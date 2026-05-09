@@ -1,20 +1,26 @@
 <template>
-  <div class="section-card">
+  <div class="pending-members-card section-card">
     <div class="section-header-with-actions">
-      <h2 class="section-title">⏳ Pending Member Approvals</h2>
+      <h2 class="section-title">Pending Member Approvals</h2>
       <div v-if="filteredFarmers.length > 0" class="bulk-actions">
         <button @click="approveAllPending" class="bulk-approve-btn" :disabled="processingBulk">
-          <span v-if="!processingBulk">✓ Approve All ({{ filteredFarmers.length }})</span>
+          <span v-if="!processingBulk">Approve All ({{ filteredFarmers.length }})</span>
           <span v-else>Processing...</span>
         </button>
         <button @click="$emit('refresh')" class="refresh-btn" :disabled="loading">
-          🔄 Refresh
+          Refresh
         </button>
       </div>
     </div>
 
     <!-- Search Bar -->
     <div class="search-container">
+      <span class="search-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+      </span>
       <input
         v-model="searchQuery"
         type="text"
@@ -37,9 +43,9 @@
 
     <!-- Empty State -->
     <div v-else-if="filteredFarmers.length === 0" class="empty-state">
-      <p>✓ No pending members to approve.</p>
-      <p class="text-sm text-gray-500 mt-2">If you expect pending accounts, verify that:</p>
-      <ul class="text-xs text-gray-400 mt-1">
+      <p>No pending members to approve.</p>
+      <p class="empty-hint">If you expect pending accounts, verify that:</p>
+      <ul class="empty-checklist">
         <li>- You are logged in as an admin account</li>
         <li>- The backend server is running (http://localhost:5000)</li>
         <li>- New users have status set to <code>pending</code> in the database</li>
@@ -77,15 +83,15 @@
                 class="role-select"
                 :disabled="processingId === member.id"
               >
-                <option value="farmer">👨‍🌾 Farmer</option>
-                <option value="president">👔 President</option>
-                <option value="treasurer">💰 Treasurer</option>
-                <option value="auditor">📊 Auditor</option>
-                <option value="operator">⚙️ Operator</option>
-                <option value="operation_manager">🛠️ Operation Manager</option>
-                <option value="business_manager">💼 Business Manager</option>
-                <option value="agriculturist">🌱 Agriculturist</option>
-                <option value="admin">👨‍💼 Admin</option>
+                <option value="farmer">Farmer</option>
+                <option value="president">President</option>
+                <option value="treasurer">Treasurer</option>
+                <option value="auditor">Auditor</option>
+                <option value="operator">Operator</option>
+                <option value="operation_manager">Operation Manager</option>
+                <option value="business_manager">Business Manager</option>
+                <option value="agriculturist">Agriculturist</option>
+                <option value="admin">Admin</option>
               </select>
             </td>
             <td>
@@ -95,8 +101,8 @@
                 class="role-select"
                 :disabled="processingId === member.id"
               >
-                <option value="member">✓ Member</option>
-                <option value="non-member">✗ Non-Member</option>
+                <option value="member">Member</option>
+                <option value="non-member">Non-Member</option>
               </select>
             </td>
             <td>{{ member.barangay_name || 'Not assigned' }}</td>
@@ -108,21 +114,21 @@
                   class="approve-btn"
                   :disabled="processingId === member.id || member.role === 'admin'"
                 >
-                  {{ processingId === member.id ? 'Processing...' : '✓ Approve' }}
+                  {{ processingId === member.id ? 'Processing...' : 'Approve' }}
                 </button>
                 <button
                   @click="rejectMember(member.id)"
                   class="reject-btn"
                   :disabled="processingId === member.id || member.role === 'admin'"
                 >
-                  ✗ Reject
+                  Reject
                 </button>
                 <button
                   @click="deleteMember(member.id)"
                   class="delete-btn"
                   :disabled="processingId === member.id || member.role === 'admin'"
                 >
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
             </td>
@@ -133,7 +139,6 @@
 
     <!-- Success Message -->
     <div v-if="successMessage" class="success-message-banner">
-      <span class="success-icon">✓</span>
       <span class="success-text">{{ successMessage }}</span>
       <button @click="successMessage = ''" class="close-success">×</button>
     </div>
@@ -340,11 +345,12 @@ const approveAllPending = async () => {
 </script>
 
 <style scoped>
-.section-card {
-  background: white;
+.pending-members-card {
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
   margin-bottom: 24px;
 }
 
@@ -358,10 +364,11 @@ const approveAllPending = async () => {
 }
 
 .section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #eefde6;
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
 .bulk-actions {
@@ -392,9 +399,9 @@ const approveAllPending = async () => {
 
 .refresh-btn {
   padding: 10px 20px;
-  background: white;
-  color: #059669;
-  border: 2px solid #059669;
+  background: transparent;
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.45);
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -402,27 +409,55 @@ const approveAllPending = async () => {
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: #059669;
-  color: white;
+  background: rgba(74, 222, 128, 0.12);
+  color: #bbf7d0;
 }
 
 .search-container {
   margin-bottom: 20px;
+  position: relative;
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
+  padding: 10px 14px 10px 44px;
+  border: 1px solid rgba(190, 235, 203, 0.24);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
+  color: #eefde6;
+  background: rgba(0, 0, 0, 0.24);
   transition: all 0.2s;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: rgba(134, 239, 172, 0.9);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  pointer-events: none;
+}
+
+.search-icon svg {
+  display: block;
+}
+
+.search-input::placeholder {
+  color: rgba(229, 235, 231, 0.45);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
 .loading-state,
@@ -430,15 +465,52 @@ const approveAllPending = async () => {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #6b7280;
+  color: rgba(229, 235, 231, 0.8);
+}
+
+.empty-state {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(190, 235, 203, 0.12);
+  border-radius: 12px;
+}
+
+.empty-state > p:first-child {
+  color: rgba(238, 253, 230, 0.95) !important;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.empty-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(229, 235, 231, 0.75) !important;
+  font-weight: 600;
+}
+
+.empty-checklist {
+  margin-top: 8px;
+  padding-left: 0;
+  list-style: none;
+  font-size: 12px;
+  color: rgba(229, 235, 231, 0.7) !important;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.empty-checklist code {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(238, 253, 230, 0.95) !important;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
 }
 
 .spinner {
   display: inline-block;
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #10b981;
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  border-top: 4px solid #34d399;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -450,7 +522,7 @@ const approveAllPending = async () => {
 }
 
 .error-state {
-  color: #ef4444;
+  color: #fca5a5;
 }
 
 .retry-btn {
@@ -466,116 +538,160 @@ const approveAllPending = async () => {
 
 .members-table {
   overflow-x: auto;
+  border-radius: 12px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 thead tr {
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%);
+  border-bottom: 1px solid rgba(190, 235, 203, 0.2);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
 th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  font-size: 13px;
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: 700;
+  color: rgba(234, 241, 236, 0.94);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-tbody tr {
-  border-bottom: 1px solid #e5e7eb;
-  transition: background 0.2s;
-}
-
-tbody tr:hover {
-  background: #f9fafb;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
 }
 
 td {
-  padding: 16px;
-  color: #1f2937;
-  font-size: 14px;
+  padding: 8px 6px;
+  color: rgba(226, 234, 229, 0.92) !important;
+  font-size: 11px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+  background: transparent !important;
+}
+
+tbody tr {
+  transition: none;
+  background: transparent !important;
+}
+
+tbody tr:hover {
+  background: rgba(74, 222, 128, 0.07) !important;
+}
+
+/* Remove click/tap highlight on member rows */
+tbody tr,
+tbody tr td {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Also remove tap/click highlight from interactive controls in rows */
+.members-table button,
+.members-table select,
+.members-table input,
+.members-table td,
+.members-table tr {
+  -webkit-tap-highlight-color: transparent;
+}
+
+tbody tr:active,
+tbody tr:focus,
+tbody tr:focus-within,
+tbody tr:active td,
+tbody tr:focus td,
+tbody tr:focus-within td {
+  background: transparent !important;
+  outline: none;
 }
 
 .role-select {
-  padding: 6px 12px;
-  border: 2px solid #e5e7eb;
+  padding: 5px 8px;
+  border: 1px solid rgba(190, 235, 203, 0.28);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  background: white;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(226, 234, 229, 0.95);
   cursor: pointer;
   transition: all 0.2s;
   text-transform: capitalize;
+  max-width: 100%;
 }
 
 .role-select:hover:not(:disabled) {
-  border-color: #10b981;
+  border-color: rgba(74, 222, 128, 0.45);
 }
 
 .role-select:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
+  background: rgba(0, 0, 0, 0.32);
 }
 
 .role-select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #f3f4f6;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.role-select option {
+  color: #111827;
+  background: #fff;
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .approve-btn,
 .reject-btn,
 .delete-btn {
-  padding: 6px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .approve-btn {
-  background: #d1fae5;
-  color: #065f46;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  color: #14532d;
+  border-color: rgba(22, 163, 74, 0.35);
 }
 
 .approve-btn:hover:not(:disabled) {
-  background: #10b981;
-  color: white;
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
 }
 
 .reject-btn {
-  background: #fee2e2;
-  color: #991b1b;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.28);
 }
 
 .reject-btn:hover:not(:disabled) {
-  background: #ef4444;
-  color: white;
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
 }
 
 .delete-btn {
-  background: #fef3c7;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   color: #92400e;
+  border-color: rgba(217, 119, 6, 0.28);
 }
 
 .delete-btn:hover:not(:disabled) {
-  background: #f59e0b;
-  color: white;
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
 }
 
 .approve-btn:disabled,
@@ -583,6 +699,17 @@ td {
 .delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Prevent focus/active click flash on action buttons */
+.approve-btn:focus,
+.reject-btn:focus,
+.delete-btn:focus,
+.approve-btn:active,
+.reject-btn:active,
+.delete-btn:active {
+  outline: none;
+  box-shadow: none;
 }
 
 .success-message-banner {
@@ -610,10 +737,6 @@ td {
     transform: translateX(0);
     opacity: 1;
   }
-}
-
-.success-icon {
-  font-size: 20px;
 }
 
 .success-text {
@@ -664,13 +787,16 @@ td {
   }
 
   .action-buttons {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .approve-btn,
   .reject-btn,
   .delete-btn {
-    width: 100%;
+    width: auto;
+    min-width: 64px;
   }
 
   .success-message-banner {

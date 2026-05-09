@@ -1,53 +1,77 @@
 <template>
   <div class="donut-chart-container">
-    <svg :width="size" :height="size" class="donut-chart">
+    <svg :viewBox="`0 0 ${size} ${size}`" :width="size" :height="size" class="donut-chart" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <pattern :id="gridPatternId" width="14" height="14" patternUnits="userSpaceOnUse">
+          <path
+            d="M 14 0 L 0 0 0 14"
+            fill="none"
+            stroke="rgba(167, 243, 198, 0.14)"
+            stroke-width="0.55"
+          />
+        </pattern>
+      </defs>
+      <rect
+        x="0"
+        y="0"
+        :width="size"
+        :height="size"
+        :fill="`url(#${gridPatternId})`"
+        class="chart-grid-bg"
+      />
       <circle
-        cx="50%"
-        cy="50%"
+        :cx="center"
+        :cy="center"
         :r="radius"
         fill="transparent"
-        stroke="#e5e7eb"
+        stroke="rgba(100, 130, 115, 0.32)"
         :stroke-width="strokeWidth"
       />
       <circle
-        cx="50%"
-        cy="50%"
+        :cx="center"
+        :cy="center"
         :r="radius"
         fill="transparent"
         :stroke="incomeColor"
         :stroke-width="strokeWidth"
         :stroke-dasharray="`${incomeLength} ${circumference - incomeLength}`"
         stroke-dashoffset="0"
-        stroke-linecap="butt"
-        transform="rotate(-90 50 50)"
+        stroke-linecap="round"
+        :transform="`rotate(-90 ${center} ${center})`"
         class="chart-segment"
-      />
+      >
+        <title>{{ incomeTooltip }}</title>
+      </circle>
       <circle
-        cx="50%"
-        cy="50%"
+        :cx="center"
+        :cy="center"
         :r="radius"
         fill="transparent"
         :stroke="expenseColor"
         :stroke-width="strokeWidth"
         :stroke-dasharray="`${expenseLength} ${circumference - expenseLength}`"
         :stroke-dashoffset="incomeLength"
-        stroke-linecap="butt"
-        transform="rotate(-90 50 50)"
+        stroke-linecap="round"
+        :transform="`rotate(-90 ${center} ${center})`"
         class="chart-segment"
-      />
+      >
+        <title>{{ expenseTooltip }}</title>
+      </circle>
       <circle
-        cx="50%"
-        cy="50%"
+        :cx="center"
+        :cy="center"
         :r="radius"
         fill="transparent"
         :stroke="savingsColor"
         :stroke-width="strokeWidth"
         :stroke-dasharray="`${savingsLength} ${circumference - savingsLength}`"
         :stroke-dashoffset="incomeLength + expenseLength"
-        stroke-linecap="butt"
-        transform="rotate(-90 50 50)"
+        stroke-linecap="round"
+        :transform="`rotate(-90 ${center} ${center})`"
         class="chart-segment"
-      />
+      >
+        <title>{{ savingsTooltip }}</title>
+      </circle>
       <text
         x="50%"
         y="50%"
@@ -55,32 +79,31 @@
         dominant-baseline="middle"
         class="chart-center-text"
       >
-        <tspan x="50%" dy="-0.3em" class="chart-total">Total</tspan>
-        <tspan x="50%" dy="1.2em" class="chart-amount">P{{ totalAmount }}</tspan>
+        <tspan x="50%" dy="-0.4em" class="chart-subtitle">Total Balance</tspan>
+        <tspan x="50%" dy="1.2em" class="chart-total">{{ totalAmount }}</tspan>
       </text>
     </svg>
     <div class="chart-legend">
-      <div class="legend-item">
-        <div class="legend-color" :style="{ backgroundColor: incomeColor }"></div>
-        <span class="legend-label">Income</span>
-        <span class="legend-value">P{{ income }}</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" :style="{ backgroundColor: expenseColor }"></div>
-        <span class="legend-label">Expenses</span>
-        <span class="legend-value">P{{ expenses }}</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" :style="{ backgroundColor: savingsColor }"></div>
-        <span class="legend-label">Savings</span>
-        <span class="legend-value">P{{ savings }}</span>
+      <div
+        v-for="item in legendItems"
+        :key="item.key"
+        class="legend-item"
+        :title="`${item.label}: ${item.amountLabel} (${item.percentLabel})`"
+      >
+        <div class="legend-dot" :style="{ backgroundColor: item.color }"></div>
+        <div class="legend-meta">
+          <div class="legend-label">{{ item.label }}</div>
+          <div class="legend-sublabel">{{ item.amountLabel }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
+
+const gridPatternId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
 
 const props = defineProps({
   income: {
@@ -101,25 +124,74 @@ const props = defineProps({
   }
 })
 
-const incomeColor = '#10b981'
-const expenseColor = '#ef4444'
-const savingsColor = '#6b7280'
+const incomeColor = '#22c55e'
+const expenseColor = '#fb7185'
+const savingsColor = '#eab308'
 
+const totalAmountValue = computed(() => props.income + props.expenses + props.savings)
 const totalAmount = computed(() => {
-  return (props.income + props.expenses + props.savings).toLocaleString()
+  return formatAmount(totalAmountValue.value)
 })
 
-const radius = computed(() => props.size / 2 - 10)
-const strokeWidth = computed(() => props.size / 10)
+const center = computed(() => props.size / 2)
+const strokeWidth = computed(() => Math.max(14, props.size * 0.08))
+const radius = computed(() => center.value - strokeWidth.value / 2)
 const circumference = computed(() => 2 * Math.PI * radius.value)
 
-const incomePercentage = computed(() => (props.income / (props.income + props.expenses + props.savings)) * 100)
-const expensePercentage = computed(() => (props.expenses / (props.income + props.expenses + props.savings)) * 100)
-const savingsPercentage = computed(() => (props.savings / (props.income + props.expenses + props.savings)) * 100)
+const incomePercentage = computed(() => {
+  return totalAmountValue.value ? props.income / totalAmountValue.value : 0
+})
+const expensePercentage = computed(() => {
+  return totalAmountValue.value ? props.expenses / totalAmountValue.value : 0
+})
+const savingsPercentage = computed(() => {
+  return totalAmountValue.value ? props.savings / totalAmountValue.value : 0
+})
 
-const incomeLength = computed(() => (incomePercentage.value / 100) * circumference.value)
-const expenseLength = computed(() => (expensePercentage.value / 100) * circumference.value)
-const savingsLength = computed(() => (savingsPercentage.value / 100) * circumference.value)
+const formatAmount = (amount) => {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    maximumFractionDigits: 0
+  }).format(amount)
+}
+
+const formatPercent = (value) => `${(value * 100).toFixed(0)}%`
+
+const incomeTooltip = computed(() => `Income: ${formatAmount(props.income)} (${formatPercent(incomePercentage.value)})`)
+const expenseTooltip = computed(() => `Expenses: ${formatAmount(props.expenses)} (${formatPercent(expensePercentage.value)})`)
+const savingsTooltip = computed(() => `Savings: ${formatAmount(props.savings)} (${formatPercent(savingsPercentage.value)})`)
+
+const legendItems = computed(() => [
+  {
+    key: 'income',
+    label: 'Income',
+    amountLabel: formatAmount(props.income),
+    percentLabel: formatPercent(incomePercentage.value),
+    color: incomeColor,
+    icon: '💰'
+  },
+  {
+    key: 'expenses',
+    label: 'Expenses',
+    amountLabel: formatAmount(props.expenses),
+    percentLabel: formatPercent(expensePercentage.value),
+    color: expenseColor,
+    icon: '💸'
+  },
+  {
+    key: 'savings',
+    label: 'Savings',
+    amountLabel: formatAmount(props.savings),
+    percentLabel: formatPercent(savingsPercentage.value),
+    color: savingsColor,
+    icon: '🏦'
+  }
+])
+
+const incomeLength = computed(() => (incomePercentage.value * circumference.value))
+const expenseLength = computed(() => (expensePercentage.value * circumference.value))
+const savingsLength = computed(() => (savingsPercentage.value * circumference.value))
 </script>
 
 <style scoped>
@@ -127,38 +199,59 @@ const savingsLength = computed(() => (savingsPercentage.value / 100) * circumfer
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  width: 100%;
 }
 
 .donut-chart {
-  width: 100%;
+  width: min(100%, 240px);
   height: auto;
+  flex: 1 1 240px;
+}
+
+.chart-grid-bg {
+  pointer-events: none;
+  opacity: 0.55;
 }
 
 .chart-segment {
-  transition: stroke-dashoffset 0.5s ease;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+  opacity: 0.95;
+}
+
+.chart-segment:hover {
+  opacity: 1;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4));
 }
 
 .chart-center-text {
-  font-size: 14px;
-  fill: #111827;
+  font-size: 12px;
+  fill: #ecfdf5;
+  opacity: 0.96;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  fill: #c4f1d8;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .chart-total {
-  font-size: 12px;
-  fill: #6b7280;
-  font-weight: 500;
+  font-size: 24px;
+  fill: #f8fafc;
+  font-weight: 800;
 }
 
 .chart-amount {
-  font-size: 18px;
-  fill: #111827;
-  font-weight: 700;
+  display: none;
 }
 
 .chart-legend {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
   width: 100%;
 }
@@ -166,26 +259,59 @@ const savingsLength = computed(() => (savingsPercentage.value / 100) * circumfer
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08);
+  cursor: default;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+.legend-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.legend-label {
-  flex: 1;
-  color: #6b7280;
-  font-weight: 500;
+.legend-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.legend-value {
-  color: #111827;
-  font-weight: 600;
+.legend-label {
+  color: #f0fdf4;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.legend-sublabel {
+  color: #d1fae5;
+  font-size: 13px;
+}
+
+@keyframes chartEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.donut-chart-container {
+  animation: chartEnter 0.8s ease both;
 }
 </style>
 

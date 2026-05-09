@@ -2,79 +2,79 @@
   <div class="machinery-booking-page">
     <!-- Page Header -->
     <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">🚜 Machinery Booking Service</h1>
-        <p class="page-subtitle">Book farm machinery and equipment for your agricultural needs</p>
+      <div class="glass-header">
+        <div class="header-text">
+          <h1 class="page-title">Machinery Booking Service</h1>
+          <p class="page-subtitle">Book farm machinery and equipment for your agricultural needs</p>
+        </div>
       </div>
     </div>
 
     <!-- My Bookings Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📋</div>
-        <div class="stat-content">
-          <div class="stat-label">My Bookings</div>
-          <div class="stat-value">{{ myBookingsCount }}</div>
+    <div class="stats-group">
+      <div class="stats-group-title">Booking Overview</div>
+      <div class="stats-grid">
+        <div class="stat-card glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">My Bookings</div>
+            <div class="stat-value">{{ myBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-pending">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-content">
-          <div class="stat-label">Pending</div>
-          <div class="stat-value">{{ pendingBookingsCount }}</div>
+        <div class="stat-card stat-pending glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">{{ pendingBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-success">
-        <div class="stat-icon">✅</div>
-        <div class="stat-content">
-          <div class="stat-label">Approved</div>
-          <div class="stat-value">{{ approvedBookingsCount }}</div>
+        <div class="stat-card stat-success glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Approved</div>
+            <div class="stat-value">{{ approvedBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-info">
-        <div class="stat-icon">🏁</div>
-        <div class="stat-content">
-          <div class="stat-label">Completed</div>
-          <div class="stat-value">{{ completedBookingsCount }}</div>
+        <div class="stat-card stat-info glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value">{{ completedBookingsCount }}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Payment Status Stats -->
-    <div class="stats-grid payment-stats">
-      <div class="stat-card stat-danger">
-        <div class="stat-icon">💳</div>
-        <div class="stat-content">
-          <div class="stat-label">Unpaid</div>
-          <div class="stat-value">{{ unpaidBookingsCount }}</div>
+    <div class="stats-group payment-group">
+      <div class="stats-group-title">Payment Overview</div>
+      <div class="stats-grid payment-stats">
+        <div class="stat-card stat-danger glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Unpaid</div>
+            <div class="stat-value">{{ unpaidBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-warning">
-        <div class="stat-icon">💰</div>
-        <div class="stat-content">
-          <div class="stat-label">Partial</div>
-          <div class="stat-value">{{ partialBookingsCount }}</div>
+        <div class="stat-card stat-warning glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Partial</div>
+            <div class="stat-value">{{ partialBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-paid">
-        <div class="stat-icon">✅</div>
-        <div class="stat-content">
-          <div class="stat-label">Fully Paid</div>
-          <div class="stat-value">{{ paidBookingsCount }}</div>
+        <div class="stat-card stat-paid glass-stat-card">
+          <div class="stat-content">
+            <div class="stat-label">Fully Paid</div>
+            <div class="stat-value">{{ paidBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card" :class="outstandingBalance > 0 ? 'stat-danger' : 'stat-paid'">
-        <div class="stat-icon">₱</div>
-        <div class="stat-content">
-          <div class="stat-label">Outstanding Balance</div>
-          <div class="stat-value">₱{{ formatNumber(outstandingBalance) }}</div>
+        <div class="stat-card glass-stat-card stat-outstanding" :class="outstandingBalance > 0 ? 'stat-danger' : 'stat-paid'">
+          <div class="stat-content">
+            <div class="stat-label">Outstanding Balance</div>
+            <div class="stat-value">₱{{ formatNumber(outstandingBalance) }}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Outstanding Balance Warning -->
     <div v-if="outstandingBalance > 0" class="outstanding-warning">
-      <div class="warning-icon">⚠️</div>
+      <div class="warning-icon" aria-hidden="true">!</div>
       <div class="warning-content">
         <h3>Outstanding Balance Alert</h3>
         <p>You have an outstanding balance of <strong>₱{{ formatNumber(outstandingBalance) }}</strong> from previous completed bookings.</p>
@@ -93,7 +93,7 @@
 
     <!-- Available Machinery -->
     <div class="section">
-      <h2 class="section-title">🚜 Available Machinery</h2>
+      <h2 class="section-title">Available Machinery</h2>
       
       <!-- Machinery Type Filter -->
       <div class="filters" style="margin-bottom: 20px;">
@@ -111,7 +111,7 @@
           <p>Loading available machinery...</p>
         </div>
         <div v-else-if="availableMachinery.length === 0" class="empty-state">
-          <div class="empty-icon">🚫</div>
+          <div class="empty-icon" aria-hidden="true"></div>
           <p>No machinery available at the moment</p>
         </div>
         <div v-else v-for="machine in availableMachinery" :key="machine.id" class="machinery-card">
@@ -131,7 +131,7 @@
               class="machinery-picture"
             />
             <div v-else class="machinery-picture-placeholder">
-              <div class="placeholder-icon">🖼️</div>
+              <div class="placeholder-icon" aria-hidden="true"></div>
               <p>No image available</p>
             </div>
           </div>
@@ -139,15 +139,15 @@
           <p class="machinery-description">{{ machine.description || 'No description available' }}</p>
           <div class="machinery-details">
             <div class="detail-row">
-              <span class="detail-label">💰 Price:</span>
+              <span class="detail-label">Price:</span>
               <span class="detail-value">₱{{ formatNumber(getEffectivePricePerUnit(machine)) }} {{ machine.unit_type }}</span>
             </div>
             <div class="detail-row" v-if="machine.max_capacity">
-              <span class="detail-label">📊 Max Capacity:</span>
+              <span class="detail-label">Max Capacity:</span>
               <span class="detail-value">{{ machine.max_capacity }} {{ machine.capacity_unit }}/day</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">📌 Status:</span>
+              <span class="detail-label">Status:</span>
               <span class="status-badge status-success">{{ machine.status }}</span>
             </div>
           </div>
@@ -165,7 +165,7 @@
 
     <!-- My Bookings -->
     <div class="section">
-      <h2 class="section-title">📋 My Bookings</h2>
+      <h2 class="section-title">My Bookings</h2>
       
       <!-- Filters -->
       <div class="filters">
@@ -242,24 +242,26 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  <button @click="viewBookingDetails(booking)" class="btn-icon-small" title="View">
-                    👁️
+                  <button type="button" @click="viewBookingDetails(booking)" class="btn-icon-small btn-text-action" title="View">
+                    View
                   </button>
                   <button 
                     v-if="booking.status === 'Pending' && booking.farmer_id === authStore.currentUser?.id" 
+                    type="button"
                     @click="editBookingConfirm(booking)" 
-                    class="btn-icon-small btn-edit" 
+                    class="btn-icon-small btn-edit btn-text-action" 
                     title="Edit"
                   >
-                    ✏️
+                    Edit
                   </button>
                   <button 
                     v-if="booking.status === 'Pending'" 
+                    type="button"
                     @click="cancelBookingConfirm(booking)" 
-                    class="btn-icon-small btn-danger" 
+                    class="btn-icon-small btn-danger btn-text-action" 
                     title="Cancel"
                   >
-                    ✕
+                    Cancel
                   </button>
                 </div>
               </td>
@@ -273,8 +275,8 @@
     <div v-if="showBookingModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>📅 Book Machinery</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Book Machinery</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="submitBooking">
@@ -302,9 +304,48 @@
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="selectedMachineryForBooking">
               <label class="form-label">Booking Date *</label>
+              <div v-if="selectedMachineryForBooking.max_capacity" class="booking-date-calendar">
+                <p v-if="loadingUnavailableDates" class="cal-loading">Checking availability…</p>
+                <div class="cal-nav">
+                  <button type="button" class="cal-nav-btn" @click="shiftBookingMonth(-1)" :disabled="!canShiftBookingMonth(-1)">
+                    ‹
+                  </button>
+                  <span class="cal-nav-title">{{ bookingMonthTitle }}</span>
+                  <button type="button" class="cal-nav-btn" @click="shiftBookingMonth(1)" :disabled="!canShiftBookingMonth(1)">
+                    ›
+                  </button>
+                </div>
+                <div class="cal-weekdays">
+                  <span v-for="w in weekdayLabels" :key="w">{{ w }}</span>
+                </div>
+                <div class="cal-grid">
+                  <button
+                    v-for="c in bookingCalendarCells"
+                    :key="c.key"
+                    type="button"
+                    class="cal-cell"
+                    :class="{
+                      'cal-cell--outside': !c.inMonth,
+                      'cal-cell--disabled': c.disabled,
+                      'cal-cell--full': c.isFull,
+                      'cal-cell--selected': c.selected
+                    }"
+                    :disabled="c.disabled"
+                    @click="selectBookingCalendarDate(c)"
+                  >
+                    <span class="cal-day-num">{{ c.dayNum }}</span>
+                    <span v-if="c.isFull" class="cal-full-label">FULL</span>
+                  </button>
+                </div>
+                <p v-if="bookingForm.booking_date" class="cal-selected-hint">
+                  Selected: <strong>{{ formatDate(bookingForm.booking_date) }}</strong>
+                </p>
+                <p v-else class="cal-selected-hint cal-selected-hint--muted">Pumili ng petsa sa kalendaryo.</p>
+              </div>
               <input
+                v-else
                 v-model="bookingForm.booking_date"
                 type="date"
                 :min="minDate"
@@ -315,13 +356,45 @@
 
             <div class="form-group">
               <label class="form-label">Service Location *</label>
-              <input
-                v-model="bookingForm.service_location"
-                type="text"
-                class="form-input"
-                placeholder="Enter farm location or address"
-                required
-              />
+              <p v-if="barangayPlacesLoading" class="form-hint">Nilo-load ang mga lokasyon…</p>
+              <template v-else-if="bookingUsesPlaceDropdown">
+                <select
+                  v-model="bookingForm.barangay_place_id"
+                  class="form-input"
+                  required
+                >
+                  <option value="">Pumili ng lugar sa inyong barangay…</option>
+                  <option
+                    v-for="p in barangayServicePlaces"
+                    :key="p.id"
+                    :value="String(p.id)"
+                  >
+                    {{ p.name }}{{ p.description ? ' — ' + p.description : '' }}
+                  </option>
+                </select>
+                <small class="form-hint">Batay sa inyong rehistradong barangay.</small>
+              </template>
+              <template v-else>
+                <p v-if="!authStore.currentUser?.barangay_id" class="form-hint">
+                  Walang naka-link na barangay sa account; ilagay manu-mano ang lokasyon.
+                </p>
+                <p v-if="barangayPlacesLoadError && authStore.currentUser?.barangay_id" class="form-hint">
+                  Hindi ma-load ang listahan ng lugar. Puwedeng maglagay ng teksto sa ibaba.
+                </p>
+                <input
+                  v-model="bookingForm.service_location"
+                  type="text"
+                  class="form-input"
+                  placeholder="Ilagay ang lokasyon ng serbisyo"
+                  required
+                />
+                <small
+                  v-if="authStore.currentUser?.barangay_id && !barangayPlacesLoadError"
+                  class="form-hint"
+                >
+                  Walang naka-program na lugar para sa inyong barangay — ilagay ang address o detalye.
+                </small>
+              </template>
             </div>
 
             <div class="form-row">
@@ -342,7 +415,7 @@
                 <small v-if="selectedMachineryForBooking?.max_capacity" class="form-hint">
                   Maximum: {{ selectedMachineryForBooking.max_capacity }} {{ selectedMachineryForBooking.capacity_unit }}
                 </small>
-                <small v-if="capacityError" class="error-message">⚠️ {{ capacityError }}</small>
+                <small v-if="capacityError" class="error-message">{{ capacityError }}</small>
               </div>
               <div class="form-group">
                 <label class="form-label">Unit *</label>
@@ -395,8 +468,8 @@
     <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>📋 Booking Details #{{ selectedBooking.id }}</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Booking Details #{{ selectedBooking.id }}</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <div class="booking-details">
@@ -478,6 +551,36 @@
               <h3>Additional Notes</h3>
               <p class="notes-text">{{ selectedBooking.notes }}</p>
             </div>
+
+            <div class="detail-section" v-if="selectedBooking.status === 'Completed' || (selectedBooking.total_paid || 0) > 0">
+              <h3>Payment History</h3>
+              <div v-if="paymentHistoryLoading" class="empty-payments">Loading payment records...</div>
+              <div v-else-if="paymentHistory.length === 0" class="empty-payments">
+                No payment records yet.
+              </div>
+              <div v-else class="payments-table-wrap">
+                <table class="payments-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th class="text-right">Amount Paid</th>
+                      <th>Receipt Number</th>
+                      <th>Recorded By</th>
+                      <th>Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="payment in paymentHistory" :key="payment.id">
+                      <td>{{ formatDate(payment.payment_date) }}</td>
+                      <td class="text-right">₱{{ formatNumber(payment.amount || 0) }}</td>
+                      <td>{{ payment.receipt_number || '-' }}</td>
+                      <td>{{ payment.recorded_by_name || '-' }}</td>
+                      <td>{{ payment.remarks || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -487,8 +590,8 @@
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>✏️ Edit Booking</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Edit Booking</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="editBooking">
@@ -502,15 +605,91 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="bookingToEdit">
               <label class="form-label">Booking Date *</label>
-              <input 
-                v-model="bookingToEdit.booking_date" 
-                type="date" 
-                class="form-input" 
+              <div v-if="selectedEditMachinery && selectedEditMachinery.max_capacity" class="booking-date-calendar">
+                <p v-if="loadingEditUnavailableDates" class="cal-loading">Checking availability…</p>
+                <div class="cal-nav">
+                  <button type="button" class="cal-nav-btn" @click="shiftEditMonth(-1)" :disabled="!canShiftEditMonth(-1)">
+                    ‹
+                  </button>
+                  <span class="cal-nav-title">{{ editMonthTitle }}</span>
+                  <button type="button" class="cal-nav-btn" @click="shiftEditMonth(1)" :disabled="!canShiftEditMonth(1)">
+                    ›
+                  </button>
+                </div>
+                <div class="cal-weekdays">
+                  <span v-for="w in weekdayLabels" :key="'e-' + w">{{ w }}</span>
+                </div>
+                <div class="cal-grid">
+                  <button
+                    v-for="c in editCalendarCells"
+                    :key="c.key"
+                    type="button"
+                    class="cal-cell"
+                    :class="{
+                      'cal-cell--outside': !c.inMonth,
+                      'cal-cell--disabled': c.disabled,
+                      'cal-cell--full': c.isFull,
+                      'cal-cell--selected': c.selected
+                    }"
+                    :disabled="c.disabled"
+                    @click="selectEditCalendarDate(c)"
+                  >
+                    <span class="cal-day-num">{{ c.dayNum }}</span>
+                    <span v-if="c.isFull" class="cal-full-label">FULL</span>
+                  </button>
+                </div>
+                <p v-if="bookingToEdit.booking_date" class="cal-selected-hint">
+                  Selected: <strong>{{ formatDate(bookingToEdit.booking_date) }}</strong>
+                </p>
+                <p v-else class="cal-selected-hint cal-selected-hint--muted">Pumili ng petsa sa kalendaryo.</p>
+              </div>
+              <input
+                v-else
+                v-model="bookingToEdit.booking_date"
+                type="date"
+                class="form-input"
                 :min="minDate"
                 required
               />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Service Location *</label>
+              <p v-if="barangayPlacesLoading" class="form-hint">Nilo-load ang mga lokasyon…</p>
+              <template v-else-if="bookingUsesPlaceDropdown">
+                <select
+                  v-model="bookingToEdit.barangay_place_id"
+                  class="form-input"
+                  required
+                >
+                  <option value="">Pumili ng lugar sa inyong barangay…</option>
+                  <option
+                    v-for="p in barangayServicePlaces"
+                    :key="p.id"
+                    :value="String(p.id)"
+                  >
+                    {{ p.name }}{{ p.description ? ' — ' + p.description : '' }}
+                  </option>
+                </select>
+                <small class="form-hint">Batay sa inyong rehistradong barangay.</small>
+              </template>
+              <template v-else>
+                <p v-if="!authStore.currentUser?.barangay_id" class="form-hint">
+                  Walang naka-link na barangay sa account; ilagay manu-mano ang lokasyon.
+                </p>
+                <p v-if="barangayPlacesLoadError && authStore.currentUser?.barangay_id" class="form-hint">
+                  Hindi ma-load ang listahan ng lugar. Puwedeng maglagay ng teksto sa ibaba.
+                </p>
+                <input
+                  v-model="bookingToEdit.service_location"
+                  type="text"
+                  class="form-input"
+                  placeholder="Ilagay ang lokasyon ng serbisyo"
+                  required
+                />
+              </template>
             </div>
 
             <div class="form-group">
@@ -522,15 +701,6 @@
                 step="0.01" 
                 class="form-input" 
                 required
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Service Location</label>
-              <input 
-                v-model="bookingToEdit.service_location" 
-                type="text" 
-                class="form-input"
               />
             </div>
 
@@ -558,8 +728,8 @@
     <div v-if="showCancelModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-small">
         <div class="modal-header">
-          <h2>⚠️ Cancel Booking</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Cancel Booking</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <p>Are you sure you want to cancel this booking?</p>
@@ -581,11 +751,11 @@
     <!-- Error/Success Messages -->
     <div v-if="error" class="alert alert-error">
       {{ error }}
-      <button @click="clearError" class="alert-close">✕</button>
+      <button type="button" @click="clearError" class="alert-close" aria-label="Dismiss">×</button>
     </div>
     <div v-if="successMessage" class="alert alert-success">
       {{ successMessage }}
-      <button @click="successMessage = ''" class="alert-close">✕</button>
+      <button type="button" @click="successMessage = ''" class="alert-close" aria-label="Dismiss">×</button>
     </div>
   </div>
 </template>
@@ -635,17 +805,57 @@ export default {
     const capacityError = ref('')
     const outstandingBalance = ref(0)
     const unpaidBookingsList = ref([])
+    const paymentHistory = ref([])
+    const paymentHistoryLoading = ref(false)
     let bookingsRefreshInterval = null
 
     const bookingForm = ref({
       farmer_id: null,
       machinery_id: '',
       booking_date: '',
+      barangay_place_id: '',
       service_location: '',
       area_size: 0,
       area_unit: '',
       notes: ''
     })
+
+    const barangayServicePlaces = ref([])
+    const barangayPlacesLoading = ref(false)
+    const barangayPlacesLoadError = ref(false)
+
+    const bookingUsesPlaceDropdown = computed(() => {
+      const bid = authStore.currentUser?.barangay_id
+      return !!(
+        bid &&
+        barangayServicePlaces.value.length > 0 &&
+        !barangayPlacesLoadError.value
+      )
+    })
+
+    const loadBarangayServicePlaces = async () => {
+      const bid = authStore.currentUser?.barangay_id
+      if (!bid) {
+        barangayServicePlaces.value = []
+        return
+      }
+      barangayPlacesLoading.value = true
+      barangayPlacesLoadError.value = false
+      try {
+        const res = await fetch(`/api/barangays/${bid}/places`, { credentials: 'include' })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to load barangay places')
+        }
+        barangayServicePlaces.value = Array.isArray(data.places) ? data.places : []
+      } catch (e) {
+        console.error('loadBarangayServicePlaces:', e)
+        barangayPlacesLoadError.value = true
+        barangayServicePlaces.value = []
+      } finally {
+        barangayPlacesLoading.value = false
+      }
+    }
 
     // Helper function to construct proper image URLs
     const getImageUrl = (imagePath) => {
@@ -683,8 +893,234 @@ export default {
     const minDate = computed(() => {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      return tomorrow.toISOString().split('T')[0]
+      return formatYMD(tomorrow)
     })
+
+    const formatYMD = (d) => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+
+    const addDaysToYMD = (ymdStr, days) => {
+      const parts = String(ymdStr || '').split('-').map(Number)
+      if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return minDate.value
+      const dt = new Date(parts[0], parts[1] - 1, parts[2])
+      dt.setDate(dt.getDate() + days)
+      return formatYMD(dt)
+    }
+
+    const BOOKING_CALENDAR_RANGE_DAYS = 120
+    const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    const maxBookableDateStr = computed(() => addDaysToYMD(minDate.value, BOOKING_CALENDAR_RANGE_DAYS))
+
+    const fullCapacityDateMap = ref({})
+    const loadingUnavailableDates = ref(false)
+    const bookingCalendarMonth = ref(new Date())
+
+    const editFullCapacityMap = ref({})
+    const loadingEditUnavailableDates = ref(false)
+    const editCalendarMonth = ref(new Date())
+
+    const buildCalendarGrid = (year, month, minStr, maxStr, selected, fullMap) => {
+      const first = new Date(year, month, 1)
+      const startOffset = (first.getDay() + 6) % 7
+      const gridStart = new Date(year, month, 1 - startOffset)
+      const cells = []
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i)
+        const ymd = formatYMD(d)
+        const inMonth = d.getMonth() === month && d.getFullYear() === year
+        const beforeMin = ymd < minStr
+        const afterMax = ymd > maxStr
+        const isFull = !!(fullMap && fullMap[ymd])
+        const disabled = !inMonth || beforeMin || afterMax || isFull
+        cells.push({
+          key: `${ymd}-${i}`,
+          ymd,
+          dayNum: d.getDate(),
+          inMonth,
+          disabled,
+          isFull,
+          selected: ymd === selected
+        })
+      }
+      return cells
+    }
+
+    const initBookingCalendarMonth = () => {
+      const seed = bookingForm.value.booking_date || minDate.value
+      const parts = String(seed).split('-').map(Number)
+      if (parts.length === 3 && !parts.some((n) => Number.isNaN(n))) {
+        bookingCalendarMonth.value = new Date(parts[0], parts[1] - 1, 1)
+      }
+    }
+
+    const initEditCalendarMonth = () => {
+      if (!bookingToEdit.value) return
+      const seed = bookingToEdit.value.booking_date || minDate.value
+      const parts = String(seed).split('-').map(Number)
+      if (parts.length === 3 && !parts.some((n) => Number.isNaN(n))) {
+        editCalendarMonth.value = new Date(parts[0], parts[1] - 1, 1)
+      }
+    }
+
+    const loadUnavailableDatesForCreate = async () => {
+      const id = bookingForm.value.machinery_id
+      const machine = selectedMachineryForBooking.value
+      if (!id || !machine?.max_capacity) {
+        fullCapacityDateMap.value = {}
+        return
+      }
+      loadingUnavailableDates.value = true
+      try {
+        const start = minDate.value
+        const end = maxBookableDateStr.value
+        const res = await fetch(
+          `/api/machinery/bookings/unavailable-dates/${id}?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`
+        )
+        const data = await res.json().catch(() => ({}))
+        const m = {}
+        if (data.success && Array.isArray(data.unavailable_dates)) {
+          for (const row of data.unavailable_dates) {
+            if (row.date) m[row.date] = true
+          }
+        }
+        fullCapacityDateMap.value = m
+        const cur = bookingForm.value.booking_date
+        if (cur && m[cur]) {
+          bookingForm.value.booking_date = ''
+        }
+      } catch (e) {
+        console.error('Failed to load unavailable dates:', e)
+      } finally {
+        loadingUnavailableDates.value = false
+      }
+    }
+
+    const loadUnavailableForEdit = async () => {
+      if (!bookingToEdit.value) return
+      const id = bookingToEdit.value.machinery_id
+      const machine = availableMachinery.value.find((mm) => mm.id == id)
+      if (!id || !machine?.max_capacity) {
+        editFullCapacityMap.value = {}
+        return
+      }
+      loadingEditUnavailableDates.value = true
+      try {
+        const start = minDate.value
+        const end = maxBookableDateStr.value
+        const res = await fetch(
+          `/api/machinery/bookings/unavailable-dates/${id}?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`
+        )
+        const data = await res.json().catch(() => ({}))
+        const map = {}
+        if (data.success && Array.isArray(data.unavailable_dates)) {
+          for (const row of data.unavailable_dates) {
+            if (row.date) map[row.date] = true
+          }
+        }
+        editFullCapacityMap.value = map
+        const cur = bookingToEdit.value.booking_date
+        if (cur && map[cur]) {
+          bookingToEdit.value.booking_date = ''
+        }
+      } catch (e) {
+        console.error('Failed to load unavailable dates (edit):', e)
+      } finally {
+        loadingEditUnavailableDates.value = false
+      }
+    }
+
+    const monthStartTs = (y, m0) => new Date(y, m0, 1).getTime()
+
+    const canShiftBookingMonth = (delta) => {
+      const cur = bookingCalendarMonth.value
+      const next = new Date(cur.getFullYear(), cur.getMonth() + delta, 1)
+      const minP = minDate.value.split('-').map(Number)
+      const maxP = maxBookableDateStr.value.split('-').map(Number)
+      const minTs = monthStartTs(minP[0], minP[1] - 1)
+      const maxTs = monthStartTs(maxP[0], maxP[1] - 1)
+      const nts = next.getTime()
+      if (delta < 0) return nts >= minTs
+      return nts <= maxTs
+    }
+
+    const shiftBookingMonth = (delta) => {
+      if (!canShiftBookingMonth(delta)) return
+      const cur = bookingCalendarMonth.value
+      bookingCalendarMonth.value = new Date(cur.getFullYear(), cur.getMonth() + delta, 1)
+    }
+
+    const canShiftEditMonth = (delta) => {
+      const cur = editCalendarMonth.value
+      const next = new Date(cur.getFullYear(), cur.getMonth() + delta, 1)
+      const minP = minDate.value.split('-').map(Number)
+      const maxP = maxBookableDateStr.value.split('-').map(Number)
+      const minTs = monthStartTs(minP[0], minP[1] - 1)
+      const maxTs = monthStartTs(maxP[0], maxP[1] - 1)
+      const nts = next.getTime()
+      if (delta < 0) return nts >= minTs
+      return nts <= maxTs
+    }
+
+    const shiftEditMonth = (delta) => {
+      if (!canShiftEditMonth(delta)) return
+      const cur = editCalendarMonth.value
+      editCalendarMonth.value = new Date(cur.getFullYear(), cur.getMonth() + delta, 1)
+    }
+
+    const bookingMonthTitle = computed(() => {
+      const d = bookingCalendarMonth.value
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    })
+
+    const editMonthTitle = computed(() => {
+      const d = editCalendarMonth.value
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    })
+
+    const bookingCalendarCells = computed(() => {
+      const d = bookingCalendarMonth.value
+      return buildCalendarGrid(
+        d.getFullYear(),
+        d.getMonth(),
+        minDate.value,
+        maxBookableDateStr.value,
+        bookingForm.value.booking_date,
+        fullCapacityDateMap.value
+      )
+    })
+
+    const selectedEditMachinery = computed(() => {
+      if (!bookingToEdit.value?.machinery_id) return null
+      return availableMachinery.value.find((m) => m.id == bookingToEdit.value.machinery_id)
+    })
+
+    const editCalendarCells = computed(() => {
+      const d = editCalendarMonth.value
+      if (!bookingToEdit.value) return []
+      return buildCalendarGrid(
+        d.getFullYear(),
+        d.getMonth(),
+        minDate.value,
+        maxBookableDateStr.value,
+        bookingToEdit.value.booking_date,
+        editFullCapacityMap.value
+      )
+    })
+
+    const selectBookingCalendarDate = (c) => {
+      if (c.disabled) return
+      bookingForm.value.booking_date = c.ymd
+    }
+
+    const selectEditCalendarDate = (c) => {
+      if (c.disabled || !bookingToEdit.value) return
+      bookingToEdit.value.booking_date = c.ymd
+    }
 
     const myBookings = computed(() => {
       return bookings.value.filter(b => b.farmer_id === authStore.currentUser?.id)
@@ -764,7 +1200,8 @@ export default {
         await Promise.all([
           machineryStore.fetchInventory({ status: 'Available' }),
           machineryStore.fetchBookings({ farmer_id: authStore.currentUser?.id }),
-          loadFarmerBalance()
+          loadFarmerBalance(),
+          loadBarangayServicePlaces()
         ])
       } catch (error) {
         console.error('Error loading data:', error)
@@ -782,17 +1219,19 @@ export default {
     const onMachinerySelect = () => {
       if (selectedMachineryForBooking.value) {
         capacityError.value = ''
-        console.log('🔧 Selected machinery:', selectedMachineryForBooking.value)
-        
+        console.log('Selected machinery:', selectedMachineryForBooking.value)
+
         // Use the machinery's capacity_unit directly to ensure correct unit matching
-        const unit = selectedMachineryForBooking.value.capacity_unit || 
-                    selectedMachineryForBooking.value.unit_type || 
-                    'units'
+        const unit = selectedMachineryForBooking.value.capacity_unit ||
+          selectedMachineryForBooking.value.unit_type ||
+          'units'
         bookingForm.value.area_unit = unit.replace(/^per /, '').trim()
-        
-        console.log('✅ Area unit set to:', bookingForm.value.area_unit)
+
+        console.log('Area unit set to:', bookingForm.value.area_unit)
         calculatePrice()
       }
+      initBookingCalendarMonth()
+      void loadUnavailableDatesForCreate()
     }
 
     const validateAndCalculate = () => {
@@ -839,16 +1278,17 @@ export default {
       return `Quantity (${unit})`
     }
 
-    const bookMachinery = (machine) => {
+    const bookMachinery = async (machine) => {
       bookingForm.value.machinery_id = machine.id
       onMachinerySelect()
+      await loadBarangayServicePlaces()
       showBookingModal.value = true
     }
 
     const submitBooking = async () => {
       try {
-        console.log('📋 Current user:', authStore.currentUser)
-        console.log('📋 Form values before validation:', JSON.stringify({
+        console.log('Current user:', authStore.currentUser)
+        console.log('Form values before validation:', JSON.stringify({
           machinery_id: bookingForm.value.machinery_id,
           booking_date: bookingForm.value.booking_date,
           service_location: bookingForm.value.service_location,
@@ -860,7 +1300,7 @@ export default {
         // Check if user is authenticated
         if (!authStore.currentUser || !authStore.currentUser.id) {
           machineryStore.error = 'You must be logged in to book machinery'
-          console.error('❌ User not authenticated:', authStore.currentUser)
+          console.error('User not authenticated:', authStore.currentUser)
           return
         }
         
@@ -878,8 +1318,16 @@ export default {
           machineryStore.error = 'Please select a booking date'
           return
         }
-        if (!bookingForm.value.service_location || bookingForm.value.service_location.trim() === '') {
-          machineryStore.error = 'Please enter service location'
+
+        const useDd = bookingUsesPlaceDropdown.value
+        if (useDd) {
+          const pid = parseInt(String(bookingForm.value.barangay_place_id || ''), 10)
+          if (!Number.isFinite(pid) || pid <= 0) {
+            machineryStore.error = 'Pumili ng lokasyon ng serbisyo mula sa listahan.'
+            return
+          }
+        } else if (!bookingForm.value.service_location || bookingForm.value.service_location.trim() === '') {
+          machineryStore.error = 'Ilagay ang lokasyon ng serbisyo.'
           return
         }
         if (!bookingForm.value.area_size || bookingForm.value.area_size <= 0) {
@@ -887,7 +1335,7 @@ export default {
           return
         }
         if (!bookingForm.value.area_unit || bookingForm.value.area_unit.trim() === '') {
-          console.error('❌ Area unit is empty!', bookingForm.value.area_unit)
+          console.error('Area unit is empty:', bookingForm.value.area_unit)
           machineryStore.error = 'Area unit is missing. Please reselect the machinery.'
           return
         }
@@ -897,25 +1345,30 @@ export default {
           farmer_id: authStore.currentUser.id,
           machinery_id: parseInt(bookingForm.value.machinery_id),
           booking_date: bookingForm.value.booking_date,
-          service_location: bookingForm.value.service_location.trim(),
           area_size: parseFloat(bookingForm.value.area_size),
           area_unit: bookingForm.value.area_unit.trim(),
           notes: bookingForm.value.notes ? bookingForm.value.notes.trim() : ''
         }
+        if (useDd) {
+          bookingData.barangay_place_id = parseInt(String(bookingForm.value.barangay_place_id), 10)
+          bookingData.service_location = ''
+        } else {
+          bookingData.service_location = bookingForm.value.service_location.trim()
+        }
         
-        console.log('📤 Submitting booking:', JSON.stringify(bookingData, null, 2))
+        console.log('Submitting booking:', JSON.stringify(bookingData, null, 2))
         
         // Validate bookingData one more time before sending
         const missingFields = []
         if (!bookingData.farmer_id) missingFields.push('farmer_id')
         if (!bookingData.machinery_id) missingFields.push('machinery_id')
         if (!bookingData.booking_date) missingFields.push('booking_date')
-        if (!bookingData.service_location) missingFields.push('service_location')
+        if (!useDd && !bookingData.service_location) missingFields.push('service_location')
         if (!bookingData.area_size) missingFields.push('area_size')
         if (!bookingData.area_unit) missingFields.push('area_unit')
         
         if (missingFields.length > 0) {
-          console.error('❌ Missing fields in booking data:', missingFields)
+          console.error('Missing fields in booking data:', missingFields)
           machineryStore.error = `Missing required fields: ${missingFields.join(', ')}`
           return
         }
@@ -932,10 +1385,18 @@ export default {
 
     const viewBookingDetails = async (booking) => {
       try {
+        paymentHistoryLoading.value = true
         await machineryStore.getBookingDetails(booking.id)
+
+        const response = await fetch(`http://localhost:3000/api/machinery/bookings/${booking.id}/payments`)
+        const data = await response.json().catch(() => ({ success: false, payments: [] }))
+        paymentHistory.value = data.success ? (data.payments || []) : []
         showViewBookingModal.value = true
       } catch (error) {
         console.error('Error viewing booking:', error)
+        paymentHistory.value = []
+      } finally {
+        paymentHistoryLoading.value = false
       }
     }
 
@@ -959,9 +1420,17 @@ export default {
       bookingToEdit.value = {
         ...booking,
         originalMachineryId: booking.machinery_id,
-        booking_date: formatDateForInput(booking.booking_date) // Ensure date is in YYYY-MM-DD format
+        booking_date: formatDateForInput(booking.booking_date), // Ensure date is in YYYY-MM-DD format
+        barangay_place_id:
+          booking.barangay_place_id != null && booking.barangay_place_id !== ''
+            ? String(booking.barangay_place_id)
+            : ''
       }
       showEditModal.value = true
+      nextTick(async () => {
+        initEditCalendarMonth()
+        await Promise.all([loadUnavailableForEdit(), loadBarangayServicePlaces()])
+      })
     }
 
     const onEditMachinerySelect = () => {
@@ -971,6 +1440,8 @@ export default {
       if (selectedMachine) {
         bookingToEdit.value.area_unit = selectedMachine.capacity_unit || ''
       }
+      initEditCalendarMonth()
+      void loadUnavailableForEdit()
     }
 
     const editBooking = async () => {
@@ -988,17 +1459,37 @@ export default {
           return
         }
 
+        const useDd = bookingUsesPlaceDropdown.value
+        if (useDd) {
+          const pid = parseInt(String(bookingToEdit.value.barangay_place_id || ''), 10)
+          if (!Number.isFinite(pid) || pid <= 0) {
+            alert('Pumili ng lokasyon ng serbisyo mula sa listahan.')
+            return
+          }
+        } else if (
+          !bookingToEdit.value.service_location ||
+          String(bookingToEdit.value.service_location).trim() === ''
+        ) {
+          alert('Ilagay ang lokasyon ng serbisyo.')
+          return
+        }
+
         // Prepare booking data with proper type conversions
         const bookingData = {
           machinery_id: parseInt(bookingToEdit.value.machinery_id, 10),
           booking_date: bookingToEdit.value.booking_date,
-          service_location: bookingToEdit.value.service_location || '',
           area_size: parseFloat(bookingToEdit.value.area_size),
           area_unit: bookingToEdit.value.area_unit || '',
           notes: bookingToEdit.value.notes || ''
         }
+        if (useDd) {
+          bookingData.barangay_place_id = parseInt(String(bookingToEdit.value.barangay_place_id), 10)
+          bookingData.service_location = ''
+        } else {
+          bookingData.service_location = String(bookingToEdit.value.service_location || '').trim()
+        }
 
-        console.log('📤 Sending edit booking data:', bookingData)
+        console.log('Sending edit booking data:', bookingData)
         await machineryStore.editBooking(bookingToEdit.value.id, bookingData)
         successMessage.value = 'Booking updated successfully'
         closeModals()
@@ -1016,6 +1507,8 @@ export default {
       showEditModal.value = false
       bookingToCancel.value = null
       bookingToEdit.value = null
+      paymentHistory.value = []
+      paymentHistoryLoading.value = false
       machineryStore.clearSelection()
     }
 
@@ -1024,6 +1517,7 @@ export default {
         farmer_id: null,
         machinery_id: '',
         booking_date: '',
+        barangay_place_id: '',
         service_location: '',
         area_size: 0,
         area_unit: '',
@@ -1145,8 +1639,26 @@ export default {
       bookingFilter,
       machineryTypeFilter,
       bookingForm,
+      barangayServicePlaces,
+      barangayPlacesLoading,
+      barangayPlacesLoadError,
+      bookingUsesPlaceDropdown,
       calculatedPrice,
       capacityError,
+      weekdayLabels,
+      loadingUnavailableDates,
+      loadingEditUnavailableDates,
+      bookingMonthTitle,
+      editMonthTitle,
+      bookingCalendarCells,
+      editCalendarCells,
+      selectedEditMachinery,
+      canShiftBookingMonth,
+      shiftBookingMonth,
+      canShiftEditMonth,
+      shiftEditMonth,
+      selectBookingCalendarDate,
+      selectEditCalendarDate,
       // Computed
       distinctMachineryTypes,
       availableMachinery,
@@ -1191,6 +1703,8 @@ export default {
       unpaidBookingsCount,
       partialBookingsCount,
       paidBookingsCount,
+      paymentHistory,
+      paymentHistoryLoading,
       getImageUrl,
       // Pricing helpers
       isNonMember,
@@ -1204,96 +1718,171 @@ export default {
 /* Notification highlight for table rows */
 .notification-highlight-row {
   animation: highlightRowPulse 2s ease-in-out 3;
-  background: #fef2f2 !important;
+  background: rgba(127, 29, 29, 0.25) !important;
   outline: 2px solid #ef4444;
   outline-offset: -2px;
 }
 
 .notification-highlight-row td {
-  background: #fef2f2 !important;
-  color: #991b1b;
+  background: rgba(127, 29, 29, 0.2) !important;
+  color: #fecaca;
   font-weight: 600;
 }
 
 @keyframes highlightRowPulse {
   0%, 100% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.2); }
-  50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.6); }
+  50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.55); }
 }
 
-/* Reuse most styles from MachineryInventoryPage */
 .machinery-booking-page {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  color: #ecfbe2;
+  border-radius: 20px;
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
 }
 
+.glass-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: linear-gradient(110deg, #0b3a2a 0%, #0d4a35 52%, #0b3a2a 100%);
+  border: 1px solid rgba(52, 104, 81, 0.7);
+  box-shadow:
+    0 14px 28px rgba(4, 14, 10, 0.32),
+    inset 0 1px 0 rgba(196, 255, 224, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .page-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a1a1a;
+  font-size: 34px;
+  font-weight: 900;
+  color: #f7fff4;
   margin: 0;
+  line-height: 1.1;
 }
 
 .page-subtitle {
-  color: #666;
+  color: rgba(240, 255, 238, 0.72);
   margin: 4px 0 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stats-group {
+  margin-bottom: 18px;
+}
+
+.payment-group {
+  padding-top: 18px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.stats-group-title {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 900;
+  color: rgba(220, 238, 211, 0.78);
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
   margin-bottom: 24px;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 20px 18px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  justify-content: center;
+  gap: 0;
+  transition: transform 220ms ease, box-shadow 240ms ease, border-color 240ms ease;
 }
 
-.stat-icon {
-  font-size: 36px;
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.glass-stat-card {
+  background: linear-gradient(135deg, rgba(162, 246, 195, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 24px rgba(8, 13, 10, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-stat-card:hover {
+  transform: scale(1.05);
+  border-color: rgba(220, 255, 233, 0.5);
+  box-shadow: 0 18px 32px rgba(10, 25, 14, 0.34), 0 0 22px rgba(110, 231, 183, 0.22);
 }
 
 .stat-label {
-  color: #666;
-  font-size: 14px;
+  color: rgba(220, 238, 211, 0.74);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
   margin-bottom: 4px;
+  text-align: center;
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a1a1a;
+  font-size: 34px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  text-align: center;
 }
 
-.stat-pending { border-left: 4px solid #f59e0b; }
-.stat-success { border-left: 4px solid #10b981; }
-.stat-info { border-left: 4px solid #3b82f6; }
-.stat-danger { border-left: 4px solid #ef4444; }
-.stat-warning { border-left: 4px solid #f59e0b; }
-.stat-paid { border-left: 4px solid #10b981; }
+.stat-pending { border-left: 4px solid rgba(251, 191, 36, 0.92); }
+.stat-success { border-left: 4px solid rgba(74, 222, 128, 0.92); }
+.stat-info { border-left: 4px solid rgba(96, 165, 250, 0.92); }
+.stat-danger { border-left: 4px solid rgba(248, 113, 113, 0.9); }
+.stat-warning { border-left: 4px solid rgba(251, 191, 36, 0.92); }
+.stat-paid { border-left: 4px solid rgba(74, 222, 128, 0.92); }
+
+.stat-outstanding .stat-value {
+  color: #ffffff;
+  text-shadow: none;
+}
 
 .payment-stats {
-  margin-top: 20px;
+  margin-top: 4px;
 }
 
-/* Outstanding Balance Warning */
 .outstanding-warning {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 1px solid #fecaca;
+  background: linear-gradient(135deg, rgba(110, 38, 38, 0.4) 0%, rgba(78, 24, 24, 0.4) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.35);
   border-left: 4px solid #ef4444;
   border-radius: 12px;
   padding: 20px;
@@ -1304,23 +1893,34 @@ export default {
 }
 
 .warning-icon {
-  font-size: 32px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fef2f2;
+  background: rgba(220, 38, 38, 0.85);
+  border: 2px solid rgba(254, 226, 226, 0.6);
 }
 
 .warning-content h3 {
   margin: 0 0 8px 0;
-  color: #dc2626;
+  color: #fecaca;
   font-size: 18px;
 }
 
 .warning-content p {
   margin: 0 0 8px 0;
-  color: #7f1d1d;
+  color: rgba(254, 226, 226, 0.92);
 }
 
 .unpaid-bookings-list {
   margin-top: 12px;
-  background: white;
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 8px;
   padding: 12px;
 }
@@ -1357,7 +1957,6 @@ export default {
   color: #dc2626;
 }
 
-/* Payment Status Badges */
 .payment-badge {
   padding: 4px 10px;
   border-radius: 20px;
@@ -1384,20 +1983,20 @@ export default {
 }
 
 .balance-unpaid {
-  color: #dc2626;
+  color: #fca5a5;
   font-weight: 600;
 }
 
-/* Disabled book button */
 .btn-book:disabled {
-  background: #d1d5db;
-  color: #6b7280;
+  background: #475569;
+  color: #cbd5e1;
   cursor: not-allowed;
   transform: none;
+  opacity: 0.85;
 }
 
 .btn-book:disabled:hover {
-  background: #d1d5db;
+  background: #475569;
   transform: none;
 }
 
@@ -1409,7 +2008,7 @@ export default {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #1a1a1a;
+  color: #ecfbe2;
 }
 
 .machinery-grid {
@@ -1420,16 +2019,20 @@ export default {
 }
 
 .machinery-card {
-  background: white;
+  background: #1f3024;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    14px 14px 26px rgba(8, 13, 10, 0.55),
+    -12px -12px 24px rgba(43, 62, 47, 0.52),
+    inset -1px -1px 0 rgba(0,0,0,0.36);
   transition: transform 0.2s;
 }
 
 .machinery-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .machinery-header {
@@ -1442,12 +2045,12 @@ export default {
 .machinery-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ecfbe2;
   margin: 0;
 }
 
 .machinery-description {
-  color: #666;
+  color: rgba(236, 252, 231, 0.82);
   font-size: 14px;
   margin-bottom: 16px;
   min-height: 40px;
@@ -1467,18 +2070,18 @@ export default {
 }
 
 .detail-label {
-  color: #666;
+  color: rgba(220, 238, 211, 0.76);
   font-size: 14px;
 }
 
 .detail-value {
   font-weight: 600;
-  color: #1a1a1a;
+  color: #f2ffe8;
 }
 
 .btn-book {
   width: 100%;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #53b476 0%, #2f8f53 100%);
   color: white;
   border: none;
   padding: 12px;
@@ -1488,15 +2091,14 @@ export default {
   transition: background 0.2s;
 }
 
-.btn-book:hover {
-  background: #2563eb;
+.btn-book:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a669 0%, #267947 100%);
 }
 
-/* Machinery Picture Styles */
 .machinery-picture-container {
   width: 100%;
   height: 220px;
-  background: #f3f4f6;
+  background: #e5e7eb;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -1524,8 +2126,12 @@ export default {
 }
 
 .machinery-picture-placeholder .placeholder-icon {
-  font-size: 48px;
+  width: 44px;
+  height: 44px;
   margin-bottom: 8px;
+  border-radius: 8px;
+  border: 2px dashed #cbd5e1;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .machinery-picture-placeholder p {
@@ -1543,17 +2149,20 @@ export default {
 
 .filter-select {
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   font-size: 14px;
   min-width: 200px;
+  background: #223427;
+  color: #ecfbe2;
 }
 
 .bookings-table-container {
-  background: white;
+  background: #1f3024;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
 }
 
 .bookings-table {
@@ -1562,20 +2171,21 @@ export default {
 }
 
 .bookings-table thead {
-  background: #f8f9fa;
+  background: #223427;
 }
 
 .bookings-table th {
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #e5e7eb;
+  color: #eaf9e0;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
 }
 
 .bookings-table td {
   padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: rgba(236, 252, 231, 0.9);
 }
 
 .booking-machinery {
@@ -1585,13 +2195,13 @@ export default {
 }
 
 .booking-machinery small {
-  color: #666;
+  color: rgba(220, 238, 211, 0.72);
   font-size: 12px;
 }
 
 .price-cell {
   font-weight: 600;
-  color: #059669;
+  color: #6ee7b7;
 }
 
 .badge {
@@ -1606,6 +2216,7 @@ export default {
 .badge-warning { background: #fef3c7; color: #92400e; }
 .badge-info { background: #e0e7ff; color: #3730a3; }
 .badge-success { background: #d1fae5; color: #065f46; }
+.badge-default { background: #e5e7eb; color: #374151; }
 
 .status-badge {
   display: inline-block;
@@ -1629,22 +2240,34 @@ export default {
 .btn-icon-small {
   padding: 6px 10px;
   border: none;
-  background: #f3f4f6;
+  background: #2a3d30;
+  color: #ecfbe2;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-icon-small:hover {
-  background: #e5e7eb;
+  background: #324a3b;
+}
+
+.btn-text-action {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+}
+
+.btn-icon-small.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.35);
 }
 
 .btn-icon-small.btn-danger:hover {
-  background: #fee2e2;
+  background: rgba(248, 113, 113, 0.35);
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #53b476 0%, #2f8f53 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -1657,11 +2280,11 @@ export default {
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, #45a669 0%, #267947 100%);
 }
 
 .btn-secondary {
-  background: #6b7280;
+  background: #3f4f44;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1684,7 +2307,9 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(8, 12, 10, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1692,13 +2317,14 @@ export default {
 }
 
 .modal-content {
-  background: white;
+  background: linear-gradient(155deg, rgba(24, 34, 29, 0.96) 0%, rgba(22, 31, 27, 0.94) 45%, rgba(19, 28, 24, 0.96) 100%);
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid rgba(116, 150, 128, 0.35);
+  box-shadow: 0 20px 60px rgba(6, 10, 8, 0.62);
 }
 
 .modal-large {
@@ -1711,7 +2337,7 @@ export default {
 
 .modal-header {
   padding: 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(152, 186, 164, 0.22);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1720,6 +2346,7 @@ export default {
 .modal-header h2 {
   margin: 0;
   font-size: 22px;
+  color: #f2eee4;
 }
 
 .modal-close {
@@ -1727,7 +2354,7 @@ export default {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: #d7cfbf;
 }
 
 .modal-body {
@@ -1738,43 +2365,199 @@ export default {
   margin-bottom: 20px;
 }
 
+/* Booking date calendar (FULL / capacity) */
+.booking-date-calendar {
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 20, 14, 0.45);
+}
+
+.cal-loading {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #a8d8b8;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cal-nav-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #ecfdf5;
+  flex: 1;
+  text-align: center;
+}
+
+.cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(34, 197, 94, 0.15);
+  color: #bbf7d0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.cal-nav-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.28);
+}
+
+.cal-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #86b89a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.cal-cell {
+  position: relative;
+  min-height: 48px;
+  padding: 4px 2px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ecfdf5;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cal-cell:hover:not(:disabled) {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(74, 222, 128, 0.12);
+}
+
+.cal-day-num {
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.cal-full-label {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fff;
+  line-height: 1;
+}
+
+.cal-cell--outside {
+  opacity: 0.25;
+}
+
+.cal-cell--disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.cal-cell--disabled:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cal-cell--full {
+  background: rgba(153, 27, 27, 0.55) !important;
+  border-color: rgba(254, 202, 202, 0.55) !important;
+  color: #fee2e2 !important;
+  cursor: not-allowed;
+}
+
+.cal-cell--full:hover {
+  background: rgba(153, 27, 27, 0.6) !important;
+  border-color: rgba(254, 202, 202, 0.65) !important;
+}
+
+.cal-cell--selected:not(.cal-cell--disabled) {
+  outline: 2px solid rgba(74, 222, 128, 0.85);
+  outline-offset: 1px;
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.cal-selected-hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #b6e4c5;
+}
+
+.cal-selected-hint--muted {
+  color: #89b099;
+  font-style: italic;
+}
+
 .form-label {
   display: block;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #333;
+  color: #eaf9e0;
 }
 
 .form-input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: 8px;
   font-size: 14px;
+  box-sizing: border-box;
+  background: #223427;
+  color: #ecfbe2;
 }
 
 .form-input.input-error {
   border-color: #ef4444;
-  background-color: #fef2f2;
+  background-color: rgba(254, 242, 242, 0.95);
+  color: #1e293b;
 }
 
 .form-input.input-readonly {
   background-color: #f3f4f6;
   cursor: not-allowed;
+  color: #1e293b;
 }
 
 .form-hint {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #6b7280;
+  color: rgba(209, 250, 229, 0.65);
 }
 
 .error-message {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #ef4444;
+  color: #fca5a5;
   font-weight: 600;
 }
 
@@ -1802,7 +2585,7 @@ export default {
 }
 
 .price-summary {
-  background: #f9fafb;
+  background: #223427;
   border-radius: 8px;
   padding: 16px;
   margin-top: 20px;
@@ -1816,7 +2599,7 @@ export default {
 
 .total-price {
   font-size: 24px;
-  color: #059669;
+  color: #6ee7b7;
 }
 
 .modal-actions {
@@ -1835,7 +2618,7 @@ export default {
 .detail-section h3 {
   font-size: 18px;
   margin: 0 0 16px 0;
-  color: #1a1a1a;
+  color: #ecfbe2;
 }
 
 .details-grid {
@@ -1852,12 +2635,12 @@ export default {
 
 .detail-item label {
   font-weight: 600;
-  color: #666;
+  color: rgba(220, 238, 211, 0.75);
   font-size: 14px;
 }
 
 .price-highlight {
-  color: #059669;
+  color: #6ee7b7;
   font-size: 20px;
 }
 
@@ -1878,15 +2661,51 @@ export default {
 }
 
 .notes-text {
-  background: #f9fafb;
+  background: #223427;
   padding: 16px;
   border-radius: 8px;
-  color: #333;
+  color: #ecfbe2;
   line-height: 1.6;
 }
 
+.payments-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 30, 22, 0.5);
+}
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.payments-table th,
+.payments-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ecfbe2;
+}
+
+.payments-table th {
+  background: #1a2b20;
+  font-weight: 700;
+  text-align: left;
+}
+
+.payments-table .text-right {
+  text-align: right;
+}
+
+.empty-payments {
+  padding: 1rem;
+  color: rgba(220, 238, 211, 0.75);
+  font-size: 0.92rem;
+}
+
 .booking-summary {
-  background: #f9fafb;
+  background: #223427;
   padding: 16px;
   border-radius: 8px;
   margin: 16px 0;
@@ -1894,6 +2713,7 @@ export default {
 
 .booking-summary p {
   margin: 8px 0;
+  color: rgba(236, 252, 231, 0.92);
 }
 
 .loading-container,
@@ -1902,17 +2722,21 @@ export default {
 .empty-cell {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: rgba(220, 238, 211, 0.78);
 }
 
 .empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 12px;
+  border: 2px dashed rgba(220, 238, 211, 0.35);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .loading-spinner {
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #3b82f6;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top: 3px solid #86efac;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -1923,6 +2747,40 @@ export default {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .glass-header {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .alert {
@@ -1937,7 +2795,7 @@ export default {
   justify-content: space-between;
   gap: 12px;
   min-width: 300px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
   z-index: 2000;
 }
 

@@ -16,9 +16,9 @@ cd backend/migrations
 mysql -u root -p calffa < create_share_capital_module.sql
 ```
 
-**Or from anywhere (full path):**
+**Or from repository root:**
 ```bash
-mysql -u root -p calffa < C:\xampp\htdocs\calffa_blockchain_integrated\CALLFA\System_calffa\backend\migrations\create_share_capital_module.sql
+mysql -u root -p calffa < CALLFA/System_calffa/backend/migrations/create_share_capital_module.sql
 ```
 
 **If you're prompted for password, enter your MySQL password (usually empty for XAMPP default setup, just press Enter).**

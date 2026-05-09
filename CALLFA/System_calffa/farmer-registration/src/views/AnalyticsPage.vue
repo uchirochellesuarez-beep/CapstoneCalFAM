@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-white p-4 lg:p-8 font-sans">
+  <div class="min-h-screen glass-module-page bg-gradient-to-br from-white via-emerald-50 to-white p-4 lg:p-8 font-sans">
     
     <!-- Header -->
     <div class="mb-8">

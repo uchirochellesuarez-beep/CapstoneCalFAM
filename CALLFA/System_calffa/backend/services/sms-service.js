@@ -69,24 +69,83 @@ const getSmsConfig = () => {
       endpoint: process.env.SMS_SEMAPHORE_ENDPOINT || 'https://api.semaphore.co/api/v4/messages',
       apiKey: process.env.SMS_SEMAPHORE_API_KEY || '',
       senderName: process.env.SMS_SEMAPHORE_SENDER_NAME || ''
+    },
+    philsms: {
+      endpoint:
+        process.env.SMS_PHILSMS_ENDPOINT ||
+        'https://dashboard.philsms.com/api/v3/sms/send',
+      apiToken: String(process.env.SMS_PHILSMS_API_TOKEN || '').trim(),
+      senderId: String(process.env.SMS_PHILSMS_SENDER_ID || '').trim(),
+      messageType: String(process.env.SMS_PHILSMS_TYPE || 'plain').trim() || 'plain'
     }
   };
 };
 
-const buildAssistanceSmsMessage = ({ farmerName, assistanceLabel, notes }) => {
-  const displayName = farmerName || 'Farmer';
-  const baseMessage = `Hello ${displayName}, you have been approved to receive ${assistanceLabel}. Please wait for further instructions regarding the schedule and distribution details.`;
-  const trimmedNotes = String(notes || '').trim();
+/** PhilSMS expects country code digits only, e.g. 639171234567 (no + prefix). */
+const formatRecipientForPhilSms = (e164Formatted) => {
+  const s = String(e164Formatted || '').trim().replace(/^\+/, '');
+  return s.replace(/\D/g, '');
+};
 
-  if (!trimmedNotes) {
-    return baseMessage;
+/** How many sacks / units show in SMS (Tagalog). */
+const formatAssistanceQuantitySms = (quantity, unit) => {
+  const num = Number(quantity);
+  const u = String(unit || '').trim().toLowerCase();
+  if (!Number.isFinite(num) || num <= 0) {
+    return 'nakatakdang dami (ilalagay ang detalye sa susunod na announcement)';
   }
+  if (
+    !u ||
+    u === 'sako' ||
+    u === 'sacks' ||
+    u === 'bags' ||
+    u === 'bag' ||
+    u.includes('sack') ||
+    u.includes('sako') ||
+    u.includes('bag')
+  ) {
+    return `${num} na sako`;
+  }
+  return `${num} ${String(unit).trim()}`;
+};
 
-  const compactNotes = trimmedNotes.length > 120
-    ? `${trimmedNotes.slice(0, 117)}...`
-    : trimmedNotes;
+const tagalogGoodsPhrase = (assistanceType, assistanceLabelFallback) => {
+  const t = String(assistanceType || '').trim();
+  if (t === 'seeds') return 'binhi';
+  if (t === 'fertilizer') return 'pataba (fertilizer)';
+  if (t === 'both') return 'binhi at pataba';
+  if (assistanceLabelFallback) return assistanceLabelFallback;
+  return 'agricultural assistance';
+};
 
-  return `${baseMessage} Details: ${compactNotes}`;
+/**
+ * SMS sa magsasaka pagkalikha ng seed/fertilizer allocation.
+ * Panatilihing maikli; iwasan ang mahabang unicode (segment limits).
+ */
+const buildAssistanceSmsMessage = ({
+  farmerName,
+  assistanceType,
+  quantity,
+  unit,
+  notes,
+  assistanceLabel // legacy: kung walang assistanceType
+}) => {
+  const first =
+    String(farmerName || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)[0] || 'Magsasaka';
+  const labelFallback = assistanceLabel || null;
+  const goods = tagalogGoodsPhrase(assistanceType, labelFallback);
+  const qtyStr = formatAssistanceQuantitySms(quantity, unit);
+
+  let body = `${first}, makakatanggap ka ng ${goods} (${qtyStr}). Humanda sa susunod na announcement sa pagtanggap ng tulong.`;
+  const n = String(notes || '').trim();
+  if (n) {
+    const short = n.length > 72 ? `${n.slice(0, 69)}...` : n;
+    body += ` Karagdagan: ${short}`;
+  }
+  return body;
 };
 
 const sendViaAndroidGateway = async ({ to, message, config }) => {
@@ -153,6 +212,81 @@ const sendViaSemaphore = async ({ to, message, config }) => {
     status: 'sent',
     provider: 'semaphore',
     providerResponse: response.data || null
+  };
+};
+
+const sendViaPhilSms = async ({ to, message, config }) => {
+  const token = String(config.apiToken || '').trim();
+  if (!token) {
+    return {
+      success: false,
+      status: 'not_configured',
+      provider: 'philsms',
+      error: 'PhilSMS API token is not configured (SMS_PHILSMS_API_TOKEN).'
+    };
+  }
+
+  const senderId = String(config.senderId || '').trim();
+  if (!senderId) {
+    return {
+      success: false,
+      status: 'not_configured',
+      provider: 'philsms',
+      error: 'PhilSMS sender_id is not configured (SMS_PHILSMS_SENDER_ID).'
+    };
+  }
+
+  const recipient = formatRecipientForPhilSms(to);
+  if (!recipient || recipient.length < 11) {
+    return {
+      success: false,
+      status: 'failed',
+      provider: 'philsms',
+      error: 'Could not format phone number for PhilSMS.'
+    };
+  }
+
+  const response = await axios.post(
+    config.endpoint,
+    {
+      recipient,
+      sender_id: senderId,
+      type: config.messageType || 'plain',
+      message
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      timeout: config.timeoutMs
+    }
+  );
+
+  const body = response.data;
+  const ok = body && String(body.status).toLowerCase() === 'success';
+
+  if (ok) {
+    return {
+      success: true,
+      status: 'sent',
+      provider: 'philsms',
+      providerResponse: body
+    };
+  }
+
+  const errMsg =
+    body && (body.message || body.error || body.errors)
+      ? String(body.message || body.error || (Array.isArray(body.errors) ? body.errors.join(' ') : body.errors))
+      : 'PhilSMS rejected the send request.';
+
+  return {
+    success: false,
+    status: 'failed',
+    provider: 'philsms',
+    error: errMsg,
+    providerResponse: body
   };
 };
 
@@ -232,6 +366,12 @@ const sendSmsNotification = async ({ to, message }) => {
         to: normalizedPhone.formatted,
         message,
         config: { ...config.httpsms, timeoutMs: config.timeoutMs }
+      });
+    } else if (config.provider === 'philsms') {
+      result = await sendViaPhilSms({
+        to: normalizedPhone.formatted,
+        message,
+        config: { ...config.philsms, timeoutMs: config.timeoutMs }
       });
     } else {
       result = await sendViaAndroidGateway({

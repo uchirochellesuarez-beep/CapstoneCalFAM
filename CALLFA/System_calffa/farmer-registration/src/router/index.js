@@ -1,10 +1,9 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import FarmerSignup from '../views/FarmerSignup.vue'
-import AdminDashboard from '../views/AdminDashboard.vue'
+import DashboardEntry from '../views/DashboardEntry.vue'
 import Login from '../views/Login.vue'
 import GoogleRegistration from '../views/GoogleRegistration.vue'
-import BarangayNoticePage from '../views/BarangayNoticePage.vue'
 import FarmerTablePage from '../views/FarmerTablePage.vue'
 import MembersSummaryPage from '../views/MembersSummaryPage.vue'
 import { useAuthStore } from '../stores/authStore'
@@ -12,20 +11,24 @@ import { useAuthStore } from '../stores/authStore'
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 
 const routes = [
-  { path: '/', redirect: '/login' },
+  {
+    path: '/landing',
+    component: () => import('../views/LandingPage.vue'),
+    meta: { requiresGuest: true }
+  },
   { path: '/signup', component: FarmerSignup },
   { path: '/login', component: Login, meta: { requiresGuest: true } },
   { path: '/google-registration', component: GoogleRegistration, meta: { requiresGuest: true } },
-  { path: '/barangay-notice', component: BarangayNoticePage, meta: { requiresAuth: true } },
+  { path: '/barangay-notice', redirect: '/dashboard' },
 
   { 
     path: '/', 
     component: AuthenticatedLayout,
     meta: { requiresAuth: true },
     children: [
-      // Dashboard Route (unified for all users)
+      // Dashboard: unified AdminDashboard (role-based copy and metrics)
       { path: 'welcome', redirect: '/dashboard' },
-      { path: 'dashboard', component: AdminDashboard },
+      { path: 'dashboard', component: DashboardEntry },
       { path: 'admin', redirect: '/dashboard' },
       
       // Operations Routes
@@ -34,7 +37,6 @@ const routes = [
       { path: 'loan', component: () => import('../views/LoanPage.vue') },
       { path: 'admin-loans', component: () => import('../views/AdminLoansPage.vue'), meta: { requiresLoanManagement: true } },
       { path: 'officer-loans', component: () => import('../views/OfficerLoansPage.vue'), meta: { requiresOfficerLoan: true } },
-      { path: 'loan-ai-assessment', name: 'LoanAIAssessment', component: () => import('../views/LoanAIAssessmentPage.vue'), meta: { requiresLoanManagement: true } },
       
       // Farmer Income Routes
       { path: 'farmer-income', component: () => import('../views/FarmerIncomePage.vue'), meta: { requiresFarmer: true } },
@@ -58,12 +60,12 @@ const routes = [
       { path: 'members-summary', component: MembersSummaryPage, meta: { requiresFarmingAccess: true } },
       
       // Barangays Route
-      { path: 'barangays', component: () => import('../views/BarangaysPage.vue') },
+      { path: 'barangays', component: () => import('../views/BarangaysPage.vue'), meta: { requiresAdmin: true } },
       
       // Admin-Only Routes
-      { path: 'system-activity', component: () => import('../views/SystemActivityPage.vue'), meta: { requiresAdmin: true } },
       { path: 'financial-overview', component: () => import('../views/FinancialOverviewPage.vue'), meta: { requiresFinancial: true } },
       { path: 'share-capital', component: () => import('../views/ShareCapitalPage.vue') },
+      { path: 'seed-fertilizer-plan', component: () => import('../views/SeedFertilizerPlanPage.vue'), meta: { requiresFinancial: true } },
       { path: 'notification-center', component: () => import('../views/NotificationCenterPage.vue'), meta: { requiresAdmin: true } },
       { path: 'audit-logs', component: () => import('../views/AuditLogs.vue'), meta: { requiresAdmin: true } },
       { path: 'settings', component: () => import('../views/Settings.vue') }
@@ -81,6 +83,11 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const isLoggedIn = authStore.isLoggedIn()
   const userRole = authStore.currentUser?.role
+
+  if (to.path === '/') {
+    next(isLoggedIn ? '/dashboard' : '/landing')
+    return
+  }
 
   // Check if route requires authentication
   // Check both route meta and parent meta for nested routes

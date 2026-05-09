@@ -25,9 +25,11 @@
   /* Neutral Naturals - Organic and Clean */
   --text-dark: #2f4f2f;            /* Dark green-gray - Readability */
   --text-light: #708090;           /* Slate gray - Subtle */
-  --background: #fafaf0;           /* Floral white - Natural */
-  --card-bg: #ffffff;              /* Pure white - Clean */
-  --border: #d3d3d3;               /* Light gray - Soft */
+  --background: #bcdcc8;           /* Visible green-gray page tint */
+  --surface-app: #aed3bf;           /* Sidebar-adjacent shell — clearly green */
+  --surface-content: #c8e5d5;       /* Main panel chrome — matches coop theme */
+  --card-bg: #e6f7ed;              /* Cards/forms — soft mint-white */
+  --border: #9bc9ad;               /* Stronger green border */
   --shadow: rgba(0, 0, 0, 0.06);  /* Very soft shadow - Gentle */
 
   /* Backdrop Theme - Textured Green Surface (Enhanced) */
@@ -61,7 +63,12 @@ body {
   font-size: 16px;
   line-height: 1.6;
   color: var(--text-dark);
-  background: linear-gradient(135deg, var(--background) 0%, var(--warm-beige) 100%);
+  background: linear-gradient(
+    145deg,
+    var(--surface-app) 0%,
+    #b5d9c4 48%,
+    var(--surface-content) 100%
+  );
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -308,154 +315,6 @@ body.backdrop-theme-dark::before {
   position: relative;
 }
 
-/* Footer Styles */
-.app-footer {
-  background: linear-gradient(135deg, #49a96d, #2f8f53);
-  color: white;
-  padding: 2rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: auto;
-  position: relative;
-  overflow: hidden;
-}
-
-.app-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 20px,
-      rgba(255, 255, 255, 0.02) 20px,
-      rgba(255, 255, 255, 0.02) 40px
-    );
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2rem;
-  position: relative;
-  z-index: 1;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-logo {
-  font-size: 32px;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  animation: sway 3s ease-in-out infinite;
-}
-
-@keyframes sway {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-
-.footer-brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-brand-name {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: white;
-  line-height: 1.2;
-  font-family: 'Poppins', sans-serif;
-}
-
-.footer-brand-tagline {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.footer-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
-}
-
-.footer-contact {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.contact-icon {
-  font-size: 16px;
-}
-
-.footer-version {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Courier New', monospace;
-}
-
-.footer-divider {
-  opacity: 0.5;
-}
-
-.footer-text {
-  margin: 0;
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.footer-icons {
-  display: flex;
-  gap: 1rem;
-  opacity: 0.7;
-}
-
-.footer-icon {
-  font-size: 1.25rem;
-  transition: opacity 0.2s;
-}
-
-.footer-icon:hover {
-  opacity: 1;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .header-content {
@@ -487,27 +346,8 @@ body.backdrop-theme-dark::before {
     justify-content: center;
   }
 
-  .footer-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
-  }
-
-  .footer-info {
-    align-items: center;
-  }
-
-  .footer-contact {
-    align-items: center;
-  }
-
   .main-content {
     padding: 1rem 0.5rem;
-  }
-
-  .footer-content {
-    flex-direction: column;
-    gap: 0.5rem;
   }
 }
 
@@ -551,7 +391,7 @@ body.backdrop-theme-dark::before {
 .shadow-lg { box-shadow: 0 10px 15px -3px var(--shadow); }
 
 .bg-transparent { background-color: transparent; }
-.bg-white { background-color: white; }
+.bg-white { background-color: var(--card-bg); }
 .bg-green-50 { background-color: var(--light-green); }
 .bg-green-100 { background-color: #dcfce7; }
 .bg-red-100 { background-color: #fef2f2; }

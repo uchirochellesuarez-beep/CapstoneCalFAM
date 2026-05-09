@@ -1,5 +1,5 @@
 <template>
-  <div class="notification-center-container">
+  <div class="notification-center-container glass-module-page">
     <div class="page-header">
       <h1 class="page-title">
         <span class="title-icon">🔔</span>

@@ -105,7 +105,7 @@ If pictures don't show, check:
 
 1. **File Directory Exists:**
    ```
-   C:\xampp\htdocs\calffa_blockchain_integrated\CALLFA\System_calffa\backend\uploads\machinery\
+   `CALLFA/System_calffa/backend/uploads/machinery/` (from repository root — use your clone’s absolute path)
    ```
    Should contain uploaded files like: `machinery-1773029544211-507125482.jpg`
 

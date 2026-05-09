@@ -650,6 +650,85 @@ router.get('/expenses-breakdown', verifyFinancialAccess, async (req, res) => {
   }
 });
 
+/**
+ * Ranking of machinery by completed bookings only (status = Completed).
+ * Respects financial page barangay scope and optional booking_date range.
+ */
+router.get('/booking-usage-stats', verifyFinancialAccess, async (req, res) => {
+  try {
+    const { start_date, end_date, barangay_id } = req.query;
+    const userRole = req.userRole;
+    const userBarangayId = req.userBarangayId;
+
+    let limit = parseInt(req.query.limit, 10);
+    if (Number.isNaN(limit) || limit < 1) limit = 20;
+    if (limit > 50) limit = 50;
+
+    let query = `
+      SELECT 
+        mb.machinery_id,
+        mi.machinery_name,
+        mi.machinery_type,
+        mi.barangay_id,
+        COALESCE(bg.name, '') AS barangay_name,
+        COUNT(*) AS booking_count,
+        COALESCE(SUM(mb.area_size), 0) AS total_area_booked,
+        MAX(mb.area_unit) AS area_unit_hint
+      FROM machinery_bookings mb
+      INNER JOIN machinery_inventory mi ON mi.id = mb.machinery_id
+      LEFT JOIN barangays bg ON bg.id = mi.barangay_id
+      WHERE mb.status = 'Completed'
+    `;
+    const params = [];
+
+    if (userRole === 'admin' && barangay_id) {
+      query += ' AND mi.barangay_id = ?';
+      params.push(parseInt(barangay_id, 10));
+    } else if (userRole !== 'admin' && userBarangayId) {
+      query += ' AND mi.barangay_id = ?';
+      params.push(userBarangayId);
+    }
+
+    if (start_date) {
+      query += ' AND mb.booking_date >= ?';
+      params.push(start_date);
+    }
+    if (end_date) {
+      query += ' AND mb.booking_date <= ?';
+      params.push(end_date);
+    }
+
+    query += `
+      GROUP BY mb.machinery_id, mi.machinery_name, mi.machinery_type, mi.barangay_id, bg.name
+      ORDER BY booking_count DESC, mi.machinery_name ASC
+      LIMIT ${limit}
+    `;
+
+    const [rows] = await pool.execute(query, params);
+
+    const leaders = rows.map((row) => ({
+      machinery_id: row.machinery_id,
+      machinery_name: row.machinery_name,
+      machinery_type: row.machinery_type,
+      barangay_id: row.barangay_id,
+      barangay_name: row.barangay_name,
+      booking_count: parseInt(row.booking_count, 10),
+      total_area_booked: parseFloat(row.total_area_booked) || 0,
+      area_unit_hint: row.area_unit_hint || ''
+    }));
+
+    res.json({
+      success: true,
+      leaders,
+      userRole,
+      userBarangayId
+    });
+  } catch (error) {
+    console.error('Error fetching booking usage stats:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch machinery booking stats' });
+  }
+});
+
 // ==================== ACCOUNTS RECEIVABLE & COLLECTIONS ====================
 
 // GET Accounts Receivable list with summary (barangay-based)
@@ -776,17 +855,13 @@ router.get('/collections', verifyFinancialAccess, async (req, res) => {
 // POST Record a collection (treasurer only)
 router.post('/collections', verifyTreasurerAccess, async (req, res) => {
   try {
-    const { 
+    const {
       booking_id, 
       collection_amount, 
       collection_date, 
       receipt_number, 
       payment_method = 'cash', 
       remarks,
-      payment_type = 'full', // 'full' or 'partial'
-      include_interest = false,
-      interest_amount = 0,
-      interest_season = 1, // Which season applies (1 or 2)
       total_collection = collection_amount // Total including interest
     } = req.body;
     const { user_id } = req.body;
@@ -814,26 +889,16 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
     const collectionAmt = parseFloat(collection_amount);
     const existingInterest = parseFloat(booking[0].pending_interest) || 0;
     
-    // Determine if interest should actually be applied
+    // Determine payment type from amount vs remaining balance (server-authoritative).
+    const initialRemainingBalance = totalPrice - currentTotalPaid;
+    const isPartialPayment = collectionAmt < (initialRemainingBalance - 0.01);
+    const finalPaymentType = isPartialPayment ? 'partial' : 'full';
+
+    // Automatically apply one-time 2% interest when payment is partial and
+    // no prior interest was added yet. Interest is based on full amount due.
     let interestAmt = 0;
-    if (include_interest && payment_type === 'partial') {
-      // Prevent duplicate interest - only allow if no interest was previously applied
-      if (existingInterest > 0) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Interest has already been applied to this booking. It can only be applied once.' 
-        });
-      }
-      
-      // Interest can only be decided on the first payment (no prior payments)
-      if (currentTotalPaid > 0.01) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Interest can only be applied on the first partial payment. The decision window has passed.' 
-        });
-      }
-      
-      interestAmt = parseFloat(interest_amount) || 0;
+    if (isPartialPayment && existingInterest <= 0) {
+      interestAmt = parseFloat((totalPrice * 0.02).toFixed(2));
     }
     
     // If interest is applied, add it to total_price (one-time increase)
@@ -856,16 +921,16 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       });
     }
     
-    // Insert payment record — only store interest fields when actually applied
+    // Insert payment record — store auto-applied interest when applicable
     const actualInterestAmount = interestAmt > 0 ? interestAmt : 0;
     const actualInterestApplied = interestAmt > 0 ? 1 : 0;
-    const actualInterestSeason = interestAmt > 0 ? interest_season : 0;
+    const actualInterestSeason = interestAmt > 0 ? 1 : 0;
     
     const [result] = await pool.execute(
       `INSERT INTO machinery_booking_payments 
        (booking_id, payment_date, amount, payment_method, receipt_number, remarks, recorded_by, payment_type, interest_amount, interest_applied, interest_season)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [booking_id, collection_date, collection_amount, payment_method, receipt_number.trim(), remarks, user_id, payment_type, actualInterestAmount, actualInterestApplied, actualInterestSeason]
+      [booking_id, collection_date, collection_amount, payment_method, receipt_number.trim(), remarks, user_id, finalPaymentType, actualInterestAmount, actualInterestApplied, actualInterestSeason]
     );
     
     // Update booking with new total_paid and payment_date
@@ -914,10 +979,12 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       success: true, 
       message: 'Collection recorded successfully and moved to income',
       payment_id: result.insertId,
-      payment_type: payment_type,
-      interest_season: interest_season,
-      interest_applied: include_interest,
-      total_collection: total_collection
+      payment_type: finalPaymentType,
+      interest_season: actualInterestSeason,
+      interest_applied: actualInterestApplied === 1,
+      interest_amount: actualInterestAmount,
+      total_collection: total_collection,
+      auto_interest_rule: '2% (Partial)'
     });
   } catch (error) {
     console.error('Error recording collection:', error);

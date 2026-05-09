@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 lg:p-6">
+  <div class="min-h-screen bg-gray-50 p-4 lg:p-6 glass-module-page quick-actions-page">
     <DashboardHeader :user="authStore.currentUser" />
     <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">⚡ Quick Actions</h1>
+      <h1 class="text-3xl font-bold text-gray-800 mb-6 page-title">⚡ Quick Actions</h1>
       <QuickActions />
     </div>
   </div>

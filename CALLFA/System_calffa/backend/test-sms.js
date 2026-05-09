@@ -37,6 +37,10 @@ async function main() {
   if (result.success) {
     console.log('SMS sent successfully.');
     console.log('Recipient:', result.recipient);
+    const d = result.providerResponse?.data;
+    if (d && typeof d === 'object' && (d.status || d.uid)) {
+      console.log('PhilSMS:', d.status || 'ok', d.uid ? `(uid ${d.uid})` : '');
+    }
     process.exit(0);
   }
 

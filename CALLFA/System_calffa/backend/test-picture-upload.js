@@ -66,7 +66,7 @@ async function testPictureUpload() {
     console.log(`  2. Click edit on "Harvester" (ID: ${machineId})`);
     console.log(`  3. Click "Upload Picture" button`);
     console.log(`  4. Select an image file`);
-    console.log(`  5. Files will be saved to: C:\\xampp\\htdocs\\calffa_blockchain_integrated\\CALLFA\\System_calffa\\backend\\uploads\\machinery`);
+    console.log(`  5. Files will be saved to: ${uploadDir}`);
 
     connection.release();
     pool.end();

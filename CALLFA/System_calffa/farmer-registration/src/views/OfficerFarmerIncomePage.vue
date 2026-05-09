@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container income-hub-subpage">
     <div class="page-header">
       <h1 class="page-title">🌾 Talaan ng Kita ng mga Magsasaka</h1>
       <p class="page-subtitle">Suriin ang mga naitatalang kita mula sa mga magsasaka sa iyong barangay</p>
@@ -109,7 +109,7 @@
 
     <!-- VIEW DETAIL MODAL - RECORD -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" @click.self="closeDetailModal">
         <div class="modal-container">
           <div class="modal-header">
             <div class="modal-title-with-status">
@@ -1349,5 +1349,308 @@ onMounted(() => {
   .status-label {
     font-size: 0.65rem;
   }
+}
+
+/* Dark shell when embedded under FarmerIncomeHubPage */
+.income-hub-subpage.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2px 1.25rem;
+  background: transparent;
+}
+
+.income-hub-subpage .page-header {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.35rem;
+  background: linear-gradient(145deg, rgba(18, 43, 29, 0.96), rgba(14, 33, 23, 0.95));
+  border: 1px solid rgba(126, 184, 145, 0.22);
+  border-radius: 22px;
+  box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
+}
+
+.income-hub-subpage .page-title {
+  color: #4ade80;
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-weight: 800;
+}
+
+.income-hub-subpage .page-subtitle {
+  color: rgba(220, 252, 231, 0.76);
+}
+
+.income-hub-subpage .tab-navigation {
+  border-bottom: none;
+  margin-bottom: 1.25rem;
+  padding: 12px 14px;
+  background: linear-gradient(145deg, rgba(66, 129, 92, 0.16), rgba(41, 88, 61, 0.18));
+  border: 1px solid rgba(126, 184, 145, 0.24);
+  border-radius: 18px;
+  gap: 10px;
+}
+
+.income-hub-subpage .tab-navigation .tab-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 232, 179, 0.25);
+  border-bottom: 1px solid rgba(255, 232, 179, 0.25);
+  background: linear-gradient(135deg, rgba(156, 107, 40, 0.55), rgba(108, 149, 94, 0.55));
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.income-hub-subpage .tab-navigation .tab-btn:hover {
+  color: #fff;
+  filter: brightness(1.08);
+}
+
+.income-hub-subpage .tab-navigation .tab-btn.active {
+  color: #052e16;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 55%, #4ade80 100%);
+  border-color: rgba(220, 252, 231, 0.85);
+}
+
+.income-hub-subpage .alert-error {
+  background: rgba(127, 29, 29, 0.4);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.income-hub-subpage .alert-success {
+  background: rgba(21, 128, 61, 0.35);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+.income-hub-subpage .alert-warning {
+  background: rgba(146, 64, 14, 0.35);
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.4);
+}
+
+.income-hub-subpage .search-box {
+  max-width: none;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(126, 184, 145, 0.35);
+}
+
+.income-hub-subpage .search-icon {
+  color: rgba(186, 240, 200, 0.55);
+}
+
+.income-hub-subpage .search-input {
+  color: #ecfdf5;
+}
+
+.income-hub-subpage .search-input::placeholder {
+  color: rgba(220, 252, 231, 0.45);
+}
+
+.income-hub-subpage .loading-state {
+  color: rgba(220, 252, 231, 0.8);
+}
+
+.income-hub-subpage .spinner {
+  border-color: rgba(255, 255, 255, 0.15);
+  border-top-color: #4ade80;
+}
+
+.income-hub-subpage .empty-state {
+  color: rgba(220, 252, 231, 0.78);
+  padding: 2rem 1.25rem;
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(18, 43, 29, 0.82), rgba(14, 33, 23, 0.8));
+  border: 1px solid rgba(126, 184, 145, 0.2);
+}
+
+.income-hub-subpage .record-card {
+  background: linear-gradient(145deg, rgba(24, 48, 34, 0.96), rgba(14, 33, 23, 0.94));
+  border: 1px solid rgba(126, 184, 145, 0.22);
+  box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
+}
+
+.income-hub-subpage .record-card:hover {
+  box-shadow: 0 18px 40px rgba(5, 12, 8, 0.28);
+}
+
+.income-hub-subpage .record-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.income-hub-subpage .farmer-name {
+  color: #86efac;
+}
+
+.income-hub-subpage .record-date {
+  color: rgba(220, 252, 231, 0.62);
+}
+
+.income-hub-subpage .status-submitted {
+  background: rgba(59, 130, 246, 0.25);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.income-hub-subpage .status-review,
+.income-hub-subpage .status-upcoming {
+  background: rgba(250, 204, 21, 0.16);
+  color: #fde68a;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+}
+
+.income-hub-subpage .status-eligible,
+.income-hub-subpage .status-received {
+  background: rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.income-hub-subpage .detail-label {
+  color: rgba(220, 252, 231, 0.55);
+}
+
+.income-hub-subpage .record-detail span:last-child {
+  color: rgba(236, 253, 245, 0.92);
+}
+
+.income-hub-subpage .record-financials {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.income-hub-subpage .financial-item > span:first-child {
+  color: rgba(220, 252, 231, 0.55);
+}
+
+.income-hub-subpage .financial-item.income > span:last-child {
+  color: #93c5fd;
+}
+
+.income-hub-subpage .financial-item.expense > span:last-child {
+  color: #fca5a5;
+}
+
+.income-hub-subpage .financial-item.profit > span:last-child {
+  color: #86efac;
+}
+
+.income-hub-subpage .distributions-header h2 {
+  color: #86efac;
+}
+
+.income-hub-subpage .distribution-card {
+  background: linear-gradient(145deg, rgba(18, 43, 29, 0.92), rgba(14, 33, 23, 0.9));
+  border: 1px solid rgba(126, 184, 145, 0.22);
+  color: rgba(226, 234, 229, 0.9);
+}
+
+.income-hub-subpage .distribution-form,
+.income-hub-subpage .form-group input,
+.income-hub-subpage .form-group select,
+.income-hub-subpage .form-group textarea {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(126, 184, 145, 0.35);
+  color: #ecfdf5;
+}
+
+.income-hub-subpage .form-group label {
+  color: rgba(220, 252, 231, 0.8);
+}
+
+.income-hub-subpage .form-actions {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.income-hub-subpage .btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(236, 253, 245, 0.9);
+}
+
+.income-hub-subpage .status-timeline,
+.income-hub-subpage .timeline-label {
+  color: rgba(220, 252, 231, 0.85);
+}
+
+/* Teleported detail modal */
+.farmer-income-hub-modal.modal-overlay {
+  background: rgba(6, 12, 9, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.farmer-income-hub-modal .modal-container {
+  background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99));
+  border: 1px solid rgba(126, 184, 145, 0.28);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.farmer-income-hub-modal .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.farmer-income-hub-modal .modal-header h2 {
+  color: #ecfdf5;
+}
+
+.farmer-income-hub-modal .modal-close {
+  color: rgba(220, 252, 231, 0.7);
+}
+
+.farmer-income-hub-modal .modal-close:hover {
+  color: #fff;
+}
+
+.farmer-income-hub-modal .modal-body {
+  color: rgba(226, 234, 229, 0.92);
+}
+
+.farmer-income-hub-modal .detail-section-title {
+  color: #bbf7d0;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.farmer-income-hub-modal .cell-label {
+  color: rgba(220, 252, 231, 0.55);
+}
+
+.farmer-income-hub-modal .cell-value {
+  color: #ecfdf5;
+}
+
+.farmer-income-hub-modal .detail-table thead {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.farmer-income-hub-modal .detail-table th {
+  color: rgba(236, 253, 245, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.farmer-income-hub-modal .detail-table td {
+  color: rgba(226, 234, 229, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.farmer-income-hub-modal .detail-table tfoot tr {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.farmer-income-hub-modal .modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.farmer-income-hub-modal .summary-detail-section {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(126, 184, 145, 0.25);
+}
+
+.farmer-income-hub-modal .no-data {
+  color: rgba(220, 252, 231, 0.6);
+}
+
+.farmer-income-hub-modal .expense-row {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  color: rgba(226, 234, 229, 0.88);
+}
+
+.farmer-income-hub-modal .expense-row.total-row {
+  background: rgba(0, 0, 0, 0.25);
+  color: #ecfdf5;
 }
 </style>

@@ -1,13 +1,12 @@
 <template>
-  <div class="financial-overview-container">
+  <div class="financial-overview-container glass-module-page">
     <!-- Header -->
     <div class="page-header">
       <div class="page-header-left">
         <h1 class="page-title">
-          <span class="title-icon">💰</span>
           Financial Overview
         </h1>
-        <p class="page-subtitle">System-wide financial metrics, income, expenses, and savings breakdown</p>
+        <h2 class="page-subtitle">System-wide financial metrics, income, expenses, and savings breakdown</h2>
       </div>
       <div class="header-actions">
         <button class="export-btn" @click="exportReport('csv')">📥 Export CSV</button>
@@ -18,28 +17,24 @@
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">💰</div>
         <div class="stat-info">
           <div class="stat-label">Total Loans Disbursed</div>
           <div class="stat-value income">₱{{ totalLoansDisbursed.toLocaleString() }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">💵</div>
         <div class="stat-info">
           <div class="stat-label">Payments Received</div>
           <div class="stat-value savings">₱{{ totalPaymentsReceived.toLocaleString() }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">💳</div>
         <div class="stat-info">
           <div class="stat-label">Outstanding Balance</div>
           <div class="stat-value expense">₱{{ outstandingBalance.toLocaleString() }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📊</div>
         <div class="stat-info">
           <div class="stat-label">Active Loans</div>
           <div class="stat-value">{{ activeLoansCount }}</div>
@@ -643,65 +638,100 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Open+Sans:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap');
+
 /* Container and base layout */
 .financial-overview-container {
   min-height: calc(100vh - 70px);
-  padding: 20px;
+  padding: 28px 20px 20px;
   max-width: 1280px;
   margin: 0 auto;
   background: #f9fafb;
   font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+.financial-overview-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(45, 212, 191, 0.10) 0%, transparent 60%),
+    radial-gradient(circle at 75% 75%, rgba(163, 230, 53, 0.08) 0%, transparent 30%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Header */
 .page-header {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   gap: 16px;
-  align-items: end;
+  align-items: start;
   margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 769px) {
+  .page-header {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
 }
 
 .page-header-left {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .page-title {
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: 34px;
+  line-height: 1.1;
   font-weight: 800;
   color: #111827;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-family: 'Poppins', sans-serif;
 }
 
-.title-icon {
-  font-size: 30px;
-}
-
 .page-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
+  font-size: 20px;
+  line-height: 1.4;
+  color: #374151;
+  margin: 8px 0 0 0;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 .header-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
 }
 
 .export-btn {
-  padding: 10px 16px;
+  padding: 11px 18px;
+  min-width: 138px;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 700;
+  font-size: 13.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   min-height: 40px;
@@ -716,9 +746,9 @@ onMounted(async () => {
 /* Stats grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 @media (max-width: 1024px) {
@@ -735,10 +765,12 @@ onMounted(async () => {
 .stat-card {
   background: white;
   border-radius: 14px;
+  min-height: 112px;
   padding: 18px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
 }
@@ -758,13 +790,16 @@ onMounted(async () => {
 .stat-info {
   display: grid;
   grid-template-rows: auto auto;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
+  min-width: 0;
+  justify-items: center;
+  text-align: center;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #6b7280;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -773,52 +808,58 @@ onMounted(async () => {
   font-weight: 800;
   font-family: 'Poppins', sans-serif;
   letter-spacing: -0.2px;
+  color: #ffffff;
 }
 
-.stat-value.income { color: #10b981; }
-.stat-value.expense { color: #ef4444; }
-.stat-value.savings { color: #3b82f6; }
+.stat-value.income { color: #ffffff; }
+.stat-value.expense { color: #ffffff; }
+.stat-value.savings { color: #ffffff; }
 
 /* Charts section */
 .charts-section {
-  background: white;
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, rgba(6, 37, 26, 0.96), rgba(12, 78, 58, 0.96));
+  border-radius: 28px;
+  padding: 28px;
+  margin-bottom: 26px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .chart-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
-  margin: 0 0 14px 0;
-  color: #111827;
+  margin: 0 auto;
+  color: #e6ffed;
+  text-align: center;
 }
 
-/* Ensures exact circle: the wrapper locks aspect ratio and prevents stretching */
+/* Ensures the wrapper gives the donut component enough room for left/right layout */
 .donut-wrap {
   width: 100%;
-  max-width: 360px;         /* optional cap */
+  max-width: 520px;
   margin: 0 auto;
-  aspect-ratio: 1 / 1;      /* guarantees 1:1 box */
-  display: grid;
-  place-items: center;      /* center the chart */
-  /* Prevent child from stretching oddly */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
 }
 .donut-wrap > * {
   width: 100%;
-  height: 100%;
   max-width: 100%;
-  max-height: 100%;
-  /* If DonutChart uses SVG, this keeps perfect circle when parent changes */
 }
 
 /* Table section */
 .financial-table-section {
   background: white;
   border-radius: 14px;
-  padding: 18px;
+  padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
 }
@@ -827,8 +868,8 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .section-title {
@@ -895,26 +936,26 @@ onMounted(async () => {
 
 .financial-table td {
   font-size: 13.5px;
-  color: #111827;
+  color: #ffffff;
 }
 
 .financial-table td.income {
-  color: #10b981;
+  color: #ffffff;
   font-weight: 700;
 }
 
 .financial-table td.expense {
-  color: #ef4444;
+  color: #ffffff;
   font-weight: 700;
 }
 
 .financial-table td.positive {
-  color: #10b981;
+  color: #ffffff;
   font-weight: 700;
 }
 
 .financial-table td.negative {
-  color: #ef4444;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -923,7 +964,7 @@ onMounted(async () => {
   background: white;
   border-radius: 14px;
   padding: 20px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
 }
@@ -932,12 +973,15 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
   border-bottom: 2px solid #f3f4f6;
 }
 
-.section-title {
+.info-section .section-title,
+.financial-table-section .table-header .section-title {
   font-size: 20px;
   font-weight: 800;
   color: #111827;
@@ -947,24 +991,30 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.financial-table-section .table-header .section-title {
+  font-size: 18px;
+}
+
 .section-actions {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .section-badge {
   padding: 6px 14px;
-  background: #f3f4f6;
-  color: #374151;
+  background: rgba(33, 68, 51, 0.9);
+  color: #dcfce7;
+  border: 1px solid rgba(120, 201, 158, 0.35);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
 }
 
 .section-badge.success {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(31, 92, 63, 0.92);
+  color: #d7ffe8;
 }
 
 .print-btn {
@@ -986,8 +1036,8 @@ onMounted(async () => {
 
 .section-stats {
   display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
@@ -999,95 +1049,109 @@ onMounted(async () => {
 
 .summary-stat .stat-label {
   font-size: 13px;
-  color: #6b7280;
+  color: #ffffff;
 }
 
 .summary-stat .stat-value {
   font-size: 20px;
   font-weight: 800;
   font-family: 'Poppins', sans-serif;
+  color: #ffffff;
 }
 
 .summary-stat .stat-value.approved {
-  color: #f59e0b;
+  color: #ffffff;
 }
 
 .summary-stat .stat-value.partial {
-  color: #3b82f6;
+  color: #ffffff;
 }
 
 .summary-stat .stat-value.warning {
-  color: #ef4444;
+  color: #ffffff;
 }
 
 .summary-stat .stat-value.success {
-  color: #10b981;
+  color: #ffffff;
 }
 
 .data-table-container {
   overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(165, 220, 185, 0.2);
+  background: linear-gradient(145deg, rgba(19, 41, 31, 0.96), rgba(15, 32, 25, 0.98));
+  box-shadow: inset 0 1px 0 rgba(226, 255, 238, 0.06);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
+  background: rgba(18, 40, 30, 0.96);
 }
 
 .data-table th,
 .data-table td {
-  padding: 12px;
+  padding: 18px 16px;
   text-align: left;
-  border-bottom: 1px solid #f3f4f6;
+  border: 1px solid rgba(156, 212, 180, 0.14);
 }
 
 .data-table th {
-  background: #f9fafb;
-  font-weight: 700;
-  font-size: 12px;
-  color: #6b7280;
-  border-bottom: 2px solid #e5e7eb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, rgba(64, 128, 92, 0.42), rgba(49, 102, 78, 0.38));
+  font-weight: 800;
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: #d8fbe6;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .data-table td {
   font-size: 13.5px;
-  color: #374151;
+  color: #effff5;
+  text-align: left;
+  background: rgba(17, 36, 28, 0.88);
+  vertical-align: middle;
 }
 
 .data-table .farmer-name {
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #f6fff9;
 }
 
 .data-table .amount {
   text-align: right;
   font-weight: 700;
   font-family: 'Courier New', monospace;
+  color: #f2fff7;
 }
 
 .data-table .amount.highlight {
-  color: #3b82f6;
+  color: #7ee7ff;
 }
 
 .data-table .amount.warning {
-  color: #ef4444;
+  color: #ff9b9b;
 }
 
 .data-table .amount.success {
-  color: #10b981;
+  color: #95f2b8;
 }
 
-.data-table .loading-row,
-.data-table .empty-row {
+.data-table .loading-row td,
+.data-table .empty-row td {
   text-align: center;
-  color: #9ca3af;
+  color: #bbdec8;
   font-style: italic;
+  padding: 32px 16px;
+  background: rgba(20, 42, 32, 0.9);
 }
 
-.data-table .data-row:hover {
-  background: #f9fafb;
+.data-table .data-row:hover td {
+  background: rgba(43, 82, 61, 0.72);
 }
 
 /* Print styles */
@@ -1109,5 +1173,140 @@ onMounted(async () => {
     box-shadow: none;
     border: 1px solid #ccc;
   }
+}
+
+@media (max-width: 900px) {
+  .table-header {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .table-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .financial-overview-container {
+    padding: 16px;
+  }
+
+  .stat-card,
+  .charts-section,
+  .financial-table-section,
+  .info-section {
+    padding: 18px;
+  }
+
+  .section-header {
+    align-items: flex-start;
+  }
+
+  .data-table th,
+  .data-table td,
+  .financial-table th,
+  .financial-table td {
+    padding: 12px 10px;
+  }
+
+  .data-table th {
+    font-size: 12.8px;
+  }
+}
+
+/* Dashboard theme override */
+.financial-overview-container {
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%) !important;
+  color: #eefde6;
+  border-radius: 18px;
+}
+
+.page-title,
+.chart-title,
+.info-section .section-title,
+.financial-table-section .table-header .section-title,
+.data-table .farmer-name { color: #eefde6 !important; }
+
+.page-subtitle,
+.stats-grid .stat-card .stat-label,
+.filter-label,
+.summary-stat .stat-label,
+.data-table td,
+.data-table .loading-row td,
+.data-table .empty-row td { color: rgba(220, 238, 211, 0.78) !important; }
+
+.stats-grid .stat-card,
+.charts-section,
+.financial-table-section,
+.page-header,
+.info-section {
+  background: rgba(28, 42, 33, 0.92) !important;
+  border: 1px solid rgba(190, 235, 203, 0.14) !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+.stat-icon {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+.financial-overview-container .export-btn,
+.financial-overview-container .print-btn {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(34, 197, 94, 0.14)) !important;
+  color: #dcfce7 !important;
+  border: 1px solid rgba(74, 222, 128, 0.34) !important;
+  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.18) !important;
+}
+
+.sort-select {
+  background: rgba(0,0,0,0.24) !important;
+  color: #eefde6 !important;
+  border-color: rgba(190, 235, 203, 0.24) !important;
+}
+
+.sort-dir-btn {
+  background: rgba(255,255,255,0.06) !important;
+  color: #eefde6 !important;
+  border-color: rgba(190, 235, 203, 0.24) !important;
+}
+
+.financial-table th {
+  background: rgba(34, 55, 44, 0.95) !important;
+  color: #b6f7cb !important;
+  border-bottom-color: rgba(190, 235, 203, 0.2) !important;
+}
+
+.financial-table td {
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+  color: rgba(238, 253, 230, 0.92) !important;
+}
+
+.financial-table td.income {
+  color: #86efac !important;
+}
+
+.financial-table td.expense {
+  color: #fca5a5 !important;
+}
+
+.financial-table td.positive {
+  color: #86efac !important;
+}
+
+.financial-table td.negative {
+  color: #fca5a5 !important;
+}
+
+.data-table th {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%) !important;
+  color: #b6f7cb !important;
+  border-bottom-color: rgba(190, 235, 203, 0.2) !important;
+}
+
+.data-table td {
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+.data-table .data-row:hover td {
+  background: rgba(74, 222, 128, 0.07) !important;
 }
 </style>

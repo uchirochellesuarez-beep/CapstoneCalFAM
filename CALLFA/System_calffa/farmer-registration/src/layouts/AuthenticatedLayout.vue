@@ -1,8 +1,11 @@
 <template>
-  <div class="authenticated-layout">
-    <div class="backdrop-dashboard backdrop-theme"></div>
+  <div
+    class="authenticated-layout"
+    :class="{ 'farmer-theme': isFarmer, 'sidebar-collapsed': sidebarCollapsed }"
+  >
+    <div class="backdrop-dashboard" :class="isFarmer ? 'backdrop-theme-farmer' : 'backdrop-theme'"></div>
     <TopHeader />
-    <Sidebar />
+    <Sidebar @toggle="onSidebarToggle" />
     <main class="main-content-wrapper">
       <div class="main-content">
         <router-view />
@@ -12,19 +15,30 @@
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
+import { useAuthStore } from '../stores/authStore'
 import TopHeader from '../components/TopHeader.vue'
 import Sidebar from '../components/Sidebar.vue'
+
+const authStore = useAuthStore()
+const isFarmer = computed(() => authStore.currentUser?.role === 'farmer')
+
+const sidebarCollapsed = ref(false)
+const onSidebarToggle = ({ isCollapsed }) => {
+  sidebarCollapsed.value = !!isCollapsed
+}
 </script>
 
 <style scoped>
 .authenticated-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #ffffff; /* white background */
+  height: 100vh;
+  background: transparent;
   position: relative;
   width: 100%;
   overflow-x: hidden; /* Prevent horizontal scroll */
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .authenticated-layout .backdrop-dashboard {
@@ -37,34 +51,58 @@ import Sidebar from '../components/Sidebar.vue'
   pointer-events: none;
 }
 
+.authenticated-layout.farmer-theme .main-content {
+  background: linear-gradient(180deg, rgba(42, 30, 19, 0.1), rgba(54, 40, 25, 0.08));
+}
+
 /* Main content wrapper - accounts for sidebar */
 .main-content-wrapper {
   flex: 1;
   margin-left: 260px; /* Sidebar width */
   min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   width: calc(100% - 260px);
   position: relative;
   z-index: 2;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
 }
 
 /* Main content area - accounts for header (header is 70px) */
 .main-content {
   flex: 1;
-  padding: 1.5rem;
-  padding-top: calc(70px + 1.5rem); /* Top header height (70px) + top padding */
+  height: 100vh;
+  padding: 1.65rem;
+  padding-top: calc(70px + 1.65rem); /* Top header height (70px) + top padding */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   min-height: calc(100vh - 70px); /* Full height minus header */
-  background: #ffffff;
+  background: transparent;
   position: relative;
   z-index: 2;
+  box-shadow: inset 16px 0 48px -32px rgba(0, 0, 0, 0.06);
+}
+
+/* Narrow sidebar (desktop collapsed): shrink main gutter to match sidebar */
+@media (min-width: 1025px) {
+  .authenticated-layout.sidebar-collapsed .main-content-wrapper {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+  }
+}
+
+.main-content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Responsive: Tablet and below */

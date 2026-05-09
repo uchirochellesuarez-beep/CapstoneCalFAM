@@ -1,35 +1,36 @@
 <template>
-  <div class="page-container">
+  <div class="financial-container glass-module-page share-capital-page">
     <div class="page-header">
-      <h1 class="page-title">🏦 Share Capital</h1>
-      <p class="page-subtitle">
-        ₱100 every 6 months (₱200/year) • Members only • Barangay-based visibility
-      </p>
+      <div class="header-content">
+        <h1>Share Capital</h1>
+        <p class="page-subtitle hero-subtitle">
+          ₱100 every 6 months (₱200/year) • Members only • Barangay-based visibility
+        </p>
+      </div>
     </div>
 
-    <div v-if="!isAllowedRole" class="card">
+    <div v-if="!isAllowedRole" class="tab-content">
       <div class="empty-state">
         <div class="empty-title">Access limited</div>
         <div class="empty-text">This module is available to Members, Treasurers, and Presidents.</div>
       </div>
     </div>
 
-    <div v-else>
-      <div v-if="error" class="card error-card">
-        <div class="error-title">⚠️ Error Loading Share Capital</div>
-        <div class="error-text">{{ error }}</div>
+    <div v-else class="tab-content tab-content--main">
+      <div v-if="error" class="info-banner info-banner--error">
+        <strong>Error loading Share Capital:</strong> {{ error }}
         <div v-if="error.includes('tables not found')" class="error-hint">
           <strong>Fix needed:</strong> Run the database migration by opening a terminal and executing:
-          <div class="code-block">mysql -u root -p calffa < backend/migrations/create_share_capital_module.sql</div>
+          <div class="code-block">
+            mysql -u root -p calffa &lt; backend/migrations/create_share_capital_module.sql
+          </div>
           Then restart the backend server. See SHARE_CAPITAL_SETUP.md for details.
         </div>
       </div>
 
-      <div v-if="isAdmin" class="card">
-        <div class="empty-state">
-          <div class="empty-title">Barangay-based module</div>
-          <div class="empty-text">Login as a barangay Treasurer/President or as a Farmer to use Share Capital.</div>
-        </div>
+      <div v-if="isAdmin" class="empty-state empty-state--panel">
+        <div class="empty-title">Barangay-based module</div>
+        <div class="empty-text">Login as a barangay Treasurer/President or as a Farmer to use Share Capital.</div>
       </div>
 
       <!-- Farmer view -->
@@ -53,26 +54,28 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Payment History</h2>
-              <button class="btn" @click="loadMe" :disabled="loading">Refresh</button>
+              <button type="button" class="btn btn-primary-action" @click="loadMe" :disabled="loading">Refresh</button>
             </div>
             <div class="table-container">
               <table class="data-table">
                 <thead>
                   <tr>
                     <th>Date</th>
+                    <th>Type</th>
                     <th>Amount</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="loading">
-                    <td colspan="3">Loading...</td>
+                    <td colspan="4">Loading...</td>
                   </tr>
                   <tr v-else-if="meContributions.length === 0">
-                    <td colspan="3">No contributions recorded</td>
+                    <td colspan="4">No contributions recorded</td>
                   </tr>
                   <tr v-else v-for="c in meContributions" :key="c.id">
                     <td>{{ formatDate(c.contribution_date) }}</td>
+                    <td>{{ formatContributionKind(c.contribution_kind) }}</td>
                     <td class="amount">₱{{ formatMoney(c.amount) }}</td>
                     <td>
                       <span class="badge" :class="c.status === 'confirmed' ? 'badge-success' : 'badge-muted'">{{ c.status }}</span>
@@ -140,7 +143,9 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Members (Your Barangay)</h2>
-              <button class="btn" @click="loadOverview" :disabled="loading">Refresh</button>
+              <button type="button" class="btn btn-primary-action" @click="loadOverview" :disabled="loading">
+                Refresh
+              </button>
             </div>
             
             <!-- Filter Input -->
@@ -208,7 +213,7 @@
               <div class="empty-text">Choose a member from the list to view share capital records.</div>
             </div>
 
-            <div v-else>
+            <div v-else class="card-body">
               <div class="farmer-summary">
                 <div class="farmer-name">{{ selectedFarmer.full_name }}</div>
                 <div class="farmer-meta">Ref: {{ selectedFarmer.reference_number || '—' }}</div>
@@ -234,7 +239,7 @@
                 <div class="form-inline">
                   <label class="inline-label">Contribution Date</label>
                   <input class="input" type="date" v-model="newContributionDate" />
-                  <label class="inline-label">Amount</label>
+                  <label class="inline-label">6-Month Share</label>
                   <input class="input" type="number" :value="100" disabled />
                   <button class="btn" @click="recordContribution" :disabled="loading">Record</button>
                 </div>
@@ -250,6 +255,7 @@
                   <thead>
                     <tr>
                       <th>Date</th>
+                      <th>Type</th>
                       <th>Amount</th>
                       <th>Status</th>
                       <th v-if="canEdit"></th>
@@ -257,23 +263,24 @@
                   </thead>
                   <tbody>
                     <tr v-if="loadingFarmer">
-                      <td colspan="4">Loading...</td>
+                      <td colspan="5">Loading...</td>
                     </tr>
                     <tr v-else-if="selectedContributions.length === 0">
-                      <td colspan="4">No contributions recorded</td>
+                      <td colspan="5">No contributions recorded</td>
                     </tr>
                     <tr v-else v-for="c in selectedContributions" :key="c.id">
                       <td>
-                        <template v-if="editingId === c.id">
+                        <template v-if="editingId === c.id && canEditContribution(c)">
                           <input class="input" type="date" v-model="editDate" />
                         </template>
                         <template v-else>
                           {{ formatDate(c.contribution_date) }}
                         </template>
                       </td>
+                      <td>{{ formatContributionKind(c.contribution_kind) }}</td>
                       <td class="amount">₱{{ formatMoney(c.amount) }}</td>
                       <td>
-                        <template v-if="editingId === c.id">
+                        <template v-if="editingId === c.id && canEditContribution(c)">
                           <select class="input" v-model="editStatus">
                             <option value="confirmed">confirmed</option>
                             <option value="cancelled">cancelled</option>
@@ -284,12 +291,13 @@
                         </template>
                       </td>
                       <td v-if="canEdit" class="actions">
-                        <template v-if="editingId === c.id">
+                        <template v-if="editingId === c.id && canEditContribution(c)">
                           <button class="btn btn-small" @click="saveEdit(c.id)" :disabled="loading">Save</button>
                           <button class="btn btn-small btn-muted" @click="cancelEdit" :disabled="loading">Cancel</button>
                         </template>
                         <template v-else>
-                          <button class="btn btn-small" @click="startEdit(c)">Edit</button>
+                          <button v-if="canEditContribution(c)" class="btn btn-small" @click="startEdit(c)">Edit</button>
+                          <span v-else class="muted">Auto</span>
                         </template>
                       </td>
                     </tr>
@@ -342,7 +350,7 @@ const isFarmer = computed(() => ['farmer', 'operation_manager', 'business_manage
 const isTreasurer = computed(() => role.value === 'treasurer')
 const isPresident = computed(() => role.value === 'president')
 const isAllowedRole = computed(() => ['admin', 'farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role.value))
-const canEdit = computed(() => isTreasurer.value || isAdmin.value)
+const canEdit = computed(() => isTreasurer.value || isPresident.value || isAdmin.value)
 
 const filteredFarmers = computed(() => {
   if (!searchQuery.value.trim()) return farmers.value
@@ -394,6 +402,16 @@ function formatDate(value) {
 function formatMoney(value) {
   const n = parseFloat(value || 0)
   return Number.isFinite(n) ? n.toLocaleString() : '0'
+}
+
+function formatContributionKind(kind) {
+  return String(kind || 'membership') === 'assistance_sacks'
+    ? 'Seed/Fertilizer Plan (₱50/sack)'
+    : '6-Month Share (₱100)'
+}
+
+function canEditContribution(contribution) {
+  return String(contribution?.contribution_kind || 'membership') === 'membership'
 }
 
 async function apiFetch(path, options = {}) {
@@ -605,104 +623,277 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-container {
-  max-width: 1400px;
-  margin: 0 auto;
+/* ===== GLASSMORPHIC GREEN THEME (aligned with Machinery Financial / Seed Fertilizer Plan) ===== */
+.financial-container {
+  --glass-bg: rgba(29, 43, 33, 0.92);
+  --glass-panel: rgba(31, 48, 36, 0.94);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-line-strong: rgba(255, 255, 255, 0.18);
+  --text-main: #eefde6;
+  --text-muted: rgba(220, 238, 211, 0.78);
+  --text-soft: rgba(220, 238, 211, 0.62);
+  --green: #34d399;
+  --lime: #a3e635;
+  --red: #f87171;
+
+  min-height: 100vh;
+  padding: 28px;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-main);
+}
+
+.financial-container::before,
+.financial-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.financial-container::before {
+  background:
+    radial-gradient(ellipse 82% 56% at 12% 88%, rgba(17, 94, 41, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 75% 55% at 92% 10%, rgba(34, 197, 94, 0.14) 0%, transparent 64%),
+    radial-gradient(circle at 50% 16%, rgba(45, 212, 191, 0.11) 0%, transparent 22%),
+    linear-gradient(130deg, rgba(163, 230, 53, 0.03) 0%, transparent 38%, rgba(45, 212, 191, 0.03) 100%);
+  animation: ambienceDrift 16s ease-in-out infinite alternate;
+}
+
+.financial-container::after {
+  background:
+    radial-gradient(circle at 94% 8%, rgba(34, 197, 94, 0.2) 0%, transparent 17%),
+    radial-gradient(circle at 8% 86%, rgba(74, 222, 128, 0.16) 0%, transparent 20%),
+    radial-gradient(circle at 80% 74%, rgba(45, 212, 191, 0.18) 0%, transparent 18%),
+    radial-gradient(circle at 22% 30%, rgba(163, 230, 53, 0.14) 0%, transparent 16%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 14px);
+  filter: blur(10px);
+  animation: orbPulse 11s ease-in-out infinite;
+}
+
+@keyframes ambienceDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-10px, 8px, 0) scale(1.03);
+  }
+}
+
+@keyframes orbPulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.financial-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.financial-container > .tab-content {
+  margin-top: 22px;
 }
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  padding: 36px 40px;
+  background: linear-gradient(135deg, rgba(28, 41, 31, 0.94) 0%, rgba(35, 54, 40, 0.9) 56%, rgba(48, 78, 62, 0.84) 100%);
+  border-radius: 26px;
+  border: 1px solid var(--glass-line);
+  box-shadow:
+    18px 18px 34px rgba(8, 14, 10, 0.5),
+    -14px -14px 26px rgba(42, 61, 46, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.34);
+  position: relative;
+  overflow: hidden;
 }
 
-.page-title {
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: -35% -10% auto auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.22) 0%, rgba(45, 212, 191, 0) 68%);
+  pointer-events: none;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  inset: auto auto -50% -8%;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.18) 0%, rgba(163, 230, 53, 0) 70%);
+  pointer-events: none;
+}
+
+.page-header h1 {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.9px;
   margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text-dark);
+  background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .page-subtitle {
-  margin: 6px 0 0 0;
-  color: var(--text-light);
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+.hero-subtitle {
+  max-width: 52rem;
+}
+
+.tab-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  padding: 24px 28px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    14px 14px 26px rgba(8, 13, 10, 0.5),
+    0 0 0 1px rgba(20, 32, 24, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -26px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(163, 230, 53, 0.08) 0%, rgba(163, 230, 53, 0) 28%),
+    radial-gradient(circle at 88% 88%, rgba(45, 212, 191, 0.08) 0%, rgba(45, 212, 191, 0) 30%);
+  pointer-events: none;
+}
+
+.tab-content--main {
+  padding-top: 22px;
+}
+
+.tab-content .stats-grid,
+.tab-content .grid-2 {
+  position: relative;
+  z-index: 1;
+}
+
+.info-banner {
+  padding: 12px 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px var(--shadow);
-  padding: 16px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-main);
+  position: relative;
+  z-index: 1;
 }
 
-.error-card {
-  border-color: var(--error);
-}
-
-.error-title {
-  font-weight: 700;
-  color: var(--error);
-  margin-bottom: 6px;
-}
-
-.error-text {
-  color: var(--text-dark);
+.info-banner--error {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
 }
 
 .error-hint {
   margin-top: 12px;
-  padding: 10px;
-  background: var(--light-green);
-  border-radius: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 13px;
+  color: #fecaca;
+  opacity: 0.95;
 }
 
 .code-block {
-  margin-top: 6px;
-  padding: 8px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: monospace;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-family: ui-monospace, 'Courier New', monospace;
   font-size: 12px;
   overflow-x: auto;
-  color: var(--text-dark);
+  color: var(--lime);
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .stats-grid.compact {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  margin: 12px 0;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
 }
 
 .stat-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88));
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow:
+    8px 8px 18px rgba(8, 13, 10, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .stat-label {
-  color: var(--text-light);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 6px;
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-dark);
-  margin-top: 6px;
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: #bbf7d0;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
 @media (max-width: 1024px) {
@@ -711,166 +902,290 @@ onMounted(async () => {
   }
 }
 
-.card-header {
+.tab-content .card {
+  background: rgba(22, 35, 27, 0.78);
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    12px 12px 22px rgba(8, 13, 10, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 0;
+  margin: 0;
+}
+
+.tab-content .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.14);
+  margin-bottom: 0;
 }
 
-.card-title {
+.tab-content .card-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--text-main);
+}
+
+.card-body {
+  padding: 16px 18px 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .filter-section {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 1;
 }
 
 .filter-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .table-container {
   width: 100%;
   overflow-x: auto;
+  position: relative;
+  z-index: 1;
 }
 
-.data-table {
+.tab-content .data-table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-  text-align: left;
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
   font-size: 14px;
-  color: var(--text-dark);
 }
 
-.data-table th {
+.tab-content .data-table thead {
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.tab-content .data-table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 800;
+  color: var(--text-main);
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-light);
+  letter-spacing: 0.6px;
 }
 
-.data-table tr.selected {
-  background: var(--light-green);
+.tab-content .data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-weight: 600;
 }
 
-.amount {
-  font-weight: 700;
+.tab-content .data-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-content .data-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.tab-content table.data-table tbody td.amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: #b7f7c8;
+  font-family: ui-monospace, 'Courier New', monospace;
+  line-height: 1.25;
+}
+
+.tab-content .data-table tr.selected {
+  outline: 2px solid rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.12) !important;
 }
 
 .name {
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--text-main);
 }
 
 .actions {
   white-space: nowrap;
+  text-align: right;
 }
 
-.btn {
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: var(--text-dark);
-  padding: 8px 10px;
-  border-radius: 10px;
-  cursor: pointer;
+.muted {
+  color: var(--text-soft);
+  font-size: 12px;
   font-weight: 700;
 }
 
+.btn {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(22, 163, 74, 0.18));
+  color: var(--green);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(74, 222, 128, 0.55);
+}
+
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-small {
-  padding: 6px 8px;
-  border-radius: 9px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.btn-primary-action {
+  padding: 12px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(96, 165, 250, 0.18));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.34), rgba(96, 165, 250, 0.28));
+  border-color: var(--green);
+  transform: translateY(-2px);
 }
 
 .btn-muted {
-  color: var(--text-light);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-muted:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.32), rgba(74, 222, 128, 0.2));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.42), rgba(74, 222, 128, 0.3));
+  border-color: var(--green);
+  transform: translateY(-2px);
 }
 
 .btn-danger {
-  border-color: var(--error);
-  color: var(--error);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.22), rgba(248, 113, 113, 0.12));
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: #f87171;
+  transform: translateY(-1px);
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .badge-success {
-  color: var(--success);
+  background: rgba(74, 222, 128, 0.16);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
 .badge-muted {
-  color: var(--text-light);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-soft);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .empty-state {
-  padding: 18px 10px;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-soft);
+  position: relative;
+  z-index: 1;
+}
+
+.empty-state--panel {
+  padding: 32px 20px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.15);
+  margin-bottom: 8px;
 }
 
 .empty-title {
   font-weight: 800;
-  color: var(--text-dark);
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin-bottom: 6px;
 }
 
 .empty-text {
-  margin-top: 6px;
-  color: var(--text-light);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.45;
 }
 
 .farmer-summary {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.22);
 }
 
 .farmer-name {
   font-weight: 900;
-  color: var(--text-dark);
+  font-size: 1.08rem;
+  color: #ecfdf5;
+  margin-bottom: 4px;
 }
 
 .farmer-meta {
-  margin-top: 4px;
-  color: var(--text-light);
   font-size: 13px;
+  color: var(--text-muted);
 }
 
 .section-title {
-  margin: 12px 0 8px 0;
-  font-size: 13px;
-  font-weight: 900;
-  color: var(--text-dark);
+  margin: 16px 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #b6f7cb;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
 }
 
 .action-row {
@@ -880,27 +1195,71 @@ onMounted(async () => {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .form-inline {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 10px 14px;
 }
 
 .inline-label {
-  font-size: 12px;
-  color: var(--text-light);
+  font-size: 11px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft);
+  margin: 0;
 }
 
 .input {
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: var(--text-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(39, 58, 45, 0.92);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 42px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12);
+}
+
+.input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+select.input {
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .financial-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    padding: 24px 20px;
+  }
+
+  .page-header h1 {
+    font-size: 30px;
+    line-height: 1.12;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .tab-content {
+    padding: 18px 16px;
+  }
 }
 </style>

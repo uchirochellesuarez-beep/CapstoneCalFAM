@@ -9,6 +9,51 @@ const {
 } = require('../middleware/auth');
 
 const SHARE_CONTRIBUTION_AMOUNT = 100;
+const ASSISTANCE_PER_SACK_PHP = 50;
+
+/**
+ * Mga distribution na may natitirang bayarin (inaasahan − kabuuang nabayad na assistance_sacks).
+ */
+async function fetchAssistanceOutstandingForFarmer(farmerId) {
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      d.id AS distribution_id,
+      d.assistance_type,
+      d.quantity AS sack_count,
+      d.status AS distribution_status,
+      d.received_date,
+      d.distribution_date,
+      (COALESCE(d.quantity, 0) * ?) AS expected_pesos,
+      COALESCE(SUM(CASE
+        WHEN c.status = 'confirmed' AND c.contribution_kind = 'assistance_sacks' THEN c.amount
+        ELSE 0
+      END), 0) AS paid_pesos
+    FROM income_assistance_distributions d
+    LEFT JOIN share_capital_contributions c ON c.source_distribution_id = d.id
+    WHERE d.farmer_id = ?
+      AND d.status IN ('Distributed', 'Confirmed Received')
+      AND d.assistance_type IN ('fertilizer', 'seeds', 'both')
+    GROUP BY d.id, d.assistance_type, d.quantity, d.status, d.received_date, d.distribution_date
+    HAVING (COALESCE(d.quantity, 0) * ?) - COALESCE(SUM(CASE
+      WHEN c.status = 'confirmed' AND c.contribution_kind = 'assistance_sacks' THEN c.amount
+      ELSE 0
+    END), 0) > 0.009
+    ORDER BY d.id DESC
+    `,
+    [ASSISTANCE_PER_SACK_PHP, farmerId, ASSISTANCE_PER_SACK_PHP]
+  );
+  return rows.map((r) => {
+    const expected = Math.round(parseFloat(r.expected_pesos || 0) * 100) / 100;
+    const paid = Math.round(parseFloat(r.paid_pesos || 0) * 100) / 100;
+    return {
+      ...r,
+      expected_pesos: expected,
+      paid_pesos: paid,
+      remaining_pesos: Math.round((expected - paid) * 100) / 100,
+    };
+  });
+}
 
 const requireBarangayForOfficer = (req, res, next) => {
   const role = req.user?.role;
@@ -97,7 +142,10 @@ router.get(
         rules: {
           amount_per_6_months: SHARE_CONTRIBUTION_AMOUNT,
           contributions_per_year: 2,
-          amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2
+          amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2,
+          assistance_seed_fertilizer_plan_per_sack: ASSISTANCE_PER_SACK_PHP,
+          assistance_plan_note_ph:
+            'Kapag naipamahagi na ang binhi/pataba (Distributed), ang Treasurer/President ay puwedeng magtala ng bayad (puwedeng bahagya) sa Seed & Fertilizer Plan; bawat bayad ay may petsa at halaga sa Share Capital ng magsasaka.',
         },
         totals,
         farmers: farmersWithBalance
@@ -143,7 +191,9 @@ router.get(
 
       const [contributions] = await pool.execute(
         `
-        SELECT id, contribution_date, amount, status, created_by, updated_by, created_at, updated_at
+        SELECT id, contribution_date, amount, status,
+               contribution_kind, sack_count, per_sack_amount, source_distribution_id,
+               created_by, updated_by, created_at, updated_at
         FROM share_capital_contributions
         WHERE farmer_id = ?
         ORDER BY contribution_date DESC, id DESC
@@ -169,12 +219,16 @@ router.get(
       };
       totals.balance = totals.total_contributed - totals.total_withdrawn;
 
+      const assistance_outstanding = await fetchAssistanceOutstandingForFarmer(parseInt(String(farmerId), 10));
+
       res.json({
         success: true,
         farmer: farmers[0],
         totals,
         contributions,
-        withdrawals
+        withdrawals,
+        assistance_outstanding,
+        pending_seed_fertilizer_obligations: assistance_outstanding,
       });
     } catch (error) {
       console.error('Error fetching share capital farmer details:', error.message, error.code);
@@ -207,7 +261,9 @@ router.get('/me', verifyToken, async (req, res) => {
 
     const [contributions] = await pool.execute(
       `
-      SELECT id, contribution_date, amount, status, created_at, updated_at
+      SELECT id, contribution_date, amount, status,
+             contribution_kind, sack_count, per_sack_amount, source_distribution_id,
+             created_at, updated_at
       FROM share_capital_contributions
       WHERE farmer_id = ?
       ORDER BY contribution_date DESC, id DESC
@@ -233,16 +289,23 @@ router.get('/me', verifyToken, async (req, res) => {
     };
     totals.balance = totals.total_contributed - totals.total_withdrawn;
 
+    const assistance_outstanding = await fetchAssistanceOutstandingForFarmer(parseInt(String(farmerId), 10));
+
     res.json({
       success: true,
       rules: {
         amount_per_6_months: SHARE_CONTRIBUTION_AMOUNT,
         contributions_per_year: 2,
-        amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2
+        amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2,
+        assistance_seed_fertilizer_plan_per_sack: ASSISTANCE_PER_SACK_PHP,
+        assistance_plan_note_ph:
+          'Ang binhi/pataba (kapag naipamahagi na) ay may kabuuang ₱50 kada sako. Maaaring bayaran nang paunti-unti; makikita ang bawat bayad (petsa at halaga) sa kasaysayan ng Share Capital mo.',
       },
       totals,
       contributions,
-      withdrawals
+      withdrawals,
+      assistance_outstanding,
+      pending_seed_fertilizer_obligations: assistance_outstanding,
     });
   } catch (error) {
     console.error('Error fetching share capital for current farmer:', error.message, error.code);
@@ -258,12 +321,12 @@ router.get('/me', verifyToken, async (req, res) => {
 });
 
 // POST /api/share-capital/contributions
-// Treasurer: record a ₱100 contribution for a member in their barangay
+// Treasurer/President: record a ₱100 six-month share contribution for a member in their barangay
 router.post(
   '/contributions',
   verifyToken,
   requireBarangayForOfficer,
-  authorizeRoles(['admin', 'treasurer']),
+  authorizeRoles(['admin', 'treasurer', 'president']),
   verifyFarmerBarangayAccess('farmerId'),
   async (req, res) => {
     try {
@@ -317,6 +380,7 @@ router.post(
         WHERE farmer_id = ?
           AND barangay_id = ?
           AND status = 'confirmed'
+          AND contribution_kind = 'membership'
           AND contribution_date >= ? AND contribution_date <= ?
         `,
         [farmer_id, barangayId, periodStart, periodEnd]
@@ -331,9 +395,9 @@ router.post(
       const [result] = await pool.execute(
         `
         INSERT INTO share_capital_contributions
-          (farmer_id, barangay_id, contribution_date, amount, status, created_by)
+          (farmer_id, barangay_id, contribution_date, amount, status, contribution_kind, created_by)
         VALUES
-          (?, ?, ?, ?, 'confirmed', ?)
+          (?, ?, ?, ?, 'confirmed', 'membership', ?)
         `,
         [farmer_id, barangayId, contribution_date, amt, req.user?.id || null]
       );
@@ -373,19 +437,19 @@ router.post(
 );
 
 // PUT /api/share-capital/contributions/:id
-// Treasurer: edit/update contribution record (date and amount; amount remains fixed at ₱100)
+// Treasurer/President: edit/update contribution record (membership: date/status; assistance: mainly status)
 router.put(
   '/contributions/:id',
   verifyToken,
   requireBarangayForOfficer,
-  authorizeRoles(['admin', 'treasurer']),
+  authorizeRoles(['admin', 'treasurer', 'president']),
   async (req, res) => {
     try {
       const { id } = req.params;
       const { contribution_date, amount, status } = req.body;
 
       const [rows] = await pool.execute(
-        'SELECT id, farmer_id, barangay_id FROM share_capital_contributions WHERE id = ?',
+        'SELECT id, farmer_id, barangay_id, contribution_kind, amount AS current_amount FROM share_capital_contributions WHERE id = ?',
         [id]
       );
       if (rows.length === 0) {
@@ -393,6 +457,7 @@ router.put(
       }
 
       const record = rows[0];
+      const kind = String(record.contribution_kind || 'membership');
       if (req.user?.role !== 'admin' && parseInt(req.user?.barangay_id) !== parseInt(record.barangay_id)) {
         return res.status(403).json({ success: false, message: 'You can only edit records in your barangay.' });
       }
@@ -406,30 +471,33 @@ router.put(
           return res.status(400).json({ success: false, message: 'Invalid contribution_date' });
         }
 
-        // Enforce one contribution per 6-month period (excluding this record)
-        const year = dt.getFullYear();
-        const month = dt.getMonth() + 1;
-        const isFirstHalf = month <= 6;
-        const periodStart = `${year}-${isFirstHalf ? '01' : '07'}-01`;
-        const periodEnd = `${year}-${isFirstHalf ? '06' : '12'}-${isFirstHalf ? '30' : '31'}`;
+        if (kind === 'membership') {
+          // Enforce one membership contribution per 6-month period (excluding this record)
+          const year = dt.getFullYear();
+          const month = dt.getMonth() + 1;
+          const isFirstHalf = month <= 6;
+          const periodStart = `${year}-${isFirstHalf ? '01' : '07'}-01`;
+          const periodEnd = `${year}-${isFirstHalf ? '06' : '12'}-${isFirstHalf ? '30' : '31'}`;
 
-        const [[existing]] = await pool.execute(
-          `
-          SELECT COUNT(*) AS cnt
-          FROM share_capital_contributions
-          WHERE farmer_id = ?
-            AND barangay_id = ?
-            AND status = 'confirmed'
-            AND contribution_date >= ? AND contribution_date <= ?
-            AND id <> ?
-          `,
-          [record.farmer_id, record.barangay_id, periodStart, periodEnd, id]
-        );
-        if ((existing?.cnt || 0) > 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'A share capital contribution already exists for this 6-month period.'
-          });
+          const [[existing]] = await pool.execute(
+            `
+            SELECT COUNT(*) AS cnt
+            FROM share_capital_contributions
+            WHERE farmer_id = ?
+              AND barangay_id = ?
+              AND status = 'confirmed'
+              AND contribution_kind = 'membership'
+              AND contribution_date >= ? AND contribution_date <= ?
+              AND id <> ?
+            `,
+            [record.farmer_id, record.barangay_id, periodStart, periodEnd, id]
+          );
+          if ((existing?.cnt || 0) > 0) {
+            return res.status(400).json({
+              success: false,
+              message: 'A share capital contribution already exists for this 6-month period.'
+            });
+          }
         }
 
         updates.push('contribution_date = ?');
@@ -437,6 +505,13 @@ router.put(
       }
 
       if (amount !== undefined) {
+        if (kind === 'assistance_sacks') {
+          return res.status(400).json({
+            success: false,
+            message:
+              'Ang halaga ng binhi/pataba (sako × ₱50) ay hindi maaaring baguhin dito; ito ay mula sa assistance distribution.',
+          });
+        }
         const amt = parseFloat(amount);
         if (Number.isNaN(amt) || amt !== SHARE_CONTRIBUTION_AMOUNT) {
           return res.status(400).json({

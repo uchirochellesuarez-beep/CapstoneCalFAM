@@ -1,8 +1,7 @@
 <template>
-  <div class="machinery-approval-page">
-    <!-- Access Control Check -->
-    <div v-if="!canApproveBookings && !canCompleteBookings" class="alert alert-warning" style="margin: 20px; padding: 20px;">
-      <h2>❌ Access Denied</h2>
+  <div class="page-container glass-module-page machinery-page">
+    <div v-if="!canApproveBookings && !canCompleteBookings" class="access-denied-card">
+      <h2 class="access-denied-title">Access Denied</h2>
       <p>This page is only available for:</p>
       <ul>
         <li>Business Managers</li>
@@ -13,252 +12,281 @@
       <p><strong>Your User ID:</strong> {{ authStore.currentUser?.id || 'N/A' }}</p>
     </div>
 
-    <!-- Page Header -->
-    <div class="page-header" v-show="canApproveBookings || canCompleteBookings">
-      <div class="header-content">
-        <h1 class="page-title" v-if="canApproveBookings">✅ Machinery Booking Approvals</h1>
-        <h1 class="page-title" v-else-if="canCompleteBookings">🏁 Machinery Booking Operations</h1>
-        <p class="page-subtitle" v-if="canApproveBookings">Review and manage machinery booking requests</p>
-        <p class="page-subtitle" v-else-if="canCompleteBookings">Track approved bookings and mark usage status</p>
+    <div v-else class="machinery-authorised-shell">
+      <div class="page-header glass-header">
+        <div class="header-title-row">
+          <h1 class="page-title">
+            {{ canApproveBookings ? 'Machinery Booking Approvals' : 'Machinery Booking Operations' }}
+          </h1>
+        </div>
+        <p v-if="canApproveBookings" class="page-subtitle">
+          Review and manage machinery booking requests with clear status tabs and filters.
+        </p>
+        <p v-else-if="canCompleteBookings" class="page-subtitle">
+          Track approved bookings and mark completion or incomplete usage, same workflow style as Loans.
+        </p>
       </div>
-    </div>
 
-    <!-- Stats Overview -->
-    <div class="stats-grid">
-      <div v-if="canApproveBookings" class="stat-card stat-pending" @click="quickFilter('Pending')" style="cursor: pointer;">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-content">
-          <div class="stat-label">Pending</div>
-          <div class="stat-value">{{ pendingCount }}</div>
+      <div class="stats-grid machinery-stats-grid">
+        <div v-if="canApproveBookings" class="stat-card pending" @click="quickFilter('Pending')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Pn</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ pendingCount }}</div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+        <div v-if="canCompleteBookings" class="stat-card approved" @click="quickFilter('Approved')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ap</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ approvedCount }}</div>
+            <div class="stat-label">To Process</div>
+          </div>
+        </div>
+        <div v-if="canCompleteBookings" class="stat-card incomplete" @click="quickFilter('Incomplete')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ic</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ incompleteCount }}</div>
+            <div class="stat-label">Incomplete</div>
+          </div>
+        </div>
+        <div class="stat-card rejected" @click="quickFilter('Rejected')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Rj</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ rejectedCount }}</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+        <div class="stat-card expired" @click="quickFilter('Expired')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ex</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ expiredCount }}</div>
+            <div class="stat-label">Expired</div>
+          </div>
         </div>
       </div>
-      <div v-if="canCompleteBookings" class="stat-card stat-pending" @click="quickFilter('Approved')" style="cursor: pointer;">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-content">
-          <div class="stat-label">To Process</div>
-          <div class="stat-value">{{ approvedCount }}</div>
-        </div>
-      </div>
-      <div v-if="canCompleteBookings" class="stat-card stat-info" @click="quickFilter('Incomplete')" style="cursor: pointer;">
-        <div class="stat-icon">⚠️</div>
-        <div class="stat-content">
-          <div class="stat-label">Incomplete</div>
-          <div class="stat-value">{{ incompleteCount }}</div>
-        </div>
-      </div>
-      <div class="stat-card stat-danger" @click="quickFilter('Rejected')" style="cursor: pointer;">
-        <div class="stat-icon">❌</div>
-        <div class="stat-content">
-          <div class="stat-label">Rejected</div>
-          <div class="stat-value">{{ rejectedCount }}</div>
-        </div>
-      </div>
-      <div class="stat-card stat-info" @click="quickFilter('Expired')" style="cursor: pointer;">
-        <div class="stat-icon">⌛</div>
-        <div class="stat-content">
-          <div class="stat-label">Expired</div>
-          <div class="stat-value">{{ expiredCount }}</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Quick Filter Buttons -->
-    <div class="quick-filters">
-      <button 
-        v-if="canApproveBookings"
-        @click="quickFilter('Pending')" 
-        class="filter-btn filter-btn-pending"
-        :class="{ active: activeFilter === 'Pending' }"
-      >
-        <span class="btn-icon">⏳</span>
-        <span class="btn-text">Pending</span>
-        <span class="btn-count">{{ pendingCount }}</span>
-      </button>
-      <button 
-        v-if="canApproveBookings"
-        @click="quickFilter('Approved')" 
-        class="filter-btn filter-btn-approved"
-        :class="{ active: activeFilter === 'Approved' }"
-      >
-        <span class="btn-icon">✅</span>
-        <span class="btn-text">Approved</span>
-        <span class="btn-count">{{ approvedCount }}</span>
-      </button>
-      <button 
-        v-if="canCompleteBookings"
-        @click="quickFilter('Incomplete')" 
-        class="filter-btn filter-btn-incomplete"
-        :class="{ active: activeFilter === 'Incomplete' }"
-      >
-        <span class="btn-icon">⚠️</span>
-        <span class="btn-text">Incomplete</span>
-        <span class="btn-count">{{ incompleteCount }}</span>
-      </button>
-      <button 
-        v-if="canCompleteBookings"
-        @click="quickFilter('Completed')" 
-        class="filter-btn filter-btn-completed"
-        :class="{ active: activeFilter === 'Completed' }"
-      >
-        <span class="btn-icon">🏁</span>
-        <span class="btn-text">Completed</span>
-        <span class="btn-count">{{ completedCount }}</span>
-      </button>
-      <button 
-        v-if="canApproveBookings"
-        @click="quickFilter('Rejected')" 
-        class="filter-btn filter-btn-rejected"
-        :class="{ active: activeFilter === 'Rejected' }"
-      >
-        <span class="btn-icon">❌</span>
-        <span class="btn-text">Rejected</span>
-        <span class="btn-count">{{ rejectedCount }}</span>
-      </button>
-      <button 
-        v-if="canApproveBookings"
-        @click="quickFilter('Expired')" 
-        class="filter-btn filter-btn-expired"
-        :class="{ active: activeFilter === 'Expired' }"
-      >
-        <span class="btn-icon">⌛</span>
-        <span class="btn-text">Expired</span>
-        <span class="btn-count">{{ expiredCount }}</span>
-      </button>
-    </div>
+      <div class="machinery-single-column">
+        <div class="card machinery-bookings-card">
+          <h2 class="card-title">Machinery bookings</h2>
+          <p class="loan-guidance-text">
+            Tip: Piliin ang status tab tulad sa Loan page. Puwede ding i-filter ayon sa petsa gamit ang start at end date.
+          </p>
 
-    <!-- Info Banner for Approvers -->
-    <div v-if="isApprover && filters.status === 'Pending'" class="info-banner">
-      <span class="banner-icon">ℹ️</span>
-      <span class="banner-text">Showing <strong>Pending</strong> bookings only. Use filter buttons to view approved, rejected, or other bookings.</span>
-    </div>
+          <div class="tabs machinery-tabs">
+            <button
+              v-if="canApproveBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Pending' }"
+              @click="quickFilter('Pending')"
+            >
+              Pending ({{ pendingCount }})
+            </button>
+            <button
+              v-if="canApproveBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Approved' }"
+              @click="quickFilter('Approved')"
+            >
+              Approved ({{ approvedCount }})
+            </button>
+            <button
+              v-if="canCompleteBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Incomplete' }"
+              @click="quickFilter('Incomplete')"
+            >
+              Incomplete ({{ incompleteCount }})
+            </button>
+            <button
+              v-if="canCompleteBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Completed' }"
+              @click="quickFilter('Completed')"
+            >
+              Completed ({{ completedCount }})
+            </button>
+            <button
+              v-if="canApproveBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Rejected' }"
+              @click="quickFilter('Rejected')"
+            >
+              Rejected ({{ rejectedCount }})
+            </button>
+            <button
+              v-if="canApproveBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Expired' }"
+              @click="quickFilter('Expired')"
+            >
+              Expired ({{ expiredCount }})
+            </button>
+          </div>
 
-    <!-- Filters -->
-    <div class="filters-section">
-      <div class="filter-group">
-        <label class="filter-label">Start Date</label>
-        <input v-model="filters.start_date" @change="applyFilters" type="date" class="filter-select" />
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">End Date</label>
-        <input v-model="filters.end_date" @change="applyFilters" type="date" class="filter-select" />
-      </div>
-      <button @click="clearFilters" class="btn-secondary">Clear Filters</button>
-    </div>
+          <div v-if="isApprover && filters.status === 'Pending'" class="alert alert-info banner-inline-alert">
+            Naka-<strong>Pending</strong> view ka. Gumamit ng ibang tabs para makita ang approved, rejected, o iba pang booking.
+          </div>
 
-    <!-- Bookings Table -->
-    <div class="table-container">
-      <table class="bookings-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Farmer</th>
-            <th>Machinery</th>
-            <th>Booking Date</th>
-            <th>Location</th>
-            <th>Area/Qty</th>
-            <th>Total</th>
-            <th v-if="canApproveBookings">Payment</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="10" class="loading-cell">
-              <div class="loading-spinner"></div>
-              <span>Loading bookings...</span>
-            </td>
-          </tr>
-          <tr v-else-if="bookings.length === 0">
-            <td colspan="10" class="empty-cell">
-              No bookings found.
-            </td>
-          </tr>
-          <tr v-else v-for="booking in bookings" :key="booking.id">
-            <td>{{ booking.id }}</td>
-            <td>
-              <div class="farmer-info">
-                <strong>{{ booking.farmer_name }}</strong>
-                <small>{{ booking.reference_number }}</small>
-                <small v-if="booking.farmer_phone">📞 {{ booking.farmer_phone }}</small>
+          <div class="filters-row machinery-filters">
+            <div class="form-group">
+              <label>Start date</label>
+              <div class="input-shell">
+                <span class="field-icon" aria-hidden="true"></span>
+                <input v-model="filters.start_date" type="date" @change="applyFilters" />
               </div>
-            </td>
-            <td>
-              <div class="machinery-info">
-                <strong>{{ booking.machinery_name }}</strong>
-                <span class="badge" :class="'badge-' + getMachineryTypeClass(booking.machinery_type)">
-                  {{ booking.machinery_type }}
-                </span>
+            </div>
+            <div class="form-group">
+              <label>End date</label>
+              <div class="input-shell">
+                <span class="field-icon" aria-hidden="true"></span>
+                <input v-model="filters.end_date" type="date" @change="applyFilters" />
               </div>
-            </td>
-            <td>{{ formatDate(booking.booking_date) }}</td>
-            <td>{{ booking.service_location }}</td>
-            <td>{{ booking.area_size }} {{ booking.area_unit }}</td>
-            <td class="price-cell">₱{{ formatNumber(booking.total_price) }}</td>
-            <td v-if="canApproveBookings">
-              <span class="status-badge" :class="'status-' + getPaymentStatusClass(booking.payment_status || 'Unpaid')">
-                {{ booking.payment_status || 'Unpaid' }}
-              </span>
-              <div v-if="booking.total_paid > 0" class="payment-info">
-                <small>Paid: ₱{{ formatNumber(booking.total_paid) }}</small>
-                <small v-if="booking.remaining_balance > 0">Balance: ₱{{ formatNumber(booking.remaining_balance) }}</small>
-              </div>
-            </td>
-            <td>
-              <span class="status-badge" :class="'status-' + getBookingStatusClass(booking.status)">
-                {{ booking.status }}
-              </span>
-            </td>
-            <td>
-              <div class="action-buttons">
-                <button @click="viewBooking(booking)" class="btn-icon-small" title="View Details">
-                  👁️
-                </button>
-                <button 
-                  v-if="booking.status === 'Pending' && canApproveBookings" 
-                  @click="approveBookingConfirm(booking)" 
-                  class="btn-icon-small btn-success" 
-                  title="Approve"
-                >
-                  ✓
-                </button>
-                <button 
-                  v-if="booking.status === 'Pending' && canApproveBookings" 
-                  @click="rejectBookingConfirm(booking)" 
-                  class="btn-icon-small btn-danger" 
-                  title="Reject"
-                >
-                  ✕
-                </button>
-                <button 
-                  v-if="booking.status === 'Approved' && canCompleteBookings" 
-                  @click="completeBookingConfirm(booking)" 
-                  class="btn-icon-small btn-info" 
-                  title="Mark as Completed"
-                >
-                  ✅
-                </button>
-                <button 
-                  v-if="booking.status === 'Approved' && canCompleteBookings" 
-                  @click="incompleteBookingConfirm(booking)" 
-                  class="btn-icon-small btn-warning" 
-                  title="Mark as Incomplete"
-                >
-                  ⚠️
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+            <button type="button" class="mach-clear-filters-btn" @click="clearFilters">Clear filters</button>
+          </div>
+
+          <div class="table-container machinery-table-container">
+            <table class="loans-table machinery-loans-table">
+              <colgroup v-if="canApproveBookings">
+                <col class="col-id" />
+                <col class="col-name" />
+                <col class="col-purpose" />
+                <col class="col-date" />
+                <col class="col-location" />
+                <col class="col-term" />
+                <col class="col-amount" />
+                <col class="col-payment" />
+                <col class="col-status" />
+                <col class="col-actions" />
+              </colgroup>
+              <colgroup v-else>
+                <col class="col-id" />
+                <col class="col-name" />
+                <col class="col-purpose" />
+                <col class="col-date" />
+                <col class="col-location" />
+                <col class="col-term" />
+                <col class="col-amount" />
+                <col class="col-status" />
+                <col class="col-actions" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="th-id">ID</th>
+                  <th class="th-name">Farmer</th>
+                  <th class="th-purpose">Machinery</th>
+                  <th class="th-booking-date">Booking Date</th>
+                  <th class="th-location">Location</th>
+                  <th class="th-term">Area / Qty</th>
+                  <th class="th-amount">Total</th>
+                  <th v-if="canApproveBookings" class="th-payment">Payment</th>
+                  <th class="th-status">Status</th>
+                  <th class="th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="loading">
+                  <td :colspan="tableColspan" class="loading-cell">Loading bookings...</td>
+                </tr>
+                <tr v-else-if="bookings.length === 0">
+                  <td :colspan="tableColspan" class="empty-cell">No bookings found.</td>
+                </tr>
+                <tr v-else v-for="booking in bookings" :key="booking.id">
+                  <td class="td-id">{{ booking.id }}</td>
+                  <td class="td-name">
+                    <div class="machinery-td-stack">
+                      <strong>{{ booking.farmer_name }}</strong>
+                      <small class="mach-sub">{{ booking.reference_number }}</small>
+                      <small v-if="booking.farmer_phone" class="mach-sub">Phone: {{ booking.farmer_phone }}</small>
+                    </div>
+                  </td>
+                  <td class="td-purpose">
+                    <div class="machinery-td-stack ma-type-cell">
+                      <span class="mach-machinery-name">{{ booking.machinery_name }}</span>
+                      <span class="badge" :class="'badge-' + getMachineryTypeClass(booking.machinery_type)">
+                        {{ booking.machinery_type }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="td-booking-date td-date">{{ formatDate(booking.booking_date) }}</td>
+                  <td class="td-location">{{ booking.service_location }}</td>
+                  <td class="td-term">{{ booking.area_size }} {{ booking.area_unit }}</td>
+                  <td class="td-amount amount">₱{{ formatNumber(booking.total_price) }}</td>
+                  <td v-if="canApproveBookings" class="td-payment">
+                    <div class="machinery-td-stack">
+                      <span :class="['mach-loan-pay', 'payment-' + paymentStatusSlug(booking.payment_status)]">
+                        {{ booking.payment_status || 'Unpaid' }}
+                      </span>
+                      <div v-if="booking.total_paid > 0" class="mach-pay-meta">
+                        <small>Paid: ₱{{ formatNumber(booking.total_paid) }}</small>
+                        <small v-if="booking.remaining_balance > 0">Balance: ₱{{ formatNumber(booking.remaining_balance) }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="td-status">
+                    <span :class="['mach-loan-status', bookingStatusSlug(booking.status)]">{{ booking.status }}</span>
+                  </td>
+                  <td class="td-actions">
+                    <div class="action-buttons">
+                      <button type="button" class="btn btn-view" title="View" @click="viewBooking(booking)">View</button>
+                      <button
+                        v-if="booking.status === 'Pending' && canApproveBookings"
+                        type="button"
+                        class="btn btn-approve"
+                        title="Approve"
+                        @click="approveBookingConfirm(booking)"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        v-if="booking.status === 'Pending' && canApproveBookings"
+                        type="button"
+                        class="btn btn-reject"
+                        title="Reject"
+                        @click="rejectBookingConfirm(booking)"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        v-if="booking.status === 'Approved' && canCompleteBookings"
+                        type="button"
+                        class="btn btn-approve"
+                        title="Mark completed"
+                        @click="completeBookingConfirm(booking)"
+                      >
+                        Done
+                      </button>
+                      <button
+                        v-if="booking.status === 'Approved' && canCompleteBookings"
+                        type="button"
+                        class="btn btn-reject"
+                        title="Mark incomplete"
+                        @click="incompleteBookingConfirm(booking)"
+                      >
+                        Issue
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- View Booking Details Modal -->
     <div v-if="showViewModal && selectedBooking" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>📋 Booking Details #{{ selectedBooking.id }}</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Booking Details #{{ selectedBooking.id }}</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <div class="booking-details">
@@ -275,7 +303,7 @@
                 </div>
                 <div class="detail-item" v-if="selectedBooking.farmer_phone">
                   <label>Phone:</label>
-                  <span>📞 {{ selectedBooking.farmer_phone }}</span>
+                  <span>Phone: {{ selectedBooking.farmer_phone }}</span>
                 </div>
                 <div class="detail-item full-width" v-if="selectedBooking.farmer_address">
                   <label>Address:</label>
@@ -366,7 +394,7 @@
           </div>
           <div class="modal-actions" v-else-if="selectedBooking.status === 'Pending'">
             <button @click="closeModals" class="btn-secondary">Close</button>
-            <p style="color: #f59e0b; margin: 10px 0;">⚠️ Only Business Managers and Operation Managers can approve bookings</p>
+            <p class="modal-permission-note">Only Business Managers and Operation Managers can approve bookings.</p>
           </div>
         </div>
       </div>
@@ -376,8 +404,8 @@
     <div v-if="showApproveModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>✅ Approve Booking</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Approve Booking</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <div class="booking-summary">
@@ -401,8 +429,8 @@
     <div v-if="showRejectModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-small">
         <div class="modal-header">
-          <h2>❌ Reject Booking</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Reject Booking</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <p>Provide a reason for rejecting this booking:</p>
@@ -435,8 +463,8 @@
     <div v-if="showCompleteModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-medium">
         <div class="modal-header">
-          <h2>✅ Mark Booking Completed</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Mark Booking Completed</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <p class="modal-subtitle">Mark this booking as completed?</p>
@@ -446,9 +474,9 @@
             <p><strong>Date:</strong> {{ formatDate(bookingToProcess?.booking_date) }}</p>
           </div>
           
-          <div style="margin-top: 20px;">
+          <div class="complete-modal-actions">
             <button @click="closeModals" class="btn-secondary btn-block">Cancel</button>
-            <button @click="completeBooking" class="btn-success btn-block" :disabled="loading" style="margin-top: 10px;">
+            <button @click="completeBooking" class="btn-success btn-block" :disabled="loading">
               {{ loading ? 'Processing...' : 'Mark as Completed' }}
             </button>
           </div>
@@ -460,8 +488,8 @@
     <div v-if="showIncompleteModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-small">
         <div class="modal-header">
-          <h2>⚠️ Mark Booking Incomplete</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Mark Booking Incomplete</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <p>Please describe the issues encountered:</p>
@@ -491,13 +519,13 @@
     </div>
 
     <!-- Error/Success Messages -->
-    <div v-if="error" class="alert alert-error">
+    <div v-if="error" class="alert alert-error alert-floating">
       {{ error }}
-      <button @click="clearError" class="alert-close">✕</button>
+      <button type="button" @click="clearError" class="alert-close" aria-label="Dismiss">×</button>
     </div>
-    <div v-if="successMessage" class="alert alert-success">
+    <div v-if="successMessage" class="alert alert-success alert-floating">
       {{ successMessage }}
-      <button @click="successMessage = ''" class="alert-close">✕</button>
+      <button type="button" @click="successMessage = ''" class="alert-close" aria-label="Dismiss">×</button>
     </div>
   </div>
 </template>
@@ -608,6 +636,31 @@ export default {
       return userRole === 'operator'
     })
 
+    const tableColspan = computed(() => (canApproveBookings.value ? 10 : 9))
+
+    const bookingStatusSlug = (status) => {
+      const map = {
+        Pending: 'pending',
+        Approved: 'approved',
+        Incomplete: 'incomplete',
+        Completed: 'completed',
+        Rejected: 'rejected',
+        Expired: 'expired',
+        Cancelled: 'cancelled'
+      }
+      return map[String(status || '').trim()] || 'unknown'
+    }
+
+    const paymentStatusSlug = (status) => {
+      const key = String(status || 'Unpaid').trim()
+      const map = {
+        Unpaid: 'unpaid',
+        Partial: 'partial',
+        Paid: 'paid'
+      }
+      return map[key] || 'unpaid'
+    }
+
     // Methods
     const loadData = async () => {
       try {
@@ -686,7 +739,7 @@ export default {
     const approveBookingConfirm = (booking) => {
       // Check if user has permission to approve
       if (!['business_manager', 'operation_manager'].includes(authStore.currentUser?.role)) {
-        alert('❌ Only Business Managers and Operation Managers can approve bookings')
+        alert('Only Business Managers and Operation Managers can approve bookings.')
         return
       }
       bookingToProcess.value = booking
@@ -718,7 +771,7 @@ export default {
     const rejectBookingConfirm = (booking) => {
       // Check if user has permission to reject
       if (!['business_manager', 'operation_manager'].includes(authStore.currentUser?.role)) {
-        alert('❌ Only Business Managers and Operation Managers can reject bookings')
+        alert('Only Business Managers and Operation Managers can reject bookings.')
         return
       }
       bookingToProcess.value = booking
@@ -748,7 +801,7 @@ export default {
     const completeBookingConfirm = (booking) => {
       // Check if user has permission to complete
       if (authStore.currentUser?.role !== 'operator') {
-        alert('❌ Only Operators can mark bookings')
+        alert('Only Operators can mark bookings.')
         return
       }
       bookingToProcess.value = booking
@@ -770,7 +823,7 @@ export default {
     const incompleteBookingConfirm = (booking) => {
       // Check if user has permission
       if (authStore.currentUser?.role !== 'operator') {
-        alert('❌ Only Operators can mark bookings')
+        alert('Only Operators can mark bookings.')
         return
       }
       bookingToProcess.value = booking
@@ -909,6 +962,9 @@ export default {
       canApproveBookings,
       canCompleteBookings,
       isApprover,
+      tableColspan,
+      bookingStatusSlug,
+      paymentStatusSlug,
       // Methods
       applyFilters,
       clearFilters,
@@ -937,484 +993,683 @@ export default {
 </script>
 
 <style scoped>
-/* Reuse styles from previous components */
-.machinery-approval-page {
-  padding: 24px;
+/* Mirrors LoanPage.vue glass shell (machinery scoped) */
+
+.machinery-page.page-container {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 28%, #1f3627 64%, #2a4735 100%);
+  border-radius: 20px;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
-.page-header {
-  margin-bottom: 24px;
+.machinery-page.page-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(45, 212, 191, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.access-denied-card,
+.machinery-authorised-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.access-denied-card {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(254, 243, 199, 0.94), rgba(253, 224, 171, 0.9));
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #78350f;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+}
+
+.access-denied-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.glass-header {
+  background: linear-gradient(135deg, rgba(167, 243, 198, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 14px 30px rgba(6, 12, 9, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.35rem;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a1a1a;
+  color: #f0fdf4;
+  font-weight: 900;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
   margin: 0;
 }
 
 .page-subtitle {
-  color: #666;
-  margin: 4px 0 0 0;
+  color: rgba(220, 252, 231, 0.78);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.machinery-stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .stat-card {
-  background: white;
+  background: linear-gradient(140deg, rgba(167, 243, 198, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(5, 11, 8, 0.28);
+  padding: 1.1rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.03);
+  border-color: rgba(167, 243, 198, 0.55);
+  box-shadow:
+    0 14px 28px rgba(5, 11, 8, 0.38),
+    0 0 20px rgba(74, 222, 128, 0.18);
+}
+
+.stat-icon-wrap {
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  padding: 20px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.stat-icon {
-  font-size: 36px;
-}
-
-.stat-label {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a1a1a;
-}
-
-.stat-pending { border-left: 4px solid #f59e0b; }
-.stat-success { border-left: 4px solid #10b981; }
-.stat-danger { border-left: 4px solid #ef4444; }
-.stat-info { border-left: 4px solid #3b82f6; }
-.stat-working { border-left: 4px solid #8b5cf6; }
-
-.info-banner {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-left: 4px solid #3b82f6;
-  padding: 14px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: #1e40af;
-}
-
-.banner-icon {
-  font-size: 18px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   flex-shrink: 0;
 }
 
-.banner-text {
-  flex: 1;
+.stat-icon.stat-abbr {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ecfdf5;
 }
 
-.banner-text strong {
-  font-weight: 600;
+.stat-value {
+  color: #ffffff;
+  font-size: 2rem;
+  line-height: 1.05;
+  font-weight: 900;
 }
 
-.filters-section {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+.stat-label {
+  color: rgba(236, 253, 245, 0.88);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.stat-card.incomplete .stat-icon-wrap {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(254, 243, 199, 0.22);
+}
+
+.stat-card.expired .stat-icon-wrap {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(241, 245, 249, 0.12);
+}
+
+.card.machinery-bookings-card {
+  background: linear-gradient(145deg, rgba(16, 44, 31, 0.86), rgba(13, 37, 27, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  padding: 1.5rem 1.65rem;
+  box-shadow: 0 16px 30px rgba(4, 9, 7, 0.34);
+}
+
+.card-title {
+  color: #ecfdf5;
+  font-weight: 800;
+  font-size: 1.35rem;
+  margin: 0 0 0.75rem;
+}
+
+.loan-guidance-text {
+  margin: -0.1rem 0 1rem;
+  color: rgba(220, 252, 231, 0.86);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.tabs {
   display: flex;
-  gap: 20px;
+  gap: 0.6rem;
   flex-wrap: wrap;
+  border-bottom: none;
+  padding-bottom: 0.4rem;
+  margin-bottom: 1.1rem;
+  overflow-x: auto;
 }
 
-.filter-group {
-  flex: 1;
-  min-width: 200px;
-}
-
-.filter-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.filter-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.quick-filters {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 12px;
-}
-
-.filter-btn {
-  padding: 14px 20px;
-  border: 2px solid #e5e7eb;
-  background: white;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+.tab {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #e6fff1;
+  font-weight: 700;
+  padding: 0.52rem 0.92rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.filter-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.filter-btn:hover::before {
-  opacity: 1;
-}
-
-.filter-btn .btn-icon {
-  font-size: 18px;
-  transition: transform 0.3s;
-}
-
-.filter-btn:hover .btn-icon {
-  transform: scale(1.2) rotate(5deg);
-}
-
-.filter-btn .btn-text {
-  font-weight: 600;
+  transition: all 220ms ease;
   white-space: nowrap;
 }
 
-.filter-btn .btn-count {
-  margin-left: 4px;
-  padding: 2px 10px;
-  background: #f3f4f6;
+.tab:hover {
+  color: #ffffff;
+  border-color: rgba(110, 231, 183, 0.5);
+}
+
+.tab.active {
+  color: #052e16;
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
+  border-color: rgba(187, 247, 208, 0.9);
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.4);
+}
+
+.banner-inline-alert {
+  margin-bottom: 1rem;
+}
+
+.alert.alert-info {
+  padding: 0.85rem 1rem;
   border-radius: 12px;
-  font-size: 13px;
+  background: rgba(219, 234, 254, 0.88);
+  color: #0f3f66;
+  border-left: 4px solid #38bdf8;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.filters-row.machinery-filters .form-group {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+}
+
+.filters-row label {
+  display: block;
+  font-weight: 600;
+  color: rgba(236, 253, 245, 0.9);
+  font-size: 0.875rem;
+  margin-bottom: 0.42rem;
+}
+
+.input-shell {
+  position: relative;
+}
+
+.input-shell .field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(187, 247, 208, 0.35);
+}
+
+.input-shell input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 0.92rem 0.85rem 2.05rem;
+  border-radius: 12px;
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  background: rgba(8, 30, 22, 0.52);
+  color: #ecfdf5;
+  font-size: 0.94rem;
+  font-family: inherit;
+}
+
+.input-shell input:focus {
+  outline: none;
+  border-color: rgba(110, 231, 183, 0.9);
+  box-shadow:
+    0 0 0 3px rgba(74, 222, 128, 0.15),
+    0 0 16px rgba(74, 222, 128, 0.22);
+}
+
+.mach-clear-filters-btn {
+  align-self: center;
+  margin-top: 1.1rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(187, 247, 208, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ecfdf5;
   font-weight: 700;
-  transition: all 0.3s;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background-color 220ms ease;
 }
 
-.filter-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Specific button colors */
-.filter-btn-pending:hover {
-  border-color: #f59e0b;
-  background: #fffbeb;
-  color: #92400e;
-}
-
-.filter-btn-pending.active {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-}
-
-.filter-btn-approved:hover {
-  border-color: #10b981;
-  background: #ecfdf5;
-  color: #065f46;
-}
-
-.filter-btn-approved.active {
-  border-color: #10b981;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-}
-
-.filter-btn-in-use:hover {
-  border-color: #8b5cf6;
-  background: #faf5ff;
-  color: #6d28d9;
-}
-
-.filter-btn-in-use.active {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
-}
-
-.filter-btn-completed:hover {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  color: #1e40af;
-}
-
-.filter-btn-completed.active {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
-}
-
-.filter-btn-rejected:hover {
-  border-color: #ef4444;
-  background: #fef2f2;
-  color: #991b1b;
-}
-
-.filter-btn-rejected.active {
-  border-color: #ef4444;
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-}
-
-.filter-btn-expired:hover {
-  border-color: #f97316;
-  background: #fff7ed;
-  color: #9a3412;
-}
-
-.filter-btn-expired.active {
-  border-color: #f97316;
-  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
-}
-
-.filter-btn-incomplete:hover {
-  border-color: #f59e0b;
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.filter-btn-incomplete.active {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-}
-
-.filter-btn.active .btn-count {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-.filter-btn:active {
+.mach-clear-filters-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }
 
-.table-container {
-  background: white;
+/* Table shell — aligns with AdminLoansPage loans-table (+ dark-card theme overrides) */
+
+.machinery-table-container.table-container {
+  overflow-x: auto;
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 0.1rem;
 }
 
-.bookings-table {
+.machinery-loans-table.loans-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 0;
 }
 
-.bookings-table thead {
-  background: #f8f9fa;
+.machinery-loans-table.loans-table th,
+.machinery-loans-table.loans-table td {
+  padding: 0.62rem 0.48rem;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
 }
 
-.bookings-table th {
-  padding: 16px;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #e5e7eb;
+.machinery-loans-table.loans-table th:not(:last-child),
+.machinery-loans-table.loans-table td:not(:last-child) {
+  border-right: 1px solid rgba(203, 213, 225, 0.22);
 }
 
-.bookings-table td {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+.machinery-loans-table.loans-table th {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
+  font-weight: 700;
+  color: rgba(234, 241, 236, 0.94);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  border-bottom-color: rgba(190, 235, 203, 0.2);
 }
 
-.farmer-info,
-.machinery-info {
+.machinery-loans-table.loans-table td {
+  font-size: 0.73rem;
+  line-height: 1.22;
+  color: rgba(226, 234, 229, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.machinery-loans-table.loans-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.07);
+}
+
+.machinery-loans-table col.col-id {
+  width: 5%;
+}
+.machinery-loans-table col.col-name {
+  width: 14%;
+}
+.machinery-loans-table col.col-purpose {
+  width: 12%;
+}
+.machinery-loans-table col.col-date {
+  width: 9%;
+}
+.machinery-loans-table col.col-location {
+  width: 11%;
+}
+.machinery-loans-table col.col-term {
+  width: 9%;
+}
+.machinery-loans-table col.col-amount {
+  width: 10%;
+}
+.machinery-loans-table col.col-payment {
+  width: 10%;
+}
+.machinery-loans-table col.col-status {
+  width: 8%;
+}
+.machinery-loans-table col.col-actions {
+  width: 15%;
+}
+
+@media (max-width: 768px) {
+  .machinery-loans-table.loans-table th,
+  .machinery-loans-table.loans-table td {
+    padding: 0.52rem 0.35rem;
+    font-size: 0.68rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+  }
+}
+
+.machinery-td-stack {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 0.22rem;
+  white-space: normal;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.farmer-info small,
-.machinery-info small {
-  color: #666;
-  font-size: 12px;
+.mach-sub {
+  font-size: 0.64rem;
+  color: rgba(199, 210, 204, 0.86);
 }
 
-.price-cell {
-  font-weight: 600;
-  color: #059669;
+.mach-machinery-name {
+  font-weight: 700;
+}
+
+.ma-type-cell .badge {
+  margin-top: 2px;
+}
+
+.mach-pay-meta small {
+  display: block;
+  font-size: 0.61rem;
+  color: rgba(199, 210, 204, 0.86);
+}
+
+.td-name,
+.td-purpose,
+.td-location {
+  word-break: break-word;
+}
+
+.td-booking-date,
+.td-term,
+.td-status {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.amount {
+  font-weight: 800;
+  color: #6ee7b7;
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.61rem;
+  font-weight: 700;
 }
 
-.badge-primary { background: #dbeafe; color: #1e40af; }
-.badge-warning { background: #fef3c7; color: #92400e; }
-.badge-info { background: #e0e7ff; color: #3730a3; }
-.badge-success { background: #d1fae5; color: #065f46; }
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+.badge-primary {
+  background: rgba(59, 130, 246, 0.2);
+  color: #bae6fd;
+  border: 1px solid rgba(147, 197, 253, 0.38);
 }
 
-.status-success { background: #d1fae5; color: #065f46; }
-.status-warning { background: #fef3c7; color: #92400e; }
-.status-info { background: #dbeafe; color: #1e40af; }
-.status-danger { background: #fee2e2; color: #991b1b; }
-.status-default { background: #f3f4f6; color: #6b7280; }
+.badge-warning {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fef3c7;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.badge-info {
+  background: rgba(129, 140, 248, 0.18);
+  color: #e0e7ff;
+  border: 1px solid rgba(165, 180, 252, 0.35);
+}
+
+.badge-success {
+  background: rgba(34, 197, 94, 0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.badge-default {
+  background: rgba(148, 163, 184, 0.16);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.mach-loan-status,
+.mach-loan-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 0.3rem 0.52rem;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid rgba(190, 235, 203, 0.35);
+  background: transparent;
+}
+
+.mach-loan-status.pending {
+  color: #facc15;
+  border-color: rgba(245, 158, 11, 0.55);
+}
+.mach-loan-status.approved {
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.55);
+}
+.mach-loan-status.rejected {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.58);
+}
+.mach-loan-status.incomplete {
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.55);
+}
+.mach-loan-status.completed {
+  color: #6ee7b7;
+  border-color: rgba(5, 150, 105, 0.58);
+}
+.mach-loan-status.expired {
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+.mach-loan-status.cancelled,
+.mach-loan-status.unknown {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.mach-loan-pay.payment-unpaid {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.mach-loan-pay.payment-partial {
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.55);
+}
+.mach-loan-pay.payment-paid {
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.55);
+}
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 0.22rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.btn-icon-small {
-  padding: 6px 10px;
+.btn {
+  padding: 0.32rem 0.42rem;
   border: none;
-  background: #f3f4f6;
   border-radius: 6px;
+  font-size: 0.64rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1.15;
+  white-space: normal;
 }
 
-.btn-icon-small:hover {
-  background: #e5e7eb;
+.btn-approve {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  color: #14532d;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+}
+.btn-approve:hover {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
 }
 
-.btn-icon-small.btn-success {
+.btn-reject {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.28);
+}
+.btn-reject:hover {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+}
+
+.btn-view {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+.btn-view:hover {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-cell,
+.empty-cell {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(199, 210, 204, 0.88);
+}
+
+/* Modal badges (detail view) */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.status-success {
   background: #d1fae5;
   color: #065f46;
 }
 
-.btn-icon-small.btn-success:hover {
-  background: #a7f3d0;
+.status-warning {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.btn-icon-small.btn-danger:hover {
-  background: #fee2e2;
-}
-
-.btn-icon-small.btn-info {
+.status-info {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.btn-icon-small.btn-info:hover {
-  background: #bfdbfe;
+.status-danger {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-secondary {
-  background: #6b7280;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-success {
-  background: #10b981;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
+.status-default {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 5000;
 }
 
 .modal-content {
-  background: white;
+  background: #ffffff !important;
   border-radius: 16px;
-  width: 90%;
+  width: 92%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid #bbf7d0 !important;
 }
 
 .modal-large {
-  max-width: 800px;
+  max-width: 840px;
 }
 
 .modal-small {
-  max-width: 450px;
+  max-width: 440px;
+}
+
+.modal-medium {
+  max-width: 560px;
 }
 
 .modal-header {
-  padding: 24px;
+  padding: 1.25rem 1.35rem;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
@@ -1423,37 +1678,40 @@ export default {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #14532d;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 1.35rem;
   cursor: pointer;
-  color: #666;
+  color: #64748b;
+  line-height: 1;
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 1.25rem 1.35rem;
 }
 
 .booking-details {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.25rem;
 }
 
 .detail-section h3 {
-  font-size: 18px;
-  margin: 0 0 16px 0;
-  color: #1a1a1a;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #14532d;
 }
 
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 0.85rem;
 }
 
 .detail-item {
@@ -1467,127 +1725,174 @@ export default {
 }
 
 .detail-item label {
-  font-weight: 600;
-  color: #666;
-  font-size: 14px;
+  font-weight: 700;
+  color: #166534;
+  font-size: 0.82rem;
+}
+
+.detail-item span,
+.detail-item p {
+  color: #0f172a;
 }
 
 .price-highlight {
-  color: #059669;
-  font-size: 20px;
+  color: #047857 !important;
 }
 
 .rejection-box {
   background: #fee2e2;
   border-left: 4px solid #ef4444;
-  padding: 16px;
-  border-radius: 8px;
-}
-
-.rejection-box strong {
-  color: #991b1b;
+  padding: 1rem;
+  border-radius: 10px;
 }
 
 .rejection-box p {
-  margin: 8px 0 0 0;
-  color: #7f1d1d;
+  margin: 0.5rem 0 0;
+  color: #7f1d1d !important;
 }
 
 .notes-text {
-  background: #f9fafb;
-  padding: 16px;
-  border-radius: 8px;
-  color: #333;
-  line-height: 1.6;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 10px;
+  color: #334155;
+  line-height: 1.55;
 }
 
 .booking-summary {
-  background: #f9fafb;
-  padding: 16px;
-  border-radius: 8px;
-  margin: 16px 0;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 10px;
 }
 
 .booking-summary p {
-  margin: 8px 0;
+  margin: 0.42rem 0;
+  color: #0f172a;
 }
 
-.form-group {
-  margin-bottom: 20px;
+.modal-body .form-group {
+  margin-bottom: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.modal-permission-note {
+  flex: 1 1 100%;
+  margin: 0.5rem 0 0;
+  color: #c2410c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.complete-modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-secondary {
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #64748b;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-success {
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-success:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-warning {
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  border: none;
+  background: #f59e0b;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-block {
+  width: 100%;
 }
 
 .form-label {
   display: block;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #333;
+  margin-bottom: 0.42rem;
+  color: #334155;
 }
 
 .form-input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
   font-family: inherit;
+  font-size: 0.9rem;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
+.form-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
 }
 
-.loading-cell,
-.empty-cell {
-  text-align: center;
-  padding: 40px !important;
-  color: #666;
+.modal-subtitle {
+  color: #64748b;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
 }
 
-.loading-spinner {
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.alert {
+.alert-floating {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 20px 24px;
-  border-radius: 12px;
+  padding: 1.15rem 1.35rem;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-width: 350px;
-  max-width: 500px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  z-index: 2000;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -60%);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
+  min-width: 320px;
+  max-width: min(460px, 92vw);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.26);
+  z-index: 6000;
 }
 
 .alert-error {
@@ -1599,19 +1904,14 @@ export default {
 .alert-success {
   background: #d1fae5;
   color: #065f46;
-  border-left: 4px solid #10b981;
-}
-
-.alert-warning {
-  background: #fef3c7;
-  color: #92400e;
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid #22c55e;
 }
 
 .alert-close {
+  flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 1.1rem;
   cursor: pointer;
   opacity: 0.7;
 }
@@ -1620,206 +1920,39 @@ export default {
   opacity: 1;
 }
 
-.payment-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 4px;
+@media (max-width: 1024px) {
+  .machinery-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.payment-info small {
-  font-size: 11px;
-  color: #666;
+@media (max-width: 640px) {
+  .machinery-page.page-container {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  .machinery-stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .glass-header {
+    padding: 1.15rem 1.25rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .machinery-loans-table.loans-table th,
+  .machinery-loans-table.loans-table td {
+    padding: 8px 6px;
+    font-size: 0.66rem;
+  }
 }
 
-.form-section {
-  margin: 20px 0;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.form-section h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.payment-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.form-input {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-input.input-readonly {
-  background-color: #f3f4f6;
-  cursor: not-allowed;
-}
-
-.form-hint {
-  font-size: 12px;
-  color: #666;
-}
-
-.btn-warning {
-  background: #f59e0b;
-  color: white;
-}
-
-.btn-warning:hover {
-  background: #d97706;
-}
-
-.btn-icon-small.btn-warning {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.btn-icon-small.btn-warning:hover {
-  background: #fde68a;
-}
-
-.stat-card.stat-warning {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-left: 4px solid #f59e0b;
-}
-
-.stat-card.stat-warning .stat-value {
-  color: #92400e;
-}
-
-.stat-card.stat-working {
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-  border-left: 4px solid #8b5cf6;
-}
-
-.stat-card.stat-working .stat-value {
-  color: #6d28d9;
-}
-
-.payment-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 4px;
-}
-
-.payment-info small {
-  font-size: 11px;
-  color: #666;
-}
-
-.payment-type-buttons {
-  display: flex;
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.payment-type-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.payment-type-btn:hover {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.payment-type-btn.active {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-  font-weight: 600;
-}
-
-.payment-type-btn .btn-icon {
-  font-size: 24px;
-}
-
-.payment-type-btn .btn-text {
-  font-size: 13px;
-  text-align: center;
-}
-
-.input-error {
-  border-color: #ef4444 !important;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-/* Button Styles */
-.btn-payment {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: white;
-  border: none;
-}
-
-.btn-payment:hover {
-  opacity: 0.9;
-}
-
-.btn-block {
-  width: 100%;
-  padding: 12px 16px;
-}
-
-/* Modal Styles */
-.modal-subtitle {
-  color: #6b7280;
-  margin-bottom: 16px;
-}
-
-.modal-small {
-  max-width: 400px;
-}
-
-.modal-medium {
-  max-width: 600px;
-}
-
-.modal-large {
-  max-width: 900px;
-}
 </style>

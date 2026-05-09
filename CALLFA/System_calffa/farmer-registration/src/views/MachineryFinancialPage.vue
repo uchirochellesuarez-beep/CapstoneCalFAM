@@ -1,8 +1,8 @@
 <template>
-  <div class="financial-container">
+  <div class="financial-container glass-module-page">
     <div class="page-header">
       <div class="header-content">
-        <h1>💰 Machinery Financial Management</h1>
+        <h1>Machinery Financial Management</h1>
         <p class="page-subtitle">Record expenses, income, and manage profit distribution</p>
       </div>
     </div>
@@ -35,21 +35,18 @@
       <!-- Financial Summary Cards -->
       <div v-if="!isDuesOnlyView" class="summary-cards">
         <div class="summary-card income-card">
-          <div class="card-icon">📈</div>
           <div class="card-content">
             <span class="card-label">Total Income</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.total_income) }}</span>
           </div>
         </div>
         <div class="summary-card expense-card">
-          <div class="card-icon">📉</div>
           <div class="card-content">
             <span class="card-label">Total Expenses</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.total_expenses) }}</span>
           </div>
         </div>
         <div class="summary-card profit-card" :class="{ negative: profitSummary.net_profit < 0 }">
-          <div class="card-icon">💵</div>
           <div class="card-content">
             <span class="card-label">Net Profit</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.net_profit) }}</span>
@@ -72,7 +69,7 @@
       <!-- TAB 1: EXPENSES MANAGEMENT -->
       <div v-if="activeTab === 'expenses'" class="tab-content">
         <div class="section-header">
-          <h2>📝 Expense Management</h2>
+          <h2>Expense Management</h2>
           <button v-if="canManage" @click="showExpenseForm = true" class="btn-primary">+ Record Expense</button>
           <span v-else class="view-only-badge">👁️ View Only</span>
         </div>
@@ -104,8 +101,10 @@
             <label class="filter-label">End Date:</label>
             <input v-model="filters.end_date" type="date" class="filter-input" />
           </div>
-          <button @click="loadExpenses" class="btn-secondary">Filter</button>
-          <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          <div class="filter-actions">
+            <button @click="loadExpenses" class="btn-secondary">Filter</button>
+            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          </div>
         </div>
 
         <!-- Expenses Table -->
@@ -160,7 +159,7 @@
       <!-- TAB 2: INCOME MANAGEMENT -->
       <div v-if="activeTab === 'income'" class="tab-content">
         <div class="section-header">
-          <h2>💹 Income Management (Auto-Populated from Completed Bookings)</h2>
+          <h2>Income Management (Auto-Populated from Completed Bookings)</h2>
         </div>
 
         <!-- Income Filters -->
@@ -181,8 +180,10 @@
             <label class="filter-label">End Date:</label>
             <input v-model="filters.end_date" type="date" class="filter-input" />
           </div>
-          <button @click="loadIncome" class="btn-secondary">Filter</button>
-          <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          <div class="filter-actions">
+            <button @click="loadIncome" class="btn-secondary">Filter</button>
+            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          </div>
         </div>
 
         <p class="info-text">💡 Income is automatically generated from machinery collections and association dues.</p>
@@ -449,27 +450,30 @@
       <!-- TAB 3: ACCOUNTS RECEIVABLE & COLLECTIONS -->
       <div v-if="activeTab === 'ar'" class="tab-content">
         <div class="section-header">
-          <h2>📋 Accounts Receivable & Collections</h2>
+          <h2>Accounts Receivable & Collections</h2>
+        </div>
+        <div class="auto-interest-indicator">
+          Auto Interest Rule: <strong>2% (Partial)</strong> - automatically added once based on the full booking amount.
         </div>
 
         <!-- A/R Summary Cards -->
         <div class="summary-container">
           <div class="summary-card ar-card">
-            <div class="card-icon">📊</div>
+            <div class="card-icon icon-receivables">📈</div>
             <div class="card-content">
               <span class="card-label">Total Receivables</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_receivables) }}</span>
             </div>
           </div>
           <div class="summary-card collected-card">
-            <div class="card-icon">💰</div>
+            <div class="card-icon icon-collected">💵</div>
             <div class="card-content">
               <span class="card-label">Total Collected</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_collected) }}</span>
             </div>
           </div>
           <div class="summary-card balance-card">
-            <div class="card-icon">⚠️</div>
+            <div class="card-icon icon-balance">⚠️</div>
             <div class="card-content">
               <span class="card-label">Outstanding Balance</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_balance) }}</span>
@@ -488,8 +492,10 @@
               </option>
             </select>
           </div>
-          <button @click="loadARData" class="btn-secondary">Filter</button>
-          <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          <div class="filter-actions">
+            <button @click="loadARData" class="btn-secondary">Filter</button>
+            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+          </div>
         </div>
 
         <!-- A/R List -->
@@ -537,6 +543,7 @@
         <div class="collections-section">
           <div class="section-subheader">
             <h3>💵 Collections Transactions</h3>
+            <small class="auto-interest-note">Auto Interest: 2% is added once on first partial payment (based on full booking amount).</small>
           </div>
           <div class="table-container">
             <table class="collections-table">
@@ -572,7 +579,43 @@
       <!-- TAB 4: PROFIT COMPUTATION -->
       <div v-if="activeTab === 'profit'" class="tab-content">
         <div class="section-header">
-          <h2>📊 Profit Computation & Distribution</h2>
+          <h2>Profit Computation & Distribution</h2>
+        </div>
+
+        <div class="usage-leaders-card">
+          <div class="section-subheader">
+            <h3>🚜 Most Used Machinery (Completed Bookings Only)</h3>
+          </div>
+          <div v-if="bookingUsageLeaders.length === 0" class="empty-state">
+            <p>No completed booking usage found for current filters.</p>
+          </div>
+          <div v-else class="table-container">
+            <table class="data-table usage-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Machinery</th>
+                  <th>Type</th>
+                  <th v-if="isAdmin">Barangay</th>
+                  <th>Completed Bookings</th>
+                  <th>Total Area Booked</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in bookingUsageLeaders" :key="item.machinery_id">
+                  <td>{{ index + 1 }}</td>
+                  <td class="font-semibold">{{ item.machinery_name || '-' }}</td>
+                  <td>{{ item.machinery_type || '-' }}</td>
+                  <td v-if="isAdmin">{{ item.barangay_name || '-' }}</td>
+                  <td>{{ item.booking_count }}</td>
+                  <td>
+                    {{ formatNumber(item.total_area_booked) }}
+                    <small>{{ item.area_unit_hint || '' }}</small>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="profit-breakdown">
@@ -687,7 +730,7 @@
       <!-- TAB 5: REPORTS -->
       <div v-if="activeTab === 'reports'" class="tab-content">
         <div class="section-header">
-          <h2>📋 Financial Reports</h2>
+          <h2>Financial Reports</h2>
         </div>
         
         <!-- Report Generation Panel -->
@@ -695,18 +738,15 @@
           <div class="report-options-grid">
             <!-- Report Type Selection -->
             <div class="report-option-card">
-              <h4>📅 Report Period</h4>
+              <h4>Report Period</h4>
               <div class="report-type-buttons">
                 <button @click="generateReport('monthly')" class="report-type-btn" :class="{ active: reportData?.type === 'monthly' }" :disabled="reportLoading">
-                  <span class="btn-icon">📅</span>
                   <span class="btn-text">Monthly</span>
                 </button>
                 <button @click="generateReport('quarterly')" class="report-type-btn" :class="{ active: reportData?.type === 'quarterly' }" :disabled="reportLoading">
-                  <span class="btn-icon">📆</span>
                   <span class="btn-text">Quarterly</span>
                 </button>
                 <button @click="generateReport('annual')" class="report-type-btn" :class="{ active: reportData?.type === 'annual' }" :disabled="reportLoading">
-                  <span class="btn-icon">📊</span>
                   <span class="btn-text">Annual</span>
                 </button>
               </div>
@@ -728,76 +768,77 @@
                   <input type="date" v-model="reportFilters.endDate" class="form-input-sm" />
                 </div>
                 <button @click="generateReportCustom" class="btn-generate" :disabled="reportLoading || !reportFilters.startDate || !reportFilters.endDate">
-                  {{ reportLoading ? '⏳ Generating...' : '🔍 Generate' }}
+                  {{ reportLoading ? 'Generating...' : 'Generate' }}
                 </button>
               </div>
             </div>
             
             <!-- Report Sections Filter -->
             <div class="report-option-card">
-              <h4>📑 Include in Report</h4>
+              <h4>Include in Report</h4>
               <div class="filter-checkboxes">
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showSummary" />
-                  <span>📊 Summary Cards</span>
+                  <span>Summary Cards</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showDistribution" />
-                  <span>💰 Profit Distribution</span>
+                  <span>Profit Distribution</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showAllTransactions" />
-                  <span>📝 All Transactions</span>
+                  <span>All Transactions</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showExpenses" />
-                  <span>📤 Expense Details</span>
+                  <span>Expense Details</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showCollections" />
-                  <span>💵 Collection Details</span>
+                  <span>Collection Details</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showBookings" />
-                  <span>📅 Bookings Summary</span>
+                  <span>Bookings Summary</span>
+                </label>
+                <label class="filter-checkbox">
+                  <input type="checkbox" v-model="reportFilters.showCollectiblesForm" />
+                  <span>List of Collectibles (Talaan ng mga Singilin)</span>
                 </label>
               </div>
             </div>
             
             <!-- Print/Export Actions -->
             <div class="report-option-card actions-card">
-              <h4>🖨️ Export Options</h4>
+              <h4>Export Options</h4>
               
               <!-- Orientation Toggle -->
               <div class="orientation-setting">
-                <span class="orientation-label">📐 Page Orientation</span>
+                <span class="orientation-label">Page Orientation</span>
                 <div class="orientation-toggle">
                   <button 
                     @click="printOrientation = 'portrait'" 
                     class="orient-btn" 
                     :class="{ active: printOrientation === 'portrait' }">
-                    📄 Portrait
+                    Portrait
                   </button>
                   <button 
                     @click="printOrientation = 'landscape'" 
                     class="orient-btn" 
                     :class="{ active: printOrientation === 'landscape' }">
-                    🖼️ Landscape
+                    Landscape
                   </button>
                 </div>
               </div>
 
               <div class="action-buttons">
                 <button @click="printReport" class="btn-action print" :disabled="!reportData">
-                  <span class="btn-icon">🖨️</span>
                   <span>Print Report</span>
                 </button>
                 <button class="btn-action select-all" @click="selectAllFilters">
-                  <span class="btn-icon">✅</span>
                   <span>Select All</span>
                 </button>
                 <button class="btn-action clear" @click="clearAllFilters">
-                  <span class="btn-icon">❌</span>
                   <span>Clear All</span>
                 </button>
               </div>
@@ -813,22 +854,98 @@
         
         <!-- Report Display -->
         <div v-if="reportData && !reportLoading" class="report-display" id="printable-report">
-          <!-- Report Header -->
+          <!-- Report Header (CFA = Barangay scope; period from filter/API; no contact/address) -->
           <div class="report-header">
             <div class="report-logo">
-              <span class="logo-icon">🌾</span>
+              <img :src="reportLogoUrl" alt="CALFFA Logo" class="report-logo-image" />
               <div class="logo-text">
-                <h3>CALFFA Cooperative</h3>
-                <p>Machinery Financial Report</p>
+                <p class="report-cfa-line">
+                  <strong>Name ng CFA:</strong> {{ reportBarangayNameForReport }}
+                </p>
+                <h3 class="report-doc-title">Machinery Financial Report</h3>
               </div>
             </div>
             <div class="report-meta">
               <h3>{{ reportData.type.charAt(0).toUpperCase() + reportData.type.slice(1) }} Transaction Report</h3>
-              <p class="report-period">
-                <strong>Period:</strong> {{ formatReportDate(reportData.period.start) }} - {{ formatReportDate(reportData.period.end) }}
+              <p class="report-period-long">
+                {{ formatReportPeriodLong(reportData.period.start, reportData.period.end) }}
               </p>
               <p class="report-generated">
                 Generated: {{ formatReportDate(reportData.generated_at) }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Official sheet: List of Collectibles / Talaan ng mga Singilin (no contact / address) -->
+          <div v-if="reportFilters.showCollectiblesForm" class="collectibles-form-sheet">
+            <div class="collectibles-form-title-block">
+              <h2 class="collectibles-main-title">List of Collectibles</h2>
+              <p class="collectibles-main-subtitle">Talaan ng mga Singilin</p>
+            </div>
+
+            <div class="collectibles-meta-box">
+              <div class="collectibles-meta-row">
+                <span class="collectibles-meta-label">Name ng CFA / Name of FCA:</span>
+                <span class="collectibles-meta-value">{{ reportBarangayNameForReport }}</span>
+              </div>
+              <div class="collectibles-meta-row">
+                <span class="collectibles-meta-label">Uri ng makinarya / Type of Farm Machinery:</span>
+                <span class="collectibles-meta-value">{{ collectiblesMachineryLine }}</span>
+              </div>
+              <div class="collectibles-meta-row collectibles-meta-row-full">
+                <span class="collectibles-meta-label">Buwan saklaw ng talaan / Period covered:</span>
+                <span class="collectibles-meta-value">{{ formatReportPeriodLong(reportData.period.start, reportData.period.end) }}</span>
+              </div>
+            </div>
+
+            <div class="collectibles-table-wrap">
+              <table class="collectibles-data-table">
+                <thead>
+                  <tr>
+                    <th class="col-client">
+                      Name of Client<br />
+                      <span class="th-tl">(Pangalan ng Kliyente)</span>
+                    </th>
+                    <th class="col-ar text-right">
+                      Accounts Receivable<br />
+                      <span class="th-tl">(Singilin)</span>
+                    </th>
+                    <th class="col-cash text-right">
+                      Cash Collection of Fees (C2)<br />
+                      <span class="th-tl">(Nakolektang bayad)</span>
+                    </th>
+                    <th class="col-date">
+                      Date of Payment<br />
+                      <span class="th-tl">(Petsa ng pagbayad)</span>
+                    </th>
+                    <th class="col-rcpt">Receipt Number</th>
+                    <th class="col-bal text-right">
+                      Remaining balance<br />
+                      <span class="th-tl">(natirang balanse)</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in collectiblesLedgerRows" :key="'cl-' + row.collectionId">
+                    <td>{{ row.farmer_name }}</td>
+                    <td class="text-right">{{ formatCollectiblesMoney(row.accounts_receivable) }}</td>
+                    <td class="text-right">{{ formatCollectiblesMoney(row.cash_collection) }}</td>
+                    <td>{{ formatReportDate(row.date) }}</td>
+                    <td>{{ row.receipt_number }}</td>
+                    <td class="text-right">{{ formatCollectiblesMoney(row.balance_after) }}</td>
+                  </tr>
+                  <tr v-for="n in collectiblesEmptyRowCount" :key="'cl-empty-' + n" class="collectibles-empty-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p v-if="collectiblesLedgerRows.length === 0" class="collectibles-empty-note">
+                Walang koleksyon sa piniling saklaw ng petsa / No collections in this period.
               </p>
             </div>
           </div>
@@ -1012,8 +1129,8 @@
                     <th>Type</th>
                     <th>Receipt No.</th>
                     <th class="text-right">Amount</th>
-                    <th class="text-right">Interest</th>
-                    <th>Season</th>
+                    <th class="text-right">Auto Interest (2% Partial)</th>
+                    <th>Rule</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1029,7 +1146,7 @@
                     <td>{{ col.receipt_number || '-' }}</td>
                     <td class="text-right text-green">₱{{ parseFloat(col.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
                     <td class="text-right">{{ col.interest_applied ? '₱' + parseFloat(col.interest_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '-' }}</td>
-                    <td>{{ col.interest_season ? 'Season ' + col.interest_season : '-' }}</td>
+                    <td>{{ col.interest_applied ? 'Auto 2% (Partial)' : '-' }}</td>
                   </tr>
                 </tbody>
                 <tfoot>
@@ -1288,36 +1405,12 @@
             </div>
           </div>
 
-          <!-- Interest Option (for Partial Payments) -->
           <div v-if="collectionForm.paymentType === 'partial'" class="form-group payment-interest-box">
-            <!-- Interest already applied on first payment - show info only -->
-            <div v-if="interestAlreadyApplied" class="interest-already-applied">
-              <span style="color: #059669; font-weight: 600;">✓ Interest already applied: ₱{{ formatNumber(editingCollection.pending_interest) }}</span>
-              <small>Interest was applied on the first payment and remains fixed until balance is fully paid.</small>
+            <div class="interest-already-applied">
+              <small style="color: #1d4ed8;">
+                Auto Interest Rule: 2% (Partial). The system automatically adds 2% once, based on the full booking amount, when a partial payment is recorded.
+              </small>
             </div>
-            <!-- First payment was made without interest - decision is locked -->
-            <div v-else-if="!isFirstPayment" class="interest-already-applied">
-              <small style="color: #6b7280;">Interest was not applied on the first payment. The decision is locked for this booking.</small>
-            </div>
-            <!-- First payment: treasurer can decide -->
-            <template v-else-if="canApplyInterest">
-              <label class="checkbox-label">
-                <input v-model="collectionForm.addInterest" type="checkbox" />
-                <span><strong>Add Interest (one-time, first payment only)</strong></span>
-              </label>
-              <small v-if="isOverdue">{{ interestSeason.label }} - {{ monthsElapsed }} month(s) overdue from due date</small>
-              <small v-else>Due date has not passed yet. You may still choose to apply interest.</small>
-              
-              <div v-if="collectionForm.addInterest" class="interest-details">
-                <div class="detail-row">
-                  <span>Interest Calculation ({{ (interestSeason.rate * 100) }}% of remaining balance ₱{{ formatNumber(remainingBalance) }}):</span>
-                  <span>₱{{ formatNumber(interestAmount) }}</span>
-                </div>
-                <div class="detail-row highlight">
-                  <span><strong>Interest will be added to remaining balance (one-time only)</strong></span>
-                </div>
-              </div>
-            </template>
           </div>
 
           <!-- Receipt Number -->
@@ -1346,10 +1439,6 @@
               <tr class="total-row">
                 <td><strong>Total Collection:</strong></td>
                 <td class="amount"><strong>₱{{ formatNumber(totalCollectionAmount) }}</strong></td>
-              </tr>
-              <tr v-if="collectionForm.addInterest && canApplyInterest">
-                <td>Interest ({{ interestSeason.label }}):</td>
-                <td class="amount">+ ₱{{ formatNumber(interestAmount) }}</td>
               </tr>
               <tr v-if="collectionForm.paymentType === 'partial'" class="balance-row">
                 <td><strong>Remaining Balance After:</strong></td>
@@ -1452,7 +1541,7 @@
 
     <!-- Alert Messages -->
     <div v-if="alert.show" :class="['alert', 'alert-' + alert.type]">
-      <span>{{ alert.message }}</span>
+      <span class="alert-message">{{ alert.message }}</span>
       <button @click="alert.show = false" class="alert-close">×</button>
     </div>
   </div>
@@ -1466,6 +1555,7 @@ import { useAuthStore } from '../stores/authStore';
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const reportLogoUrl = 'https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3';
 
 const highlightedBookingId = ref(null);
 
@@ -1488,6 +1578,24 @@ const isTreasurer = computed(() => userRole.value === 'treasurer');
 
 // Check if user is admin (sees only profit and reports tabs)
 const isAdmin = computed(() => userRole.value === 'admin');
+
+// Barangay tied to the report scope (admin = filter; others = user's barangay)
+const reportEffectiveBarangayId = computed(() => {
+  if (isAdmin.value) return selectedBarangayId.value || '';
+  return userBarangayId.value != null && userBarangayId.value !== ''
+    ? String(userBarangayId.value)
+    : '';
+});
+
+const reportBarangayNameForReport = computed(() => {
+  const bid = reportEffectiveBarangayId.value;
+  if (!bid) {
+    if (isAdmin.value) return '(Pumili ng Barangay sa filter sa itaas)';
+    return '—';
+  }
+  const row = barangays.value.find((b) => String(b.id) === String(bid));
+  return row?.name || bid;
+});
 
 // Check if user can manage (only treasurer)
 const canManage = computed(() => isTreasurer.value);
@@ -1519,10 +1627,9 @@ const totalCollectionAmount = computed(() => {
 
 const remainingBalanceAfter = computed(() => {
   if (collectionForm.value.paymentType === 'full') return 0;
-  // Remaining balance = (Current Balance - Payment Amount) + Interest (only if being applied now)
+  // Frontend preview excludes auto-interest because backend applies it server-side.
   const base = remainingBalance.value - (collectionForm.value.paymentAmount || 0);
-  const interest = (collectionForm.value.addInterest && canApplyInterest.value) ? interestAmount.value : 0;
-  return base + interest;
+  return base;
 });
 
 const showPartialWarning = computed(() => {
@@ -1537,19 +1644,6 @@ const getDueDate = (bookingDate) => {
   return d;
 };
 
-// Calculate months elapsed since due date (30 days after booking) for progressive interest
-const monthsElapsed = computed(() => {
-  if (!editingCollection.value || !editingCollection.value.booking_date) return 0;
-  const bookingDate = new Date(editingCollection.value.booking_date);
-  const dueDate = new Date(bookingDate);
-  dueDate.setDate(dueDate.getDate() + 30); // Due date is 30 days after booking
-  const today = new Date();
-  const diffMs = today - dueDate;
-  if (diffMs <= 0) return 0; // Not yet overdue
-  const diffMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
-  return diffMonths;
-});
-
 // Check if booking is overdue (past 30 days from booking date)
 const isOverdue = computed(() => {
   if (!editingCollection.value || !editingCollection.value.booking_date) return false;
@@ -1557,48 +1651,6 @@ const isOverdue = computed(() => {
   const dueDate = new Date(bookingDate);
   dueDate.setDate(dueDate.getDate() + 30);
   return new Date() > dueDate;
-});
-
-// Check if the selected collection date is after the due date
-const isPaymentAfterDueDate = computed(() => {
-  if (!editingCollection.value || !editingCollection.value.booking_date || !collectionForm.value.collectionDate) return false;
-  const bookingDate = new Date(editingCollection.value.booking_date);
-  const dueDate = new Date(bookingDate);
-  dueDate.setDate(dueDate.getDate() + 30);
-  const paymentDate = new Date(collectionForm.value.collectionDate);
-  return paymentDate > dueDate;
-});
-
-// Check if interest was already applied to this booking
-const interestAlreadyApplied = computed(() => {
-  return (parseFloat(editingCollection.value?.pending_interest) || 0) > 0;
-});
-
-// Check if this is the first payment (no prior payments recorded)
-const isFirstPayment = computed(() => {
-  const status = editingCollection.value?.payment_status;
-  return status === 'Unpaid' || status === 'unpaid';
-});
-
-// Interest can only be added if: partial payment, first payment, and not already applied
-const canApplyInterest = computed(() => {
-  return collectionForm.value.paymentType === 'partial'
-    && isFirstPayment.value
-    && !interestAlreadyApplied.value;
-});
-
-// Determine which interest season applies (based on months overdue from due date)
-const interestSeason = computed(() => {
-  const months = monthsElapsed.value;
-  if (months <= 6) return { season: 1, rate: 0.02, label: `Season 1 (0-6mo overdue): 2%` };
-  return { season: 2, rate: 0.04, label: `Season 2 (6+mo overdue): 4%` };
-});
-
-const interestAmount = computed(() => {
-  if (!collectionForm.value.addInterest || !canApplyInterest.value) return 0;
-  // Interest is calculated on the whole remaining balance at the time of first application
-  const rate = interestSeason.value.rate;
-  return parseFloat((remainingBalance.value * rate).toFixed(2));
 });
 
 // Profit Distribution Calculation (30% Org, 20% Training, 50% Members)
@@ -1674,6 +1726,7 @@ const profitSummary = ref({
 });
 const expenseBreakdown = ref({});
 const totalMembers = ref(0); // Total cooperative members for distribution calculation
+const bookingUsageLeaders = ref([]);
 
 // Report data
 const reportData = ref(null);
@@ -1685,10 +1738,88 @@ const reportFilters = ref({
   showExpenses: true,
   showCollections: true,
   showBookings: true,
+  showCollectiblesForm: true,
   customDateRange: false,
   startDate: '',
   endDate: ''
 });
+
+const COLLECTIBLES_MIN_PRINT_ROWS = 20;
+
+/** Bilingual machinery line for collectibles sheet (from report collections). */
+const collectiblesMachineryLine = computed(() => {
+  const cols = reportData.value?.transactions?.collections;
+  if (!cols?.length) return '—';
+  const names = [...new Set(cols.map((c) => c.machinery_name).filter(Boolean))];
+  return names.length ? names.join(', ') : '—';
+});
+
+/** One row per collection payment; A/R & balance use booking total from API when available. */
+const collectiblesLedgerRows = computed(() => {
+  const cols = reportData.value?.transactions?.collections;
+  if (!cols?.length) return [];
+  const bookingMap = {};
+  for (const b of reportData.value?.transactions?.bookings || []) {
+    const bid = b.booking_id;
+    if (bid != null) bookingMap[bid] = b;
+  }
+  const sorted = [...cols].sort((a, b) => {
+    const ta = new Date(a.date).getTime();
+    const tb = new Date(b.date).getTime();
+    if (ta !== tb) return ta - tb;
+    return (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+  const paidByBooking = {};
+  const rows = [];
+  for (const c of sorted) {
+    const bid = c.booking_id;
+    let total =
+      c.booking_total_price != null && c.booking_total_price !== ''
+        ? parseFloat(c.booking_total_price)
+        : NaN;
+    if (Number.isNaN(total) && bid != null && bookingMap[bid]) {
+      total = parseFloat(bookingMap[bid].amount) || 0;
+    }
+    if (Number.isNaN(total)) total = 0;
+    const principal = parseFloat(c.amount || 0);
+    const interest = parseFloat(c.interest_amount || 0);
+    const interestApplied =
+      c.interest_applied === 1 ||
+      c.interest_applied === true ||
+      c.interest_applied === '1';
+    const cash = principal + (interestApplied ? interest : 0);
+    if (!paidByBooking[bid]) paidByBooking[bid] = 0;
+    paidByBooking[bid] += cash;
+    const balanceAfter = Math.max(0, total - paidByBooking[bid]);
+    rows.push({
+      collectionId: c.id,
+      farmer_name: c.farmer_name || '—',
+      accounts_receivable: total,
+      cash_collection: cash,
+      date: c.date,
+      receipt_number: (c.receipt_number && String(c.receipt_number).trim()) || '—',
+      balance_after: balanceAfter
+    });
+  }
+  return rows;
+});
+
+const collectiblesEmptyRowCount = computed(() => {
+  const n = collectiblesLedgerRows.value.length;
+  return Math.max(0, COLLECTIBLES_MIN_PRINT_ROWS - n);
+});
+
+const formatCollectiblesMoney = (num) => {
+  const x = parseFloat(num);
+  if (Number.isNaN(x)) return '—';
+  return (
+    '₱' +
+    x.toLocaleString('en-PH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  );
+};
 
 const printOrientation = ref('landscape');
 
@@ -1734,9 +1865,7 @@ const collectionForm = ref({
   paymentAmount: 0,
   collectionDate: new Date().toISOString().split('T')[0],
   receiptNumber: '',
-  remarks: '',
-  addInterest: false,
-  interestSeason: 1  // Track which season's interest applies (1 or 2)
+  remarks: ''
 });
 
 const alert = ref({
@@ -2089,6 +2218,28 @@ const loadExpenseBreakdown = async () => {
   }
 };
 
+const loadBookingUsageStats = async () => {
+  try {
+    const params = new URLSearchParams({
+      user_id: authStore.currentUser.id,
+      ...(filters.value.start_date && { start_date: filters.value.start_date }),
+      ...(filters.value.end_date && { end_date: filters.value.end_date }),
+      ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value }),
+      limit: '10'
+    });
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/booking-usage-stats?${params}`);
+    const data = await response.json();
+
+    if (data.success) {
+      bookingUsageLeaders.value = data.leaders || [];
+    }
+  } catch (error) {
+    console.error('Error loading booking usage stats:', error);
+    bookingUsageLeaders.value = [];
+  }
+};
+
 const saveExpense = async () => {
   try {
     // Validate required fields
@@ -2314,7 +2465,6 @@ const deleteCollection = async (id) => {
 const setFullPaymentAmount = () => {
   // Auto-fill full payment with remaining balance
   collectionForm.value.paymentAmount = remainingBalance.value;
-  collectionForm.value.addInterest = false; // Disable interest for full payments
 };
 
 const validatePaymentAmount = () => {
@@ -2330,7 +2480,6 @@ const validatePaymentAmount = () => {
     // If partial amount equals full balance, auto-switch to Full Payment
     if (collectionForm.value.paymentAmount > 0 && Math.abs(collectionForm.value.paymentAmount - remainingBalance.value) < 0.01) {
       collectionForm.value.paymentType = 'full';
-      collectionForm.value.addInterest = false;
       showAlert('Amount equals full balance — switched to Full Payment automatically.', 'success');
     }
   }
@@ -2362,18 +2511,9 @@ const saveCollection = async () => {
     // Block partial payment if amount equals full balance
     if (collectionForm.value.paymentType === 'partial' && Math.abs(collectionForm.value.paymentAmount - remainingBalance.value) < 0.01) {
       collectionForm.value.paymentType = 'full';
-      collectionForm.value.addInterest = false;
       showAlert('Amount equals full balance — switched to Full Payment.', 'success');
       return;
     }
-
-    // Force-clear interest if conditions aren't met (safety check)
-    if (collectionForm.value.addInterest && !canApplyInterest.value) {
-      collectionForm.value.addInterest = false;
-    }
-    
-    // Update interest season based on months elapsed
-    collectionForm.value.interestSeason = interestSeason.value.season;
     
     // Prepare collection data
     const collectionData = {
@@ -2385,11 +2525,7 @@ const saveCollection = async () => {
       receipt_number: collectionForm.value.receiptNumber.trim(),
       remarks: collectionForm.value.remarks || null,
       user_id: authStore.currentUser.id,
-      // New fields for tracking
       payment_type: collectionForm.value.paymentType, // 'full' or 'partial'
-      include_interest: collectionForm.value.addInterest && canApplyInterest.value,
-      interest_amount: (collectionForm.value.addInterest && canApplyInterest.value) ? interestAmount.value : 0,
-      interest_season: (collectionForm.value.addInterest && canApplyInterest.value) ? collectionForm.value.interestSeason : 0,
       total_collection: totalCollectionAmount.value
     };
     
@@ -2403,13 +2539,8 @@ const saveCollection = async () => {
     const data = await response.json();
     
     if (data.success) {
-      // If partial payment with interest, show interest amount in message
-      const interestMsg = collectionForm.value.addInterest && collectionForm.value.paymentType === 'partial' 
-        ? ` (including ₱${formatNumber(interestAmount.value)} interest)`
-        : '';
-      
       showAlert(
-        `Collection recorded successfully: ₱${formatNumber(collectionForm.value.paymentAmount)}${interestMsg}. Payment moved to income section.`,
+        `Collection recorded successfully: ₱${formatNumber(collectionForm.value.paymentAmount)}. Payment moved to income section.`,
         'success'
       );
       
@@ -2434,9 +2565,7 @@ const resetCollectionForm = () => {
     paymentAmount: 0,
     collectionDate: new Date().toISOString().split('T')[0],
     receiptNumber: '',
-    remarks: '',
-    addInterest: false,
-    interestSeason: 1
+    remarks: ''
   };
   editingCollection.value = null;
 };
@@ -2527,6 +2656,22 @@ const formatReportDate = (dateStr) => {
   });
 };
 
+/** e.g. Mula March 1 – September 30, Year: 2026 (from report / filter period) */
+const formatReportPeriodLong = (startStr, endStr) => {
+  if (!startStr || !endStr) return '-';
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '-';
+  const monthDay = (d) =>
+    d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const y1 = start.getFullYear();
+  const y2 = end.getFullYear();
+  if (y1 === y2) {
+    return `Mula ${monthDay(start)} – ${monthDay(end)}, Year: ${y1}`;
+  }
+  return `Mula ${monthDay(start)}, Year: ${y1} – ${monthDay(end)}, Year: ${y2}`;
+};
+
 const getTransactionTypeClass = (type) => {
   switch (type) {
     case 'Expense': return 'badge-expense';
@@ -2544,6 +2689,7 @@ const selectAllFilters = () => {
   reportFilters.value.showExpenses = true;
   reportFilters.value.showCollections = true;
   reportFilters.value.showBookings = true;
+  reportFilters.value.showCollectiblesForm = true;
 };
 
 const clearAllFilters = () => {
@@ -2553,6 +2699,7 @@ const clearAllFilters = () => {
   reportFilters.value.showExpenses = false;
   reportFilters.value.showCollections = false;
   reportFilters.value.showBookings = false;
+  reportFilters.value.showCollectiblesForm = false;
 };
 
 // Generate report with custom date range
@@ -2852,6 +2999,7 @@ watch(selectedBarangayId, () => {
   if (isAdmin.value) {
     loadProfitSummary();
     loadExpenseBreakdown();
+    loadBookingUsageStats();
     // Clear report data when filter changes
     reportData.value = null;
   }
@@ -2914,6 +3062,7 @@ onMounted(async () => {
     loadCollections();
     loadProfitSummary();
     loadExpenseBreakdown();
+    loadBookingUsageStats();
     loadMachinery();
     loadTotalMembers();
     loadMonthlyDues();
@@ -2963,30 +3112,158 @@ onBeforeUnmount(() => {
 }
 
 @keyframes highlightRowPulse {
-  0%, 100% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.2); }
-  50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.6); }
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(74, 222, 128, 0.2); }
+  50% { box-shadow: inset 0 0 0 2px rgba(74, 222, 128, 0.6); }
 }
 
+/* ===== GLASSMORPHIC GREEN THEME ===== */
 .financial-container {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  --glass-bg: rgba(29, 43, 33, 0.92);
+  --glass-bg-soft: rgba(35, 52, 41, 0.84);
+  --glass-panel: rgba(31, 48, 36, 0.94);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-line-strong: rgba(255, 255, 255, 0.18);
+  --text-main: #eefde6;
+  --text-muted: rgba(220, 238, 211, 0.78);
+  --text-soft: rgba(220, 238, 211, 0.62);
+  --green: #34d399;
+  --yellow: #86efac;
+  --blue: #22c55e;
+  --teal: #2dd4bf;
+  --lime: #a3e635;
+  --red: #f87171;
+  
+  min-height: 100vh;
+  padding: 28px;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-main);
+}
+
+.financial-container::before,
+.financial-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.financial-container::before {
+  background:
+    radial-gradient(ellipse 82% 56% at 12% 88%, rgba(17, 94, 41, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 75% 55% at 92% 10%, rgba(34, 197, 94, 0.14) 0%, transparent 64%),
+    radial-gradient(circle at 50% 16%, rgba(45, 212, 191, 0.11) 0%, transparent 22%),
+    linear-gradient(130deg, rgba(163, 230, 53, 0.03) 0%, transparent 38%, rgba(45, 212, 191, 0.03) 100%);
+  animation: ambienceDrift 16s ease-in-out infinite alternate;
+}
+
+.financial-container::after {
+  background:
+    radial-gradient(circle at 94% 8%, rgba(34, 197, 94, 0.2) 0%, transparent 17%),
+    radial-gradient(circle at 8% 86%, rgba(74, 222, 128, 0.16) 0%, transparent 20%),
+    radial-gradient(circle at 80% 74%, rgba(45, 212, 191, 0.18) 0%, transparent 18%),
+    radial-gradient(circle at 22% 30%, rgba(163, 230, 53, 0.14) 0%, transparent 16%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 14px);
+  filter: blur(10px);
+  animation: orbPulse 11s ease-in-out infinite;
+}
+
+@keyframes ambienceDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-10px, 8px, 0) scale(1.03);
+  }
+}
+
+@keyframes orbPulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.financial-container > * {
+  position: relative;
+  z-index: 1;
 }
 
 .page-header {
-  margin-bottom: 30px;
+  margin-bottom: 28px;
+  padding: 36px 40px;
+  background: linear-gradient(135deg, rgba(28, 41, 31, 0.94) 0%, rgba(35, 54, 40, 0.9) 56%, rgba(48, 78, 62, 0.84) 100%);
+  border-radius: 26px;
+  border: 1px solid var(--glass-line);
+  box-shadow:
+    18px 18px 34px rgba(8, 14, 10, 0.5),
+    -14px -14px 26px rgba(42, 61, 46, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.34);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  margin-left: 0;
+  margin-right: auto;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: -35% -10% auto auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.22) 0%, rgba(45, 212, 191, 0) 68%);
+  pointer-events: none;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  inset: auto auto -50% -8%;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.18) 0%, rgba(163, 230, 53, 0) 70%);
+  pointer-events: none;
 }
 
 .page-header h1 {
-  font-size: 32px;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.9px;
+  margin: 0;
+  background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .page-subtitle {
-  color: #666;
+  color: var(--text-muted);
   margin: 0;
   font-size: 16px;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 .access-denied {
@@ -2994,10 +3271,20 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   min-height: 400px;
+  padding: 32px;
 }
 
 .denied-content {
   text-align: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 24px;
+  padding: 48px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    16px 16px 30px rgba(8, 14, 10, 0.52),
+    -14px -14px 28px rgba(42, 61, 46, 0.44),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .denied-icon {
@@ -3007,56 +3294,112 @@ onBeforeUnmount(() => {
 
 .denied-text {
   font-size: 24px;
-  color: #1a1a1a;
+  color: var(--text-main);
   margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .denied-reason {
-  color: #666;
+  color: var(--text-soft);
   font-size: 14px;
 }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
 }
 
 .distribution-actions {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
 }
 
 .summary-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.96), rgba(24, 36, 28, 0.94));
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  border-radius: 18px;
+  padding: 22px 24px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow:
+    12px 12px 24px rgba(8, 13, 10, 0.52),
+    0 0 0 1px rgba(20, 32, 24, 0.5),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -20px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    18px 18px 32px rgba(8, 13, 10, 0.56),
+    0 14px 28px rgba(16, 56, 33, 0.26),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(163, 230, 53, 0.14) 0%, rgba(163, 230, 53, 0) 44%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.04) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.summary-card::after {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  right: -36px;
+  bottom: -40px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.16) 0%, rgba(45, 212, 191, 0) 70%);
+  pointer-events: none;
+}
+
+.summary-card:nth-child(odd) {
+  animation: cardFloat 9s ease-in-out infinite;
+}
+
+.summary-card:nth-child(even) {
+  animation: cardFloat 11s ease-in-out infinite reverse;
 }
 
 .income-card {
-  border-left: 4px solid #10b981;
+  border-image: linear-gradient(135deg, rgba(74, 222, 128, 0.8), rgba(74, 222, 128, 0.2)) 1;
 }
 
 .expense-card {
-  border-left: 4px solid #ef4444;
+  border-image: linear-gradient(135deg, rgba(74, 222, 128, 0.75), rgba(22, 163, 74, 0.25)) 1;
 }
 
 .profit-card {
-  border-left: 4px solid #3b82f6;
+  border-image: linear-gradient(135deg, rgba(34, 197, 94, 0.85), rgba(16, 185, 129, 0.28)) 1;
 }
 
 .profit-card.negative {
-  border-left-color: #ef4444;
+  border-image: linear-gradient(135deg, rgba(248, 113, 113, 0.85), rgba(251, 191, 36, 0.2)) 1;
 }
 
 .card-icon {
-  font-size: 32px;
+  font-size: 42px;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(22, 163, 74, 0.22));
+  flex-shrink: 0;
 }
 
 .card-content {
@@ -3065,51 +3408,110 @@ onBeforeUnmount(() => {
 }
 
 .card-label {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 4px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  text-shadow: none;
 }
 
 .card-amount {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 33px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.7px;
+  color: #1a5c2a;
+  text-shadow: none;
 }
 
 .tabs-container {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #e5e7eb;
+  gap: 14px;
+  margin-bottom: 26px;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .tab {
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
+  padding: 15px 26px;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(220, 252, 231, 0.9));
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: #666;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.3s;
+  font-size: 18px;
+  font-weight: 800;
+  color: #14532d;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  min-height: 54px;
+  flex: 1 1 0;
+  text-align: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(3, 16, 10, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .tab:hover {
-  color: #1a1a1a;
+  background: linear-gradient(135deg, rgba(220, 252, 231, 1), rgba(187, 247, 208, 0.96));
+  border-color: rgba(22, 163, 74, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(3, 16, 10, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%);
+  border-color: rgba(167, 243, 208, 0.65);
+  color: #f0fdf4;
+  box-shadow: 0 12px 22px rgba(6, 78, 35, 0.35), inset 0 1px 0 rgba(220, 252, 231, 0.22);
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 13px 20px;
+    font-size: 16px;
+    min-height: 48px;
+    flex: 1 1 calc(50% - 10px);
+  }
 }
 
 .tab-content {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  padding: 24px 28px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    14px 14px 26px rgba(8, 13, 10, 0.5),
+    0 0 0 1px rgba(20, 32, 24, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -26px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(163, 230, 53, 0.08) 0%, rgba(163, 230, 53, 0) 28%),
+    radial-gradient(circle at 88% 88%, rgba(45, 212, 191, 0.08) 0%, rgba(45, 212, 191, 0) 30%);
+  pointer-events: none;
+}
+
+@keyframes cardFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .section-header {
@@ -3121,42 +3523,73 @@ onBeforeUnmount(() => {
 
 .section-header h2 {
   margin: 0;
-  font-size: 22px;
-  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
 }
 
 .filters-section {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 24px;
   flex-wrap: wrap;
+  align-items: end;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(187, 247, 208, 0.22);
+  background: linear-gradient(135deg, rgba(39, 58, 45, 0.72), rgba(26, 41, 32, 0.7));
 }
 
-.filter-input {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
+.filter-input,
+.filter-select-glass {
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  font-size: 15px;
+  background: rgba(39, 58, 45, 0.92);
+  color: var(--text-main);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.34), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.filter-input:focus,
+.filter-select-glass:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.34), 0 0 0 3px rgba(74, 222, 128, 0.1);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 190px;
+  flex: 1;
 }
 
 .filter-label {
   font-size: 13px;
-  font-weight: 600;
-  color: #555;
+  font-weight: 800;
+  color: rgba(220, 238, 211, 0.9);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.75px;
+}
+
+.filter-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  align-self: end;
 }
 
 .table-container {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .expenses-table,
@@ -3165,50 +3598,76 @@ onBeforeUnmount(() => {
 .collections-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .expenses-table thead,
 .income-table thead,
 .ar-table thead,
 .collections-table thead {
-  background: #f9fafb;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
 }
 
 .expenses-table th,
 .income-table th,
 .ar-table th,
 .collections-table th {
-  padding: 12px;
+  padding: 16px 18px;
   text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #e5e7eb;
+  font-weight: 800;
+  color: var(--text-main);
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(74, 222, 128, 0.08);
 }
 
 .expenses-table td,
 .income-table td,
 .ar-table td,
 .collections-table td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.expenses-table tbody tr:nth-child(even),
+.income-table tbody tr:nth-child(even),
+.ar-table tbody tr:nth-child(even),
+.collections-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.expenses-table tbody tr:hover,
+.income-table tbody tr:hover,
+.ar-table tbody tr:hover,
+.collections-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.12);
+  transition: all 0.2s ease;
 }
 
 .amount-cell {
-  font-weight: 600;
-  color: #059669;
+  font-weight: 800;
+  font-size: 15px;
+  color: #b7f7c8;
+  font-family: 'Courier New', monospace;
 }
 
 .amount-cell.balance {
-  color: #f97316;
+  color: #bbf7d0;
+  font-weight: 800;
 }
 
 .amount-cell.balance.highlight {
-  background: #fee2e2;
-  color: #dc2626;
-  font-weight: 700;
-  padding: 8px 12px;
-  border-radius: 4px;
+  background: rgba(248, 113, 113, 0.25);
+  color: #fecaca;
+  font-weight: 900;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.4);
 }
 
 .ar-section,
@@ -3221,66 +3680,209 @@ onBeforeUnmount(() => {
 }
 
 .section-subheader h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
   margin: 0;
 }
 
 .ar-card {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(22, 163, 74, 0.12));
+  border: 1px solid rgba(74, 222, 128, 0.24);
+  padding: 12px;
+  border-radius: 12px;
 }
 
 .collected-card {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border-color: #10b981;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.1));
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  padding: 12px;
+  border-radius: 12px;
 }
 
 .balance-card {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border-color: #ef4444;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.15), rgba(248, 113, 113, 0.1));
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* A/R summary cards: equal-size responsive layout */
+.summary-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-container > .summary-card {
+  min-height: 148px;
+  height: 100%;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 11px;
+  border-radius: 16px;
+  transition: transform 220ms ease, box-shadow 240ms ease, border-color 220ms ease;
+}
+
+.summary-container > .summary-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(187, 247, 208, 0.42);
+  box-shadow: 0 16px 28px rgba(2, 10, 6, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.summary-container > .summary-card .card-content {
+  align-items: center;
+}
+
+.summary-container > .summary-card .card-label {
+  color: #f1fdf5;
+  font-size: 12.5px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.summary-container > .summary-card .card-amount {
+  font-size: clamp(2.1rem, 3.7vw, 2.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.summary-container > .summary-card .card-icon {
+  width: 52px;
+  height: 52px;
+  font-size: 30px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition: transform 220ms ease, box-shadow 240ms ease, filter 220ms ease;
+}
+
+.summary-container > .summary-card:hover .card-icon {
+  transform: translateY(-1px) scale(1.06);
+  filter: saturate(1.08);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.summary-container .ar-card .card-icon.icon-receivables {
+  background: linear-gradient(135deg, rgba(134, 239, 172, 0.42), rgba(34, 197, 94, 0.28));
+}
+
+.summary-container .collected-card .card-icon.icon-collected {
+  background: linear-gradient(135deg, rgba(187, 247, 208, 0.4), rgba(16, 185, 129, 0.28));
+}
+
+.summary-container .balance-card .card-icon.icon-balance {
+  background: linear-gradient(135deg, rgba(254, 202, 202, 0.75), rgba(248, 113, 113, 0.55));
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #7f1d1d;
+  font-size: 32px;
+  box-shadow: 0 12px 22px rgba(127, 29, 29, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.summary-container .ar-card .card-amount {
+  color: #86efac;
+}
+
+.summary-container .collected-card .card-amount {
+  color: #bbf7d0;
+}
+
+.summary-container .balance-card .card-amount {
+  color: #fca5a5;
+}
+
+@media (max-width: 980px) {
+  .summary-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 .btn-primary-small {
-  padding: 6px 12px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.26), rgba(22, 163, 74, 0.2));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 12px;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .btn-primary-small:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.36), rgba(22, 163, 74, 0.3));
+  border-color: var(--green);
   transform: translateY(-1px);
 }
 
 .status-badge {
   display: inline-block;
   padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .status-badge.full-payment {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(74, 222, 128, 0.2);
+  color: #b7f7c8;
 }
 
 .status-badge.partial-payment {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(74, 222, 128, 0.2);
+  color: #d1fae5;
 }
 
 .status-badge.unpaid {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(248, 113, 113, 0.2);
+  color: #fecaca;
+}
+
+.status-badge.collected {
+  background: rgba(34, 197, 94, 0.22);
+  color: #ecfdf5;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.income-table .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.income-table .badge-income {
+  background: rgba(74, 222, 128, 0.2);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.income-table .badge-collection {
+  background: rgba(96, 165, 250, 0.2);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.35);
 }
 
 .actions-cell {
@@ -3294,29 +3896,31 @@ onBeforeUnmount(() => {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
+  color: var(--green);
 }
 
 .btn-edit:hover {
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .btn-delete:hover {
-  opacity: 0.7;
+  opacity: 0.9;
+  color: var(--red);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-soft);
 }
 
 .info-text {
   padding: 12px 16px;
-  background: #eff6ff;
-  border-left: 4px solid #3b82f6;
-  color: #1e40af;
-  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.12);
+  border-left: 4px solid var(--green);
+  color: #d1fae5;
+  border-radius: 8px;
   margin-bottom: 16px;
   font-size: 14px;
   font-weight: 500;
@@ -3324,133 +3928,219 @@ onBeforeUnmount(() => {
 
 .profit-breakdown {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  align-items: start;
 }
 
 .breakdown-card {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(190, 235, 203, 0.18);
+  border-radius: 14px;
+  padding: 20px 22px;
+  backdrop-filter: blur(6px);
 }
 
 .breakdown-card h3 {
-  margin: 0 0 16px 0;
+  margin: 0 0 14px 0;
   font-size: 16px;
-  color: #1a1a1a;
+  color: #b6f7cb;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
 }
 
 .amount {
-  font-size: 28px;
-  font-weight: 700;
-  color: #059669;
+  font-size: 29px;
+  font-weight: 900;
+  color: #4ade80;
   margin: 0;
+  text-shadow: 0 0 12px rgba(74, 222, 128, 0.35);
 }
 
 .amount.negative {
-  color: #ef4444;
+  color: var(--red);
 }
 
 .expense-items {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
 .expense-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #e5e7eb;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+}
+
+.expense-item span:first-child {
+  color: rgba(220, 238, 211, 0.82);
+  font-weight: 600;
+}
+
+.expense-item span:last-child {
+  color: #86efac;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: monospace;
 }
 
 .expense-item.total {
-  font-weight: 600;
-  border-bottom: 2px solid #1a1a1a;
+  font-weight: 800;
+  border-top: 1px solid rgba(190, 235, 203, 0.3);
+  border-bottom: none;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.expense-item.total span:first-child {
+  color: #eefde6;
+  font-size: 14px;
+}
+
+.expense-item.total span:last-child {
+  color: #4ade80;
+  font-size: 16px;
 }
 
 .profit {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(34, 197, 94, 0.08));
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  padding: 20px 22px;
+  border-radius: 14px;
 }
 
 .profit-distribution-section {
   margin-top: 40px;
   padding-top: 30px;
-  border-top: 2px solid #e5e7eb;
+  border-top: 1px solid rgba(190, 235, 203, 0.15);
 }
 
 .profit-distribution-section h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #b6f7cb;
+  letter-spacing: 0.3px;
 }
 
 .distribution-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 360px));
+  gap: 32px;
+  
   margin-top: 20px;
+  justify-content: center;
 }
 
 .distribution-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 8px;
-  background: #f9fafb;
-  border-left: 4px solid #6b7280;
+  text-align: center;
+  gap: 0;
+  padding: 30px 20px 24px;
+  border-radius: 18px;
+  background: rgba(22, 35, 27, 0.82);
+  border: 1px solid rgba(190, 235, 203, 0.16);
+  border-top: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.distribution-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 18px 18px 0 0;
+}
+
+.distribution-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
 }
 
 .distribution-card.org {
-  border-left-color: #f59e0b;
-  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.13) 0%, rgba(22, 35, 27, 0.9) 60%);
+  border-color: rgba(251, 191, 36, 0.28);
 }
+.distribution-card.org::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 
 .distribution-card.training {
-  border-left-color: #3b82f6;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(160deg, rgba(45, 212, 191, 0.13) 0%, rgba(22, 35, 27, 0.9) 60%);
+  border-color: rgba(45, 212, 191, 0.28);
 }
+.distribution-card.training::before { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
 
 .distribution-card.members {
-  border-left-color: #10b981;
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  background: linear-gradient(160deg, rgba(74, 222, 128, 0.13) 0%, rgba(22, 35, 27, 0.9) 60%);
+  border-color: rgba(74, 222, 128, 0.28);
 }
+.distribution-card.members::before { background: linear-gradient(90deg, #16a34a, #4ade80); }
 
 .distribution-icon {
-  font-size: 32px;
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
 }
 
 .distribution-content {
-  flex: 1;
+  width: 100%;
 }
 
 .distribution-content h4 {
-  margin: 0 0 4px 0;
+  margin: 0 0 8px 0;
   font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
+  color: rgba(220, 238, 211, 0.75);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
 }
 
 .distribution-content .percentage {
-  margin: 4px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
+  margin: 0 auto 12px;
+  display: inline-block;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+  padding: 2px 18px;
+  letter-spacing: 0.5px;
 }
 
 .distribution-content .amount {
-  margin: 8px 0 0 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #059669;
+  margin: 0 0 0 0;
+  font-size: 29px;
+  font-weight: 900;
+  color: #4ade80;
+  font-family: monospace;
+  text-shadow: 0 0 14px rgba(74, 222, 128, 0.4);
 }
 
+.distribution-card.org .distribution-content .amount { color: #fbbf24; text-shadow: 0 0 14px rgba(251, 191, 36, 0.4); }
+.distribution-card.training .distribution-content .amount { color: #2dd4bf; text-shadow: 0 0 14px rgba(45, 212, 191, 0.4); }
+
 .distribution-content .per-member {
-  margin: 8px 0 0 0;
-  font-size: 12px;
-  color: #6b7280;
+  margin: 10px 0 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(220, 238, 211, 0.65);
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 4px 10px;
+  display: inline-block;
 }
 
 .reports-section {
@@ -3462,55 +4152,69 @@ onBeforeUnmount(() => {
 .btn-primary,
 .btn-secondary,
 .btn-success {
-  padding: 10px 20px;
+  padding: 12px 22px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
 }
 
 .btn-primary {
-  background: #3b82f6;
-  color: white;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(96, 165, 250, 0.18));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.34), rgba(96, 165, 250, 0.28));
+  border-color: var(--green);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  background: #6b7280;
-  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btn-secondary:hover {
-  background: #4b5563;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
 }
 
 .btn-secondary-outline {
-  background: transparent;
-  border: 1px solid #ddd;
-  color: #666;
-  padding: 10px 20px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  padding: 12px 22px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary-outline:hover {
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn-success {
-  background: #10b981;
-  color: white;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.32), rgba(74, 222, 128, 0.2));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .btn-success:hover {
-  background: #059669;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.42), rgba(74, 222, 128, 0.3));
+  border-color: var(--green);
+  transform: translateY(-2px);
 }
 
 .modal-overlay {
@@ -3519,21 +4223,26 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: 20px;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow:
+    20px 20px 40px rgba(0, 0, 0, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
 }
 
 .modal-large {
@@ -3541,8 +4250,8 @@ onBeforeUnmount(() => {
 }
 
 .modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -3551,6 +4260,8 @@ onBeforeUnmount(() => {
 .modal-header h2 {
   margin: 0;
   font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .btn-close {
@@ -3558,11 +4269,21 @@ onBeforeUnmount(() => {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-soft);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  color: var(--text-main);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 20px 28px;
 }
 
 .form-group {
@@ -3578,24 +4299,34 @@ onBeforeUnmount(() => {
 }
 
 .form-group label {
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #333;
-  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-input {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
+  background: rgba(39, 58, 45, 0.92);
+  color: var(--text-main);
+  min-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: var(--text-soft);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--green);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.34), 0 0 0 3px rgba(74, 222, 128, 0.1);
 }
 
 .expense-items-grid {
@@ -3606,21 +4337,21 @@ onBeforeUnmount(() => {
 
 .total-input {
   font-size: 16px;
-  font-weight: 600;
-  background: #f0f9ff;
-  border: 2px solid #3b82f6;
+  font-weight: 700;
+  background: rgba(74, 222, 128, 0.1);
+  border: 2px solid var(--green);
   cursor: not-allowed;
-  color: #1e40af;
+  color: var(--green);
 }
 
 .total-input:readonly {
-  background: #e0e7ff;
-  color: #1e40af;
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--green);
 }
 
 .calculated {
   font-size: 12px;
-  color: #666;
+  color: var(--text-soft);
   margin-top: 4px;
 }
 
@@ -3629,6 +4360,8 @@ onBeforeUnmount(() => {
   gap: 12px;
   justify-content: flex-end;
   margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .alert {
@@ -3636,14 +4369,20 @@ onBeforeUnmount(() => {
   bottom: 24px;
   right: 24px;
   padding: 16px 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  z-index: 999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10060;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
   animation: slideUp 0.3s ease-out;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: isolate;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  min-width: 320px;
+  max-width: 520px;
 }
 
 @keyframes slideUp {
@@ -3658,23 +4397,35 @@ onBeforeUnmount(() => {
 }
 
 .alert-success {
-  background: #d1fae5;
-  color: #065f46;
-  border-left: 4px solid #10b981;
+  background: #ecfdf5 !important;
+  color: #14532d !important;
+  border-color: #86efac !important;
 }
 
 .alert-error {
-  background: #fee2e2;
-  color: #991b1b;
-  border-left: 4px solid #ef4444;
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+.alert-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.1px;
 }
 
 .alert-close {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  opacity: 0.7;
+  font-size: 20px;
+  font-weight: 800;
+  color: inherit;
+  opacity: 0.75;
+  padding: 0 2px;
 }
 
 .alert-close:hover {
@@ -3682,17 +4433,17 @@ onBeforeUnmount(() => {
 }
 
 .info-text {
-  color: #666;
+  color: var(--text-soft);
   font-size: 14px;
   margin-bottom: 16px;
 }
 
 /* Collection Form Styles */
 .highlight-box {
-  background: #f0f9ff;
-  border: 2px solid #3b82f6;
+  background: rgba(96, 165, 250, 0.1);
+  border: 2px solid var(--blue);
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 20px;
 }
 
@@ -3701,15 +4452,16 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   font-size: 14px;
+  color: var(--text-main);
 }
 
 .details-grid div {
   padding: 6px 0;
-  border-bottom: 1px solid #bfdbfe;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .details-grid div:nth-child(even) {
-  border-right: 1px solid #bfdbfe;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   padding-right: 12px;
 }
 
@@ -3718,16 +4470,17 @@ onBeforeUnmount(() => {
 }
 
 .payment-type-group {
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
 }
 
 .payment-type-group legend {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   margin-bottom: 12px;
+  color: var(--text-main);
 }
 
 .radio-group {
@@ -3742,12 +4495,13 @@ onBeforeUnmount(() => {
   gap: 12px;
   cursor: pointer;
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: background 0.2s;
+  color: var(--text-main);
 }
 
 .radio-label:hover {
-  background: #e5e7eb;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .radio-label input[type="radio"] {
@@ -3763,15 +4517,15 @@ onBeforeUnmount(() => {
 
 .radio-label small {
   font-size: 12px;
-  color: #666;
+  color: var(--text-soft);
   font-weight: normal;
 }
 
 .payment-interest-box {
-  background: #fef3c7;
-  border: 2px solid #f59e0b;
+  background: rgba(251, 191, 36, 0.1);
+  border: 2px solid var(--yellow);
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .checkbox-label {
@@ -3779,8 +4533,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 8px;
+  color: var(--text-main);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -3792,8 +4547,8 @@ onBeforeUnmount(() => {
 .interest-details {
   margin-top: 12px;
   padding: 12px;
-  background: #fff8dc;
-  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 8px;
 }
 
 .detail-row {
@@ -3891,124 +4646,203 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
 }
 
-.report-period, .report-generated {
+.report-period-long,
+.report-generated {
   margin: 4px 0;
   opacity: 0.9;
 }
 
-.report-summary-grid {
+#printable-report .report-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
-.summary-card {
-  padding: 16px;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+@media (min-width: 1200px) {
+  #printable-report .report-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
-.summary-card .summary-label {
+/* Scoped to printable report only — avoids overriding main KPI / A&R cards */
+#printable-report .report-summary-grid > .summary-card {
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+#printable-report .report-summary-grid > .summary-card .summary-label {
   font-size: 0.85rem;
   font-weight: 500;
-  opacity: 0.8;
+  color: #4b5563;
 }
 
-.summary-card .summary-value {
-  font-size: 1.5rem;
+#printable-report .report-summary-grid > .summary-card .summary-value {
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
-.summary-card .summary-count {
+#printable-report .report-summary-grid > .summary-card .summary-count {
   font-size: 0.75rem;
-  opacity: 0.7;
+  color: #9ca3af;
 }
 
-.expense-card {
+#printable-report .report-summary-grid > .expense-card {
   background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%);
   color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
-.income-card {
+#printable-report .report-summary-grid > .income-card {
   background: linear-gradient(135deg, #a7f3d0 0%, #d1fae5 100%);
   color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
-.collection-card {
+#printable-report .report-summary-grid > .collection-card {
   background: linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%);
   color: #1e40af;
+  border: 1px solid #bfdbfe;
 }
 
-.profit-card {
+#printable-report .report-summary-grid > .profit-card {
   background: linear-gradient(135deg, #86efac 0%, #bbf7d0 100%);
   color: #14532d;
+  border: 1px solid #86efac;
 }
 
-.loss-card {
+#printable-report .report-summary-grid > .loss-card {
   background: linear-gradient(135deg, #fca5a5 0%, #fecaca 100%);
   color: #7f1d1d;
+  border: 1px solid #fca5a5;
 }
 
-.distribution-summary {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
+#printable-report .distribution-summary {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 24px;
 }
 
-.distribution-summary h4 {
-  margin: 0 0 16px 0;
-  color: #1f2937;
+#printable-report .distribution-summary h4 {
+  margin: 0 0 18px;
+  color: #166534;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.distribution-grid {
+#printable-report .distribution-summary .distribution-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
 }
 
-.dist-item {
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+@media (min-width: 1100px) {
+  #printable-report .distribution-summary .distribution-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+#printable-report .distribution-summary .dist-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.dist-item.highlight {
-  background: #fef3c7;
-  border-color: #f59e0b;
-}
-
-.dist-label {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.dist-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-transactions, .report-section {
-  background: white;
-  border: 1px solid #e5e7eb;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  padding: 14px;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-.report-transactions h4, .report-section h4 {
+#printable-report .distribution-summary .dist-item.highlight {
+  background: #fefce8;
+  border-color: #fbbf24;
+}
+
+#printable-report .distribution-summary .dist-details .dist-label {
+  font-size: 11px;
+  color: #6b7280;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#printable-report .distribution-summary .dist-details .dist-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+#printable-report .report-transactions,
+#printable-report .report-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+#printable-report .report-transactions h4,
+#printable-report .report-section h4 {
   margin: 0 0 16px 0;
   color: #1f2937;
   font-size: 1.1rem;
+}
+
+#printable-report .report-section-card .data-table thead {
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+#printable-report .report-section-card .data-table th {
+  color: #14532d;
+  font-weight: 800;
+  font-size: 12px;
+  border-bottom: 1px solid #bbf7d0;
+}
+
+#printable-report .report-section-card .data-table td {
+  color: #334155;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+#printable-report .report-section-card .data-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+#printable-report .report-section-card .badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#printable-report .report-section-card .badge-income {
+  background: #dcfce7;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+#printable-report .report-section-card .badge-collection {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+#printable-report .report-section-card .badge-expense {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .badge-expense {
@@ -4096,11 +4930,17 @@ onBeforeUnmount(() => {
 
 /* Enhanced Report Panel Styles */
 .report-generator-panel {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border: 1px solid #bbf7d0;
-  border-radius: 16px;
-  padding: 24px;
+  background: linear-gradient(140deg,
+    rgba(14, 36, 27, 0.92) 0%,
+    rgba(17, 48, 33, 0.9) 52%,
+    rgba(12, 32, 25, 0.94) 100%);
+  border: 1px solid rgba(121, 169, 138, 0.36);
+  border-radius: 18px;
+  padding: 22px;
   margin-bottom: 24px;
+  box-shadow:
+    0 18px 34px rgba(5, 14, 10, 0.36),
+    inset 0 1px 0 rgba(184, 230, 201, 0.1);
 }
 
 .report-options-grid {
@@ -4110,18 +4950,24 @@ onBeforeUnmount(() => {
 }
 
 .report-option-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(155deg,
+    rgba(24, 49, 38, 0.88) 0%,
+    rgba(21, 44, 35, 0.9) 58%,
+    rgba(17, 34, 28, 0.94) 100%);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow:
+    0 10px 22px rgba(5, 12, 9, 0.34),
+    inset 0 1px 0 rgba(184, 230, 201, 0.08);
+  border: 1px solid rgba(126, 170, 141, 0.3);
 }
 
 .report-option-card h4 {
   margin: 0 0 16px 0;
-  font-size: 15px;
-  color: #1f2937;
-  font-weight: 600;
+  font-size: 1.08rem;
+  color: #ecfdf5;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4139,9 +4985,12 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 14px 18px;
-  border: 2px solid #e5e7eb;
+  border: 1px solid rgba(150, 203, 171, 0.38);
   border-radius: 10px;
-  background: white;
+  background: linear-gradient(138deg,
+    rgba(174, 112, 35, 0.76) 0%,
+    rgba(124, 166, 74, 0.72) 100%);
+  color: #f7fff9;
   cursor: pointer;
   transition: all 0.2s ease;
   flex: 1;
@@ -4149,14 +4998,18 @@ onBeforeUnmount(() => {
 }
 
 .report-type-btn:hover {
-  border-color: #22c55e;
-  background: #f0fdf4;
+  border-color: rgba(182, 238, 201, 0.58);
+  transform: translateY(-1px);
+  filter: brightness(1.06) saturate(1.04);
 }
 
 .report-type-btn.active {
-  border-color: #16a34a;
-  background: #dcfce7;
-  color: #166534;
+  border-color: rgba(196, 246, 213, 0.76);
+  background: linear-gradient(138deg,
+    rgba(221, 126, 33, 0.92) 0%,
+    rgba(102, 182, 102, 0.9) 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(62, 116, 72, 0.28);
 }
 
 .report-type-btn:disabled {
@@ -4165,19 +5018,20 @@ onBeforeUnmount(() => {
 }
 
 .report-type-btn .btn-icon {
-  font-size: 24px;
+  font-size: 1.45rem;
   margin-bottom: 4px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .report-type-btn .btn-text {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .custom-date-toggle {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(148, 196, 165, 0.26);
 }
 
 .checkbox-inline {
@@ -4185,8 +5039,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 14px;
-  color: #374151;
+  font-size: 0.9rem;
+  color: #ecfdf5;
+  font-weight: 600;
 }
 
 .checkbox-inline input[type="checkbox"] {
@@ -4201,8 +5056,9 @@ onBeforeUnmount(() => {
   gap: 12px;
   margin-top: 12px;
   padding: 12px;
-  background: #f9fafb;
+  background: rgba(12, 32, 23, 0.58);
   border-radius: 8px;
+  border: 1px solid rgba(132, 182, 150, 0.24);
 }
 
 .date-input-group {
@@ -4213,16 +5069,18 @@ onBeforeUnmount(() => {
 
 .date-input-group label {
   font-size: 12px;
-  color: #6b7280;
-  font-weight: 500;
+  color: #cde7d7;
+  font-weight: 600;
 }
 
 .form-input-sm {
   padding: 8px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(137, 188, 156, 0.38);
   border-radius: 6px;
   font-size: 13px;
   min-width: 140px;
+  background: rgba(11, 30, 22, 0.64);
+  color: #f0fff5;
 }
 
 .form-input-sm:focus {
@@ -4263,16 +5121,31 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  background: #f9fafb;
-  border-radius: 6px;
+  padding: 10px 12px;
+  background: linear-gradient(140deg,
+    rgba(18, 42, 31, 0.9) 0%,
+    rgba(23, 51, 38, 0.92) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(136, 186, 153, 0.32);
   cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 0 rgba(184, 230, 201, 0.08);
 }
 
 .filter-checkbox:hover {
-  background: #f3f4f6;
+  border-color: rgba(178, 233, 196, 0.54);
+  background: linear-gradient(140deg,
+    rgba(22, 50, 36, 0.95) 0%,
+    rgba(26, 59, 43, 0.97) 100%);
+  transform: translateY(-1px);
+}
+
+.filter-checkbox span {
+  color: #f1fff7;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 .filter-checkbox input[type="checkbox"] {
@@ -4289,13 +5162,17 @@ onBeforeUnmount(() => {
 
 .orientation-setting {
   margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid rgba(136, 186, 153, 0.3);
+  border-radius: 10px;
+  background: rgba(14, 36, 26, 0.5);
 }
 
 .orientation-label {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #555;
+  color: #d8f3e3;
   margin-bottom: 6px;
 }
 
@@ -4307,27 +5184,32 @@ onBeforeUnmount(() => {
 .orient-btn {
   flex: 1;
   padding: 8px 10px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid rgba(143, 194, 162, 0.4);
   border-radius: 8px;
-  background: #fafafa;
+  background: linear-gradient(135deg,
+    rgba(173, 108, 40, 0.78),
+    rgba(93, 168, 96, 0.78));
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 700;
   transition: all 0.2s;
   text-align: center;
-  color: #666;
+  color: #f6fff9;
 }
 
 .orient-btn:hover {
-  border-color: #16a34a;
-  background: #f0fdf4;
+  border-color: rgba(191, 242, 207, 0.72);
+  transform: translateY(-1px);
 }
 
 .orient-btn.active {
-  border-color: #16a34a;
-  background: #dcfce7;
-  color: #15803d;
+  border-color: rgba(201, 248, 215, 0.82);
+  background: linear-gradient(135deg,
+    rgba(220, 123, 31, 0.95),
+    rgba(89, 180, 97, 0.94));
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 6px 16px rgba(55, 110, 68, 0.3);
 }
 
 .btn-action {
@@ -4336,12 +5218,14 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  border: none;
+  border: 1px solid rgba(152, 203, 171, 0.45);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 700;
   transition: all 0.2s;
+  color: #f6fff9;
+  box-shadow: 0 6px 16px rgba(7, 15, 11, 0.3);
 }
 
 .btn-action.print {
@@ -4362,21 +5246,26 @@ onBeforeUnmount(() => {
 }
 
 .btn-action.select-all {
-  background: #dbeafe;
-  color: #1e40af;
+  background: linear-gradient(135deg, rgba(212, 123, 39, 0.88), rgba(104, 173, 99, 0.88));
+  color: #f6fff9;
 }
 
 .btn-action.select-all:hover {
-  background: #bfdbfe;
+  filter: brightness(1.06);
 }
 
 .btn-action.clear {
-  background: #fee2e2;
-  color: #991b1b;
+  background: linear-gradient(135deg, rgba(183, 105, 35, 0.86), rgba(100, 160, 89, 0.84));
+  color: #fff6f6;
 }
 
 .btn-action.clear:hover {
-  background: #fecaca;
+  filter: brightness(1.06);
+}
+
+.btn-action .btn-icon {
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 /* Loading state */
@@ -4405,11 +5294,11 @@ onBeforeUnmount(() => {
 
 /* Enhanced Report Display */
 .report-display {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(180deg, #f6fdf9 0%, #eefaf3 48%, #f2fbf6 100%);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(187, 247, 208, 0.65);
 }
 
 .report-header {
@@ -4429,19 +5318,36 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-.logo-icon {
-  font-size: 48px;
+.report-logo-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  padding: 3px;
 }
 
-.logo-text h3 {
+.report-cfa-line {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #f0fdf4;
+  line-height: 1.4;
+}
+
+.report-cfa-line strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.report-doc-title {
   margin: 0;
-  font-size: 22px;
-}
-
-.logo-text p {
-  margin: 4px 0 0;
-  opacity: 0.9;
-  font-size: 14px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
 }
 
 .report-meta {
@@ -4453,32 +5359,147 @@ onBeforeUnmount(() => {
   font-size: 18px;
 }
 
-.report-period, .report-generated {
-  margin: 4px 0;
-  font-size: 13px;
-  opacity: 0.9;
+.report-period-long {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(240, 253, 244, 0.96);
+  line-height: 1.45;
 }
 
-/* Enhanced Summary Cards */
-.report-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+.report-generated {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.88;
+  color: rgba(240, 253, 244, 0.95);
 }
 
-.summary-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
+/* Official collectibles sheet (screen + print via shared classes) */
+.collectibles-form-sheet {
+  margin: 20px 0 28px;
+  padding: 20px 22px 22px;
+  background: #ffffff;
+  border: 2px solid #0f172a;
   border-radius: 12px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
-.card-icon-wrapper {
+.collectibles-form-title-block {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.collectibles-main-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.collectibles-main-subtitle {
+  margin: 6px 0 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.collectibles-meta-box {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #f8fafc;
+}
+
+.collectibles-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
+  margin-bottom: 10px;
+  font-size: 0.92rem;
+}
+
+.collectibles-meta-row-full {
+  margin-bottom: 0;
+}
+
+.collectibles-meta-label {
+  font-weight: 800;
+  color: #0f172a;
+  min-width: min(100%, 260px);
+}
+
+.collectibles-meta-value {
+  flex: 1;
+  min-width: 200px;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 1px solid #94a3b8;
+  padding: 0 2px 4px;
+}
+
+.collectibles-table-wrap {
+  overflow-x: auto;
+}
+
+.collectibles-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.collectibles-data-table th,
+.collectibles-data-table td {
+  border: 1px solid #1e293b;
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+.collectibles-data-table th {
+  background: #e2e8f0;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.collectibles-data-table .th-tl {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.collectibles-data-table td {
+  color: #0f172a;
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+.collectibles-data-table .col-client { width: 22%; text-align: left; }
+.collectibles-data-table .col-ar { width: 15%; }
+.collectibles-data-table .col-cash { width: 18%; }
+.collectibles-data-table .col-date { width: 14%; }
+.collectibles-data-table .col-rcpt { width: 14%; text-align: center; }
+.collectibles-data-table .col-bal { width: 17%; }
+
+.collectibles-empty-row td {
+  height: 28px;
+  background: #fff;
+}
+
+.collectibles-empty-note {
+  margin-top: 12px;
+  font-size: 0.88rem;
+  color: #64748b;
+  text-align: center;
+}
+
+#printable-report .card-icon-wrapper {
   width: 56px;
   height: 56px;
   display: flex;
@@ -4486,139 +5507,117 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 12px;
   font-size: 28px;
+  flex-shrink: 0;
 }
 
-.card-icon-wrapper.expense { background: #fee2e2; }
-.card-icon-wrapper.income { background: #dcfce7; }
-.card-icon-wrapper.collection { background: #dbeafe; }
-.card-icon-wrapper.profit { background: #bbf7d0; }
-.card-icon-wrapper.loss { background: #fecaca; }
+#printable-report .card-icon-wrapper.expense { background: #fee2e2; }
+#printable-report .card-icon-wrapper.income { background: #dcfce7; }
+#printable-report .card-icon-wrapper.collection { background: #dbeafe; }
+#printable-report .card-icon-wrapper.profit { background: #bbf7d0; }
+#printable-report .card-icon-wrapper.loss { background: #fecaca; }
 
-.card-details {
+#printable-report .card-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.card-details .summary-label {
+#printable-report .card-details .summary-label {
   font-size: 13px;
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.card-details .summary-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
+#printable-report .card-details .summary-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #15803d;
+  letter-spacing: -0.02em;
 }
 
-.card-details .summary-count {
+#printable-report .report-summary-grid > .loss-card .card-details .summary-value {
+  color: #991b1b;
+}
+
+#printable-report .report-summary-grid > .expense-card .card-details .summary-value {
+  color: #991b1b;
+}
+
+#printable-report .report-summary-grid > .collection-card .card-details .summary-value {
+  color: #1e40af;
+}
+
+#printable-report .card-details .summary-count {
   font-size: 12px;
   color: #9ca3af;
 }
 
-/* Enhanced Distribution */
-.distribution-summary {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border: 1px solid #bbf7d0;
+#printable-report .distribution-summary .dist-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+/* Report Section Cards (generated report only) */
+#printable-report .report-section-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.distribution-summary h4 {
-  margin: 0 0 20px;
-  color: #166534;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.distribution-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.dist-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 16px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-}
-
-.dist-item.highlight {
-  background: #fef3c7;
-  border-color: #fbbf24;
-}
-
-.dist-icon {
-  font-size: 28px;
-}
-
-.dist-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.dist-details .dist-label {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.dist-details .dist-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #166534;
-}
-
-/* Report Section Cards */
-.report-section-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
   overflow: hidden;
   margin-bottom: 20px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
 }
 
-.section-title {
+#printable-report .section-title {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 16px 20px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%);
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.section-icon {
+#printable-report .section-icon {
   font-size: 20px;
 }
 
-.section-title h4 {
+#printable-report .section-title h4 {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #14532d;
 }
 
-.section-count {
+#printable-report .section-count {
   margin-left: auto;
   font-size: 12px;
-  color: #6b7280;
-  background: #e5e7eb;
-  padding: 4px 10px;
-  border-radius: 12px;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
-.report-section-card .table-container {
+#printable-report .report-section-card .table-container {
   padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
-.report-section-card .data-table {
+#printable-report .report-section-card .data-table {
   margin: 0;
+}
+
+/* Dues & other tabs: plain section divider (report uses #printable-report rules above) */
+.tab-content .section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 16px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  letter-spacing: 0.02em;
 }
 
 .description-cell {
@@ -4629,46 +5628,46 @@ onBeforeUnmount(() => {
 }
 
 /* Report Footer */
-.report-footer {
+#printable-report .report-footer {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid #e5e7eb;
   text-align: center;
-  color: #6b7280;
+  color: #64748b;
   font-size: 12px;
 }
 
-.footer-date {
+#printable-report .footer-date {
   margin-top: 4px;
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 /* Responsive for Report */
 @media (max-width: 1200px) {
-  .report-summary-grid,
-  .distribution-grid {
-    grid-template-columns: repeat(2, 1fr);
+  #printable-report .report-summary-grid,
+  #printable-report .distribution-summary .distribution-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .report-header {
+  #printable-report .report-header {
     flex-direction: column;
     gap: 16px;
     text-align: center;
   }
   
-  .report-meta {
+  #printable-report .report-meta {
     text-align: center;
   }
   
-  .report-logo {
+  #printable-report .report-logo {
     flex-direction: column;
     text-align: center;
   }
   
-  .report-summary-grid,
-  .distribution-grid {
+  #printable-report .report-summary-grid,
+  #printable-report .distribution-summary .distribution-grid {
     grid-template-columns: 1fr;
   }
   
@@ -4679,29 +5678,46 @@ onBeforeUnmount(() => {
 
 /* View Only Badge */
 .view-only-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
   color: white;
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   margin-left: 12px;
+  border: 1px solid rgba(187, 247, 208, 0.4);
+  box-shadow: 0 6px 12px rgba(20, 83, 45, 0.25);
+}
+
+.view-only-badge .badge-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 12px;
+  line-height: 1;
 }
 
 /* Barangay Context Styles */
 .barangay-context {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border: 1px solid #38bdf8;
-  border-radius: 8px;
+  background: rgba(22, 163, 74, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.24);
+  border-radius: 12px;
   padding: 12px 20px;
   margin-bottom: 20px;
   text-align: center;
+  backdrop-filter: blur(10px);
 }
 
 .barangay-context.admin-context {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border-color: #22c55e;
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4709,44 +5725,492 @@ onBeforeUnmount(() => {
 
 .context-badge {
   font-size: 0.95rem;
-  font-weight: 500;
-  color: #0369a1;
+  font-weight: 700;
+  color: #d1fae5;
 }
 
 .admin-context .context-badge {
-  color: #15803d;
+  color: var(--green);
+}
+
+/* Main KPI row: stacked label (subtitle) + amount, no icons */
+.summary-cards > .summary-card {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.summary-cards > .summary-card .card-content {
+  align-items: center;
+}
+
+.summary-cards > .summary-card .card-label {
+  color: #111827;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin-bottom: 4px;
+}
+
+.summary-cards > .summary-card .card-amount {
+  color: #111827;
+  font-size: clamp(1.85rem, 4.2vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Expense Breakdown readability: make rows bolder and clearer */
+.profit-breakdown .breakdown-card:nth-child(2) .expense-item {
+  padding: 8px 0;
+}
+
+.profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
+  font-weight: 800;
+  color: #effbe8;
+  letter-spacing: 0.2px;
+}
+
+.profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
+  font-weight: 900;
+  font-size: 15px;
+  color: #f8fff5;
+}
+
+.profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
+.profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
+  font-weight: 900;
 }
 
 .admin-filter {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
 }
 
 .admin-filter label {
-  font-weight: 500;
-  color: #374151;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .barangay-select {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: #374151;
-  background: white;
-  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid rgba(190, 235, 203, 0.35);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f3ffef;
+  background: rgba(25, 37, 29, 0.96);
+  min-width: 270px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 14px rgba(0, 0, 0, 0.22);
 }
 
 .barangay-select:focus {
   outline: none;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18), 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.barangay-select option {
+  background: #f3fff1;
+  color: #142016;
+}
+
+/* Profit distribution cards: centered 3-column layout with wider spacing */
+.profit-distribution-section .distribution-grid {
+  grid-template-columns: repeat(3, minmax(250px, 320px));
+  column-gap: 56px;
+  row-gap: 28px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 28px;
+}
+
+@media (max-width: 1200px) {
+  .profit-distribution-section .distribution-grid {
+    grid-template-columns: repeat(2, minmax(240px, 320px));
+    column-gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profit-distribution-section .distribution-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+    row-gap: 18px;
+  }
+
+  .page-header {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+
+  .header-content {
+    gap: 10px;
+  }
+
+  .page-header h1 {
+    font-size: 30px;
+    line-height: 1.12;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    line-height: 1.45;
+  }
 }
 
 /* Print Styles */
+@media print {
+  .report-generator-panel,
+  .tabs-container,
+  .main-header,
+  .sidebar { display: none !important; }
+  
+  .report-display {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+  
+  .barangay-context {
+    display: none;
+  }
+}
+
+/* App extras: dues tab, nested headers, tables, conflicts — keep after reference sheet */
+
+.tab-content .page-header {
+  margin-bottom: 20px;
+  padding: 22px 26px;
+  border-radius: 20px;
+}
+
+.tab-content .page-header h1,
+.tab-content .page-header .page-title {
+  font-size: clamp(1.25rem, 3vw, 1.45rem);
+  line-height: 1.2;
+}
+
+.section-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.auto-interest-note {
+  flex: 1 1 auto;
+  text-align: right;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stats-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88));
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow:
+    8px 8px 18px rgba(8, 13, 10, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: #bbf7d0;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.stat-value-sm {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 980px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tab-content .card {
+  background: rgba(22, 35, 27, 0.78);
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    12px 12px 22px rgba(8, 13, 10, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.tab-content .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.tab-content .card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.filter-section {
+  padding: 12px 18px 8px;
+}
+
+.btn {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(22, 163, 74, 0.18));
+  color: var(--green);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(74, 222, 128, 0.55);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.tab-content .btn-success {
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+
+.input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(39, 58, 45, 0.92);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 42px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12);
+}
+
+.tab-content .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tab-content .data-table thead {
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.tab-content .data-table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 800;
+  color: var(--text-main);
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.tab-content .data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.tab-content .data-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-content .data-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.tab-content table.data-table tbody td.amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: #b7f7c8;
+  font-family: ui-monospace, 'Courier New', monospace;
+  margin: 0;
+  text-shadow: none;
+  line-height: 1.25;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-soft);
+}
+
+.empty-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.empty-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.farmer-summary {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.22);
+}
+
+.farmer-name {
+  font-weight: 900;
+  font-size: 1.08rem;
+  color: #ecfdf5;
+  margin-bottom: 4px;
+}
+
+.farmer-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.action-row {
+  margin: 14px 0 18px;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-end;
+}
+
+.inline-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+}
+
+.dues-remarks-group {
+  margin-top: 14px;
+}
+
+.dues-remarks-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  margin-top: 4px;
+}
+
+.usage-leaders-card {
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(22, 35, 27, 0.88));
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 12px 12px 22px rgba(8, 13, 10, 0.42);
+}
+
+.usage-table td small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.interest-already-applied {
+  display: block;
+  color: #bfdbfe;
+  line-height: 1.45;
+}
+
+.font-semibold {
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.name {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.actions {
+  text-align: right;
+}
+
+tr.selected {
+  outline: 2px solid rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.12) !important;
+}
+
 @media print {
   :global(body.printing-machinery-report) {
     background: #fff;
@@ -4786,6 +6250,11 @@ onBeforeUnmount(() => {
     overflow: visible !important;
   }
 }
+
+@media (max-width: 920px) {
+  .profit-breakdown {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
-
-

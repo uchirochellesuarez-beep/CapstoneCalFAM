@@ -7,9 +7,9 @@
 
 :root {
   /* Base Colors - Deep Natural Green */
-  --backdrop-base: #166534;              /* Primary deep natural green */
-  --backdrop-base-dark: #0d4a26;        /* Darker variant for depth */
-  --backdrop-base-light: #1a7a3e;       /* Lighter variant for highlights */
+  --backdrop-base: #14532d;              /* Primary deep natural green */
+  --backdrop-base-dark: #0c3d22;        /* Darker variant for depth */
+  --backdrop-base-light: #1d6b45;       /* Soft emerald highlight */
   
   /* Light Mode Variant */
   --backdrop-light-base: #d1fae5;       /* Pale green base */
@@ -36,6 +36,83 @@
   
   /* Canvas/Chalkboard Texture */
   --canvas-texture: rgba(0, 0, 0, 0.02);
+
+  /* Farmer earthy theme */
+  --farmer-backdrop-base: #6b4428;
+  --farmer-backdrop-dark: #4f321f;
+  --farmer-backdrop-light: #8a5c38;
+  --farmer-mottle-soil: rgba(120, 76, 42, 0.12);
+  --farmer-mottle-wheat: rgba(238, 198, 141, 0.08);
+  --farmer-mottle-clay: rgba(169, 109, 67, 0.09);
+}
+
+/* ============================================
+   FARMER BACKDROP THEME (Earthy Brown/Tan)
+   ============================================ */
+
+.backdrop-theme-farmer {
+  position: relative;
+  background:
+    linear-gradient(135deg, var(--farmer-backdrop-base) 0%, var(--farmer-backdrop-dark) 52%, var(--farmer-backdrop-light) 100%),
+    radial-gradient(ellipse 900px 480px at 15% 25%, var(--farmer-mottle-soil) 0%, transparent 60%),
+    radial-gradient(ellipse 760px 420px at 82% 72%, var(--farmer-mottle-clay) 0%, transparent 55%),
+    radial-gradient(ellipse 620px 300px at 48% 44%, var(--farmer-mottle-wheat) 0%, transparent 52%),
+    radial-gradient(ellipse 520px 240px at 30% 70%, rgba(236, 184, 116, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 420px 220px at 70% 35%, rgba(96, 60, 34, 0.1) 0%, transparent 50%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 3px,
+      transparent 3px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.018) 2px,
+      rgba(255, 255, 255, 0.018) 3px,
+      transparent 3px,
+      transparent 5px
+    );
+
+  background-size:
+    100% 100%,
+    1200px 800px,
+    1000px 700px,
+    900px 520px,
+    700px 380px,
+    650px 360px,
+    40px 40px,
+    40px 40px;
+
+  background-blend-mode:
+    normal,
+    overlay,
+    overlay,
+    screen,
+    overlay,
+    multiply,
+    normal,
+    normal;
+
+  opacity: 0.76;
+}
+
+.backdrop-theme-farmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 214, 154, 0.06) 0%, transparent 56%);
+  background-size: 220px 220px;
+  animation: textureShift 24s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.52;
 }
 
 /* ============================================
@@ -45,8 +122,8 @@
 .backdrop-theme {
   position: relative;
   background:
-    /* Base gradient - deep natural green */
-    linear-gradient(135deg, var(--backdrop-base) 0%, var(--backdrop-base-dark) 50%, var(--backdrop-base-light) 100%),
+    /* Base gradient - deep green → soft emerald */
+    linear-gradient(152deg, var(--backdrop-base-dark) 0%, var(--backdrop-base) 38%, #178042 68%, var(--backdrop-base-light) 100%),
     
     /* Large organic mottling - rice field patterns */
     radial-gradient(ellipse 800px 400px at 15% 25%, var(--mottle-green-1) 0%, transparent 60%),
@@ -139,11 +216,13 @@
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 50% 50%, rgba(34, 139, 34, 0.03) 0%, transparent 50%);
-  background-size: 200px 200px;
+    radial-gradient(ellipse 120% 45% at 50% 0%, rgba(52, 211, 153, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 85% 75%, rgba(250, 204, 21, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(34, 139, 34, 0.04) 0%, transparent 50%);
+  background-size: 100% 100%, 100% 100%, 200px 200px;
   animation: textureShift 20s ease-in-out infinite;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.72;
 }
 
 @keyframes textureShift {

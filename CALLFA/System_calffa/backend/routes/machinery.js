@@ -768,6 +768,19 @@ const checkBookingAvailability = async (machineryId, bookingDate, areaSize, excl
   return true;
 };
 
+// ✅ Helper: safely format a mysql2 DATE value to "YYYY-MM-DD" string
+const formatDateToString = (val) => {
+  if (!val) return null;
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  // Already a string — strip any time portion just in case
+  return String(val).split('T')[0];
+};
+
 // GET /api/machinery/bookings - Get all bookings with barangay filtering
 router.get('/bookings', async (req, res) => {
   try {
@@ -864,24 +877,14 @@ router.get('/bookings', async (req, res) => {
       params.push(end_date);
     }
 
-    // CRITICAL: Barangay filtering based on user role
-    // - Admin: Can see all barangays
-    // - President/Operation Manager/Business Manager: Only their assigned barangay
-    // - Farmer: Only their own bookings (already filtered by farmer_id if present)
     if (userRole === 'operation_manager' || userRole === 'business_manager') {
-      // These roles can ONLY approve pending bookings from their assigned barangay
-      // Ensure both booking's barangay AND farmer's barangay match their assigned barangay
       if (!userBarangayId) {
-        // Manager has no barangay assigned - return empty results
         query += ' AND 1=0';
       } else {
         query += ' AND mb.barangay_id = ? AND f.barangay_id = ?';
         params.push(userBarangayId, userBarangayId);
-        // NOTE: Removed auto-filter to Pending - frontend handles default filter
-        // This allows fetching all statuses for count purposes
       }
     } else if (userRole === 'president') {
-      // Presidents see their barangay's bookings regardless of status
       if (!userBarangayId) {
         query += ' AND 1=0';
       } else {
@@ -889,7 +892,6 @@ router.get('/bookings', async (req, res) => {
         params.push(userBarangayId, userBarangayId);
       }
     } else if (userRole === 'farmer') {
-      // Farmers see only their own bookings
       if (!userId) {
         query += ' AND 1=0';
       } else {
@@ -897,8 +899,6 @@ router.get('/bookings', async (req, res) => {
         params.push(userId);
       }
     } else if (userRole === 'operator') {
-      // Operators see approved/in-use bookings from their assigned barangay
-      // They process bookings (deploy equipment, complete, mark incomplete)
       if (!userBarangayId) {
         query += ' AND 1=0';
       } else {
@@ -906,7 +906,6 @@ router.get('/bookings', async (req, res) => {
         params.push(userBarangayId, userBarangayId);
       }
     } else if (userRole !== 'admin') {
-      // Other roles: no additional bookings (security measure)
       query += ' AND 1=0';
     }
     
@@ -1036,6 +1035,111 @@ router.get('/bookings/farmer-balance/:farmer_id', async (req, res) => {
   }
 });
 
+// GET /api/machinery/bookings/unavailable-dates/:machinery_id
+// ✅ FIXED: mysql2 returns DATE columns as JS Date objects, not strings.
+//    We now format them to "YYYY-MM-DD" strings before sending to the frontend.
+router.get('/bookings/unavailable-dates/:machinery_id', async (req, res) => {
+  try {
+    const { machinery_id } = req.params;
+    const { start_date, end_date } = req.query;
+    
+    // Get machinery details to know the max capacity
+    const [machinery] = await pool.execute(
+      'SELECT max_capacity, capacity_unit FROM machinery_inventory WHERE id = ?',
+      [machinery_id]
+    );
+    
+    if (machinery.length === 0) {
+      return res.status(404).json({ success: false, message: 'Machinery not found' });
+    }
+    
+    const maxCapacity = machinery[0].max_capacity;
+    const capacityUnit = machinery[0].capacity_unit;
+    
+    // If no capacity limit, return empty array
+    if (!maxCapacity) {
+      return res.json({ success: true, unavailable_dates: [], partially_available_dates: [], capacity_unit: capacityUnit });
+    }
+    
+    // Default date range: today to 90 days from now
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = start_date || today.toISOString().split('T')[0];
+    const endDateObj = new Date(today);
+    endDateObj.setDate(endDateObj.getDate() + 90);
+    const endDate = end_date || endDateObj.toISOString().split('T')[0];
+    
+    // Get all fully booked dates (total_booked >= max_capacity)
+    const [fullyBookedRows] = await pool.execute(
+      `SELECT 
+        booking_date, 
+        SUM(area_size) as total_booked,
+        COUNT(*) as booking_count
+      FROM machinery_bookings
+      WHERE machinery_id = ? 
+        AND booking_date >= ? 
+        AND booking_date <= ?
+        AND status IN ('Approved', 'Completed')
+      GROUP BY booking_date
+      HAVING total_booked >= ?
+      ORDER BY booking_date`,
+      [machinery_id, startDate, endDate, maxCapacity]
+    );
+    
+    // ✅ Format booking_date to plain "YYYY-MM-DD" string (fixes mysql2 Date object issue)
+    const unavailableDates = fullyBookedRows.map(booking => ({
+      date: formatDateToString(booking.booking_date),
+      total_booked: parseFloat(booking.total_booked),
+      max_capacity: maxCapacity,
+      booking_count: booking.booking_count,
+      capacity_unit: capacityUnit,
+      is_fully_booked: true
+    }));
+    
+    // Get partially booked dates (total_booked < max_capacity)
+    const [partialRows] = await pool.execute(
+      `SELECT 
+        booking_date, 
+        SUM(area_size) as total_booked,
+        COUNT(*) as booking_count
+      FROM machinery_bookings
+      WHERE machinery_id = ? 
+        AND booking_date >= ? 
+        AND booking_date <= ?
+        AND status IN ('Approved', 'Completed')
+      GROUP BY booking_date
+      HAVING total_booked < ?
+      ORDER BY booking_date`,
+      [machinery_id, startDate, endDate, maxCapacity]
+    );
+    
+    // ✅ Same fix for partially available dates
+    const partiallyAvailableDates = partialRows.map(booking => ({
+      date: formatDateToString(booking.booking_date),
+      total_booked: parseFloat(booking.total_booked),
+      max_capacity: maxCapacity,
+      booking_count: booking.booking_count,
+      capacity_unit: capacityUnit,
+      remaining_capacity: maxCapacity - parseFloat(booking.total_booked),
+      is_fully_booked: false
+    }));
+
+    console.log('📅 Unavailable dates (formatted):', unavailableDates.map(d => d.date));
+    console.log('📅 Partially available dates (formatted):', partiallyAvailableDates.map(d => d.date));
+    
+    res.json({
+      success: true,
+      unavailable_dates: unavailableDates,
+      partially_available_dates: partiallyAvailableDates,
+      max_capacity: maxCapacity,
+      capacity_unit: capacityUnit
+    });
+  } catch (error) {
+    console.error('Error fetching unavailable dates:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch unavailable dates' });
+  }
+});
+
 // POST /api/machinery/bookings - Create new booking (Farmer)
 router.post('/bookings', async (req, res) => {
   try {
@@ -1048,22 +1152,22 @@ router.post('/bookings', async (req, res) => {
       service_location,
       area_size,
       area_unit,
-      notes
+      notes,
+      barangay_place_id
     } = req.body;
     
-    // Validate required fields
-    if (!farmer_id || !machinery_id || !booking_date || !service_location || !area_size || !area_unit) {
+    // Validate required fields (service_location optional when barangay_place_id picks a predefined place)
+    if (!farmer_id || !machinery_id || !booking_date || !area_size || !area_unit) {
       console.error('❌ Validation failed. Missing fields:', {
         farmer_id: !!farmer_id,
         machinery_id: !!machinery_id,
         booking_date: !!booking_date,
-        service_location: !!service_location,
         area_size: !!area_size,
         area_unit: !!area_unit
       });
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required fields: farmer_id, machinery_id, booking_date, service_location, area_size, area_unit' 
+        message: 'Missing required fields: farmer_id, machinery_id, booking_date, area_size, area_unit' 
       });
     }
     
@@ -1092,6 +1196,50 @@ router.post('/bookings', async (req, res) => {
 
     const barangayId = farmer[0].barangay_id;
     const membershipStatus = farmer[0].membership_status || 'member';
+
+    let resolvedServiceLocation = typeof service_location === 'string' ? service_location.trim() : '';
+    let resolvedPlaceId = null;
+
+    if (barangay_place_id != null && barangay_place_id !== '') {
+      const pid = parseInt(barangay_place_id, 10);
+      if (Number.isNaN(pid)) {
+        return res.status(400).json({ success: false, message: 'Invalid barangay_place_id' });
+      }
+      try {
+        const [plc] = await pool.execute(
+          `SELECT id, name, description FROM barangay_service_places 
+           WHERE id = ? AND barangay_id = ? AND is_active = 1`,
+          [pid, barangayId]
+        );
+        if (plc.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid or inactive service place for your barangay'
+          });
+        }
+        resolvedPlaceId = plc[0].id;
+        const desc = plc[0].description ? ` — ${plc[0].description}` : '';
+        resolvedServiceLocation = `${plc[0].name}${desc}`;
+        if (typeof service_location === 'string' && service_location.trim()) {
+          resolvedServiceLocation = `${resolvedServiceLocation} (${service_location.trim()})`;
+        }
+      } catch (placeErr) {
+        if (placeErr.code === 'ER_BAD_FIELD_ERROR' || placeErr.code === 'ER_NO_SUCH_TABLE') {
+          return res.status(503).json({
+            success: false,
+            message: 'Service places are not available on this server (database migration required).'
+          });
+        }
+        throw placeErr;
+      }
+    }
+
+    if (!resolvedServiceLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Provide a service location or select a predefined place'
+      });
+    }
     
     // Check for outstanding balance from completed bookings
     const [unpaidBookings] = await pool.execute(
@@ -1155,15 +1303,51 @@ router.post('/bookings', async (req, res) => {
       });
     }
     
-    // Create booking with barangay_id
-    const [result] = await pool.execute(
-      `INSERT INTO machinery_bookings 
-       (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
-        area_unit, total_price, remaining_balance, notes, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
-      [farmer_id, machinery_id, barangayId, booking_date, service_location, area_size, 
-       area_unit, totalPrice, totalPrice, notes]
-    );
+    const bookingInsertBase = [
+      farmer_id,
+      machinery_id,
+      barangayId,
+      booking_date,
+      resolvedServiceLocation,
+      area_size,
+      area_unit,
+      totalPrice,
+      totalPrice,
+      notes
+    ];
+
+    let result;
+    if (resolvedPlaceId != null) {
+      try {
+        [result] = await pool.execute(
+          `INSERT INTO machinery_bookings 
+           (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
+            area_unit, total_price, remaining_balance, notes, status, barangay_place_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)`,
+          [...bookingInsertBase, resolvedPlaceId]
+        );
+      } catch (insErr) {
+        if (insErr.code === 'ER_BAD_FIELD_ERROR') {
+          [result] = await pool.execute(
+            `INSERT INTO machinery_bookings 
+             (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
+              area_unit, total_price, remaining_balance, notes, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+            bookingInsertBase
+          );
+        } else {
+          throw insErr;
+        }
+      }
+    } else {
+      [result] = await pool.execute(
+        `INSERT INTO machinery_bookings 
+         (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
+          area_unit, total_price, remaining_balance, notes, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+        bookingInsertBase
+      );
+    }
     
     console.log('✅ Booking created successfully! Booking ID:', result.insertId);
     
@@ -1180,7 +1364,7 @@ router.post('/bookings', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/approve - Approve booking (Business Manager / Operation Manager from same barangay only)
+// PUT /api/machinery/bookings/:id/approve - Approve booking
 router.put('/bookings/:id/approve', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1195,7 +1379,6 @@ router.put('/bookings/:id/approve', async (req, res) => {
       });
     }
     
-    // Get manager and their barangay
     const [manager] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [approved_by]
@@ -1208,7 +1391,6 @@ router.put('/bookings/:id/approve', async (req, res) => {
       });
     }
     
-    // Get booking and verify barangay access
     const [booking] = await pool.execute(
       `SELECT mb.*, mi.machinery_name
        FROM machinery_bookings mb
@@ -1221,7 +1403,6 @@ router.put('/bookings/:id/approve', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify manager's barangay matches booking's barangay (unless admin)
     if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1236,7 +1417,6 @@ router.put('/bookings/:id/approve', async (req, res) => {
       });
     }
     
-    // Recheck availability
     const isAvailable = await checkBookingAvailability(
       booking[0].machinery_id, 
       booking[0].booking_date, 
@@ -1286,7 +1466,7 @@ router.put('/bookings/:id/approve', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/reject - Reject booking (Business Manager / Operation Manager from same barangay only)
+// PUT /api/machinery/bookings/:id/reject - Reject booking
 router.put('/bookings/:id/reject', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1301,7 +1481,6 @@ router.put('/bookings/:id/reject', async (req, res) => {
       });
     }
     
-    // Get manager and their barangay
     const [manager] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [approved_by]
@@ -1314,7 +1493,6 @@ router.put('/bookings/:id/reject', async (req, res) => {
       });
     }
     
-    // Get booking
     const [booking] = await pool.execute(
       `SELECT mb.*, mi.machinery_name
        FROM machinery_bookings mb
@@ -1327,7 +1505,6 @@ router.put('/bookings/:id/reject', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify manager's barangay matches booking's barangay (unless admin)
     if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1342,7 +1519,6 @@ router.put('/bookings/:id/reject', async (req, res) => {
       });
     }
     
-    // Reject booking
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
        SET status = 'Rejected', approved_by = ?, rejection_reason = ?, approved_date = NOW()
@@ -1374,8 +1550,7 @@ router.put('/bookings/:id/reject', async (req, res) => {
   }
 });
 
-// POST /api/machinery/bookings/:id/payment - Record payment for booking (Treasurer from same barangay)
-// IMPROVED: Separated from status transitions - payment is independent of workflow
+// POST /api/machinery/bookings/:id/payment - Record payment for booking
 router.post('/bookings/:id/payment', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1394,7 +1569,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       });
     }
     
-    // Get treasurer and their barangay
     const [user] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [recorded_by]
@@ -1407,7 +1581,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       });
     }
     
-    // Get booking and verify barangay access
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1417,7 +1590,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify treasurer's barangay matches booking's barangay (unless admin)
     if (user[0].role !== 'admin' && user[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1425,7 +1597,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       });
     }
     
-    // IMPROVED: Only allow payment for bookings that aren't Cancelled, Rejected, or already fully paid
     if (['Cancelled', 'Rejected'].includes(booking[0].status)) {
       return res.status(400).json({ 
         success: false, 
@@ -1436,7 +1607,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
     const paymentAmount = parseFloat(amount);
     const currentRemainingBalance = parseFloat(booking[0].remaining_balance || booking[0].total_price);
     
-    // Validate payment amount doesn't exceed remaining balance
     if (paymentAmount > currentRemainingBalance) {
       return res.status(400).json({ 
         success: false, 
@@ -1444,7 +1614,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       });
     }
     
-    // Record payment
     await pool.execute(
       `INSERT INTO machinery_booking_payments 
        (booking_id, payment_date, amount, receipt_number, remarks, recorded_by)
@@ -1452,7 +1621,6 @@ router.post('/bookings/:id/payment', async (req, res) => {
       [id, payment_date, paymentAmount, receipt_number, remarks, recorded_by]
     );
     
-    // Update booking totals
     const newTotalPaid = parseFloat(booking[0].total_paid || 0) + paymentAmount;
     const newRemainingBalance = parseFloat(booking[0].total_price) - newTotalPaid;
     const newPaymentStatus = newRemainingBalance <= 0 ? 'Paid' : 'Partial';
@@ -1507,7 +1675,7 @@ router.get('/bookings/:id/payments', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/deploy - Deploy equipment to operator from same barangay
+// PUT /api/machinery/bookings/:id/deploy - Deploy equipment
 router.put('/bookings/:id/deploy', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1524,7 +1692,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       });
     }
     
-    // Get operator and their barangay
     const [operator] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [operator_id]
@@ -1541,7 +1708,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       });
     }
     
-    // Get booking
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1551,7 +1717,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify operator's barangay matches booking's barangay
     if (operator[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1559,7 +1724,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       });
     }
     
-    // Can only deploy from Approved status
     if (booking[0].status !== 'Approved') {
       return res.status(400).json({ 
         success: false, 
@@ -1567,7 +1731,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       });
     }
     
-    // Track equipment deployment with timestamp
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
        SET status = 'In Use',
@@ -1600,7 +1763,7 @@ router.put('/bookings/:id/deploy', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/return-equipment - Operator returns equipment from same barangay
+// PUT /api/machinery/bookings/:id/return-equipment - Operator returns equipment
 router.put('/bookings/:id/return-equipment', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1618,7 +1781,6 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
       });
     }
     
-    // Get operator and their barangay
     const [operator] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [operator_id]
@@ -1635,7 +1797,6 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
       });
     }
     
-    // Get booking
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1645,7 +1806,6 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify operator's barangay matches booking's barangay
     if (operator[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1653,7 +1813,6 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
       });
     }
     
-    // Equipment can only be returned from "In Use" status
     if (booking[0].status !== 'In Use') {
       return res.status(400).json({ 
         success: false, 
@@ -1661,7 +1820,6 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
       });
     }
     
-    // Record operator sign-off with usage details
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
        SET equipment_return_date = ?,
@@ -1689,14 +1847,12 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/complete - Mark booking as completed or incomplete (Operator only)
-// This transitions: Approved → Completed or Approved → Incomplete
+// PUT /api/machinery/bookings/:id/complete - Mark booking as completed or incomplete
 router.put('/bookings/:id/complete', async (req, res) => {
   try {
     const { id } = req.params;
     const { status_action = 'completed', operator_id } = req.body;
     
-    // Validate status_action
     if (!['completed', 'incomplete'].includes(status_action)) {
       return res.status(400).json({ 
         success: false, 
@@ -1704,7 +1860,6 @@ router.put('/bookings/:id/complete', async (req, res) => {
       });
     }
     
-    // Verify operator role and barangay
     if (operator_id) {
       const [operator] = await pool.execute(
         'SELECT role, barangay_id FROM farmers WHERE id = ?',
@@ -1719,7 +1874,6 @@ router.put('/bookings/:id/complete', async (req, res) => {
       }
     }
     
-    // Get current booking details
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1729,7 +1883,6 @@ router.put('/bookings/:id/complete', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify operator's barangay matches booking's barangay (if operator_id provided)
     if (operator_id) {
       const [operator] = await pool.execute(
         'SELECT barangay_id FROM farmers WHERE id = ?',
@@ -1743,7 +1896,6 @@ router.put('/bookings/:id/complete', async (req, res) => {
       }
     }
     
-    // Check if booking is approved
     if (booking[0].status !== 'Approved') {
       return res.status(400).json({ 
         success: false, 
@@ -1751,14 +1903,10 @@ router.put('/bookings/:id/complete', async (req, res) => {
       });
     }
     
-    // Determine new status based on action
     let newStatus = booking[0].status;
-    
     if (status_action === 'completed') {
-      // Mark booking as completed - machine usage finished
       newStatus = 'Completed';
     } else if (status_action === 'incomplete') {
-      // Mark as Incomplete (equipment issue, etc.)
       newStatus = 'Incomplete';
     }
     
@@ -1793,7 +1941,7 @@ router.put('/bookings/:id/complete', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/mark-completed - Mark "In Use" booking as "Completed" (Admin/President/Treasurer from same barangay)
+// PUT /api/machinery/bookings/:id/mark-completed - Mark "In Use" booking as "Completed"
 router.put('/bookings/:id/mark-completed', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1806,7 +1954,6 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       });
     }
     
-    // Get user and their barangay
     const [user] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [completed_by]
@@ -1826,7 +1973,6 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       });
     }
     
-    // Get booking
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1836,7 +1982,6 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify user's barangay matches booking's barangay (unless admin)
     if (user[0].role !== 'admin' && user[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1851,7 +1996,6 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       });
     }
     
-    // Mark booking as Completed - this moves it to A/R & Collections for payment tracking
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
        SET status = 'Completed',
@@ -1875,7 +2019,7 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/resolve-incomplete - Resolve "Incomplete" booking from same barangay
+// PUT /api/machinery/bookings/:id/resolve-incomplete - Resolve "Incomplete" booking
 router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1888,7 +2032,6 @@ router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
       });
     }
     
-    // Get manager and their barangay
     const [manager] = await pool.execute(
       'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
       [resolved_by]
@@ -1901,7 +2044,6 @@ router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
       });
     }
     
-    // Get booking
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [id]
@@ -1911,7 +2053,6 @@ router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // CRITICAL: Verify manager's barangay matches booking's barangay (unless admin)
     if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
@@ -1927,7 +2068,6 @@ router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
     }
     
     let newStatus, responseMessage;
-    
     if (resolution_action === 'resume') {
       newStatus = 'In Use';
       responseMessage = 'Booking resumed. Operator can continue work.';
@@ -1958,8 +2098,7 @@ router.put('/bookings/:id/resolve-incomplete', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/cancel - Cancel booking 
-// IMPROVED: Delete booking from database instead of marking as Cancelled
+// PUT /api/machinery/bookings/:id/cancel - Cancel booking
 router.put('/bookings/:id/cancel', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1979,7 +2118,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
       });
     }
     
-    // Allow cancellation from Pending (farmer only) or Approved (manager approval required)
     if (!['Pending', 'Approved'].includes(booking[0].status)) {
       return res.status(400).json({ 
         success: false, 
@@ -1987,7 +2125,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
       });
     }
     
-    // If Approved, need manager approval to cancel
     if (booking[0].status === 'Approved') {
       if (!cancelled_by) {
         return res.status(400).json({ 
@@ -2008,7 +2145,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
         });
       }
 
-      // CRITICAL: Verify manager's barangay matches booking's barangay (unless admin)
       if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) {
         return res.status(403).json({ 
           success: false, 
@@ -2016,7 +2152,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
         });
       }
     } else {
-      // Pending: farmer can cancel directly
       if (booking[0].farmer_id !== farmer_id) {
         return res.status(403).json({ 
           success: false, 
@@ -2024,7 +2159,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
         });
       }
 
-      // CRITICAL: Verify farmer's barangay matches booking's barangay
       const [farmer] = await pool.execute(
         'SELECT barangay_id FROM farmers WHERE id = ?',
         [farmer_id]
@@ -2037,7 +2171,6 @@ router.put('/bookings/:id/cancel', async (req, res) => {
       }
     }
     
-    // IMPROVED: Delete the booking instead of marking as Cancelled
     const [result] = await pool.execute(
       'DELETE FROM machinery_bookings WHERE id = ?',
       [id]
@@ -2054,17 +2187,16 @@ router.put('/bookings/:id/cancel', async (req, res) => {
   }
 });
 
-// PUT /api/machinery/bookings/:id/edit - Edit booking (farmer can only edit pending)
+// PUT /api/machinery/bookings/:id/edit - Edit booking
 router.put('/bookings/:id/edit', async (req, res) => {
   try {
     const { id } = req.params;
-    const { machinery_id, booking_date, service_location, area_size, area_unit, notes } = req.body;
+    const { machinery_id, booking_date, service_location, area_size, area_unit, notes, barangay_place_id } = req.body;
 
     await syncExpiredMachineryBookings({ bookingId: id });
     
-    console.log('🔄 Edit booking request:', { id, machinery_id, booking_date, service_location, area_size, area_unit, notes });
+    console.log('🔄 Edit booking request:', { id, machinery_id, booking_date, service_location, area_size, area_unit, notes, barangay_place_id });
     
-    // Validate required fields
     if (!machinery_id || !booking_date || area_size === undefined || area_size === null) {
       return res.status(400).json({ 
         success: false, 
@@ -2072,7 +2204,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
     
-    // Convert numeric values
     const machineryIdNum = parseInt(machinery_id, 10);
     const areaSizeNum = parseFloat(area_size);
     const bookingIdNum = parseInt(id, 10);
@@ -2092,7 +2223,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
     
-    // Fetch the current booking
     const [booking] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [bookingIdNum]
@@ -2105,7 +2235,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
 
-    // CRITICAL: Verify farmer owns the booking
     if (!booking[0].farmer_id) {
       return res.status(401).json({ 
         success: false, 
@@ -2113,8 +2242,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
 
-    // CRITICAL: Verify farmer owns AND is from the same barangay
-    // Get farmer info from request body or token context
     const { farmer_id } = req.body;
     
     if (farmer_id && booking[0].farmer_id !== farmer_id) {
@@ -2124,7 +2251,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
 
-    // Get farmer's barangay
     const [farmer] = await pool.execute(
       'SELECT barangay_id FROM farmers WHERE id = ?',
       [booking[0].farmer_id]
@@ -2137,7 +2263,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
     
-    // Only allow editing of Pending bookings
     if (booking[0].status !== 'Pending') {
       return res.status(400).json({ 
         success: false, 
@@ -2145,7 +2270,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
     
-    // Fetch machinery details for the new machinery
     const [machinery] = await pool.execute(
       'SELECT * FROM machinery_inventory WHERE id = ? AND barangay_id = ?',
       [machineryIdNum, farmer[0].barangay_id]
@@ -2157,28 +2281,130 @@ router.put('/bookings/:id/edit', async (req, res) => {
         message: 'Selected machinery not found or not available in your barangay' 
       });
     }
+
+    const barangayId = farmer[0].barangay_id;
+    let resolvedServiceLocation = typeof service_location === 'string' ? service_location.trim() : '';
+    let resolvedPlaceId = null;
+
+    if (barangay_place_id != null && barangay_place_id !== '') {
+      const pid = parseInt(barangay_place_id, 10);
+      if (Number.isNaN(pid)) {
+        return res.status(400).json({ success: false, message: 'Invalid barangay_place_id' });
+      }
+      try {
+        const [plc] = await pool.execute(
+          `SELECT id, name, description FROM barangay_service_places 
+           WHERE id = ? AND barangay_id = ? AND is_active = 1`,
+          [pid, barangayId]
+        );
+        if (plc.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid or inactive service place for your barangay'
+          });
+        }
+        resolvedPlaceId = plc[0].id;
+        const desc = plc[0].description ? ` — ${plc[0].description}` : '';
+        resolvedServiceLocation = `${plc[0].name}${desc}`;
+        if (typeof service_location === 'string' && service_location.trim()) {
+          resolvedServiceLocation = `${resolvedServiceLocation} (${service_location.trim()})`;
+        }
+      } catch (placeErr) {
+        if (placeErr.code === 'ER_BAD_FIELD_ERROR' || placeErr.code === 'ER_NO_SUCH_TABLE') {
+          return res.status(503).json({
+            success: false,
+            message: 'Service places are not available on this server (database migration required).'
+          });
+        }
+        throw placeErr;
+      }
+    }
+
+    if (!resolvedServiceLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Provide a service location or select a predefined place'
+      });
+    }
     
-    // Calculate the new total price
     const pricePerUnit = parseFloat(machinery[0].price_per_unit);
     const unitType = machinery[0].unit_type;
     const totalPrice = unitType === 'per load' ? pricePerUnit : pricePerUnit * areaSizeNum;
     
     console.log('Price calculation:', { pricePerUnit, unitType, areaSizeNum, totalPrice });
-    
-    // Update the booking
-    const [result] = await pool.execute(
-      `UPDATE machinery_bookings 
-       SET machinery_id = ?, 
-           booking_date = ?, 
-           service_location = ?, 
-           area_size = ?,
-           area_unit = ?,
-           total_price = ?,
-           notes = ?,
-           updated_at = NOW()
-       WHERE id = ?`,
-      [machineryIdNum, booking_date, service_location || null, areaSizeNum, area_unit || null, totalPrice, notes || null, bookingIdNum]
-    );
+
+    let result;
+    if (resolvedPlaceId != null) {
+      try {
+        [result] = await pool.execute(
+          `UPDATE machinery_bookings 
+           SET machinery_id = ?, 
+               booking_date = ?, 
+               service_location = ?, 
+               area_size = ?,
+               area_unit = ?,
+               total_price = ?,
+               notes = ?,
+               barangay_place_id = ?,
+               updated_at = NOW()
+           WHERE id = ?`,
+          [machineryIdNum, booking_date, resolvedServiceLocation, areaSizeNum, area_unit || null, totalPrice, notes || null, resolvedPlaceId, bookingIdNum]
+        );
+      } catch (updErr) {
+        if (updErr.code === 'ER_BAD_FIELD_ERROR') {
+          [result] = await pool.execute(
+            `UPDATE machinery_bookings 
+             SET machinery_id = ?, 
+                 booking_date = ?, 
+                 service_location = ?, 
+                 area_size = ?,
+                 area_unit = ?,
+                 total_price = ?,
+                 notes = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [machineryIdNum, booking_date, resolvedServiceLocation, areaSizeNum, area_unit || null, totalPrice, notes || null, bookingIdNum]
+          );
+        } else {
+          throw updErr;
+        }
+      }
+    } else {
+      try {
+        [result] = await pool.execute(
+          `UPDATE machinery_bookings 
+           SET machinery_id = ?, 
+               booking_date = ?, 
+               service_location = ?, 
+               area_size = ?,
+               area_unit = ?,
+               total_price = ?,
+               notes = ?,
+               barangay_place_id = NULL,
+               updated_at = NOW()
+           WHERE id = ?`,
+          [machineryIdNum, booking_date, resolvedServiceLocation, areaSizeNum, area_unit || null, totalPrice, notes || null, bookingIdNum]
+        );
+      } catch (updErr) {
+        if (updErr.code === 'ER_BAD_FIELD_ERROR') {
+          [result] = await pool.execute(
+            `UPDATE machinery_bookings 
+             SET machinery_id = ?, 
+                 booking_date = ?, 
+                 service_location = ?, 
+                 area_size = ?,
+                 area_unit = ?,
+                 total_price = ?,
+                 notes = ?,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [machineryIdNum, booking_date, resolvedServiceLocation, areaSizeNum, area_unit || null, totalPrice, notes || null, bookingIdNum]
+          );
+        } else {
+          throw updErr;
+        }
+      }
+    }
     
     console.log('Update result:', result);
     
@@ -2190,7 +2416,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
       });
     }
     
-    // Fetch and return the updated booking
     const [updatedData] = await pool.execute(
       'SELECT * FROM machinery_bookings WHERE id = ?',
       [bookingIdNum]
@@ -2211,7 +2436,6 @@ router.put('/bookings/:id/edit', async (req, res) => {
 // GET /api/machinery/stats - Get machinery statistics
 router.get('/stats', async (req, res) => {
   try {
-    // Total machinery count by type
     const [machineryStats] = await pool.execute(
       `SELECT 
         machinery_type,
@@ -2223,7 +2447,6 @@ router.get('/stats', async (req, res) => {
       GROUP BY machinery_type`
     );
     
-    // Booking statistics
     const [bookingStats] = await pool.execute(
       `SELECT 
         COUNT(*) as total_bookings,
@@ -2236,7 +2459,6 @@ router.get('/stats', async (req, res) => {
       FROM machinery_bookings`
     );
     
-    // Active operators count
     const [operatorStats] = await pool.execute(
       `SELECT COUNT(DISTINCT farmer_id) as active_operators
        FROM machinery_operators
