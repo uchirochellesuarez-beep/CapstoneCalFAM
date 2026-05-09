@@ -3,12 +3,11 @@
     <!-- Page Header -->
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">🚜 Machinery Management System</h1>
-        <p class="page-subtitle" v-if="isAdminOnly">View machinery inventory across all barangays</p>
-        <p class="page-subtitle" v-else-if="isPresidentRole">Manage machinery inventory and monitor bookings for your barangay</p>
-        <p class="page-subtitle" v-else>Monitor machinery bookings</p>
+        <h1 class="page-title">Machinery Management System</h1>
+        <p class="page-subtitle" v-if="isPresidentRole">Manage machinery inventory and monitor bookings for your barangay</p>
+        <p class="page-subtitle" v-else-if="!isAdminOnly">Monitor machinery bookings</p>
       </div>
-      <button v-if="isAdminRole" @click="showInventoryModal = true" class="btn-primary">
+      <button v-if="isAdminRole" @click="showInventoryModal = true" class="btn-primary machinery-inventory-btn">
         <span class="btn-icon">📦</span>
         Machinery Inventory
       </button>
@@ -17,28 +16,24 @@
     <!-- Stats Overview (Hidden for Admin-Only) -->
     <div v-if="!isAdminOnly" class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">🚜</div>
         <div class="stat-content">
           <div class="stat-label">Total Machinery</div>
           <div class="stat-value">{{ totalMachinery }}</div>
         </div>
       </div>
       <div class="stat-card stat-success">
-        <div class="stat-icon">✅</div>
         <div class="stat-content">
           <div class="stat-label">Available</div>
           <div class="stat-value">{{ availableMachinery }}</div>
         </div>
       </div>
       <div class="stat-card stat-pending">
-        <div class="stat-icon">⏳</div>
         <div class="stat-content">
           <div class="stat-label">Pending Bookings</div>
           <div class="stat-value">{{ pendingBookingsCount }}</div>
         </div>
       </div>
       <div class="stat-card stat-info">
-        <div class="stat-icon">💰</div>
         <div class="stat-content">
           <div class="stat-label">Total Revenue</div>
           <div class="stat-value">₱{{ formatNumber(totalRevenue) }}</div>
@@ -48,7 +43,7 @@
 
     <!-- Admin Inventory View -->
     <div v-if="isAdminOnly" class="section">
-      <h2 class="section-title">📦 Machinery Inventory by Barangay</h2>
+      <h2 class="section-title">Machinery Inventory by Barangay</h2>
       
       <!-- Admin Inventory Filters -->
       <div class="filters-section">
@@ -96,7 +91,7 @@
               <th>Name</th>
               <th>Type</th>
               <th>Barangay</th>
-              <th>💰 Pricing</th>
+              <th>Pricing</th>
               <th>Max Capacity</th>
               <th>Status</th>
               <th>Actions</th>
@@ -121,16 +116,16 @@
                 </span>
               </td>
               <td>
-                <span class="barangay-badge">📍 {{ getBarangayName(machine.barangay_id) }}</span>
+                <span class="barangay-badge">{{ getBarangayName(machine.barangay_id) }}</span>
               </td>
               <td>
                 <div class="price-display">
                   <div class="price-row">
-                    <span class="price-label">👥 Member:</span>
+                    <span class="price-label">Member:</span>
                     <span class="price-value">₱{{ formatNumber(machine.member_price || machine.price_per_unit) }} {{ machine.unit_type }}</span>
                   </div>
                   <div class="price-row">
-                    <span class="price-label">🚫 Non-Member:</span>
+                    <span class="price-label">Non-Member:</span>
                     <span class="price-value">₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }} {{ machine.unit_type }}</span>
                   </div>
                 </div>
@@ -158,9 +153,9 @@
 
     <!-- President's Machinery Inventory Section -->
     <div v-if="isPresidentRole" class="section">
-      <h2 class="section-title">🚜 Machinery Inventory ({{ barangays.find(b => b.id === userBarangayId)?.name || 'Your Barangay' }})</h2>
+      <h2 class="section-title">Machinery Inventory ({{ barangays.find(b => b.id === userBarangayId)?.name || 'Your Barangay' }})</h2>
       
-      <div class="inventory-actions" style="margin-bottom: 20px;">
+      <div class="inventory-actions standalone-actions">
         <button @click="showAddMachineryModal = true" class="btn-success">
           ➕ Add Machinery
         </button>
@@ -176,7 +171,7 @@
             <tr>
               <th>Name</th>
               <th>Type</th>
-              <th>💰 Pricing</th>
+              <th>Pricing</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -192,11 +187,11 @@
               <td>
                 <div class="price-display">
                   <div class="price-row">
-                    <span class="price-label">👥 Member:</span>
+                    <span class="price-label">Member:</span>
                     <span class="price-value">₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}</span>
                   </div>
                   <div class="price-row">
-                    <span class="price-label">🚫 Non-Member:</span>
+                    <span class="price-label">Non-Member:</span>
                     <span class="price-value">₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}</span>
                   </div>
                 </div>
@@ -222,7 +217,7 @@
 
     <!-- All Bookings Table -->
     <div v-if="!isAdminOnly" class="section">
-      <h2 class="section-title">📋 Machinery Bookings</h2>
+      <h2 class="section-title">Machinery Bookings</h2>
       
       <!-- Filters -->
       <div class="filters-section">
@@ -302,8 +297,11 @@
                 </span>
               </td>
               <td>
-                <button @click="viewBooking(booking)" class="btn-icon-small" title="View Details">
-                  👁️
+                <button @click="viewBooking(booking)" class="btn-icon-small booking-view-btn" title="View Details" aria-label="View booking details">
+                  <svg class="booking-view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path>
+                    <circle cx="12" cy="12" r="2.7"></circle>
+                  </svg>
                 </button>
               </td>
             </tr>
@@ -314,71 +312,227 @@
 
     <!-- Inventory Modal (Hidden for Admin) -->
     <div v-if="showInventoryModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content modal-xlarge">
-        <div class="modal-header">
-          <h2>📦 Machinery Inventory Management</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+      <div class="modal-content modal-xlarge inv2-modal">
+
+        <!-- ── Header ── -->
+        <div class="inv2-header">
+          <div class="inv2-header-left">
+            <div class="inv2-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div>
+              <h2 class="inv2-title">Machinery Inventory</h2>
+              <p class="inv2-subtitle">{{ invFiltered.length }} record{{ invFiltered.length !== 1 ? 's' : '' }} found</p>
+            </div>
+          </div>
+          <div class="inv2-header-right">
+            <!-- View toggle -->
+            <div class="inv2-view-toggle">
+              <button type="button" class="inv2-view-btn" :class="{ active: invView === 'table' }" @click="invView = 'table'" title="Table view">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3h18M3 9h18M3 15h18M3 21h18"/></svg>
+              </button>
+              <button type="button" class="inv2-view-btn" :class="{ active: invView === 'card' }" @click="invView = 'card'" title="Card view">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              </button>
+            </div>
+            <button type="button" @click="closeModals" class="inv2-close" title="Close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="modal-body">
-          <div class="inventory-actions">
-            <button @click="showAddMachineryModal = true; showInventoryModal = false" class="btn-success">
-              ➕ Add New Machinery
+
+        <!-- ── Toolbar ── -->
+        <div class="inv2-toolbar">
+          <div class="inv2-search">
+            <svg class="inv2-search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input v-model="invQ" type="text" class="inv2-search-input" placeholder="Search name or type…" />
+            <button v-if="invQ" type="button" @click="invQ = ''" class="inv2-clear-btn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           </div>
 
-          <!-- Inventory Table -->
-          <div class="inventory-table-container">
-            <table class="inventory-table">
+          <select v-model="invTypeF" class="inv2-select">
+            <option value="">All Types</option>
+            <option v-for="t in invUniqueTypes" :key="t" :value="t">{{ t }}</option>
+          </select>
+
+          <select v-model="invStatusF" class="inv2-select">
+            <option value="">All Status</option>
+            <option value="Available">Available</option>
+            <option value="In Use">In Use</option>
+            <option value="Under Maintenance">Under Maintenance</option>
+            <option value="Unavailable">Unavailable</option>
+          </select>
+
+          <button type="button" @click="showAddMachineryModal = true; showInventoryModal = false" class="inv2-add-btn">
+            ➕ Add New Machinery
+          </button>
+        </div>
+
+        <!-- Active filter chips -->
+        <div v-if="invQ || invTypeF || invStatusF" class="inv2-chips">
+          <span v-if="invQ" class="inv2-chip">
+            Search: "{{ invQ }}"
+            <button type="button" @click="invQ = ''" class="inv2-chip-x">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </span>
+          <span v-if="invTypeF" class="inv2-chip">
+            Type: {{ invTypeF }}
+            <button type="button" @click="invTypeF = ''" class="inv2-chip-x">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </span>
+          <span v-if="invStatusF" class="inv2-chip">
+            Status: {{ invStatusF }}
+            <button type="button" @click="invStatusF = ''" class="inv2-chip-x">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </span>
+          <button type="button" @click="invQ = ''; invTypeF = ''; invStatusF = ''" class="inv2-clear-all">Clear all</button>
+        </div>
+
+        <!-- ── Body ── -->
+        <div class="inv2-body">
+
+          <!-- TABLE VIEW -->
+          <div v-if="invView === 'table'" class="inv2-table-wrap">
+            <table class="inv2-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th style="width:60px">ID</th>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Price</th>
-                  <th>Max Capacity</th>
+                  <th>Member Rate</th>
+                  <th>Non-Member Rate</th>
+                  <th>Capacity</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th style="width:132px">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="inventory.length === 0">
-                  <td colspan="7" class="empty-cell">No machinery in inventory</td>
+                <tr v-if="invFiltered.length === 0">
+                  <td colspan="8" class="inv2-empty">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <div>No machinery found</div>
+                  </td>
                 </tr>
-                <tr v-else v-for="machine in inventory" :key="machine.id">
-                  <td>{{ machine.id }}</td>
-                  <td>{{ machine.machinery_name }}</td>
+                <tr v-else v-for="(m, i) in invPaged" :key="m.id" class="inv2-row" :class="i % 2 === 0 ? 'inv2-row-a' : 'inv2-row-b'">
+                  <td style="text-align:center"><span class="inv2-id">#{{ m.id }}</span></td>
                   <td>
-                    <span class="badge" :class="'badge-' + getMachineryTypeClass(machine.machinery_type)">
-                      {{ machine.machinery_type }}
-                    </span>
-                  </td>
-                  <td>₱{{ formatNumber(machine.price_per_unit) }} {{ machine.unit_type }}</td>
-                  <td>
-                    <span v-if="machine.max_capacity">{{ machine.max_capacity }} {{ machine.capacity_unit }}</span>
-                    <span v-else>-</span>
+                    <div class="inv2-name-wrap">
+                      <div class="inv2-machine-icon">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                      </div>
+                      <span class="inv2-name">{{ m.machinery_name }}</span>
+                    </div>
                   </td>
                   <td>
-                    <span class="status-badge" :class="'status-' + getStatusClass(machine.status)">
-                      {{ machine.status }}
-                    </span>
+                    <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                  </td>
+                  <td style="text-align:right">
+                    <span v-if="m.member_price" class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                    <span v-else class="inv2-price inv2-price-main">₱{{ formatNumber(m.price_per_unit) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                  </td>
+                  <td style="text-align:right">
+                    <span v-if="m.non_member_price" class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                    <span v-else class="inv2-na">—</span>
+                  </td>
+                  <td style="text-align:center">
+                    <span v-if="m.max_capacity" class="inv2-cap">{{ m.max_capacity }} {{ m.capacity_unit }}</span>
+                    <span v-else class="inv2-na">—</span>
+                  </td>
+                  <td style="text-align:center">
+                    <span class="status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
                   </td>
                   <td>
-                    <div class="action-buttons">
-                      <button @click="editMachinery(machine)" class="btn-icon-small" title="Edit">✏️</button>
-                      <button @click="deleteMachineryConfirm(machine)" class="btn-icon-small btn-danger" title="Delete">🗑️</button>
+                    <div class="inv2-actions">
+                      <button type="button" @click="editMachinery(m)" class="inv2-action-btn inv2-btn-edit" title="Edit Machinery">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button type="button" @click="deleteMachineryConfirm(m)" class="inv2-action-btn inv2-btn-del" title="Delete Entry">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- CARD VIEW -->
+          <div v-else class="inv2-cards-grid">
+            <div v-if="invFiltered.length === 0" class="inv2-empty">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <div>No machinery found</div>
+            </div>
+            <div v-else v-for="m in invPaged" :key="'c' + m.id" class="inv2-card">
+              <!-- Card image / icon -->
+              <div class="inv2-card-img">
+                <img v-if="getImageUrl(m.machinery_picture)" :src="getImageUrl(m.machinery_picture)" :alt="m.machinery_name" @error="handleImageError" />
+                <div v-else class="inv2-card-img-fallback">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </div>
+                <span class="inv2-card-status-badge status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
+              </div>
+              <!-- Card body -->
+              <div class="inv2-card-body">
+                <div class="inv2-card-top">
+                  <span class="inv2-card-name">{{ m.machinery_name }}</span>
+                  <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                </div>
+                <div class="inv2-card-id">#{{ m.id }}</div>
+                <!-- Pricing rows -->
+                <div class="inv2-card-pricing">
+                  <div class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">Member</span>
+                    <span class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price || m.price_per_unit) }}/{{ m.unit_type }}</span>
+                  </div>
+                  <div v-if="m.non_member_price" class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">Non-Member</span>
+                    <span class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}/{{ m.unit_type }}</span>
+                  </div>
+                </div>
+                <div v-if="m.max_capacity" class="inv2-card-cap">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  {{ m.max_capacity }} {{ m.capacity_unit }}
+                </div>
+                <div class="inv2-card-actions">
+                  <button type="button" @click="editMachinery(m)" class="inv2-action-btn inv2-btn-edit" title="Edit Machinery">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="inv2-action-btn inv2-btn-del" title="Delete Entry">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="invTotalPg > 1" class="inv2-pagination">
+            <button type="button" class="inv2-pg-btn" :disabled="invPg === 1" @click="invPg--">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="inv2-pg-info">{{ invPg }} / {{ invTotalPg }}</span>
+            <button type="button" class="inv2-pg-btn" :disabled="invPg === invTotalPg" @click="invPg++">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
         </div>
+
+        <!-- Mobile FAB -->
+        <button type="button" @click="showAddMachineryModal = true; showInventoryModal = false" class="inv2-fab" title="Add New Machinery">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </div>
     </div>
 
     <!-- Add/Edit Machinery Modal -->
     <div v-if="showAddMachineryModal || showEditMachineryModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content">
+      <div class="modal-content modal-form-content">
         <div class="modal-header">
           <h2>{{ showEditMachineryModal ? 'Edit Machinery' : 'Add New Machinery' }}</h2>
           <button @click="closeModals" class="modal-close">✕</button>
@@ -455,7 +609,7 @@
                 <small class="form-hint">Price for barangay/association members</small>
               </div>
               <div class="form-group">
-                <label class="form-label">� Non-Member Price *</label>
+                <label class="form-label">💰 Non-Member Price *</label>
                 <input v-model.number="machineryForm.non_member_price" type="number" step="0.01" min="0.01" class="form-input" required placeholder="e.g., 6250" />
                 <small class="form-hint">Price for non-members (typically 20-30% higher)</small>
               </div>
@@ -594,7 +748,9 @@
           <p class="warning-text">This action cannot be undone.</p>
           <div class="modal-actions">
             <button @click="closeModals" class="btn-secondary">Cancel</button>
-            <button @click="deleteMachinery" class="btn-danger" :disabled="loading">Delete</button>
+            <button @click="deleteMachinery" class="btn-danger" :disabled="loading">
+              {{ loading ? 'Deleting...' : 'Delete' }}
+            </button>
           </div>
         </div>
       </div>
@@ -666,6 +822,13 @@ export default {
       return imagePath
     }
 
+    const invQ = ref('')
+    const invTypeF = ref('')
+    const invStatusF = ref('')
+    const invView = ref('table')
+    const invPg = ref(1)
+    const invPerPg = 10
+
     const inventory = computed(() => machineryStore.inventory)
     const bookings = computed(() => machineryStore.bookings)
     const loading = computed(() => machineryStore.loading)
@@ -692,6 +855,28 @@ export default {
         const barangayMatch = !adminFilters.value.barangay_id || machine.barangay_id === parseInt(adminFilters.value.barangay_id)
         return statusMatch && typeMatch && barangayMatch
       })
+    })
+
+    const invUniqueTypes = computed(() => {
+      const s = new Set((inventory.value || []).map((m) => m.machinery_type).filter(Boolean))
+      return [...s].sort()
+    })
+    const invFiltered = computed(() => {
+      const q = invQ.value.trim().toLowerCase()
+      return (inventory.value || []).filter((m) => {
+        const qMatch =
+          !q ||
+          (m.machinery_name || '').toLowerCase().includes(q) ||
+          (m.machinery_type || '').toLowerCase().includes(q)
+        const tMatch = !invTypeF.value || m.machinery_type === invTypeF.value
+        const sMatch = !invStatusF.value || m.status === invStatusF.value
+        return qMatch && tMatch && sMatch
+      })
+    })
+    const invTotalPg = computed(() => Math.max(1, Math.ceil(invFiltered.value.length / invPerPg)))
+    const invPaged = computed(() => {
+      const s = (invPg.value - 1) * invPerPg
+      return invFiltered.value.slice(s, s + invPerPg)
     })
 
     const applyAdminFilters = () => {
@@ -1087,267 +1272,1628 @@ export default {
       getBarangayName, formatNumber, formatDate, formatDateTime,
       handleMachineryPictureChange, removeMachineryPicture, uploadMachineryPicture,
       handleImageError, handleImageLoad, machineryPictureInput, currentPictureFile, resetForm,
-      getImageUrl
+      getImageUrl,
+      invQ,
+      invTypeF,
+      invStatusF,
+      invView,
+      invPg,
+      invTotalPg,
+      invPaged,
+      invUniqueTypes,
+      invFiltered
     }
   }
 }
 </script>
 
 <style scoped>
-.machinery-management-page { padding: 24px; max-width: 1400px; margin: 0 auto; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-title { font-size: 28px; font-weight: bold; color: #1a1a1a; margin: 0; }
-.page-subtitle { color: #666; margin: 4px 0 0 0; }
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 24px; }
-.stat-card { background: white; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.stat-icon { font-size: 36px; }
-.stat-label { color: #666; font-size: 14px; margin-bottom: 4px; }
-.stat-value { font-size: 28px; font-weight: bold; color: #1a1a1a; }
-.stat-success { border-left: 4px solid #10b981; }
-.stat-pending { border-left: 4px solid #f59e0b; }
-.stat-info { border-left: 4px solid #3b82f6; }
-.section { margin-bottom: 40px; }
-.section-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
-.filters-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
-.filter-group { flex: 1; min-width: 200px; }
-.filter-label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
-.filter-select, .form-input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-.table-container, .inventory-table-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.bookings-table, .inventory-table { width: 100%; border-collapse: collapse; }
-.bookings-table thead, .inventory-table thead { background: #f8f9fa; }
-.bookings-table th, .inventory-table th { padding: 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e5e7eb; }
-.bookings-table td, .inventory-table td { padding: 16px; border-bottom: 1px solid #e5e7eb; }
-.farmer-info, .machinery-info { display: flex; flex-direction: column; gap: 4px; }
-.farmer-info small, .machinery-info small { color: #666; font-size: 12px; }
-.price-cell { font-weight: 600; color: #059669; }
-
-/* Pricing Display Styles */
-.price-display {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
+.machinery-management-page {
+  --surface-1: #1d2b21;
+  --surface-2: #24372b;
+  --surface-3: #2a3f32;
+  --line-soft: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --text-main: #eefde6;
+  --text-muted: rgba(220, 238, 211, 0.76);
+  --text-soft: rgba(220, 238, 211, 0.62);
+  --success: #34d399;
+  --warning: #86efac;
+  --danger: #f87171;
+  --info: #60a5fa;
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  position: relative;
+  overflow-x: hidden;
 }
 
-.price-row {
+.machinery-management-page::before,
+.machinery-management-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.machinery-management-page::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(234, 179, 8, 0.08) 0%, transparent 60%);
+}
+
+.machinery-management-page::after {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(250, 204, 21, 0.12) 0%, transparent 22%),
+    radial-gradient(circle at 8% 88%, rgba(74, 222, 128, 0.12) 0%, transparent 20%);
+}
+
+.machinery-management-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page-header,
+.section {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: 24px;
+  box-shadow:
+    16px 16px 30px rgba(8, 14, 10, 0.55),
+    -14px -14px 28px rgba(42, 61, 46, 0.5),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 26px;
+  padding: 28px 32px;
+}
+
+.header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  color: var(--text-main);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
+  padding: 22px 22px 20px;
+  border-radius: 18px;
+  background: #202f24;
+  border: 1px solid var(--line-soft);
+  box-shadow:
+    12px 12px 22px rgba(8, 13, 10, 0.5),
+    -10px -10px 20px rgba(44, 63, 48, 0.48),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.07),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.08) 50%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--line-strong);
+  box-shadow:
+    16px 16px 28px rgba(7, 12, 9, 0.58),
+    -12px -12px 22px rgba(45, 66, 50, 0.56),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.11),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.stat-card:hover::after {
+  opacity: 1;
+}
+
+.stat-card:first-child {
+  border-left: 3px solid var(--success);
+}
+
+.stat-success {
+  border-left: 3px solid var(--success);
+}
+
+.stat-pending {
+  border-left: 3px solid var(--warning);
+}
+
+.stat-info {
+  border-left: 3px solid var(--info);
+}
+
+.stat-content {
+  min-width: 0;
+}
+
+.stat-label {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-soft);
+}
+
+.stat-value {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+  color: var(--text-main);
+}
+
+.section {
+  margin-bottom: 28px;
+  padding: 26px 28px 28px;
+}
+
+.section-title {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  color: var(--text-main);
+}
+
+.filters-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.06),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.filter-group {
+  min-width: 0;
+}
+
+.filter-label,
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.filter-select,
+.form-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-3);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+}
+
+.filter-select:focus,
+.form-input:focus {
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12), inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+}
+
+.filter-select option,
+.form-input option {
+  background: #223428;
+  color: var(--text-main);
+}
+
+.table-container,
+.inventory-table-container {
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  box-shadow:
+    12px 12px 22px rgba(8, 13, 10, 0.48),
+    -10px -10px 20px rgba(43, 62, 47, 0.44),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.06),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+.inventory-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px 0;
+  margin-bottom: 12px;
+}
+
+.inv2-modal {
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: column;
+  width: min(88vw, 1020px) !important;
+  max-height: 88vh !important;
+  margin-left: clamp(18px, 5vw, 96px);
+  background: rgba(18, 32, 22, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  border: 1px solid rgba(100, 220, 130, 0.14) !important;
+  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+.inv2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+.inv2-header-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.inv2-header-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(34, 197, 94, 0.08));
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 12px;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+.inv2-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #f0fdf4;
+  line-height: 1.2;
+}
+.inv2-subtitle {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: rgba(200, 235, 210, 0.5);
+}
+.inv2-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.inv2-view-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px;
+  gap: 2px;
+}
+.inv2-view-btn {
+  width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: rgba(200, 235, 210, 0.5);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.inv2-view-btn.active {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+}
+.inv2-view-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(200, 235, 210, 0.9);
+}
+.inv2-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  color: rgba(200, 235, 210, 0.7);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.inv2-close:hover {
+  background: rgba(248, 113, 113, 0.16);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #fca5a5;
+}
+
+.inv2-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 170px 170px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+.inv2-search {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.inv2-search-ico {
+  position: absolute;
+  left: 11px;
+  color: rgba(200, 235, 210, 0.45);
+  pointer-events: none;
+}
+.inv2-search-input {
+  width: 100%;
+  padding: 8px 32px 8px 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  color: #f0fdf4;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.inv2-search-input::placeholder {
+  color: rgba(200, 235, 210, 0.38);
+}
+.inv2-search-input:focus {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+}
+.inv2-clear-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: rgba(200, 235, 210, 0.5);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+.inv2-clear-btn:hover {
+  color: #f0fdf4;
+}
+.inv2-select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  color: #f0fdf4;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+.inv2-select option {
+  background: #1a3025;
+  color: #f0fdf4;
+}
+.inv2-add-btn {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(22, 163, 74, 0.32);
+  transition: all 0.2s ease;
+}
+.inv2-add-btn:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.45);
+}
+.inv2-add-btn:active {
+  transform: translateY(0);
+}
+
+.inv2-chips {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 8px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+.inv2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.24);
+  color: #86efac;
+}
+.inv2-chip-x {
+  background: none;
+  border: none;
+  color: #86efac;
+  cursor: pointer;
+  display: flex;
+  padding: 0;
+  opacity: 0.7;
+}
+.inv2-chip-x:hover {
+  opacity: 1;
+}
+.inv2-clear-all {
+  background: none;
+  border: none;
+  color: rgba(200, 235, 210, 0.45);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: underline;
+}
+.inv2-clear-all:hover {
+  color: rgba(200, 235, 210, 0.8);
+}
+
+.inv2-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inv2-table-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(8px);
+}
+.inv2-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.inv2-table thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+.inv2-table th {
+  padding: 13px 14px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(200, 235, 210, 0.5);
+  white-space: nowrap;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.inv2-table td {
+  padding: 13px 14px;
+  font-size: 13px;
+  color: #e8f5ee;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.inv2-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.inv2-row {
+  transition: background 0.15s ease;
+  cursor: default;
+}
+.inv2-row-a td {
+  background: rgba(255, 255, 255, 0.01);
+}
+.inv2-row-b td {
+  background: rgba(0, 0, 0, 0.06);
+}
+.inv2-row:hover td {
+  background: rgba(74, 222, 128, 0.06) !important;
+}
+.inv2-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(200, 235, 210, 0.45);
+}
+.inv2-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.inv2-machine-icon {
+  width: 28px;
+  height: 28px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+.inv2-name {
+  font-weight: 600;
+  color: #f0fdf4;
+}
+.inv2-price {
+  font-weight: 800;
+  white-space: nowrap;
+}
+.inv2-price-main {
+  color: #9af0b5;
+}
+.inv2-price-member {
+  color: #4ade80;
+}
+.inv2-price-nonmember {
+  color: #fb923c;
+}
+.inv2-unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(200, 235, 210, 0.5);
+  margin-left: 1px;
+}
+.inv2-cap {
+  font-size: 12px;
+  color: rgba(200, 235, 210, 0.7);
+}
+.inv2-na {
+  color: rgba(200, 235, 210, 0.3);
   font-size: 13px;
 }
 
-.price-label {
+.inv2-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 120px;
+}
+.inv2-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 42px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 600;
-  color: #374151;
-  min-width: 90px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.inv2-btn-edit {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.22);
+}
+.inv2-btn-edit:hover {
+  background: rgba(59, 130, 246, 0.24);
+  transform: translateY(-1px);
+}
+.inv2-btn-del {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.inv2-btn-del:hover {
+  background: rgba(239, 68, 68, 0.22);
+  transform: translateY(-1px);
+}
+
+.inv2-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.inv2-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.inv2-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+.inv2-card-img {
+  height: 110px;
+  position: relative;
+  background: linear-gradient(135deg, rgba(18, 46, 28, 0.9), rgba(28, 56, 38, 0.9));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.inv2-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.inv2-card-img-fallback {
+  color: rgba(100, 200, 130, 0.35);
+}
+.inv2-card-status-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px !important;
+  padding: 3px 9px !important;
+}
+.inv2-card-body {
+  padding: 13px 14px 14px;
+}
+.inv2-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.inv2-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f0fdf4;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+.inv2-card-id {
+  font-size: 10px;
+  color: rgba(200, 235, 210, 0.4);
+  margin-bottom: 10px;
+}
+.inv2-card-pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.inv2-card-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.inv2-card-price-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(200, 235, 210, 0.45);
+}
+.inv2-card-cap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(200, 235, 210, 0.55);
+  margin-bottom: 12px;
+}
+.inv2-card-actions {
+  display: flex;
+  gap: 8px;
+}
+.inv2-card-actions .inv2-action-btn {
+  flex: 1;
+  justify-content: center;
+  padding: 8px;
+}
+
+.inv2-empty {
+  text-align: center;
+  padding: 52px 20px;
+  color: rgba(200, 235, 210, 0.4);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inv2-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+.inv2-pg-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f0fdf4;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.inv2-pg-btn:hover:not(:disabled) {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.28);
+}
+.inv2-pg-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+.inv2-pg-info {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(200, 235, 210, 0.55);
+  min-width: 52px;
+  text-align: center;
+}
+
+.inv2-fab {
+  display: none;
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.5);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+.inv2-fab:hover {
+  box-shadow: 0 6px 22px rgba(22, 163, 74, 0.65);
+  transform: scale(1.06);
+}
+
+@media (max-width: 1120px) {
+  .inv2-toolbar {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .inv2-add-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .inv2-fab {
+    display: flex;
+  }
+  .inv2-add-btn {
+    display: none;
+  }
+  .inv2-modal {
+    max-height: 95vh !important;
+    width: min(96vw, 96vw) !important;
+    margin-left: 0;
+  }
+  .inv2-toolbar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .inv2-table-wrap {
+    overflow-x: auto;
+  }
+  .inv2-table th,
+  .inv2-table td {
+    white-space: nowrap;
+  }
+  .inv2-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-form-content {
+    margin-top: 8px;
+  }
+}
+
+.standalone-actions {
+  padding: 0 0 18px;
+}
+
+.bookings-table,
+.inventory-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.bookings-table thead,
+.inventory-table thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bookings-table th,
+.inventory-table th {
+  padding: 18px 20px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.bookings-table td,
+.inventory-table td {
+  padding: 18px 20px;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.inventory-table th {
+  font-size: 12.5px;
+  letter-spacing: 0.7px;
+}
+
+.inventory-table td {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.bookings-table tbody tr,
+.inventory-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.bookings-table tbody tr:hover,
+.inventory-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bookings-table th:first-child,
+.inventory-table th:first-child,
+.bookings-table td:first-child,
+.inventory-table td:first-child {
+  padding-left: 24px;
+}
+
+.bookings-table th:last-child,
+.inventory-table th:last-child,
+.bookings-table td:last-child,
+.inventory-table td:last-child {
+  padding-right: 24px;
+}
+
+.inventory-table th:nth-child(1),
+.inventory-table td:nth-child(1) {
+  width: 74px;
+}
+
+.inventory-table th:nth-child(5),
+.inventory-table td:nth-child(5) {
+  min-width: 240px;
+}
+
+.inventory-table th:last-child,
+.inventory-table td:last-child,
+.bookings-table th:last-child,
+.bookings-table td:last-child {
+  width: 110px;
+}
+
+.farmer-info,
+.machinery-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.farmer-info strong,
+.machinery-info strong {
+  color: var(--text-main);
+}
+
+.farmer-info small,
+.machinery-info small {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.price-cell {
+  font-weight: 800;
+  color: #9af0b5;
+  white-space: nowrap;
+}
+
+.price-display {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.price-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 108px) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.price-label {
+  font-weight: 700;
+  color: var(--text-soft);
+  font-size: 13px;
 }
 
 .price-value {
-  font-weight: 700;
-  color: #059669;
+  font-weight: 800;
+  color: #9af0b5;
+  word-break: break-word;
+  font-size: 14.5px;
 }
 
-.badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-.badge-primary { background: #dbeafe; color: #1e40af; }
-.badge-warning { background: #fef3c7; color: #92400e; }
-.badge-info { background: #e0e7ff; color: #3730a3; }
-.badge-success { background: #d1fae5; color: #065f46; }
-.status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-.status-success { background: #d1fae5; color: #065f46; }
-.status-info { background: #dbeafe; color: #1e40af; }
-.status-warning { background: #fef3c7; color: #92400e; }
-.status-danger { background: #fee2e2; color: #991b1b; }
-.status-default { background: #f3f4f6; color: #6b7280; }
-.action-buttons { display: flex; gap: 8px; }
-.btn-icon-small { padding: 6px 10px; border: none; background: #f3f4f6; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-.btn-icon-small:hover { background: #e5e7eb; }
-.btn-icon-small.btn-danger:hover { background: #fee2e2; }
-.btn-primary { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.btn-primary:hover { background: #2563eb; }
-.btn-secondary { background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-.btn-success { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.btn-danger { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-.modal-large { max-width: 800px; }
-.modal-xlarge { max-width: 1000px; }
-.modal-small { max-width: 400px; }
-.modal-header { padding: 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-.modal-header h2 { margin: 0; font-size: 22px; }
-.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
-.modal-body { padding: 24px; }
-.inventory-actions { margin-bottom: 20px; }
-.form-group { margin-bottom: 20px; }
-.form-label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
-.form-hint { display: block; margin-top: 4px; font-size: 12px; color: #6b7280; font-style: italic; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.pricing-guide { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 8px; margin-top: 20px; }
-.pricing-guide h4 { margin: 0 0 8px 0; color: #1e40af; font-size: 16px; }
-.pricing-guide p { margin: 4px 0; color: #1e3a8a; }
-.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
-.booking-details { display: flex; flex-direction: column; gap: 24px; }
-.detail-section h3 { font-size: 18px; margin: 0 0 16px 0; }
-.details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.detail-item { display: flex; flex-direction: column; gap: 4px; }
-.detail-item label { font-weight: 600; color: #666; font-size: 14px; }
-.price-highlight { color: #059669; font-size: 20px; }
-.notes-text { background: #f9fafb; padding: 16px; border-radius: 8px; color: #333; line-height: 1.6; }
-.loading-cell, .empty-cell { text-align: center; padding: 40px !important; color: #666; }
-.loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.alert { position: fixed; top: 20px; right: 20px; padding: 16px 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2000; }
-.alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
-.alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
-.alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
-.alert-close { background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.7; }
-.warning-text { color: #dc2626; font-size: 14px; margin-top: 8px; }
-.barangay-assignment-group { 
-  background: #fffacd;
-  border: 2px solid #fbbf24;
+.badge,
+.status-badge,
+.barangay-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.badge-primary {
+  background: rgba(96, 165, 250, 0.18);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+}
+.badge-warning {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.24);
+}
+.badge-info {
+  background: rgba(129, 140, 248, 0.18);
+  color: #c7d2fe;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+}
+.badge-success {
+  background: rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.24);
+}
+.badge-default {
+  background: rgba(203, 213, 225, 0.14);
+  color: #dbe4ec;
+  border: 1px solid rgba(203, 213, 225, 0.2);
+}
+
+.status-success {
+  background: rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.24);
+}
+.status-info {
+  background: rgba(96, 165, 250, 0.18);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+}
+.status-warning {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.24);
+}
+.status-danger {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+}
+.status-default {
+  background: rgba(203, 213, 225, 0.14);
+  color: #dbe4ec;
+  border: 1px solid rgba(203, 213, 225, 0.2);
+}
+
+.barangay-badge {
+  justify-content: flex-start;
+  background: rgba(96, 165, 250, 0.16);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+}
+
+.action-buttons,
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon-small,
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.btn-icon-small:hover,
+.btn-sm:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-info {
+  background: rgba(96, 165, 250, 0.16);
+  border-color: rgba(96, 165, 250, 0.2);
+}
+
+.btn-icon-small.btn-danger,
+.btn-sm.btn-danger {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.2);
+  color: #fecaca;
+}
+
+.btn-icon-small.btn-danger:hover,
+.btn-sm.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.booking-view-btn {
+  background: rgba(96, 165, 250, 0.16);
+  border-color: rgba(147, 197, 253, 0.42);
+  color: #dbeafe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.booking-view-btn:hover {
+  background: rgba(96, 165, 250, 0.26);
+  border-color: rgba(147, 197, 253, 0.62);
+  box-shadow: 0 8px 14px rgba(30, 64, 175, 0.24);
+}
+
+.booking-view-icon {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-danger,
+.btn-upload-picture,
+.btn-remove-picture {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 18px;
   border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  color: white;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+  color: #082111;
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.24);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-danger,
+.btn-remove-picture {
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  color: white;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.24);
+}
+
+.btn-upload-picture {
+  width: 100%;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-danger:hover,
+.btn-upload-picture:hover,
+.btn-remove-picture:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-success:disabled,
+.btn-danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 12, 9, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+
+.modal-content {
+  width: min(90%, 640px);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface-1);
+  color: var(--text-main);
+  border-radius: 22px;
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+}
+
+.modal-form-content {
+  margin-top: 14px;
+}
+
+.modal-large {
+  max-width: 820px;
+}
+.modal-xlarge {
+  max-width: 1080px;
+}
+.modal-small {
+  max-width: 420px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 26px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 24px 26px 28px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.booking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-section {
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+}
+
+.detail-section h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-soft);
+}
+
+.price-highlight {
+  color: #9af0b5;
+  font-size: 20px;
+}
+
+.notes-text {
+  margin: 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.loading-cell,
+.empty-cell {
+  padding: 42px 24px !important;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  padding: 26px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.loading-spinner,
+.spinner-small {
+  border-radius: 999px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top: 3px solid var(--success);
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--info);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+}
+
+.alert-error {
+  background: rgba(127, 29, 29, 0.92);
+  color: #fecaca;
+  border-left: 4px solid #ef4444;
+}
+.alert-success {
+  background: rgba(6, 95, 70, 0.92);
+  color: #d1fae5;
+  border-left: 4px solid #10b981;
+}
+.alert-warning {
+  background: rgba(120, 53, 15, 0.92);
+  color: #fde68a;
+  border-left: 4px solid #f59e0b;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.warning-text {
+  color: #fecaca;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.barangay-assignment-group {
   padding: 20px;
   margin-bottom: 24px;
-  position: relative;
+  border-radius: 18px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
 }
+
 .barangay-warning {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fef08a;
-  padding: 12px 16px;
-  border-radius: 8px;
   margin-bottom: 16px;
-  font-weight: 600;
-  color: #92400e;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
   border-left: 4px solid #f59e0b;
-}
-.warning-icon { font-size: 18px; }
-.barangay-label {
   font-weight: 700;
-  color: #92400e;
-  font-size: 16px;
-  margin-top: 0;
 }
+
+.warning-icon {
+  font-size: 18px;
+}
+
+.barangay-label {
+  color: #fde68a;
+}
+
 .barangay-loading {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  color: #666;
+  padding: 12px 0;
+  color: var(--text-muted);
 }
-.spinner-small {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #f3f4f6;
-  border-top: 2px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+
 .barangay-select-emphasized {
-  font-weight: 500;
-  border: 2px solid #f59e0b;
-  background: white;
+  border-color: rgba(251, 191, 36, 0.35);
 }
+
 .barangay-select-emphasized:focus {
-  border-color: #d97706;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
-  outline: none;
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12), inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
 }
+
 .barangay-selected {
   margin-top: 12px;
-  padding: 10px 14px;
-  background: #d1fae5;
-  border-left: 4px solid #10b981;
-  border-radius: 6px;
-  color: #065f46;
-  font-weight: 600;
-  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(74, 222, 128, 0.12);
+  border-left: 4px solid #22c55e;
+  color: #bbf7d0;
+  font-weight: 700;
 }
+
 .barangay-hint {
-  display: block;
-  margin-top: 12px;
-  font-size: 13px;
-  color: #5b4d1a;
-  font-style: italic;
+  color: rgba(254, 230, 138, 0.86);
 }
+
 .barangay-read-only {
   margin-top: 12px;
-  padding: 12px 14px;
-  background: #f0fdf4;
-  border: 2px solid #10b981;
-  border-radius: 6px;
-  color: #065f46;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: #bbf7d0;
 }
+
 .barangay-read-only .barangay-info {
-  font-weight: 600;
-  font-size: 15px;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
 }
+
 .barangay-read-only .barangay-info::before {
   content: '✓';
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: #10b981;
-  color: white;
-  border-radius: 50%;
-  font-weight: bold;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #22c55e;
+  color: #082111;
   font-size: 12px;
-}
-.barangay-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  background: #dbeafe;
-  color: #1e40af;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
-}
-.inventory-actions {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  font-weight: 900;
 }
 
-/* Picture Upload Styles */
 .picture-upload-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px dashed #d1d5db;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
 }
 
 .picture-preview {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
 }
 
 .preview-image {
   width: 100%;
   max-width: 250px;
-  height: auto;
   min-height: 150px;
-  border-radius: 8px;
+  height: auto;
+  display: block;
   object-fit: contain;
   object-position: center;
-  border: 2px solid #d1d5db;
-  background: white;
-  display: block;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .picture-placeholder {
@@ -1357,56 +2903,220 @@ export default {
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  color: #6b7280;
+  color: var(--text-soft);
 }
 
 .placeholder-icon {
-  font-size: 48px;
   margin-bottom: 8px;
+  font-size: 48px;
 }
 
 .picture-placeholder p {
   margin: 0;
-  color: #6b7280;
   font-size: 14px;
-}
-
-.btn-upload-picture,
-.btn-remove-picture {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.btn-upload-picture {
-  background: #3b82f6;
-  color: white;
-  width: 100%;
-}
-
-.btn-upload-picture:hover {
-  background: #2563eb;
-}
-
-.btn-remove-picture {
-  background: #fee2e2;
-  color: #991b1b;
-  width: auto;
-}
-
-.btn-remove-picture:hover {
-  background: #fecaca;
 }
 
 .file-input-hidden {
   display: none;
 }
+
+@media (max-width: 1100px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-actions {
+    justify-content: flex-start;
+  }
+
+  .bookings-table,
+  .inventory-table {
+    min-width: 920px;
+  }
+
+  .table-container,
+  .inventory-table-container {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .machinery-management-page {
+    padding: 18px;
+  }
+
+  .page-header,
+  .section {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row,
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-overlay {
+    padding: 14px;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions > * {
+    width: 100%;
+  }
+
+  .alert {
+    left: 14px;
+    right: 14px;
+    min-width: auto;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .machinery-management-page {
+    padding: 14px;
+  }
+
+  .page-header,
+  .section {
+    padding: 18px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .bookings-table th,
+  .inventory-table th,
+  .bookings-table td,
+  .inventory-table td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+}
+
+.machinery-management-page::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(45, 212, 191, 0.1) 0%, transparent 60%) !important;
+}
+
+.machinery-management-page::after {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(45, 212, 191, 0.12) 0%, transparent 22%),
+    radial-gradient(circle at 8% 88%, rgba(74, 222, 128, 0.12) 0%, transparent 20%),
+    radial-gradient(circle at 76% 78%, rgba(163, 230, 53, 0.08) 0%, transparent 18%) !important;
+}
+
+.page-header,
+.section,
+.stat-card,
+.filters-section,
+.table-card,
+.modal-content {
+  border-color: rgba(190, 235, 203, 0.14) !important;
+}
+
+.btn-primary,
+.btn-secondary,
+.action-btn,
+.filter-select,
+.search-input,
+.form-input,
+.form-select {
+  border-color: rgba(190, 235, 203, 0.24) !important;
+}
+
+.machinery-management-page .page-header,
+.machinery-management-page .section,
+.machinery-management-page .stat-card,
+.machinery-management-page .filters-section,
+.machinery-management-page .table-container,
+.machinery-management-page .inventory-table-container,
+.machinery-management-page .modal-content,
+.machinery-management-page .detail-section,
+.machinery-management-page .empty-state,
+.machinery-management-page .picture-upload-section,
+.machinery-management-page .picture-preview,
+.machinery-management-page .notes-text,
+.machinery-management-page .inv2-card,
+.machinery-management-page .inv2-table-wrap {
+  background: linear-gradient(145deg, rgba(14, 25, 19, 0.97), rgba(10, 19, 15, 0.96)) !important;
+  border-color: rgba(122, 171, 140, 0.2) !important;
+  box-shadow: 16px 16px 28px rgba(4, 8, 6, 0.56), -10px -10px 18px rgba(27, 42, 33, 0.32) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.machinery-management-page .inv2-modal {
+  background: linear-gradient(145deg, rgba(14, 25, 19, 0.97), rgba(10, 19, 15, 0.96)) !important;
+}
+
+.machinery-management-page .bookings-table thead,
+.machinery-management-page .inventory-table thead,
+.machinery-management-page .inv2-table thead,
+.machinery-management-page .inv2-toolbar,
+.machinery-management-page .inv2-chips {
+  background: rgba(12, 23, 17, 0.94) !important;
+  border-color: rgba(122, 171, 140, 0.16) !important;
+}
+
+.machinery-management-page .bookings-table tbody tr:hover,
+.machinery-management-page .inventory-table tbody tr:hover,
+.machinery-management-page .inv2-row:hover td {
+  background: rgba(74, 222, 128, 0.04) !important;
+}
+
+.machinery-management-page .filter-select,
+.machinery-management-page .form-input,
+.machinery-management-page .inv2-search-input,
+.machinery-management-page .inv2-select,
+.machinery-management-page .modal-close,
+.machinery-management-page .btn-icon-small,
+.machinery-management-page .btn-sm {
+  background: rgba(11, 21, 16, 0.94) !important;
+  border-color: rgba(122, 171, 140, 0.2) !important;
+  box-shadow: none !important;
+}
+
+.machinery-management-page .stat-card::after {
+  background: transparent !important;
+}
+
+.machinery-management-page .machinery-inventory-btn {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  box-shadow: none !important;
+}
+
+.machinery-management-page .machinery-inventory-btn:hover {
+  background: #f0fdf4 !important;
+  border-color: #166534 !important;
+  color: #14532d !important;
+}
+
+.inv2-modal {
+  position: relative;
+}
+
 </style>

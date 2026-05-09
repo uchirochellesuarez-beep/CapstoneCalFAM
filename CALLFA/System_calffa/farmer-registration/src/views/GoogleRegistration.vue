@@ -1,5 +1,5 @@
 <template>
-  <div class="google-registration-page">
+  <div class="google-registration-page glass-module-page">
     <!-- Progress Indicator -->
     <div class="progress-bar">
       <div class="progress-step completed">
@@ -57,9 +57,15 @@
               v-model="formData.reference_number"
               type="text"
               required
+              minlength="19"
+              maxlength="19"
+              pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
+              inputmode="numeric"
               class="form-input"
-              placeholder="Enter your reference ID"
+              placeholder="00-00-00-000-000000"
+              @input="handleReferenceInput"
             />
+            <small v-if="errors.reference_number" class="form-error">{{ errors.reference_number }}</small>
           </div>
         </div>
 
@@ -294,12 +300,35 @@ const successMessage = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const errors = reactive({
+  reference_number: '',
   phone_number: '',
   land_area: '',
   barangay_id: '',
   password: '',
   confirm_password: ''
 })
+
+const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
+const formatReferenceNumberInput = (value = '') => {
+  const digits = String(value).replace(/\D/g, '').slice(0, 15)
+  const parts = [2, 2, 2, 3, 6]
+  let idx = 0
+  const out = []
+  for (const p of parts) {
+    const chunk = digits.slice(idx, idx + p)
+    if (!chunk) break
+    out.push(chunk)
+    idx += p
+  }
+  return out.join('-')
+}
+
+const handleReferenceInput = () => {
+  formData.reference_number = formatReferenceNumberInput(formData.reference_number)
+  errors.reference_number = REFERENCE_FORMAT_REGEX.test(formData.reference_number)
+    ? ''
+    : 'Reference number must follow 00-00-00-000-000000 format'
+}
 
 // Load barangays on mount
 onMounted(async () => {
@@ -386,6 +415,14 @@ const validateConfirmPassword = () => {
 
 const validateForm = () => {
   let isValid = true
+
+  // Validate reference format
+  if (!REFERENCE_FORMAT_REGEX.test(formData.reference_number || '')) {
+    errors.reference_number = 'Reference number must follow 00-00-00-000-000000 format'
+    isValid = false
+  } else {
+    errors.reference_number = ''
+  }
 
   // Validate phone
   validatePhoneNumber()
@@ -488,10 +525,29 @@ const goBack = () => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 .google-registration-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem 1rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+.google-registration-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255, 255, 255, 0.12) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.google-registration-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .progress-bar {
@@ -676,6 +732,10 @@ const goBack = () => {
   position: relative;
 }
 
+.password-input-wrapper .form-input {
+  padding-right: 2.75rem;
+}
+
 .password-toggle {
   position: absolute;
   right: 0.5rem;
@@ -718,7 +778,7 @@ const goBack = () => {
 }
 
 .password-toggle:hover {
-  transform: translateY(-50%) scale(1.15);
+  transform: translateY(-50%) scale(1.15) !important;
   color: #667eea;
   outline: none;
   border: none;

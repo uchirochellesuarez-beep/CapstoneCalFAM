@@ -97,6 +97,22 @@ function getBarangayStatusMessage(barangayId) {
   return `${barangay.name} is a sample barangay. Transaction modules are not yet available for this barangay.`;
 }
 
+/**
+ * Merge hardcoded display flags onto a database barangay row (when id matches).
+ * @param {Object} row - Barangay row from DB
+ * @returns {Object}
+ */
+function enrichDbBarangay(row) {
+  if (!row || row.id == null) return row;
+  const extra = getBarangayById(Number(row.id));
+  if (!extra) return { ...row };
+  return {
+    ...row,
+    is_active_for_transactions: extra.is_active_for_transactions,
+    description: extra.description
+  };
+}
+
 module.exports = {
   BARANGAYS,
   BARANGAY_LIST,
@@ -105,5 +121,6 @@ module.exports = {
   getBarangayById,
   getBarangayByName,
   isBarangayActiveForTransactions,
-  getBarangayStatusMessage
+  getBarangayStatusMessage,
+  enrichDbBarangay
 };

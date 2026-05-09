@@ -18,8 +18,8 @@
       <div class="banner-right">
         <div class="farm-info">
           <span class="farm-label">Farm:</span>
-          <span class="farm-name">{{ farmName }} ({{ cropType }})</span>
-          <span class="farm-size">• {{ farmSize }} hectares</span>
+          <span class="farm-name">{{ farmName }}<template v-if="cropLabel"> ({{ cropLabel }})</template></span>
+          <span v-if="farmSizeFormatted !== null" class="farm-size">• {{ farmSizeFormatted }} hectares</span>
         </div>
       </div>
     </div>
@@ -42,10 +42,28 @@ const isSidebarOpen = ref(false)
 // Computed values
 const userName = computed(() => authStore.currentUser?.full_name || 'Farmer')
 const farmName = computed(() => authStore.currentUser?.address || 'Rice Field')
-const cropType = computed(() => farmerStore.currentCrop?.cropType || 'IR-64')
-const farmSize = computed(() => {
-  const area = farmerStore.currentCrop?.area_hectares || 2.5
-  return area.toFixed(1)
+
+/** Crop / variety: dashboard crop first, then DB primary_crop — no placeholder variety. */
+const cropLabel = computed(() => {
+  const c = farmerStore.currentCrop
+  const fromCrop = (c?.cropType || c?.variety || '').trim()
+  if (fromCrop) return fromCrop
+  const fromProfile = String(authStore.currentUser?.primary_crop || '').trim()
+  return fromProfile || ''
+})
+
+function parsePositiveNumber (val) {
+  const n = typeof val === 'number' ? val : parseFloat(String(val ?? '').replace(',', '.'))
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+/** Hectares: active crop area first, then farmer profile land_area from DB. */
+const farmSizeFormatted = computed(() => {
+  const fromCrop = parsePositiveNumber(farmerStore.currentCrop?.area_hectares)
+  if (fromCrop !== null) return fromCrop.toFixed(1)
+  const fromUser = parsePositiveNumber(authStore.currentUser?.land_area)
+  if (fromUser !== null) return fromUser.toFixed(1)
+  return null
 })
 
 // Toggle sidebar function

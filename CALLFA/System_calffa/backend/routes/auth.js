@@ -376,9 +376,9 @@ router.post('/google/login', async (req, res) => {
     
     // Build query dynamically based on available columns
     const selectFields = [
-      'id', 'reference_number', 'full_name', 'phone_number', 'educational_status', 
-      'address', 'role', 'barangay_id', 'status', 'membership_status', 
-      'profile_picture', 'is_farmer'
+      'id', 'reference_number', 'full_name', 'phone_number', 'educational_status',
+      'address', 'role', 'barangay_id', 'status', 'membership_status',
+      'profile_picture', 'is_farmer', 'land_area', 'primary_crop'
     ];
     
     if (hasEmailColumn) {

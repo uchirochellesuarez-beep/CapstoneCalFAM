@@ -1,45 +1,50 @@
 <template>
-  <div class="news-page">
-    <section class="header-card">
-      <div>
-        <p class="eyebrow">CALFFA Bulletin</p>
-        <h1>News Feed</h1>
-        <p class="subtitle">Role-based posting and approval flow with live database data.</p>
-      </div>
+  <div class="financial-container glass-module-page news-page">
+    <div class="page-header page-header--news">
+      <div class="header-main">
+        <div class="header-content">
+          <p class="eyebrow">CALFFA Bulletin</p>
+          <h1>News Feed</h1>
+          <p class="page-subtitle hero-subtitle">
+            Role-based posting and approval flow with live database data.
+          </p>
+        </div>
 
-      <div class="header-actions">
-        <span class="count-badge">{{ visiblePostCount }} post(s)</span>
-        <button
-          v-if="canCreateNews"
-          class="btn primary header-btn"
-          type="button"
-          @click="openCreateModal = true"
-        >
-          Create News
-        </button>
-        <button
-          v-if="isPresident"
-          class="btn header-btn"
-          type="button"
-          @click="goToPendingApprovals"
-        >
-          Pending Approvals
-        </button>
-        <select v-model="quickFilter" class="control-select">
-          <option value="all">All</option>
-          <option v-if="isFarmer" value="my">My Posts</option>
-          <option value="pending">Pending</option>
-        </select>
-        <select v-model="sortOrder" class="control-select">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-        </select>
+        <div class="header-actions">
+          <span class="count-badge">{{ visiblePostCount }} post(s)</span>
+          <button
+            v-if="canCreateNews"
+            class="btn btn-primary-action header-btn"
+            type="button"
+            @click="openCreateModal = true"
+          >
+            Create News
+          </button>
+          <button
+            v-if="isPresident"
+            class="btn btn-secondary-soft header-btn"
+            type="button"
+            @click="goToPendingApprovals"
+          >
+            Pending Approvals
+          </button>
+          <select v-model="quickFilter" class="control-select">
+            <option value="all">All</option>
+            <option v-if="isFarmer" value="my">My Posts</option>
+            <option value="pending">Pending</option>
+          </select>
+          <select v-model="sortOrder" class="control-select">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
       </div>
-    </section>
+    </div>
 
     <div v-if="toastMessage" class="toast" :class="toastType">{{ toastMessage }}</div>
 
-    <section v-if="showPublishedSection" class="section">
+    <div class="tab-content tab-content--main">
+    <section v-if="showPublishedSection" class="news-section">
       <div class="section-head">
         <h2>{{ isFarmer ? 'Published News (Community Feed)' : 'Published News' }}</h2>
         <span>{{ publishedNews.length }} item(s)</span>
@@ -76,12 +81,17 @@
               </button>
             </div>
 
-            <img
+            <div
               v-if="item.image"
-              :src="resolveImageUrl(item.image)"
-              alt="News image"
-              class="ig-image"
-            />
+              class="ig-image-wrap"
+              @click.stop="openImagePreview(resolveImageUrl(item.image), item.title || 'News image')"
+            >
+              <img
+                :src="resolveImageUrl(item.image)"
+                alt="News image"
+                class="ig-image"
+              />
+            </div>
 
             <div class="ig-actions">
               <span class="action-right">
@@ -111,7 +121,7 @@
       </div>
     </section>
 
-    <section v-if="showMyPostsSection" class="section">
+    <section v-if="showMyPostsSection" class="news-section">
       <div class="section-head">
         <h2>My Submissions</h2>
         <span>{{ mySubmissions.length }} item(s)</span>
@@ -148,12 +158,17 @@
               </button>
             </div>
 
-            <img
+            <div
               v-if="item.image"
-              :src="resolveImageUrl(item.image)"
-              alt="News image"
-              class="ig-image"
-            />
+              class="ig-image-wrap"
+              @click.stop="openImagePreview(resolveImageUrl(item.image), item.title || 'News image')"
+            >
+              <img
+                :src="resolveImageUrl(item.image)"
+                alt="News image"
+                class="ig-image"
+              />
+            </div>
 
             <div class="ig-actions">
               <span class="action-right">
@@ -183,7 +198,7 @@
       </div>
     </section>
 
-    <section v-if="showMyPostsSection && rejectedSubmissions.length" class="section">
+    <section v-if="showMyPostsSection && rejectedSubmissions.length" class="news-section">
       <div class="rejected-bottom">
         <h3>Rejected ({{ rejectedSubmissions.length }})</h3>
         <ul class="rejected-list">
@@ -198,7 +213,7 @@
       </div>
     </section>
 
-    <section v-if="showPendingSection" class="section">
+    <section v-if="showPendingSection" class="news-section">
       <div class="section-head">
         <h2>{{ isPresident ? 'Pending News (For Review)' : 'Pending News' }}</h2>
         <span>{{ pendingPosts.length }} item(s)</span>
@@ -235,12 +250,17 @@
               </button>
             </div>
 
-            <img
+            <div
               v-if="item.image"
-              :src="resolveImageUrl(item.image)"
-              alt="News image"
-              class="ig-image"
-            />
+              class="ig-image-wrap"
+              @click.stop="openImagePreview(resolveImageUrl(item.image), item.title || 'News image')"
+            >
+              <img
+                :src="resolveImageUrl(item.image)"
+                alt="News image"
+                class="ig-image"
+              />
+            </div>
 
             <div class="ig-actions">
               <span class="action-right">
@@ -268,24 +288,25 @@
         </div>
       </div>
     </section>
+    </div>
 
     <div v-if="openCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
       <div class="modal">
         <h3>Create News</h3>
 
         <label>Title</label>
-        <input v-model="createForm.title" type="text" maxlength="255" />
+        <input v-model="createForm.title" class="modal-input" type="text" maxlength="255" />
 
         <label>Content</label>
-        <textarea v-model="createForm.content" rows="6"></textarea>
+        <textarea v-model="createForm.content" class="modal-input" rows="6"></textarea>
 
         <label>Attach Image (optional)</label>
-        <input type="file" accept="image/*" @change="onImageSelected" />
+        <input type="file" class="modal-file" accept="image/*" @change="onImageSelected" />
         <p v-if="createForm.imageFileName" class="file-name">Selected: {{ createForm.imageFileName }}</p>
 
         <div class="modal-actions">
-          <button class="btn" type="button" @click="closeCreateModal">Cancel</button>
-          <button class="btn primary" type="button" :disabled="submitting" @click="submitCreateNews">
+          <button class="btn btn-muted" type="button" @click="closeCreateModal">Cancel</button>
+          <button class="btn btn-primary-action" type="button" :disabled="submitting" @click="submitCreateNews">
             {{ submitting ? 'Submitting...' : 'Submit' }}
           </button>
         </div>
@@ -297,22 +318,22 @@
         <h3>Edit News</h3>
 
         <label>Title</label>
-        <input v-model="editForm.title" type="text" maxlength="255" />
+        <input v-model="editForm.title" class="modal-input" type="text" maxlength="255" />
 
         <label>Content</label>
-        <textarea v-model="editForm.content" rows="6"></textarea>
+        <textarea v-model="editForm.content" class="modal-input" rows="6"></textarea>
 
         <label>Image Preview</label>
         <img v-if="editForm.imagePreview" :src="editForm.imagePreview" alt="Current image" class="preview-image" />
         <div v-else class="preview-empty">No image</div>
 
         <label>Replace Image (optional)</label>
-        <input type="file" accept="image/*" @change="onEditImageSelected" />
+        <input type="file" class="modal-file" accept="image/*" @change="onEditImageSelected" />
         <p v-if="editForm.imageFileName" class="file-name">Selected: {{ editForm.imageFileName }}</p>
 
         <div class="modal-actions">
-          <button class="btn" type="button" @click="closeEditModal">Cancel</button>
-          <button class="btn primary" type="button" :disabled="submitting" @click="submitEditNews">
+          <button class="btn btn-muted" type="button" @click="closeEditModal">Cancel</button>
+          <button class="btn btn-primary-action" type="button" :disabled="submitting" @click="submitEditNews">
             {{ submitting ? 'Saving...' : 'Save Changes' }}
           </button>
         </div>
@@ -324,8 +345,8 @@
         <h3>Confirm Deletion</h3>
         <p>This action cannot be undone.</p>
         <div class="modal-actions">
-          <button class="btn" type="button" @click="closeDeleteModal">Cancel</button>
-          <button class="btn danger" type="button" @click="confirmDeleteNews">Delete</button>
+          <button class="btn btn-muted" type="button" @click="closeDeleteModal">Cancel</button>
+          <button class="btn btn-danger-solid" type="button" @click="confirmDeleteNews">Delete</button>
         </div>
       </div>
     </div>
@@ -335,8 +356,15 @@
         <h3>{{ contentPreviewItem.title }}</h3>
         <p class="full-content">{{ contentPreviewItem.content }}</p>
         <div class="modal-actions">
-          <button class="btn primary" type="button" @click="closeContentModal">Close</button>
+          <button class="btn btn-primary-action" type="button" @click="closeContentModal">Close</button>
         </div>
+      </div>
+    </div>
+
+    <div v-if="openImagePreviewModal" class="modal-backdrop image-preview-backdrop" @click.self="closeImagePreview">
+      <div class="image-preview-modal">
+        <button class="image-close-btn" type="button" aria-label="Close image preview" @click="closeImagePreview">&times;</button>
+        <img :src="previewImageSrc" :alt="previewImageAlt" class="image-preview-full" />
       </div>
     </div>
   </div>
@@ -373,8 +401,11 @@ const openCreateModal = ref(false)
 const openEditNewsModal = ref(false)
 const openDeleteConfirmModal = ref(false)
 const openContentPreviewModal = ref(false)
+const openImagePreviewModal = ref(false)
 const pendingDeleteNewsId = ref(null)
 const contentPreviewItem = ref({ title: '', content: '' })
+const previewImageSrc = ref('')
+const previewImageAlt = ref('News image')
 const quickFilter = ref('all')
 const sortOrder = ref('newest')
 const createForm = ref({
@@ -663,6 +694,18 @@ const closeContentModal = () => {
   contentPreviewItem.value = { title: '', content: '' }
 }
 
+const openImagePreview = (src, alt = 'News image') => {
+  previewImageSrc.value = src
+  previewImageAlt.value = alt
+  openImagePreviewModal.value = true
+}
+
+const closeImagePreview = () => {
+  openImagePreviewModal.value = false
+  previewImageSrc.value = ''
+  previewImageAlt.value = 'News image'
+}
+
 const confirmDeleteNews = async () => {
   if (!pendingDeleteNewsId.value) return
   await deleteNews(pendingDeleteNewsId.value)
@@ -748,112 +791,332 @@ onMounted(fetchNews)
 </script>
 
 <style scoped>
-.news-page {
-  max-width: 1100px;
+/* ===== GLASS GREEN THEME (aligned with Machinery Financial / Share Capital) ===== */
+.news-page.financial-container {
+  --glass-bg: rgba(29, 43, 33, 0.92);
+  --glass-panel: rgba(31, 48, 36, 0.94);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-line-strong: rgba(255, 255, 255, 0.18);
+  --text-main: #eefde6;
+  --text-muted: rgba(220, 238, 211, 0.78);
+  --text-soft: rgba(220, 238, 211, 0.62);
+  --green: #34d399;
+  --lime: #a3e635;
+
+  min-height: 100vh;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  background:
-    radial-gradient(circle at 18% 14%, rgba(187, 247, 208, 0.48), transparent 30%),
-    radial-gradient(circle at 82% 15%, rgba(253, 224, 71, 0.18), transparent 26%),
-    #eff4eb;
+  padding: 28px;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-main);
 }
-.header-card {
+
+.news-page.financial-container::before,
+.news-page.financial-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.news-page.financial-container::before {
+  background:
+    radial-gradient(ellipse 82% 56% at 12% 88%, rgba(17, 94, 41, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 75% 55% at 92% 10%, rgba(34, 197, 94, 0.14) 0%, transparent 64%),
+    radial-gradient(circle at 50% 16%, rgba(45, 212, 191, 0.11) 0%, transparent 22%),
+    linear-gradient(130deg, rgba(163, 230, 53, 0.03) 0%, transparent 38%, rgba(45, 212, 191, 0.03) 100%);
+  animation: newsAmbience 16s ease-in-out infinite alternate;
+}
+
+.news-page.financial-container::after {
+  background:
+    radial-gradient(circle at 94% 8%, rgba(34, 197, 94, 0.2) 0%, transparent 17%),
+    radial-gradient(circle at 8% 86%, rgba(74, 222, 128, 0.16) 0%, transparent 20%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 14px);
+  filter: blur(10px);
+  animation: newsOrb 11s ease-in-out infinite;
+}
+
+@keyframes newsAmbience {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-8px, 6px, 0) scale(1.02);
+  }
+}
+
+@keyframes newsOrb {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.news-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page-header--news {
+  margin-bottom: 0;
+  padding: 28px 32px;
+  background: linear-gradient(135deg, rgba(28, 41, 31, 0.94) 0%, rgba(35, 54, 40, 0.9) 56%, rgba(48, 78, 62, 0.84) 100%);
+  border-radius: 26px;
+  border: 1px solid var(--glass-line);
+  box-shadow:
+    18px 18px 34px rgba(8, 14, 10, 0.5),
+    -14px -14px 26px rgba(42, 61, 46, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.34);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header--news::before {
+  content: '';
+  position: absolute;
+  inset: -35% -10% auto auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.2) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.header-main {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.header-content {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+
+.page-header--news h1 {
+  margin: 0;
+  font-size: clamp(1.85rem, 4vw, 2.65rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.6px;
+  background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.page-subtitle.hero-subtitle {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 500;
+  max-width: 36rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 18px;
-  padding: 18px 22px;
-  border-radius: 20px;
-  background:
-    linear-gradient(130deg, #4aa96d 0%, #3fa764 48%, #2f8f53 100%);
-  color: #f4fff7;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 24px 48px rgba(21, 128, 61, 0.22);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1 1 260px;
 }
-.eyebrow { margin: 0 0 6px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
-h1 { margin: 0; font-size: clamp(2rem, 2.2vw, 2.9rem); }
-.subtitle { margin: 10px 0 0; opacity: 0.92; font-size: 1rem; }
-.header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: end; }
+
 .count-badge {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #f4fff7;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-main);
   border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 800;
 }
+
 .control-select {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 12px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #f4fff7;
+  background: rgba(39, 58, 45, 0.85);
+  color: var(--text-main);
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-height: 44px;
 }
+
+.control-select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12);
+}
+
 .control-select option {
-  color: #1f2937;
+  color: #14532d;
+  background: #ecfdf5;
 }
-.section { margin-top: 22px; }
-.section-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
-.section-head h2 { margin: 0; font-size: clamp(2.1rem, 2.2vw, 3rem); color: #355843; }
-.section-head span { font-size: clamp(1.7rem, 1.7vw, 2.2rem); color: #355843; }
+
+.financial-container > .tab-content {
+  margin-top: 22px;
+}
+
+.tab-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  padding: 22px 24px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    14px 14px 26px rgba(8, 13, 10, 0.5),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+.tab-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(163, 230, 53, 0.07) 0%, transparent 35%),
+    radial-gradient(circle at 92% 100%, rgba(45, 212, 191, 0.08) 0%, transparent 32%);
+  pointer-events: none;
+}
+
+.tab-content--main {
+  padding-bottom: 28px;
+}
+
+.news-section {
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.news-section:first-child {
+  margin-top: 8px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.35rem);
+  font-weight: 800;
+  color: #b6f7cb;
+  letter-spacing: -0.02em;
+}
+
+.section-head span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
 .feed-scroll {
   max-height: 520px;
   overflow-y: auto;
-  padding-right: 6px;
+  padding-right: 8px;
 }
+
 .feed-scroll::-webkit-scrollbar {
   width: 8px;
 }
+
 .feed-scroll::-webkit-scrollbar-thumb {
-  background: #b8d4bf;
+  background: rgba(74, 222, 128, 0.25);
   border-radius: 999px;
 }
+
 .feed-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
   gap: 20px;
   justify-content: center;
 }
+
 .ig-card {
-  border: 2px solid #8fc5a0;
+  border: 1px solid var(--glass-line);
   border-radius: 16px;
-  background: #ffffff;
+  background: rgba(22, 35, 27, 0.82);
   margin: 0;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    12px 12px 22px rgba(8, 13, 10, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   min-height: 380px;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 560px;
   justify-self: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  outline: 1px solid rgba(34, 139, 74, 0.16);
-  outline-offset: -3px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
 .ig-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  border-color: rgba(74, 222, 128, 0.28);
+  box-shadow:
+    16px 20px 32px rgba(8, 13, 10, 0.5),
+    0 0 0 1px rgba(74, 222, 128, 0.12);
 }
+
 .ig-top {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 12px 10px;
+  padding: 12px 14px 10px;
+  background: rgba(0, 0, 0, 0.12);
 }
+
 .ig-top-meta {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .author-name {
   font-size: 13px;
-  line-height: 1.2;
+  line-height: 1.25;
+  color: var(--text-main);
+  font-weight: 800;
 }
-.meta-line { font-size: 12px; color: #64748b; }
+
+.meta-line {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
 .avatar {
   width: 38px;
   height: 38px;
@@ -862,245 +1125,558 @@ h1 { margin: 0; font-size: clamp(2rem, 2.2vw, 2.9rem); }
   color: #fff;
   display: grid;
   place-items: center;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
 }
+
 .role-pill {
   padding: 4px 9px;
   border-radius: 999px;
-  background: rgba(22, 101, 52, 0.12);
-  color: #166534;
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--lime);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  border: 1px solid rgba(74, 222, 128, 0.22);
 }
+
 .top-right-tags {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
+
 .status-pill {
   padding: 4px 9px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
+  border: 1px solid transparent;
 }
+
 .status-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.3);
 }
+
 .status-published {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(74, 222, 128, 0.14);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.28);
 }
+
 .status-rejected {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(248, 113, 113, 0.14);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.35);
 }
+
 .ig-image {
   width: min(92%, 300px);
   display: block;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   flex-shrink: 0;
-  margin: 8px auto 0;
-  border: 2px solid #8fc5a0;
-  border-radius: 16px;
-  background: #f6fbf6;
+  margin: 10px auto 0;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
   padding: 4px;
   box-sizing: border-box;
 }
+
+.ig-image-wrap {
+  width: min(92%, 300px);
+  display: block;
+  margin: 10px auto 0;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  cursor: zoom-in;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ig-image-wrap:hover {
+  transform: translateY(-2px);
+  border-color: rgba(74, 222, 128, 0.55);
+  box-shadow: 0 10px 24px rgba(74, 222, 128, 0.22);
+}
+
+.ig-image-wrap .ig-image {
+  width: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 10px;
+  display: block;
+}
+
 .no-image-card .ig-actions {
   margin-top: auto;
 }
+
 .ig-actions {
   display: flex;
   gap: 10px;
-  padding: 10px 12px 6px;
+  padding: 10px 14px 12px;
   font-size: 18px;
-  color: #334155;
+  color: var(--text-muted);
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.1);
 }
-.action-right { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
+
+.action-right {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .icon-btn {
   border: none;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
-  padding: 0;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
 }
+
+.icon-btn:hover {
+  background: rgba(74, 222, 128, 0.15);
+}
+
 .delete-btn {
-  color: #b91c1c;
+  color: #f87171;
 }
+
 .edit-btn {
-  color: #1d4ed8;
+  color: #7dd3fc;
 }
-.btn.danger { background: #b91c1c; color: #fff; }
+
 .toast {
   position: fixed;
   right: 22px;
   top: 22px;
-  z-index: 1200;
-  background: #14532d;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  box-shadow: 0 12px 28px rgba(21, 128, 61, 0.28);
-  font-weight: 600;
-}
-.toast.error {
-  background: #991b1b;
-  box-shadow: 0 12px 28px rgba(153, 27, 27, 0.28);
-}
-.ig-caption {
-  padding: 4px 12px 14px;
-  overflow: visible;
-  background: #ffffff;
-  border-top: 1px solid #eef2ef;
-}
-.news-title {
-  margin: 4px 0 6px;
-  font-size: 18px;
+  z-index: 2000;
+  background: rgba(22, 35, 27, 0.95);
+  color: var(--text-main);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   font-weight: 700;
-  color: #10241a;
+  backdrop-filter: blur(12px);
 }
+
+.toast.error {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
+.ig-caption {
+  padding: 6px 14px 14px;
+  overflow: visible;
+  background: transparent;
+}
+
+.news-title {
+  margin: 4px 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ecfdf5;
+}
+
 .news-content {
   margin: 0;
-  color: #555;
+  color: var(--text-muted);
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 .read-more-btn {
-  margin-top: 8px;
+  margin-top: 10px;
   border: none;
   background: transparent;
-  color: #166534;
-  font-weight: 700;
+  color: var(--green);
+  font-weight: 800;
   cursor: pointer;
   padding: 0;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
+
+.read-more-btn:hover {
+  color: var(--lime);
+}
+
 .full-content {
-  color: #334155;
+  color: var(--text-muted);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
   max-height: 52vh;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
 }
+
 .btn {
-  border: none;
-  border-radius: 999px;
-  padding: 12px 18px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(22, 163, 74, 0.18));
+  color: var(--green);
+  font-weight: 800;
   cursor: pointer;
-  background: #e5edf4;
-  color: #21334b;
-  font-weight: 700;
-  font-size: 1rem;
+  font-size: 15px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
-.btn.primary { background: #2f8d54; color: #fff; }
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(74, 222, 128, 0.55);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary-action {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.32), rgba(96, 165, 250, 0.2));
+  border: 1px solid rgba(74, 222, 128, 0.42);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn-primary-action:hover:not(:disabled) {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.btn-secondary-soft {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-main);
+}
+
+.btn-secondary-soft:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.btn-muted {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+.btn-muted:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-danger-solid {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.35), rgba(220, 38, 38, 0.25));
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+
+.btn-danger-solid:hover:not(:disabled) {
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
 .header-btn {
   min-width: 170px;
-  min-height: 56px;
-  font-size: 1rem;
-  line-height: 1.1;
+  min-height: 52px;
+  font-size: 0.95rem;
+  line-height: 1.15;
 }
-.error { margin-top: 12px; background: #fee2e2; color: #7f1d1d; padding: 10px 12px; border-radius: 8px; }
-.success { margin-top: 12px; background: #dcfce7; color: #14532d; padding: 10px 12px; border-radius: 8px; }
-.muted { color: #64748b; }
-.rejection-reason { color: #991b1b; font-size: 14px; margin-top: 8px; }
-.rejected-bottom {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border: 1px solid #f3d2d2;
-  background: #fff7f7;
-  border-radius: 10px;
-}
-.rejected-bottom h3 {
-  margin: 0 0 8px;
+
+.muted {
+  color: var(--text-soft);
   font-size: 14px;
-  color: #7f1d1d;
 }
+
+.rejected-bottom {
+  margin-top: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.08);
+  border-radius: 14px;
+}
+
+.rejected-bottom h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fecaca;
+}
+
 .rejected-list {
   margin: 0;
   padding-left: 18px;
+  color: var(--text-muted);
 }
+
 .rejected-list li {
-  margin-bottom: 6px;
-  color: #334155;
+  margin-bottom: 10px;
   font-size: 13px;
+  line-height: 1.4;
 }
+
 .rejection-reason-inline {
-  color: #991b1b;
+  color: #fca5a5;
 }
+
 .mini-link {
   margin-left: 8px;
   border: none;
   background: transparent;
-  color: #1d4ed8;
+  color: #7dd3fc;
   cursor: pointer;
   font-size: 12px;
+  font-weight: 700;
   text-decoration: underline;
 }
+
 .danger-link {
-  color: #b91c1c;
+  color: #f87171;
 }
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: grid; place-items: center; padding: 16px; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  backdrop-filter: blur(6px);
+}
+
 .modal {
   width: min(560px, 100%);
-  background: linear-gradient(180deg, #fbfefb 0%, #f2f8f2 100%);
-  border: 1px solid #dbe8d8;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 18px 38px rgba(22, 101, 52, 0.2);
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow:
+    20px 24px 48px rgba(0, 0, 0, 0.5),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  color: var(--text-main);
 }
-.modal h3 { margin-top: 0; }
-.modal label { display: block; margin-top: 8px; font-weight: 600; }
-.modal input, .modal textarea { width: 100%; box-sizing: border-box; margin-top: 6px; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1; }
-.file-name { margin-top: 6px; color: #475569; font-size: 13px; }
-.preview-image {
+
+.modal h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ecfdf5;
+}
+
+.modal label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+}
+
+.modal-input {
+  width: 100%;
+  box-sizing: border-box;
   margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(39, 58, 45, 0.92);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12);
+}
+
+.modal-file {
+  margin-top: 8px;
+  width: 100%;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.file-name {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.preview-image {
+  margin-top: 8px;
   width: 100%;
   max-height: 200px;
   object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
+
 .preview-empty {
-  margin-top: 6px;
-  padding: 10px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  color: #64748b;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: var(--text-soft);
+  font-size: 13px;
 }
-.modal-actions { display: flex; justify-content: end; gap: 8px; margin-top: 12px; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
 
 @media (max-width: 1024px) {
-  .feed-grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+  .feed-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+
   .header-btn {
     min-width: 160px;
-    font-size: 1rem;
   }
 }
 
 @media (max-width: 640px) {
-  .feed-grid { grid-template-columns: 1fr; }
-  .ig-card { min-height: 340px; }
-  .header-btn {
-    min-width: 150px;
-    min-height: 50px;
-    font-size: 0.95rem;
+  .news-page.financial-container {
+    padding: 16px;
   }
-  .header-card {
+
+  .page-header--news {
+    padding: 22px 18px;
+  }
+
+  .feed-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ig-card {
+    min-height: 340px;
+  }
+
+  .header-btn {
+    min-width: 140px;
+    min-height: 48px;
+    font-size: 0.92rem;
+  }
+
+  .header-main {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ============================================
+   Image Preview Lightbox
+   ============================================ */
+.image-preview-backdrop {
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1100;
+  padding: 24px;
+}
+
+.image-preview-modal {
+  position: relative;
+  max-width: 94vw;
+  max-height: 94vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.image-preview-full {
+  max-width: 94vw;
+  max-height: 94vh;
+  width: auto;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+  display: block;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.image-close-btn {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  transition: transform 0.18s ease, background 0.18s ease;
+  z-index: 2;
+}
+
+.image-close-btn:hover {
+  transform: scale(1.1);
+  background: rgba(220, 38, 38, 0.95);
+}
+
+@media (max-width: 768px) {
+  .image-close-btn {
+    top: -8px;
+    right: -8px;
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
   }
 }
 </style>

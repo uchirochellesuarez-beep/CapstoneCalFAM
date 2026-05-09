@@ -14,6 +14,7 @@ const pool = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getUserBarangayContext, getBarangayOfficers, getBarangayFarmers } = require('../utils/barangayHelpers');
 const { hasFarmersEmailColumn } = require('../utils/googleAuth');
+const REFERENCE_NUMBER_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/;
 
 // Configure multer for profile picture uploads
 const storage = multer.diskStorage({
@@ -53,13 +54,29 @@ const upload = multer({
 // For officers (president, treasurer, etc.), barangay_id is required
 router.post('/register', async (req, res) => {
   try {
-    const { reference_number, full_name, date_of_birth, address, phone_number, educational_status, password, role, barangay_id } = req.body;
+    const { reference_number, full_name, date_of_birth, address, phone_number, educational_status, password, role, barangay_id, land_area } = req.body;
+    const normalizedReferenceNumber = String(reference_number || '').trim();
 
     // Validate required fields
-    if (!reference_number || !full_name || !date_of_birth || !address || !phone_number || !educational_status || !password) {
+    if (!normalizedReferenceNumber || !full_name || !date_of_birth || !address || !phone_number || !educational_status || !password) {
       return res.status(400).json({ 
         success: false, 
         message: 'All fields are required: reference_number, full_name, date_of_birth, address, phone_number, educational_status, password'
+      });
+    }
+
+    if (!REFERENCE_NUMBER_REGEX.test(normalizedReferenceNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reference number format must be 00-00-00-000-000000.'
+      });
+    }
+
+    const parsedLandArea = parseFloat(land_area);
+    if (!Number.isFinite(parsedLandArea) || parsedLandArea <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Land area (hectares farmed) is required and must be greater than 0.'
       });
     }
 
@@ -142,9 +159,9 @@ router.post('/register', async (req, res) => {
     // Insert into database (status pending by default, membership_status member by default)
     const [result] = await pool.execute(
       `INSERT INTO farmers 
-       (reference_number, full_name, date_of_birth, address, phone_number, educational_status, password_hash, role, barangay_id, status, membership_status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'member')`,
-      [reference_number, full_name, date_of_birth, address, phone_number, educational_status || null, password_hash, userRole, barangay_id || null]
+       (reference_number, full_name, date_of_birth, address, phone_number, educational_status, land_area, password_hash, role, barangay_id, status, membership_status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'member')`,
+      [normalizedReferenceNumber, full_name, date_of_birth, address, phone_number, educational_status || null, parsedLandArea, password_hash, userRole, barangay_id || null]
     );
 
     res.json({ 
@@ -176,11 +193,16 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { reference_number, password } = req.body;
+    const normalizedReferenceNumber = String(reference_number || '').trim();
+
+    if (!REFERENCE_NUMBER_REGEX.test(normalizedReferenceNumber)) {
+      return res.status(400).json({ success: false, message: 'Reference number format must be 00-00-00-000-000000.' });
+    }
 
     const [rows] = await pool.execute(
-      `SELECT id, reference_number, full_name, date_of_birth, address, phone_number, educational_status, role, barangay_id, status, membership_status, password_hash, profile_picture
+      `SELECT id, reference_number, full_name, date_of_birth, address, phone_number, educational_status, role, barangay_id, status, membership_status, password_hash, profile_picture, land_area, primary_crop
        FROM farmers WHERE reference_number = ?`,
-      [reference_number]
+      [normalizedReferenceNumber]
     );
 
     if (rows.length === 0) {
@@ -437,7 +459,7 @@ router.get('/:id/profile', async (req, res) => {
 router.put('/:id/profile', async (req, res) => {
   try {
     const farmerId = parseInt(req.params.id);
-    const { full_name, address, phone_number, date_of_birth, educational_status, land_area, farm_location, barangay_id } = req.body;
+    const { full_name, address, phone_number, date_of_birth, educational_status, land_area, farm_location, reference_number } = req.body;
 
     if (!farmerId) return res.status(400).json({ success: false, message: 'Invalid farmer ID' });
 
@@ -448,6 +470,23 @@ router.put('/:id/profile', async (req, res) => {
     if (full_name) {
       updates.push('full_name = ?');
       values.push(full_name);
+    }
+    if (reference_number !== undefined) {
+      const normalizedReferenceNumber = String(reference_number || '').trim();
+      if (!REFERENCE_NUMBER_REGEX.test(normalizedReferenceNumber)) {
+        return res.status(400).json({ success: false, message: 'Reference number format must be 00-00-00-000-000000.' });
+      }
+
+      const [existingReference] = await pool.execute(
+        'SELECT id FROM farmers WHERE reference_number = ? AND id != ? LIMIT 1',
+        [normalizedReferenceNumber, farmerId]
+      );
+      if (existingReference.length > 0) {
+        return res.status(400).json({ success: false, message: 'Reference number already exists.' });
+      }
+
+      updates.push('reference_number = ?');
+      values.push(normalizedReferenceNumber);
     }
     if (address) {
       updates.push('address = ?');
@@ -473,16 +512,6 @@ router.put('/:id/profile', async (req, res) => {
       updates.push('farm_location = ?');
       values.push(farm_location);
     }
-    if (barangay_id !== undefined && barangay_id !== null) {
-      // Validate barangay exists
-      const [barangays] = await pool.execute('SELECT id FROM barangays WHERE id = ?', [barangay_id]);
-      if (barangays.length === 0) {
-        return res.status(400).json({ success: false, message: 'Invalid barangay ID' });
-      }
-      updates.push('barangay_id = ?');
-      values.push(barangay_id);
-    }
-
     if (updates.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }

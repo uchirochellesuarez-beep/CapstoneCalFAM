@@ -1,154 +1,87 @@
 # SMS Setup Guide
 
-This project is already wired to send real SMS when an agriculturist creates a seed/fertilizer allocation.
+This project sends real SMS when an agriculturist creates a seed/fertilizer allocation (Farmer Income Hub) and the farmer is eligible to receive assistance.
 
-## Recommended Setup
+## Recommended: PhilSMS
 
-Use an Android phone as the SMS gateway.
+[PhilSMS](https://philsms.com/) is a hosted SMS API in the Philippines. It does **not** require an Android gateway app on your phone (unlike TextBee-style gateways).
 
-Why:
-- no per-message API cost
-- works well in the Philippines
-- uses your SIM/load/unli text promo
-
-## What You Need
-
-- an Android phone with a working SIM
-- the phone and backend machine on the same network, or a reachable public/local tunnel URL
-- an SMS gateway app on the phone that exposes an HTTP API
-
-The backend expects to send:
-- recipient field: `phoneNumber`
-- message field: `message`
-
-If your app uses different field names, update:
-- `SMS_ANDROID_RECIPIENT_FIELD`
-- `SMS_ANDROID_MESSAGE_FIELD`
-
-If your app requires extra payload fields, put them in:
-- `SMS_ANDROID_EXTRA_PAYLOAD`
-
-Example:
-
-```env
-SMS_ANDROID_EXTRA_PAYLOAD={"simSlot":1}
-```
-
-## Backend .env
-
-Update `backend/.env`:
+1. Create an account and get an **API token** from the PhilSMS Developers page (often `dashboard.philsms.com/developers`).
+2. Register a **sender_id** (brand name or approved number) as required by PhilSMS.
+3. Set in `backend/.env`:
 
 ```env
 SMS_ENABLED=true
-SMS_PROVIDER=android_gateway
+SMS_PROVIDER=philsms
 SMS_TIMEOUT_MS=10000
-SMS_ANDROID_ENDPOINT=http://YOUR_PHONE_IP:PORT/send-sms
-SMS_ANDROID_AUTH_TOKEN=
-SMS_ANDROID_RECIPIENT_FIELD=phoneNumber
-SMS_ANDROID_MESSAGE_FIELD=message
-SMS_ANDROID_EXTRA_PAYLOAD={}
+SMS_PHILSMS_API_TOKEN=YOUR_API_TOKEN
+SMS_PHILSMS_SENDER_ID=PhilSMS
+SMS_PHILSMS_ENDPOINT=https://dashboard.philsms.com/api/v3/sms/send
+SMS_PHILSMS_TYPE=plain
 ```
 
-Replace `YOUR_PHONE_IP:PORT/send-sms` with the real endpoint from your Android SMS gateway app.
+The backend calls `POST https://dashboard.philsms.com/api/v3/sms/send` with JSON:
 
-## Easier Real-World Setup: httpSMS
+- `recipient`: `639171234567` (digits only, country code, **no** `+`)
+- `sender_id`: your configured ID
+- `type`: `plain`
+- `message`: text body
 
-If you want a concrete working setup with less custom wiring, use `httpSMS`.
+Auth: `Authorization: Bearer <SMS_PHILSMS_API_TOKEN>`
 
-Official docs:
-- https://docs.httpsms.com/
-- Android app download:
-  https://github.com/NdoleStudio/httpsms/releases/latest/download/HttpSms.apk
+## Test PhilSMS
 
-According to the official docs, sending SMS uses:
-- endpoint: `https://api.httpsms.com/v1/messages/send`
-- auth header: `x-api-key`
-- body fields: `from`, `to`, `content`
-
-Use this config:
-
-```env
-SMS_ENABLED=true
-SMS_PROVIDER=httpsms
-SMS_TIMEOUT_MS=10000
-SMS_HTTPSMS_API_KEY=YOUR_HTTPSMS_API_KEY
-SMS_HTTPSMS_FROM=+639171234567
-SMS_HTTPSMS_ENDPOINT=https://api.httpsms.com/v1/messages/send
-```
-
-`SMS_HTTPSMS_FROM` should be the number connected to the Android phone/SIM registered in httpSMS.
-
-## Phone Number Format
-
-The backend already normalizes Philippine numbers like:
-
-- `09171234567`
-- `9171234567`
-- `+639171234567`
-
-All of these become `+639171234567`.
-
-## Test the SMS Gateway
-
-From `backend/`, run:
+From `backend/`:
 
 ```bash
 npm run sms:test -- 09171234567 "Test message from CALFFA"
 ```
 
-If successful, the terminal should say:
+If successful, the terminal prints `SMS sent successfully.`
 
-```text
-SMS sent successfully.
+## Legacy: Android HTTP gateway (e.g. TextBee-style)
+
+Use an Android phone with an app that exposes HTTP → SMS. The backend posts JSON to `SMS_ANDROID_ENDPOINT` using `phoneNumber` and `message` by default.
+
+```env
+SMS_ENABLED=true
+SMS_PROVIDER=android_gateway
+SMS_ANDROID_ENDPOINT=http://YOUR_PHONE_IP:PORT/send-sms
+SMS_ANDROID_RECIPIENT_FIELD=phoneNumber
+SMS_ANDROID_MESSAGE_FIELD=message
 ```
 
-## After Testing
+## httpSMS (Android + cloud relay)
 
-Restart the backend server:
-
-```bash
-npm run dev
+```env
+SMS_ENABLED=true
+SMS_PROVIDER=httpsms
+SMS_HTTPSMS_API_KEY=YOUR_HTTPSMS_API_KEY
+SMS_HTTPSMS_FROM=+639171234567
 ```
 
-Then in the app:
+See [httpSMS docs](https://docs.httpsms.com/).
 
-1. Open `/farmer-income-hub`
-2. Log in as agriculturist
-3. Create a seed/fertilizer allocation for an eligible farmer
-4. The system will:
-   - save the allocation
-   - create an in-app notification
-   - attempt to send SMS automatically
-
-## If SMS Fails
-
-Check:
-- the phone is powered on
-- mobile signal is available
-- the phone has internet access
-- the app endpoint is reachable from the backend machine
-- the SIM has enough load or an active text promo
-- `SMS_ENABLED=true`
-- `SMS_ANDROID_ENDPOINT` is correct
-
-In the UI, failed sends can be retried from the agriculturist distribution screen.
-
-## Optional API Provider
-
-This project also supports `SMS_PROVIDER=semaphore`.
-
-Example:
+## Semaphore
 
 ```env
 SMS_ENABLED=true
 SMS_PROVIDER=semaphore
 SMS_SEMAPHORE_API_KEY=your_key
 SMS_SEMAPHORE_SENDER_NAME=CALFFA
-SMS_SEMAPHORE_ENDPOINT=https://api.semaphore.co/api/v4/messages
 ```
 
-Then test with:
+## Phone number format
 
-```bash
-npm run sms:test -- 09171234567 "Test message from CALFFA"
-```
+The backend normalizes Philippine numbers (`09171234567`, `9171234567`, `+639171234567`) to E164 `+639…` internally. PhilSMS receives digits without `+`.
+
+## After configuration
+
+Restart the backend (`npm run dev`), then as agriculturist allocate seed/fertilizer on `/farmer-income-hub`. The farmer’s registered phone gets the SMS when the flow triggers a send. Failed sends can be retried from the agriculturist distribution UI.
+
+## If SMS fails
+
+- `SMS_ENABLED=true` and correct `SMS_PROVIDER`
+- For PhilSMS: valid token, approved `sender_id`, account balance
+- For Android gateway: phone on, reachable URL, SIM load
+- Check `sms_failure_reason` in the distribution row in the UI

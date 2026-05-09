@@ -5,6 +5,7 @@ import App from './App.vue'
 import { router } from './router'
 import './style.css'
 import './assets/backdrop-theme.css'
+import './styles/glass-unified-theme.css'
 import 'leaflet/dist/leaflet.css'
 
 

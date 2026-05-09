@@ -10,12 +10,12 @@
         <h1 class="notice-title">{{ userBarangay }} Barangay</h1>
         
         <!-- Status Badge -->
-        <div class="status-badge sample">{{ statusLabel }}</div>
+        <div class="status-badge scoped">{{ statusLabel }}</div>
         
         <!-- Message -->
         <div class="notice-message">
           <p class="primary-message">
-            <strong>{{ language === 'tl' ? 'Salamat sa iyong pagpaparehistro!' : 'Thank you for registering!' }}</strong>
+            <strong>{{ primaryHeadline }}</strong>
           </p>
           <p class="secondary-message">
             {{ message }}
@@ -24,39 +24,40 @@
         
         <!-- Features Status -->
         <div class="features-section">
-          <h2 class="features-title">{{ language === 'tl' ? 'Status ng Features' : 'Feature Status' }}</h2>
+          <h2 class="features-title">{{ language === 'tl' ? 'Mga feature (barangay mo lang)' : 'Features (your barangay only)' }}</h2>
           <div class="features-list">
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">💰</span>
               <span class="feature-name">{{ language === 'tl' ? 'Mga Savings' : 'Savings' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">📋</span>
               <span class="feature-name">{{ language === 'tl' ? 'Mga Loan' : 'Loans' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">📈</span>
               <span class="feature-name">{{ language === 'tl' ? 'Share Capital' : 'Share Capital' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">🌾</span>
               <span class="feature-name">{{ language === 'tl' ? 'Kita ng Magsasaka' : 'Farmer Income' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">⚙️</span>
               <span class="feature-name">{{ language === 'tl' ? 'Machinery' : 'Machinery' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
-            <div class="feature-item disabled">
+            <div class="feature-item available">
               <span class="feature-icon">📊</span>
               <span class="feature-name">{{ language === 'tl' ? 'Financial Overview' : 'Financial Overview' }}</span>
-              <span class="status-label">{{ language === 'tl' ? 'Hindi Available' : 'Not Available' }}</span>
+              <span class="status-label ok">{{ language === 'tl' ? 'Available' : 'Available' }}</span>
             </div>
           </div>
+          <p class="features-footnote">{{ featuresFootnote }}</p>
         </div>
         
         <!-- Info Box -->
@@ -72,11 +73,11 @@
         
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <button @click="goToDashboard" class="btn btn-primary">
-            <span class="btn-icon">👤</span>
-            {{ language === 'tl' ? 'Tingnan ang Profile' : 'View Profile' }}
+          <button type="button" @click="goToDashboard" class="btn btn-primary">
+            <span class="btn-icon">🏠</span>
+            {{ language === 'tl' ? 'Pumunta sa Dashboard' : 'Go to Dashboard' }}
           </button>
-          <button @click="logout" class="btn btn-secondary">
+          <button type="button" @click="logout" class="btn btn-secondary">
             <span class="btn-icon">🚪</span>
             {{ language === 'tl' ? 'Mag-logout' : 'Logout' }}
           </button>
@@ -101,25 +102,37 @@ const userBarangay = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  return language.value === 'tl' ? 'Sample Barangay' : 'Sample Barangay'
+  return language.value === 'tl' ? 'Portal ng iyong barangay' : 'Your barangay portal'
+})
+
+const primaryHeadline = computed(() => {
+  return language.value === 'tl'
+    ? 'Maligayang pagdating!'
+    : 'Welcome!'
 })
 
 const message = computed(() => {
   if (language.value === 'tl') {
-    return `Ang ${userBarangay.value} ay isang sample na barangay. Ang mga transaction module ay hindi pa available para sa barangay na ito. Tiyak kaming magbubukas ng aktibong transactions sa hinaharap kapag naging available ang features.`
+    return `Ikaw ay nakatala sa ${userBarangay.value}. Parehong mga uri ng transaction at module ang makukuha ng bawat barangay—pero nakasara ang datos: makikita at magagamit mo lang ang impormasyon at transaksyon na kabilang sa barangay mo, hindi ng ibang komunidad.`
   }
-  return `${userBarangay.value} is a sample barangay. Transaction modules are not yet available for this barangay. We will enable transactions in the future when the features become available.`
+  return `You are registered under ${userBarangay.value}. Each barangay uses the same transaction modules—but data is scoped: you only see and work with records for your barangay, not other communities.`
+})
+
+const featuresFootnote = computed(() => {
+  return language.value === 'tl'
+    ? 'Ipinapakita sa sidebar ang eksaktong menu batay sa iyong role.'
+    : 'The sidebar shows only the menus for your role; all scoped data stays within your barangay.'
 })
 
 const nextStepMessage = computed(() => {
   if (language.value === 'tl') {
-    return `Habang naghihintay para sa mga aktibong transactions, maaari mong suriin ang iyong profile at pamilyaridad sa platform. Ang lahat ng transaction-based features ay magiging available sa ${userBarangay.value} sa hinaharap.`
+    return `Pumunta sa dashboard para gamitin ang mga feature ayon sa iyong role. Tandaan: lahat ng listahan at ulat ay naka-limit sa iyong barangay lamang (${userBarangay.value}), maliban kung isa kang admin ng buong sistema.`
   }
-  return `While awaiting active transactions, you can review your profile and familiarize yourself with the platform. All transaction-based features will become available in ${userBarangay.value} in the future.`
+  return `Continue to your dashboard to use features available to your role. Lists and reports are limited to your barangay (${userBarangay.value}) unless you are a cooperative-wide administrator.`
 })
 
 const goToDashboard = () => {
-  router.push('/welcome')
+  router.push('/dashboard')
 }
 
 const logout = () => {
@@ -128,9 +141,13 @@ const logout = () => {
 }
 
 onMounted(() => {
-  // Check if user is authenticated
   if (!authStore.currentUser) {
     router.push('/login')
+    return
+  }
+  const u = authStore.currentUser
+  if (u.role === 'admin' || u.barangay_id == null) {
+    router.push('/dashboard')
   }
 })
 </script>
@@ -196,15 +213,15 @@ onMounted(() => {
   width: fit-content;
 }
 
-.status-badge.sample {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
+.status-badge.scoped {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
 }
 
 .notice-message {
   background: #f8f9fa;
-  border-left: 4px solid #ffc107;
+  border-left: 4px solid #43a047;
   padding: 15px;
   border-radius: 4px;
   margin-bottom: 25px;
@@ -234,6 +251,13 @@ onMounted(() => {
   margin-bottom: 15px;
 }
 
+.features-footnote {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.45;
+}
+
 .features-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -251,14 +275,13 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.feature-item.disabled {
-  background-color: #f5f5f5;
-  opacity: 0.6;
-  border-color: #d0d0d0;
+.feature-item.available {
+  background-color: #f1f8f4;
+  border-color: #c8e6c9;
 }
 
 .feature-item:hover {
-  border-color: #999;
+  border-color: #81c784;
 }
 
 .feature-icon {
@@ -275,8 +298,11 @@ onMounted(() => {
 
 .status-label {
   font-size: 11px;
-  color: #d32f2f;
   font-weight: 600;
+}
+
+.status-label.ok {
+  color: #2e7d32;
 }
 
 .info-box {

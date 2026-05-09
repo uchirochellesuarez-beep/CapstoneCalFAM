@@ -1,27 +1,36 @@
 <template>
-  <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 scale-100">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-green-700">🚜 Farmer Login</h2>
-        <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+  <div v-if="showModal" class="modal-overlay animate-fade-in">
+    <div class="modal-shell">
+      <div class="modal-header">
+        <h2 class="modal-title">🚜 Farmer Login</h2>
+        <button @click="closeModal" class="modal-close">&times;</button>
       </div>
-      <div v-if="errorMessage" class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 text-sm">
+      <div v-if="errorMessage" class="error-banner">
         {{ errorMessage }}
       </div>
-      <form @submit.prevent="submitLogin" class="space-y-4">
-        <div>
-          <label class="flex items-center text-sm font-semibold mb-1 text-green-800">
-            <span class="mr-2">🆔</span> Reference Number
+      <form @submit.prevent="submitLogin" class="login-form">
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-icon">🆔</span> Reference Number
           </label>
-          <input v-model="form.referenceNumber" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm" />
+          <input
+            v-model="form.referenceNumber"
+            @input="handleReferenceInput"
+            minlength="19"
+            maxlength="19"
+            pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
+            inputmode="numeric"
+            required
+            class="field-input"
+          />
         </div>
-        <div>
-          <label class="flex items-center text-sm font-semibold mb-1 text-green-800">
-            <span class="mr-2">🔑</span> Password
+        <div class="field-group">
+          <label class="field-label">
+            <span class="label-icon">🔑</span> Password
           </label>
-          <input type="password" v-model="form.password" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm" />
+          <input type="password" v-model="form.password" required class="field-input" />
         </div>
-        <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-lime-500 text-white py-3 rounded-lg font-bold hover:from-green-700 hover:to-lime-600 shadow-lg transition transform hover:scale-105">
+        <button type="submit" class="login-btn">
           🌾 Login
         </button>
       </form>
@@ -44,6 +53,25 @@ const form = ref({
   password: ''
 })
 
+const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
+const formatReferenceNumberInput = (value = '') => {
+  const digits = String(value).replace(/\D/g, '').slice(0, 15)
+  const parts = [2, 2, 2, 3, 6]
+  let idx = 0
+  const out = []
+  for (const p of parts) {
+    const chunk = digits.slice(idx, idx + p)
+    if (!chunk) break
+    out.push(chunk)
+    idx += p
+  }
+  return out.join('-')
+}
+
+const handleReferenceInput = () => {
+  form.value.referenceNumber = formatReferenceNumberInput(form.value.referenceNumber)
+}
+
 const openModal = () => {
   showModal.value = true
   errorMessage.value = ''
@@ -60,6 +88,10 @@ const submitLogin = async () => {
   
   if (!form.value.referenceNumber || !form.value.password) {
     errorMessage.value = 'Please fill in all fields'
+    return
+  }
+  if (!REFERENCE_FORMAT_REGEX.test(form.value.referenceNumber)) {
+    errorMessage.value = 'Reference number must follow 00-00-00-000-000000 format'
     return
   }
 
@@ -84,5 +116,128 @@ defineExpose({ openModal, closeModal })
 }
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 6, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.modal-shell {
+  width: 100%;
+  max-width: 430px;
+  border-radius: 20px;
+  padding: 26px;
+  background: linear-gradient(155deg, rgba(250, 255, 252, 0.97), rgba(238, 249, 243, 0.95));
+  border: 1px solid rgba(74, 161, 112, 0.24);
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-size: 25px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.modal-close {
+  font-size: 24px;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #111827;
+}
+
+.error-banner {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(254, 226, 226, 0.95);
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.label-icon {
+  margin-right: 6px;
+}
+
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 10px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f2937;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(22, 163, 74, 0.4);
+  background: linear-gradient(135deg, #16a34a 0%, #84cc16 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
+  transition: all 0.2s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 10px 20px rgba(22, 163, 74, 0.34);
 }
 </style>

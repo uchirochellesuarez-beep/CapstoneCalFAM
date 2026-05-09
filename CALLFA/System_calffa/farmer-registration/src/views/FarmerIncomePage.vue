@@ -1,17 +1,17 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">🌾 Talaan ng Kita sa Pagsasaka</h1>
+      <h1 class="page-title">Talaan ng Kita sa Pagsasaka</h1>
       <p class="page-subtitle">Punan ang form na ito para maitala ang iyong gastos at kita sa pagsasaka. Kinakailangan para sa eligibility sa tulong na pang-agrikultura tulad ng pataba at binhi.</p>
     </div>
 
     <!-- Success/Error Messages -->
     <div v-if="successMessage" class="alert alert-success">
-      <span>✅ {{ successMessage }}</span>
+      <span>{{ successMessage }}</span>
       <button class="alert-close" @click="successMessage = ''">&times;</button>
     </div>
     <div v-if="errorMessage" class="alert alert-error">
-      <span>❌ {{ errorMessage }}</span>
+      <span>{{ errorMessage }}</span>
       <button class="alert-close" @click="errorMessage = ''">&times;</button>
     </div>
 
@@ -22,21 +22,28 @@
         :class="{ active: activeTab === 'form' }"
         @click="activeTab = 'form'; if (editingRecordId) cancelEdit()"
       >
-        {{ editingRecordId ? '✏️ I-edit ang Talaan' : '📝 Bagong Talaan' }}
+        {{ editingRecordId ? 'I-edit ang Talaan' : 'Bagong Talaan' }}
       </button>
       <button
         class="tab-btn"
         :class="{ active: activeTab === 'history' }"
         @click="activeTab = 'history'; fetchRecords()"
       >
-        📋 Mga Naunang Talaan
+        Mga Naunang Talaan
       </button>
       <button
         class="tab-btn"
         :class="{ active: activeTab === 'assistance' }"
         @click="activeTab = 'assistance'; fetchCompletedAssistance()"
       >
-        📦 Tulong na Natanggap
+        Tulong na Natanggap
+      </button>
+      <button
+        class="tab-btn"
+        :class="{ active: activeTab === 'predictive' }"
+        @click="activeTab = 'predictive'; loadPredictiveData()"
+      >
+        Predictive Analytics
       </button>
     </div>
 
@@ -44,14 +51,14 @@
     <div v-if="activeTab === 'form'" class="form-wrapper">
       <!-- Edit mode banner -->
       <div v-if="editingRecordId" class="edit-banner">
-        <span>✏️ Ine-edit mo ang talaan mula {{ formatDate(editingCreatedAt) }}</span>
-        <button class="cancel-edit-btn" @click="cancelEdit">✕ Kanselahin</button>
+        <span>Ine-edit mo ang talaan mula {{ formatDate(editingCreatedAt) }}</span>
+        <button class="cancel-edit-btn" @click="cancelEdit">Kanselahin</button>
       </div>
       <form @submit.prevent="submitForm" class="income-form">
 
         <!-- Section 1: Farm Details -->
         <div class="form-section">
-          <h2 class="section-title">🌱 Detalye ng Taniman</h2>
+          <h2 class="section-title">Detalye ng Taniman</h2>
           <div class="form-row">
             <div class="form-group">
               <label>Lawak ng Taniman (Ektarya)</label>
@@ -89,7 +96,7 @@
 
         <!-- Section 2: Abono (Fertilizers) -->
         <div class="form-section">
-          <h2 class="section-title">🧪 Mga Ginamit na Abono</h2>
+          <h2 class="section-title">Mga Ginamit na Abono</h2>
           <div class="dynamic-table-wrapper">
             <table class="dynamic-table">
               <thead>
@@ -143,7 +150,7 @@
                       @click="removeFertilizer(index)"
                       v-if="form.fertilizers.length > 1"
                       title="Alisin"
-                    >✕</button>
+                    >&times;</button>
                   </td>
                 </tr>
               </tbody>
@@ -159,13 +166,13 @@
             </table>
           </div>
           <button type="button" class="add-row-btn" @click="addFertilizer">
-            ➕ Magdagdag ng Abono
+            Magdagdag ng Abono
           </button>
         </div>
 
         <!-- Section 3: Pesticides -->
         <div class="form-section">
-          <h2 class="section-title">🧴 Mga Ginamit na Lason</h2>
+          <h2 class="section-title">Mga Ginamit na Lason</h2>
           <div class="dynamic-table-wrapper">
             <table class="dynamic-table">
               <thead>
@@ -215,7 +222,7 @@
                       @click="removePesticide(index)"
                       v-if="form.pesticides.length > 1"
                       title="Alisin"
-                    >✕</button>
+                    >&times;</button>
                   </td>
                 </tr>
               </tbody>
@@ -231,13 +238,13 @@
             </table>
           </div>
           <button type="button" class="add-row-btn" @click="addPesticide">
-            ➕ Magdagdag ng Lason
+            Magdagdag ng Lason
           </button>
         </div>
 
         <!-- Section 4: Labor & Other Expenses -->
         <div class="form-section">
-          <h2 class="section-title">👷 Gastos sa Labor at Iba Pa</h2>
+          <h2 class="section-title">Gastos sa Labor at Iba Pa</h2>
           <div class="form-row">
             <div class="form-group">
               <label>Gastos sa Paghahanda ng Lupang Taniman (₱)</label>
@@ -292,7 +299,7 @@
 
         <!-- Section 5: Harvest -->
         <div class="form-section">
-          <h2 class="section-title">🌾 Ani</h2>
+          <h2 class="section-title">Ani</h2>
           <div class="form-row">
             <div class="form-group">
               <label>Ilang Sako ang Naani</label>
@@ -313,7 +320,7 @@
 
         <!-- Summary Section -->
         <div class="form-section summary-section">
-          <h2 class="section-title">📊 Buod</h2>
+          <h2 class="section-title">Buod</h2>
           <div class="summary-grid">
             <div class="summary-item">
               <span class="summary-label">Kabuuang Ani (kg)</span>
@@ -336,10 +343,10 @@
 
         <!-- Submit -->
         <div class="form-actions">
-          <button type="button" class="btn-reset" @click="editingRecordId ? cancelEdit() : resetForm()">{{ editingRecordId ? '✕ Kanselahin' : '🔄 I-reset' }}</button>
+          <button type="button" class="btn-reset" @click="editingRecordId ? cancelEdit() : resetForm()">{{ editingRecordId ? 'Kanselahin' : 'I-reset' }}</button>
           <button type="submit" class="btn-submit" :disabled="submitting">
-            <span v-if="submitting">⏳ {{ editingRecordId ? 'Ina-update...' : 'Sinusumite...' }}</span>
-            <span v-else>{{ editingRecordId ? '✏️ I-update ang Talaan' : '💾 I-save ang Talaan' }}</span>
+            <span v-if="submitting">{{ editingRecordId ? 'Ina-update...' : 'Sinusumite...' }}</span>
+            <span v-else>{{ editingRecordId ? 'I-update ang Talaan' : 'I-save ang Talaan' }}</span>
           </button>
         </div>
       </form>
@@ -352,7 +359,7 @@
         <p>Kinukuha ang mga talaan...</p>
       </div>
       <div v-else-if="records.length === 0" class="empty-state">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
         <p>Wala pang naitatalang kita. Punan ang form para magsimula!</p>
       </div>
       <div v-else class="records-list">
@@ -362,10 +369,10 @@
           class="record-card"
         >
           <div class="record-header">
-            <span class="record-date">📅 {{ formatDate(record.created_at) }}</span>
+            <span class="record-date">{{ formatDate(record.created_at) }}</span>
             <div class="record-actions">
-              <button class="edit-btn" @click="startEdit(record)">✏️ I-edit</button>
-              <button class="view-btn" @click="openRecordDetail(record)">👁️ Tingnan</button>
+              <button class="edit-btn" @click="startEdit(record)">I-edit</button>
+              <button class="view-btn" @click="openRecordDetail(record)">Tingnan</button>
             </div>
           </div>
           <div class="record-details">
@@ -411,7 +418,7 @@
         <p>Kinukuha ang tulong na natanggap...</p>
       </div>
       <div v-else-if="completedAssistance.length === 0" class="empty-state">
-        <div class="empty-icon">📦</div>
+        <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
         <p>Walang natanggapang tulong pa. Maghintay na kayo ay maging eligible at lumikha ng tulong.</p>
       </div>
       <div v-else>
@@ -424,34 +431,34 @@
                   {{ formatAssistanceType(assist.assistance_type) }}
                 </span>
               </div>
-              <span class="status-badge completed">✅ Natanggap</span>
+              <span class="status-badge completed">Natanggap</span>
             </div>
 
             <div class="card-body">
               <div class="info-row">
                 <div class="info-item">
-                  <span class="info-label">📅 Petsa ng Talaan</span>
+                  <span class="info-label">Petsa ng Talaan</span>
                   <span class="info-value">{{ formatDate(assist.created_at) }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">📦 Dami</span>
+                  <span class="info-label">Dami</span>
                   <span class="info-value quantity-highlight">{{ assist.notes ? extractQuantityFromNotes(assist.notes) : assist.quantity + ' ' + (assist.unit || 'sako') }}</span>
                 </div>
               </div>
 
               <div class="info-row dates-row">
                 <div v-if="assist.distribution_date" class="info-item">
-                  <span class="info-label">🚚 Araw ng Pamamahagi</span>
+                  <span class="info-label">Araw ng Pamamahagi</span>
                   <span class="info-value">{{ formatDate(assist.distribution_date) }}</span>
                 </div>
                 <div v-if="assist.received_date" class="info-item">
-                  <span class="info-label">✋ Araw ng Pagtanggap</span>
+                  <span class="info-label">Araw ng Pagtanggap</span>
                   <span class="info-value">{{ formatDate(assist.received_date) }}</span>
                 </div>
               </div>
 
               <div v-if="assist.notes && !assist.notes.startsWith('Pataba')" class="notes-section">
-                <span class="notes-label">📝 Tala</span>
+                <span class="notes-label">Tala</span>
                 <p class="notes-content">{{ extractNotesOnly(assist.notes) }}</p>
               </div>
             </div>
@@ -464,19 +471,106 @@
       </div>
     </div>
 
+    <!-- PREDICTIVE TAB -->
+    <div v-if="activeTab === 'predictive'" class="predictive-wrapper">
+      <div class="form-section">
+        <h2 class="section-title">Predicted Future Expenses</h2>
+        <p class="card-sub">
+          Forecast lang ito para sa future expenses (walang season input). Gumagamit ito ng backend model at historical expenses.
+        </p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Target Farmer ID</label>
+            <input v-if="!isPresident" type="text" :value="targetFarmerId || '-'" disabled />
+            <select v-else v-model="selectedForecastFarmerId" @change="loadPredictiveData">
+              <option value="">-- Pumili ng farmer --</option>
+              <option v-for="f in barangayFarmers" :key="f.id" :value="String(f.id)">
+                #{{ f.id }} - {{ f.full_name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Foundation Data (CSV/JSON)</label>
+            <input type="file" accept=".csv,.json,text/csv,application/json" @change="onFoundationFileChange" />
+          </div>
+        </div>
+
+        <div class="predictive-actions">
+          <button class="btn-submit" type="button" :disabled="foundationUploading || !canUploadFoundation" @click="uploadFoundationFile">
+            <span v-if="foundationUploading">Uploading...</span>
+            <span v-else>Upload Historical Foundation</span>
+          </button>
+          <button class="btn-reset" type="button" :disabled="foundationDeleting || !targetFarmerId" @click="clearFoundation">
+            <span v-if="foundationDeleting">Removing...</span>
+            <span v-else>Clear Foundation</span>
+          </button>
+          <button class="btn-submit" type="button" :disabled="forecastLoading || !targetFarmerId" @click="fetchExpenseForecast">
+            <span v-if="forecastLoading">Forecasting...</span>
+            <span v-else>Run Expense Forecast</span>
+          </button>
+        </div>
+
+        <div class="foundation-summary" v-if="foundationSummary">
+          <p><strong>Foundation Farmer ID:</strong> {{ foundationSummary.farmer_id }}</p>
+          <p><strong>Uploaded Points:</strong> {{ foundationSummary.count || 0 }}</p>
+          <p v-if="foundationSummary.updated_at"><strong>Last Updated:</strong> {{ formatDate(foundationSummary.updated_at) }}</p>
+          <p v-if="(foundationSummary.preview || []).length > 0">
+            <strong>Preview:</strong> {{ foundationSummary.preview.join(', ') }}
+          </p>
+        </div>
+      </div>
+
+      <div class="form-section" v-if="forecastResult">
+        <h3 class="section-title">Forecast Result</h3>
+        <div v-if="forecastResult.ok" class="summary-grid">
+          <div class="summary-item expense">
+            <span class="summary-label">Predicted Future Expense</span>
+            <span class="summary-value">₱{{ formatPeso(forecastResult.forecast_next?.predicted_total_expenses) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">95% Confidence Interval</span>
+            <span class="summary-value">
+              ₱{{ formatPeso(forecastResult.forecast_next?.ci95_low) }} - ₱{{ formatPeso(forecastResult.forecast_next?.ci95_high) }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Model Quality (R²)</span>
+            <span class="summary-value">{{ forecastResult.forecast_next?.r_squared ?? '-' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Training Points</span>
+            <span class="summary-value">{{ forecastResult.training_n || 0 }}</span>
+          </div>
+        </div>
+        <div v-else class="alert alert-error">
+          <span>{{ forecastResult.error || 'Forecast failed.' }}</span>
+        </div>
+
+        <div class="model-info-box" v-if="forecastResult.ok">
+          <p><strong>Model Used:</strong> {{ forecastResult.model || 'N/A' }}</p>
+          <p>
+            <strong>Engine:</strong>
+            {{ forecastResult.ml_engine === 'python_sklearn' ? 'Python sklearn' : 'Node.js OLS fallback' }}
+          </p>
+          <p>{{ forecastResult.method_description_ph || '' }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- VIEW DETAIL MODAL -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+      <div v-if="showDetailModal" class="modal-overlay farmer-income-page-modal" @click.self="closeDetailModal">
         <div class="modal-container">
           <div class="modal-header">
-            <h2>📋 Buong Detalye ng Talaan</h2>
+            <h2>Buong Detalye ng Talaan</h2>
             <button class="modal-close" @click="closeDetailModal">&times;</button>
           </div>
           <div class="modal-body" v-if="selectedRecord">
 
             <!-- Farm Info -->
             <div class="detail-section">
-              <h3 class="detail-section-title">🌱 Detalye ng Taniman</h3>
+              <h3 class="detail-section-title">Detalye ng Taniman</h3>
               <div class="detail-grid">
                 <div class="detail-cell">
                   <span class="cell-label">Petsa ng Talaan</span>
@@ -499,7 +593,7 @@
 
             <!-- Fertilizers -->
             <div class="detail-section" v-if="selectedRecord.fertilizers && selectedRecord.fertilizers.length > 0">
-              <h3 class="detail-section-title">🧪 Mga Ginamit na Abono</h3>
+              <h3 class="detail-section-title">Mga Ginamit na Abono</h3>
               <table class="detail-table">
                 <thead>
                   <tr>
@@ -526,13 +620,13 @@
               </table>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">🧪 Mga Ginamit na Abono</h3>
+              <h3 class="detail-section-title">Mga Ginamit na Abono</h3>
               <p class="no-data">Walang naitalang abono.</p>
             </div>
 
             <!-- Pesticides -->
             <div class="detail-section" v-if="selectedRecord.pesticides && selectedRecord.pesticides.length > 0">
-              <h3 class="detail-section-title">🧴 Mga Ginamit na Lason</h3>
+              <h3 class="detail-section-title">Mga Ginamit na Lason</h3>
               <table class="detail-table">
                 <thead>
                   <tr>
@@ -559,13 +653,13 @@
               </table>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">🧴 Mga Ginamit na Lason</h3>
+              <h3 class="detail-section-title">Mga Ginamit na Lason</h3>
               <p class="no-data">Walang naitalang lason.</p>
             </div>
 
             <!-- Labor & Expenses -->
             <div class="detail-section">
-              <h3 class="detail-section-title">👷 Gastos sa Labor at Iba Pa</h3>
+              <h3 class="detail-section-title">Gastos sa Labor at Iba Pa</h3>
               <div class="expense-grid">
                 <div class="expense-row">
                   <span>Paghahanda ng Lupa</span>
@@ -612,7 +706,7 @@
 
             <!-- Harvest -->
             <div class="detail-section">
-              <h3 class="detail-section-title">🌾 Ani</h3>
+              <h3 class="detail-section-title">Ani</h3>
               <div class="detail-grid">
                 <div class="detail-cell">
                   <span class="cell-label">Sako na Naani</span>
@@ -635,7 +729,7 @@
 
             <!-- Grand Summary -->
             <div class="detail-section summary-detail-section">
-              <h3 class="detail-section-title">📊 Buod</h3>
+              <h3 class="detail-section-title">Buod</h3>
               <div class="grand-summary">
                 <div class="grand-row income-row">
                   <span>Kabuuang Benta</span>
@@ -683,6 +777,20 @@ const showDetailModal = ref(false)
 const selectedRecord = ref(null)
 const editingRecordId = ref(null)
 const editingCreatedAt = ref(null)
+const forecastLoading = ref(false)
+const foundationUploading = ref(false)
+const foundationDeleting = ref(false)
+const forecastResult = ref(null)
+const foundationSummary = ref(null)
+const foundationFile = ref(null)
+const barangayFarmers = ref([])
+const selectedForecastFarmerId = ref('')
+const isPresident = computed(() => String(currentUser.value?.role || '') === 'president')
+const targetFarmerId = computed(() => {
+  if (isPresident.value) return selectedForecastFarmerId.value || ''
+  return currentUser.value?.id != null ? String(currentUser.value.id) : ''
+})
+const canUploadFoundation = computed(() => !!foundationFile.value && !!targetFarmerId.value)
 
 const syncActiveTabFromRoute = async () => {
   const requestedTab = String(route.query.tab || '').trim()
@@ -696,6 +804,12 @@ const syncActiveTabFromRoute = async () => {
   if (requestedTab === 'assistance') {
     activeTab.value = 'assistance'
     await fetchCompletedAssistance()
+    return
+  }
+
+  if (requestedTab === 'predictive') {
+    activeTab.value = 'predictive'
+    await loadPredictiveData()
   }
 }
 
@@ -941,15 +1055,131 @@ const fetchCompletedAssistance = async () => {
   }
 }
 
+const fetchBarangayFarmers = async () => {
+  if (!isPresident.value || !currentUser.value?.barangay_id) return
+  try {
+    const res = await fetch(`/api/farmer-income/barangay-farmers/${currentUser.value.barangay_id}`, {
+      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi makuha ang listahan ng farmers.')
+    barangayFarmers.value = data.farmers || []
+    if (!selectedForecastFarmerId.value && barangayFarmers.value.length > 0) {
+      selectedForecastFarmerId.value = String(barangayFarmers.value[0].id)
+    }
+  } catch (err) {
+    errorMessage.value = err.message
+  }
+}
+
+const fetchFoundationSummary = async () => {
+  if (!targetFarmerId.value) return
+  try {
+    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
+      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi makuha ang foundation summary.')
+    foundationSummary.value = data
+  } catch (err) {
+    foundationSummary.value = null
+    errorMessage.value = err.message
+  }
+}
+
+const fetchExpenseForecast = async () => {
+  if (!targetFarmerId.value) return
+  forecastLoading.value = true
+  forecastResult.value = null
+  try {
+    const res = await fetch(`/api/farmer-income/expense-forecast/${targetFarmerId.value}`, {
+      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    forecastResult.value = data
+    if (!res.ok && data?.error) {
+      throw new Error(data.error)
+    }
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    forecastLoading.value = false
+  }
+}
+
+const onFoundationFileChange = (event) => {
+  const f = event?.target?.files?.[0]
+  foundationFile.value = f || null
+}
+
+const uploadFoundationFile = async () => {
+  if (!foundationFile.value || !targetFarmerId.value) return
+  foundationUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', foundationFile.value)
+    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authStore.token}` },
+      body: formData
+    })
+    const data = await res.json()
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi na-upload ang file.')
+    successMessage.value = data.message || 'Foundation uploaded.'
+    foundationFile.value = null
+    await fetchFoundationSummary()
+    await fetchExpenseForecast()
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    foundationUploading.value = false
+  }
+}
+
+const clearFoundation = async () => {
+  if (!targetFarmerId.value) return
+  foundationDeleting.value = true
+  try {
+    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi na-clear ang foundation.')
+    successMessage.value = data.message || 'Foundation removed.'
+    foundationSummary.value = null
+    await fetchExpenseForecast()
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    foundationDeleting.value = false
+  }
+}
+
+const loadPredictiveData = async () => {
+  if (isPresident.value && barangayFarmers.value.length === 0) {
+    await fetchBarangayFarmers()
+  }
+  await fetchFoundationSummary()
+  await fetchExpenseForecast()
+}
+
 // ─── Helpers ───
 const resetForm = () => {
   form.value = getInitialForm()
 }
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('fil-PH', {
     year: 'numeric', month: 'long', day: 'numeric'
   })
+}
+
+const formatPeso = (value) => {
+  const n = parseFloat(value || 0)
+  if (!Number.isFinite(n)) return '0.00'
+  return n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const formatIrrigation = (type) => {
@@ -1012,34 +1242,62 @@ const getTimeSinceReceived = (dateStr) => {
 
 onMounted(() => {
   syncActiveTabFromRoute()
+  if (isPresident.value) fetchBarangayFarmers()
 })
 
 watch(() => route.query.tab, () => {
   syncActiveTabFromRoute()
 })
+
+watch(targetFarmerId, async (id) => {
+  if (!id) return
+  if (activeTab.value === 'predictive') {
+    await fetchFoundationSummary()
+    await fetchExpenseForecast()
+  }
+})
 </script>
 
 <style scoped>
 .page-container {
-  max-width: 1000px;
+  max-width: 1440px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .page-header {
-  margin-bottom: 1.5rem;
+  background: rgba(25, 38, 29, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.13);
+  border-radius: 20px;
+  padding: 32px 38px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 1px 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.13) 0%, transparent 65%);
+  pointer-events: none;
 }
 
 .page-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #166534;
-  margin: 0 0 0.25rem 0;
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  color: #eefde6;
 }
 
 .page-subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
-  margin: 0;
+  margin: 6px 0 0 0;
+  color: rgba(220, 238, 211, 0.78);
+  font-size: 17px;
 }
 
 /* Alerts */
@@ -1073,53 +1331,100 @@ watch(() => route.query.tab, () => {
 /* Tab Navigation */
 .tab-nav {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  align-items: center;
 }
 .tab-btn {
-  padding: 0.6rem 1.2rem;
-  border: 2px solid #d1d5db;
-  background: #f9fafb;
-  border-radius: 8px;
+  padding: 0.78rem 1.3rem;
+  border: 1px solid rgba(190, 235, 203, 0.2);
+  background: rgba(28, 42, 33, 0.9);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-weight: 700;
+  color: rgba(220, 238, 211, 0.9);
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), inset 1px 1px 0 rgba(255, 255, 255, 0.04);
 }
 .tab-btn.active {
   background: #166534;
-  color: white;
-  border-color: #166534;
+  color: #ecfdf5;
+  border-color: rgba(134, 239, 172, 0.48);
+  box-shadow: 0 4px 14px rgba(4, 12, 8, 0.28);
 }
 .tab-btn:hover:not(.active) {
-  border-color: #16a34a;
-  background: #f0fdf4;
+  border-color: rgba(134, 239, 172, 0.35);
+  background: rgba(32, 49, 38, 0.95);
+  transform: translateY(-1px);
+}
+
+.card-sub {
+  margin: 0 0 1rem 0;
+  font-size: 0.92rem;
+  color: rgba(220, 238, 211, 0.78);
+  line-height: 1.45;
+}
+
+.predictive-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.foundation-summary {
+  margin-top: 1rem;
+  padding: 0.9rem 1.05rem;
+  border: 1px solid rgba(126, 184, 145, 0.32);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  font-size: 0.88rem;
+  color: rgba(236, 253, 245, 0.9);
+}
+
+.foundation-summary p {
+  margin: 0.25rem 0;
+}
+
+.model-info-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(126, 184, 145, 0.28);
+  background: rgba(74, 222, 128, 0.08);
+  color: rgba(220, 252, 231, 0.92);
+  font-size: 0.88rem;
+}
+
+.model-info-box strong {
+  color: #bbf7d0;
 }
 
 /* Form Sections */
 .form-section {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(167, 243, 208, 0.45);
+  border-radius: 16px;
+  padding: 2.15rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 20px rgba(6, 16, 11, 0.2);
 }
 
 .section-title {
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #166534;
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #d1fae5;
+  border-bottom: 1px solid rgba(167, 243, 208, 0.65);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 
 .form-group {
@@ -1130,19 +1435,19 @@ watch(() => route.query.tab, () => {
   grid-column: 1 / -1;
 }
 .form-group label {
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: #374151;
   margin-bottom: 0.35rem;
 }
 .form-group input,
 .form-group select {
-  padding: 0.55rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 1.05rem 1.1rem;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  border-radius: 12px;
+  font-size: 0.95rem;
   transition: border-color 0.2s;
-  background: #fff;
+  background: rgba(245, 255, 250, 0.9);
 }
 .form-group input:focus,
 .form-group select:focus {
@@ -1158,19 +1463,19 @@ watch(() => route.query.tab, () => {
 .dynamic-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 .dynamic-table th {
   background: #f0fdf4;
   color: #166534;
   font-weight: 600;
-  padding: 0.6rem 0.5rem;
+  padding: 0.95rem 0.75rem;
   text-align: left;
   border-bottom: 2px solid #bbf7d0;
   white-space: nowrap;
 }
 .dynamic-table td {
-  padding: 0.4rem 0.5rem;
+  padding: 0.75rem 0.75rem;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
 }
@@ -1228,13 +1533,13 @@ watch(() => route.query.tab, () => {
 }
 .add-row-btn {
   margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
+  padding: 0.9rem 1.35rem;
   background: #f0fdf4;
   color: #166534;
   border: 1px dashed #16a34a;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -1248,25 +1553,26 @@ watch(() => route.query.tab, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: #14532d;
+  border: 1px solid rgba(74, 222, 128, 0.55);
   border-radius: 8px;
   padding: 0.75rem 1rem;
   margin-top: 0.75rem;
 }
 .labor-total-label {
-  font-weight: 700;
-  color: #374151;
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: #ecfdf5 !important;
 }
 .labor-total-value {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #166534;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #bbf7d0 !important;
 }
 
 /* Summary Section */
 .summary-section {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  background: #ecfdf5;
   border: 2px solid #86efac;
 }
 .summary-grid {
@@ -1283,14 +1589,14 @@ watch(() => route.query.tab, () => {
 }
 .summary-item .summary-label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #6b7280;
   margin-bottom: 0.3rem;
   font-weight: 600;
 }
 .summary-item .summary-value {
   display: block;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 .summary-item.income .summary-value { color: #2563eb; }
@@ -1308,34 +1614,36 @@ watch(() => route.query.tab, () => {
   padding: 0.5rem 0 1rem;
 }
 .btn-reset {
-  padding: 0.65rem 1.5rem;
+  padding: 1rem 1.8rem;
   background: #f3f4f6;
   color: #374151;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   transition: all 0.2s;
 }
 .btn-reset:hover {
   background: #e5e7eb;
 }
 .btn-submit {
-  padding: 0.65rem 2rem;
-  background: linear-gradient(135deg, #166534, #16a34a);
-  color: white;
-  border: none;
+  padding: 1rem 2.4rem;
+  background: #166534;
+  color: #f0fdf4;
+  border: 1px solid rgba(134, 239, 172, 0.38);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.3);
+  font-size: 1.05rem;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.25);
 }
 .btn-submit:hover:not(:disabled) {
+  background: #15803d;
+  border-color: rgba(187, 247, 208, 0.45);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.4);
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.32);
 }
 .btn-submit:disabled {
   opacity: 0.6;
@@ -1370,6 +1678,18 @@ watch(() => route.query.tab, () => {
   margin-bottom: 0.5rem;
 }
 
+.empty-icon-block {
+  font-size: 0;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.75rem;
+  border: 2px dashed rgba(107, 159, 126, 0.55);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
 .records-list {
   display: flex;
   flex-direction: column;
@@ -1379,18 +1699,19 @@ watch(() => route.query.tab, () => {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 1.3rem 1.35rem;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
 }
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
 }
 .record-date {
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #ecfdf5;
+  font-size: 0.98rem;
 }
 .record-season {
   background: #f0fdf4;
@@ -1403,33 +1724,35 @@ watch(() => route.query.tab, () => {
 .record-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.65rem 1rem;
+  margin-bottom: 0.85rem;
 }
 .record-detail {
-  font-size: 0.85rem;
-  color: #4b5563;
+  font-size: 0.95rem;
+  color: #dcfce7;
+  font-weight: 600;
 }
 .detail-label {
-  font-weight: 600;
+  font-weight: 800;
   margin-right: 0.25rem;
+  color: #ffffff;
 }
 .record-financials {
   display: flex;
   gap: 1rem;
-  padding-top: 0.75rem;
+  padding-top: 0.85rem;
   border-top: 1px solid #e5e7eb;
 }
 .financial-item {
   display: flex;
   gap: 0.4rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
 }
-.financial-item.income { color: #2563eb; }
-.financial-item.expense { color: #dc2626; }
+.financial-item.income { color: #60a5fa; }
+.financial-item.expense { color: #f87171; }
 .financial-item.profit { color: #166534; }
-.financial-item.loss { color: #dc2626; }
+.financial-item.loss { color: #f87171; }
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -1466,20 +1789,24 @@ watch(() => route.query.tab, () => {
 
 /* View Button */
 .view-btn {
-  padding: 0.35rem 0.85rem;
-  background: linear-gradient(135deg, #166534, #16a34a);
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 0.42rem 0.92rem;
+  background: #166534;
+  color: #ecfdf5;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: background 0.2s, box-shadow 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(134, 239, 172, 0.42);
 }
 .view-btn:hover {
+  background: #15803d;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.35);
+  box-shadow: 0 4px 10px rgba(22, 101, 52, 0.3);
 }
 .record-actions {
   display: flex;
@@ -1487,21 +1814,39 @@ watch(() => route.query.tab, () => {
   align-items: center;
 }
 .edit-btn {
-  padding: 0.35rem 0.85rem;
-  background: linear-gradient(135deg, #b45309, #d97706);
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 0.42rem 0.92rem;
+  background: rgba(28, 42, 33, 0.95);
+  color: rgba(220, 252, 231, 0.95);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(126, 184, 145, 0.52);
 }
 .edit-btn:hover {
+  background: rgba(22, 60, 40, 0.98);
+  border-color: rgba(134, 239, 172, 0.55);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.35);
+  box-shadow: 0 4px 10px rgba(6, 12, 9, 0.28);
 }
+
+/* Strong readability overrides for history cards in dark theme */
+.page-container .record-card .record-date,
+.page-container .record-card .record-detail,
+.page-container .record-card .detail-label {
+  color: #f0fdf4 !important;
+}
+
+.page-container .record-card .financial-item.income { color: #93c5fd !important; }
+.page-container .record-card .financial-item.expense { color: #fca5a5 !important; }
+.page-container .record-card .financial-item.profit { color: #86efac !important; }
+.page-container .record-card .financial-item.loss { color: #fca5a5 !important; }
+
 .edit-banner {
   display: flex;
   justify-content: space-between;
@@ -1557,8 +1902,9 @@ watch(() => route.query.tab, () => {
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, #166534, #16a34a);
-  color: white;
+  background: #166534;
+  color: #f0fdf4;
+  border-bottom: 1px solid rgba(134, 239, 172, 0.25);
 }
 .modal-header h2 {
   margin: 0;
@@ -1762,7 +2108,7 @@ watch(() => route.query.tab, () => {
   gap: 1rem;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  background: #ecfdf5;
   border-radius: 12px;
   border: 1px solid #86efac;
 }
@@ -1985,6 +2331,311 @@ watch(() => route.query.tab, () => {
   padding: 0.35rem 0.75rem;
   border-radius: 12px;
   white-space: nowrap;
+}
+
+/* Darker cards/panels override for Farmer Income page */
+.page-container .form-section,
+.page-container .summary-section,
+.page-container .record-card,
+.page-container .assistance-summary,
+.page-container .assistance-card,
+.page-container .summary-box,
+.page-container .modal-container {
+  background: rgba(26, 44, 35, 0.97) !important;
+  border: 1px solid rgba(167, 243, 208, 0.32) !important;
+  box-shadow: 0 10px 22px rgba(6, 12, 9, 0.34) !important;
+}
+
+.page-container .detail-cell,
+.page-container .summary-item,
+.page-container .notes-section,
+.page-container .expense-row,
+.page-container .assistance-card .card-footer,
+.page-container .assistance-card .card-header {
+  background: rgba(42, 64, 50, 0.78) !important;
+  border-color: rgba(167, 243, 208, 0.28) !important;
+}
+
+.page-container .dynamic-table th,
+.page-container .detail-table th {
+  background: rgba(20, 83, 45, 0.72) !important;
+  color: #ecfdf5 !important;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.35) !important;
+}
+
+.page-container .dynamic-table td,
+.page-container .detail-table td,
+.page-container .record-detail,
+.page-container .notes-content,
+.page-container .info-value,
+.page-container .cell-value {
+  color: #dcfce7 !important;
+}
+
+.page-container .form-section,
+.page-container .form-section label,
+.page-container .section-title,
+.page-container .dynamic-table th,
+.page-container .dynamic-table td,
+.page-container .computed-cell,
+.page-container .total-label,
+.page-container .total-value,
+.page-container .labor-total-label,
+.page-container .labor-total-value,
+.page-container .summary-item .summary-label,
+.page-container .summary-item .summary-value,
+.page-container .summary-label,
+.page-container .summary-value,
+.page-container .form-group input,
+.page-container .form-group select {
+  color: #ffffff !important;
+}
+
+.page-container .form-group input::placeholder {
+  color: rgba(220, 252, 231, 0.5) !important;
+}
+
+/* Form fields: dark wells — iwas light-on-light (puting text sa maliwanag na bg) */
+.page-container .form-group input,
+.page-container .form-group select {
+  background: rgba(6, 18, 12, 0.55) !important;
+  border-color: rgba(126, 184, 145, 0.42) !important;
+  color: #ecfdf5 !important;
+}
+
+.page-container .form-group select option {
+  background: #142e22;
+  color: #ecfdf5;
+}
+
+.page-container .dynamic-table td input,
+.page-container .dynamic-table td select {
+  background: rgba(6, 18, 12, 0.5) !important;
+  border-color: rgba(126, 184, 145, 0.38) !important;
+  color: #ecfdf5 !important;
+}
+
+.page-container .dynamic-table td select option {
+  background: #142e22;
+  color: #ecfdf5;
+}
+
+/* Chrome/Edge: hindi madilaw ang numero sa madilim na field (+ autofill) */
+.page-container .form-group input,
+.page-container .form-group select,
+.page-container .dynamic-table td input,
+.page-container .dynamic-table td select {
+  color-scheme: dark;
+  caret-color: #bbf7d0;
+  -webkit-text-fill-color: #f0fdf4 !important;
+}
+
+.page-container .form-group input::placeholder,
+.page-container .dynamic-table td input::placeholder {
+  opacity: 1;
+  color: rgba(220, 252, 231, 0.7) !important;
+  -webkit-text-fill-color: rgba(220, 252, 231, 0.7) !important;
+}
+
+.page-container .form-group input:disabled {
+  opacity: 0.95;
+  -webkit-text-fill-color: rgba(220, 252, 231, 0.75) !important;
+  color: rgba(220, 252, 231, 0.75) !important;
+}
+
+.page-container .form-group input:-webkit-autofill,
+.page-container .form-group input:-webkit-autofill:hover,
+.page-container .form-group input:-webkit-autofill:focus,
+.page-container .dynamic-table td input:-webkit-autofill,
+.page-container .dynamic-table td input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f0fdf4 !important;
+  caret-color: #bbf7d0;
+  transition: background-color 99999s ease-out 0s;
+  box-shadow: 0 0 0 1000px rgba(6, 18, 12, 0.92) inset !important;
+}
+
+/* Mas malinaw na hierarchy: hindi lahat sapilitang puti */
+.page-container .section-title {
+  color: #bbf7d0 !important;
+  border-bottom-color: rgba(134, 239, 172, 0.35) !important;
+}
+
+.page-container .form-section label {
+  color: rgba(220, 252, 231, 0.88) !important;
+}
+
+.page-container .summary-section .summary-item .summary-label {
+  color: #ecfdf5 !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.page-container .summary-item .summary-label {
+  color: rgba(236, 253, 245, 0.92) !important;
+}
+
+.page-container .summary-item.income .summary-value {
+  color: #93c5fd !important;
+}
+
+.page-container .summary-item.expense .summary-value {
+  color: #fca5a5 !important;
+}
+
+.page-container .summary-item.profit .summary-value {
+  color: #86efac !important;
+}
+
+.page-container .summary-item.loss .summary-value {
+  color: #fca5a5 !important;
+}
+
+.page-container .computed-cell,
+.page-container .total-label,
+.page-container .total-value {
+  color: #ecfdf5 !important;
+}
+
+/* Assistance: labels at badge na dating abo sa madilim na card */
+.page-container .assistance-card .info-label,
+.page-container .assistance-card .notes-label {
+  color: rgba(196, 230, 210, 0.88) !important;
+}
+
+.page-container .assistance-card .quantity-highlight {
+  color: #86efac !important;
+}
+
+.page-container .assistance-card .badge-info {
+  background: rgba(0, 0, 0, 0.28) !important;
+  color: rgba(220, 252, 231, 0.9) !important;
+}
+
+.page-container .info-row.dates-row {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.page-container .modal-footer {
+  border-top: 1px solid rgba(126, 184, 145, 0.2) !important;
+  background: rgba(14, 24, 19, 0.85) !important;
+}
+
+.page-container .tab-btn {
+  background: rgba(20, 34, 26, 0.92) !important;
+  border-color: rgba(126, 184, 145, 0.32) !important;
+  color: #d1fae5 !important;
+}
+
+.page-container .tab-btn:hover:not(.active) {
+  background: rgba(24, 41, 31, 0.96) !important;
+}
+
+.page-container .tab-btn.active {
+  background: #166534 !important;
+  border-color: rgba(134, 239, 172, 0.48) !important;
+  color: #ecfdf5 !important;
+}
+
+.page-container input[type='file'] {
+  color: rgba(236, 253, 245, 0.92);
+  font-size: 0.875rem;
+}
+
+.page-container input[type='file']::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(126, 184, 145, 0.45);
+  background: rgba(22, 101, 52, 0.55);
+  color: #ecfdf5;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.page-container .foundation-summary {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border-color: rgba(126, 184, 145, 0.35) !important;
+  color: rgba(236, 253, 245, 0.92) !important;
+}
+
+.page-container .model-info-box {
+  background: rgba(74, 222, 128, 0.1) !important;
+  border-color: rgba(126, 184, 145, 0.32) !important;
+}
+
+/* Detail modal Teleport — hindi nasa ilalim ng .page-container sa DOM */
+.farmer-income-page-modal.modal-overlay {
+  background: rgba(6, 12, 9, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.farmer-income-page-modal .modal-container {
+  background: rgba(24, 40, 32, 0.99) !important;
+  border: 1px solid rgba(167, 243, 208, 0.35) !important;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45) !important;
+}
+
+.farmer-income-page-modal .modal-body {
+  color: rgba(226, 234, 229, 0.92);
+}
+
+.farmer-income-page-modal .detail-section-title {
+  color: #bbf7d0 !important;
+}
+
+.farmer-income-page-modal .cell-label {
+  color: rgba(220, 252, 231, 0.55) !important;
+}
+
+.farmer-income-page-modal .cell-value {
+  color: #ecfdf5 !important;
+}
+
+.farmer-income-page-modal .detail-table th {
+  background: rgba(20, 83, 45, 0.75) !important;
+  color: #ecfdf5 !important;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.32) !important;
+}
+
+.farmer-income-page-modal .detail-table td {
+  color: #dcfce7 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.farmer-income-page-modal .no-data {
+  color: rgba(220, 252, 231, 0.55) !important;
+}
+
+.farmer-income-page-modal .detail-section {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.farmer-income-page-modal .expense-row {
+  background: rgba(42, 64, 50, 0.72) !important;
+  color: rgba(236, 253, 245, 0.9) !important;
+}
+
+.farmer-income-page-modal .summary-detail-section {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: rgba(126, 184, 145, 0.35) !important;
+}
+
+.farmer-income-page-modal .modal-footer {
+  border-top: 1px solid rgba(126, 184, 145, 0.22) !important;
+  background: rgba(14, 24, 19, 0.9) !important;
+}
+
+.farmer-income-page-modal .btn-close-modal {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(236, 253, 245, 0.95);
+  border-color: rgba(126, 184, 145, 0.35);
+}
+
+.farmer-income-page-modal .btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 @media (max-width: 600px) {

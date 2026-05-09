@@ -1,66 +1,82 @@
 <template>
-  <div class="barangays-page">
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">🏘️ Barangay Management</h1>
+  <div class="page-container barangays-page">
+    <div class="page-header page-header-split">
+      <div class="page-header-text">
+        <h1 class="page-title">Barangay Management</h1>
         <p class="page-subtitle">Manage barangays and land areas</p>
       </div>
-      <button @click="openAddModal" class="btn-primary">
-        <span class="btn-icon">➕</span>
+      <button type="button" @click="openAddModal" class="btn-header-add">
+        <svg class="btn-header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+        </svg>
         Add Barangay
       </button>
     </div>
 
     <!-- Statistics -->
     <div class="stats-grid">
-      <div class="stat-card stat-primary">
-        <div class="stat-icon">🏘️</div>
+      <div class="stat-card stat-total">
+        <div class="stat-icon-wrap" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="stat-svg">
+            <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9 9v0M9 12v0M9 15v0" stroke-linecap="round" />
+          </svg>
+        </div>
         <div class="stat-content">
-          <div class="stat-label">Total Barangays</div>
           <div class="stat-value">{{ totalBarangays }}</div>
+          <div class="stat-label">Total Barangays</div>
         </div>
       </div>
-      <div class="stat-card stat-success">
-        <div class="stat-icon">✓</div>
+      <div class="stat-card stat-active">
+        <div class="stat-icon-wrap stat-icon-accent" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="stat-svg">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
         <div class="stat-content">
-          <div class="stat-label">Active Barangays</div>
           <div class="stat-value">{{ activeBarangays }}</div>
+          <div class="stat-label">Active Barangays</div>
         </div>
       </div>
     </div>
 
     <!-- Search and Filter -->
-    <div class="search-section">
+    <div class="tools-card">
       <div class="search-bar">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon-wrap" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+          </svg>
+        </span>
         <input 
           v-model="searchQuery" 
           type="text" 
           placeholder="Search barangays..."
-          class="search-input"
+          class="toolbar-input search-input-main"
         />
       </div>
       <div class="filter-group">
-        <select v-model="statusFilter" class="filter-select">
+        <select v-model="statusFilter" class="toolbar-select">
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <select v-model="sortBy" class="filter-select">
+        <select v-model="sortBy" class="toolbar-select">
           <option value="name">Sort by Name</option>
-          <option value="area">Sort by Area</option>
+          <option value="area">Sort by Member Land (Ha)</option>
         </select>
       </div>
     </div>
 
     <!-- Barangays Table -->
-    <div class="table-container">
-      <table class="data-table">
+    <div class="card">
+      <div class="table-container">
+      <table class="barangays-table">
         <thead>
           <tr>
             <th>#</th>
             <th>Barangay Name</th>
-            <th>Total Area (Hectares)</th>
+            <th>Land Area (Ha)</th>
             <th>Farmers</th>
             <th>Officers</th>
             <th>Status</th>
@@ -68,78 +84,86 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="filteredBarangays.length === 0">
-            <td colspan="7" class="text-center">
-              No barangays found
-            </td>
+          <tr v-if="loading">
+            <td colspan="7" class="loading-cell">Loading barangays...</td>
           </tr>
+          <tr v-else-if="filteredBarangays.length === 0">
+            <td colspan="7" class="empty-cell">No barangays found</td>
+          </tr>
+          <template v-else>
           <tr v-for="(barangay, index) in filteredBarangays" :key="barangay.id">
             <td>{{ index + 1 }}</td>
-            <td class="font-semibold barangay-name-link" @click="viewBarangayDetails(barangay)">
+            <td class="td-name-link barangay-name-link" @click="viewBarangayDetails(barangay)">
               {{ barangay.name }}
             </td>
-            <td>{{ barangay.total_area || '0' }} ha</td>
-            <td class="text-center">{{ barangay.total_farmers || 0 }}</td>
-            <td class="text-center">{{ barangay.total_officers || 0 }}</td>
+            <td class="area-cell">
+              <span class="area-value">{{ formatHectares(barangay.total_area) }} ha</span>
+            </td>
+            <td class="num-cell">{{ barangay.total_farmers || 0 }}</td>
+            <td class="num-cell">{{ barangay.total_officers || 0 }}</td>
             <td>
-              <span :class="['status-badge', barangay.status]">
+              <span :class="['status-pill', barangay.status]">
                 {{ barangay.status }}
               </span>
             </td>
-            <td class="actions-cell">
-              <button @click="openEditModal(barangay)" class="btn-icon-sm btn-edit" title="Edit">
-                ✏️
+            <td class="td-actions">
+              <div class="action-buttons-row">
+              <button type="button" class="btn-view-area" @click="viewBarangayDetails(barangay)">
+                View
               </button>
-              <button @click="deleteBarangay(barangay)" class="btn-icon-sm btn-delete" title="Delete">
-                🗑️
+              <button type="button" @click="openPlacesModal(barangay)" class="icon-action icon-places" title="Manage Places">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M12 21s-8-5.5-8-11.8A8 8 0 0112 3a8 8 0 018 6.2c0 6.3-8 11.8-8 11.8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="2.75" /></svg>
               </button>
+              <button type="button" @click="openEditModal(barangay)" class="icon-action icon-edit" title="Edit">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2 2 0 000-2.83L17.83 7a2 2 0 00-2.83 0L4 16.5V20z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button type="button" @click="deleteBarangay(barangay)" class="icon-action icon-delete" title="Delete">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M10 11v8M14 11v8M8 7l1 13h6l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              </div>
             </td>
           </tr>
+          </template>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Add/Edit Modal -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h2>{{ editingBarangay ? '✏️ Edit Barangay' : '➕ Add New Barangay' }}</h2>
-          <button @click="closeModal" class="close-btn">×</button>
+          <h2>{{ editingBarangay ? 'Edit Barangay' : 'Add New Barangay' }}</h2>
+          <button type="button" @click="closeModal" class="close-btn" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>Barangay Name *</label>
-            <input 
-              v-model="formData.name" 
-              type="text" 
-              class="form-input"
-              placeholder="Enter barangay name"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label>Total Area (Hectares) *</label>
-            <input 
-              v-model="formData.total_area" 
-              type="number" 
-              step="0.01"
-              class="form-input"
-              placeholder="0.00"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select v-model="formData.status" class="form-input">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+          <p class="form-hint-area">
+            Total land area is computed automatically from registered members’ farm hectares (approved farmers and officers).
+          </p>
+          <div class="compact-form-grid">
+            <div class="form-group">
+              <label>Barangay Name *</label>
+              <input 
+                v-model="formData.name" 
+                type="text" 
+                class="form-input"
+                placeholder="Enter barangay name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select v-model="formData.status" class="form-input">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeModal" class="btn-secondary">Cancel</button>
-          <button @click="saveBarangay" class="btn-primary">
-            {{ editingBarangay ? '💾 Update' : '➕ Add' }}
+          <button type="button" @click="closeModal" class="btn-secondary">Cancel</button>
+          <button type="button" @click="saveBarangay" class="btn-submit">
+            {{ editingBarangay ? 'Update' : 'Add Barangay' }}
           </button>
         </div>
       </div>
@@ -149,34 +173,130 @@
     <div v-if="showDetailsModal" class="modal-overlay" @click="closeDetailsModal">
       <div class="modal-content modal-large" @click.stop>
         <div class="modal-header">
-          <h2>🏘️ {{ selectedBarangay?.name }}</h2>
-          <button @click="closeDetailsModal" class="close-btn">×</button>
+          <h2>{{ selectedBarangay?.name }}</h2>
+          <button type="button" @click="closeDetailsModal" class="close-btn" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
+          <div class="area-summary-card" v-if="selectedBarangay">
+            <div class="area-summary-title">Total land area (approved members)</div>
+            <div class="area-summary-value">{{ formatHectares(detailsTotalLandArea) }} ha</div>
+            <p class="area-summary-note">Sum of hectares reported by each registered farmer and officer below.</p>
+          </div>
+
+          <div class="details-tabs filter-tabs">
+            <button 
+              type="button"
+              @click="activeTab = 'officers'" 
+              :class="['tab', { active: activeTab === 'officers' }]"
+            >
+              Officers ({{ filteredOfficers.length }})
+            </button>
+            <button 
+              type="button"
+              @click="activeTab = 'farmers'" 
+              :class="['tab', { active: activeTab === 'farmers' }]"
+            >
+              Farmers ({{ filteredFarmers.length }})
+            </button>
+            <button 
+              type="button"
+              @click="activeTab = 'places'" 
+              :class="['tab', { active: activeTab === 'places' }]"
+            >
+              Places ({{ places.length }})
+            </button>
+          </div>
+
+          <div class="places-card" v-if="selectedBarangay && activeTab === 'places'">
+            <div class="places-header">
+              <div>
+                <h3>Service Places</h3>
+                <p>Used in machinery booking location choices.</p>
+              </div>
+              <span class="places-count">{{ places.length }} total</span>
+            </div>
+
+            <div class="place-form-row">
+              <input
+                v-model="placeForm.name"
+                type="text"
+                class="form-input"
+                placeholder="Place name (e.g. Sitio Proper)"
+              />
+              <input
+                v-model="placeForm.description"
+                type="text"
+                class="form-input"
+                placeholder="Description (optional)"
+              />
+              <select v-model="placeForm.is_active" class="form-input place-status">
+                <option :value="true">Active</option>
+                <option :value="false">Inactive</option>
+              </select>
+              <button type="button" class="btn-submit btn-place-save" @click="savePlace">
+                {{ editingPlaceId ? 'Update' : 'Add Place' }}
+              </button>
+              <button
+                v-if="editingPlaceId"
+                type="button"
+                class="btn-secondary"
+                @click="resetPlaceForm"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div class="places-table-wrap" v-if="places.length">
+              <table class="places-table">
+                <thead>
+                  <tr>
+                    <th>Place</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="place in places" :key="place.id">
+                    <td class="font-semibold">{{ place.name }}</td>
+                    <td>{{ place.description || '—' }}</td>
+                    <td>
+                      <span :class="['status-badge', place.is_active ? 'active' : 'inactive']">
+                        {{ place.is_active ? 'active' : 'inactive' }}
+                      </span>
+                    </td>
+                    <td class="td-actions">
+                      <div class="action-buttons-row">
+                      <button type="button" class="icon-action icon-edit" title="Edit" @click="startEditPlace(place)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2 2 0 000-2.83L17.83 7a2 2 0 00-2.83 0L4 16.5V20z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                      <button type="button" class="icon-action icon-delete" title="Delete" @click="deletePlace(place)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M10 11v8M14 11v8M8 7l1 13h6l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="empty-state compact" v-else>
+              No service places yet.
+            </div>
+          </div>
+
           <!-- Search Bar -->
-          <div class="modal-search-bar">
-            <span class="search-icon">🔍</span>
+          <div class="modal-search-bar" v-if="activeTab !== 'places'">
+            <span class="search-icon-wrap" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+              </svg>
+            </span>
             <input 
               v-model="memberSearchQuery" 
               type="text" 
               placeholder="Search by name or reference number..."
-              class="search-input"
+              class="toolbar-input modal-search-input"
             />
-          </div>
-
-          <div class="details-tabs">
-            <button 
-              @click="activeTab = 'officers'" 
-              :class="['tab-btn', { active: activeTab === 'officers' }]"
-            >
-              👔 Officers ({{ filteredOfficers.length }})
-            </button>
-            <button 
-              @click="activeTab = 'farmers'" 
-              :class="['tab-btn', { active: activeTab === 'farmers' }]"
-            >
-              👨‍🌾 Farmers ({{ filteredFarmers.length }})
-            </button>
           </div>
 
           <div class="tab-content">
@@ -194,6 +314,7 @@
                     <th>Reference #</th>
                     <th>Full Name</th>
                     <th>Role</th>
+                    <th>Land (Ha)</th>
                     <th>Phone Number</th>
                     <th>Registered On</th>
                   </tr>
@@ -207,6 +328,7 @@
                         {{ officer.role }}
                       </span>
                     </td>
+                    <td>{{ formatHectares(officer.land_area) }}</td>
                     <td>{{ officer.phone_number }}</td>
                     <td>{{ formatDate(officer.registered_on) }}</td>
                   </tr>
@@ -227,6 +349,7 @@
                   <tr>
                     <th>Reference #</th>
                     <th>Full Name</th>
+                    <th>Land (Ha)</th>
                     <th>Phone Number</th>
                     <th>Registered On</th>
                   </tr>
@@ -235,6 +358,7 @@
                   <tr v-for="farmer in filteredFarmers" :key="farmer.id">
                     <td>{{ farmer.reference_number }}</td>
                     <td class="font-semibold">{{ farmer.full_name }}</td>
+                    <td>{{ formatHectares(farmer.land_area) }}</td>
                     <td>{{ farmer.phone_number }}</td>
                     <td>{{ formatDate(farmer.registered_on) }}</td>
                   </tr>
@@ -244,7 +368,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeDetailsModal" class="btn-secondary">Close</button>
+          <button type="button" @click="closeDetailsModal" class="btn-secondary">Close</button>
         </div>
       </div>
     </div>
@@ -254,9 +378,18 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useFarmerStore } from '../stores/farmerStore'
+import { useAuthStore } from '../stores/authStore'
 
 const farmerStore = useFarmerStore()
+const authStore = useAuthStore()
 const isAdmin = computed(() => farmerStore.role === 'admin')
+
+const authHeaders = (json = true) => {
+  const h = {}
+  if (json) h['Content-Type'] = 'application/json'
+  if (authStore.token) h.Authorization = `Bearer ${authStore.token}`
+  return h
+}
 
 const barangays = ref([])
 const loading = ref(false)
@@ -268,7 +401,6 @@ const showModal = ref(false)
 const editingBarangay = ref(null)
 const formData = ref({
   name: '',
-  total_area: '',
   status: 'active'
 })
 
@@ -278,6 +410,13 @@ const activeTab = ref('officers')
 const farmers = ref([])
 const officers = ref([])
 const memberSearchQuery = ref('')
+const places = ref([])
+const editingPlaceId = ref(null)
+const placeForm = ref({
+  name: '',
+  description: '',
+  is_active: true
+})
 
 const totalBarangays = computed(() => barangays.value.length)
 const activeBarangays = computed(() => barangays.value.filter(b => b.status === 'active').length)
@@ -300,6 +439,15 @@ const filteredFarmers = computed(() => {
     farmer.full_name.toLowerCase().includes(query) ||
     farmer.reference_number.toLowerCase().includes(query)
   )
+})
+
+/** Sum of hectares from approved members shown in the details modal */
+const detailsTotalLandArea = computed(() => {
+  const sum = [...officers.value, ...farmers.value].reduce((acc, row) => {
+    const n = parseFloat(row.land_area)
+    return acc + (Number.isFinite(n) ? n : 0)
+  }, 0)
+  return Math.round(sum * 100) / 100
 })
 
 const filteredBarangays = computed(() => {
@@ -347,7 +495,6 @@ const openAddModal = () => {
   editingBarangay.value = null
   formData.value = {
     name: '',
-    total_area: '',
     status: 'active'
   }
   showModal.value = true
@@ -357,7 +504,6 @@ const openEditModal = (barangay) => {
   editingBarangay.value = barangay
   formData.value = {
     name: barangay.name,
-    total_area: barangay.total_area || '',
     status: barangay.status
   }
   showModal.value = true
@@ -368,14 +514,13 @@ const closeModal = () => {
   editingBarangay.value = null
   formData.value = {
     name: '',
-    total_area: '',
     status: 'active'
   }
 }
 
 const saveBarangay = async () => {
-  if (!formData.value.name || formData.value.total_area === '') {
-    alert('Please fill in all required fields')
+  if (!formData.value.name || !String(formData.value.name).trim()) {
+    alert('Barangay name is required')
     return
   }
 
@@ -388,8 +533,11 @@ const saveBarangay = async () => {
 
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData.value)
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name: formData.value.name,
+        status: formData.value.status
+      })
     })
 
     const data = await response.json()
@@ -414,7 +562,8 @@ const deleteBarangay = async (barangay) => {
 
   try {
     const response = await fetch(`http://localhost:3000/api/barangays/${barangay.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: authHeaders(false)
     })
 
     const data = await response.json()
@@ -437,17 +586,27 @@ const viewBarangayDetails = async (barangay) => {
   showDetailsModal.value = true
   
   try {
-    const response = await fetch(`http://localhost:3000/api/barangays/${barangay.id}`)
-    const data = await response.json()
-    
-    if (data.success) {
-      farmers.value = data.farmers || []
-      officers.value = data.officers || []
+    const [detailsRes, placesRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/barangays/${barangay.id}`),
+      fetch(`http://localhost:3000/api/barangays/${barangay.id}/places?active_only=0`)
+    ])
+    const detailsData = await detailsRes.json()
+    const placesData = await placesRes.json()
+
+    if (detailsData.success) {
+      farmers.value = detailsData.farmers || []
+      officers.value = detailsData.officers || []
     }
+    places.value = placesData.success ? (placesData.places || []) : []
   } catch (error) {
     console.error('Error fetching barangay details:', error)
     alert('Failed to load barangay details')
   }
+}
+
+const openPlacesModal = async (barangay) => {
+  await viewBarangayDetails(barangay)
+  activeTab.value = 'places'
 }
 
 const closeDetailsModal = () => {
@@ -455,7 +614,85 @@ const closeDetailsModal = () => {
   selectedBarangay.value = null
   farmers.value = []
   officers.value = []
+  places.value = []
+  resetPlaceForm()
   memberSearchQuery.value = ''
+}
+
+const resetPlaceForm = () => {
+  editingPlaceId.value = null
+  placeForm.value = {
+    name: '',
+    description: '',
+    is_active: true
+  }
+}
+
+const startEditPlace = (place) => {
+  editingPlaceId.value = place.id
+  placeForm.value = {
+    name: place.name || '',
+    description: place.description || '',
+    is_active: !!place.is_active
+  }
+}
+
+const savePlace = async () => {
+  if (!selectedBarangay.value?.id) return
+  if (!String(placeForm.value.name || '').trim()) {
+    alert('Place name is required')
+    return
+  }
+
+  try {
+    const isEdit = !!editingPlaceId.value
+    const endpoint = isEdit
+      ? `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places/${editingPlaceId.value}`
+      : `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places`
+
+    const res = await fetch(endpoint, {
+      method: isEdit ? 'PUT' : 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name: placeForm.value.name,
+        description: placeForm.value.description,
+        is_active: placeForm.value.is_active
+      })
+    })
+    const data = await res.json()
+    if (!data.success) {
+      alert(data.message || 'Failed to save place')
+      return
+    }
+
+    await viewBarangayDetails(selectedBarangay.value)
+    resetPlaceForm()
+  } catch (error) {
+    console.error('Error saving place:', error)
+    alert('Failed to save place')
+  }
+}
+
+const deletePlace = async (place) => {
+  if (!selectedBarangay.value?.id) return
+  if (!confirm(`Delete place "${place.name}"?`)) return
+
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places/${place.id}`,
+      { method: 'DELETE', headers: authHeaders(false) }
+    )
+    const data = await res.json()
+    if (!data.success) {
+      alert(data.message || 'Failed to delete place')
+      return
+    }
+    await viewBarangayDetails(selectedBarangay.value)
+    if (editingPlaceId.value === place.id) resetPlaceForm()
+  } catch (error) {
+    console.error('Error deleting place:', error)
+    alert('Failed to delete place')
+  }
 }
 
 const formatDate = (dateString) => {
@@ -464,296 +701,490 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+const formatHectares = (value) => {
+  if (value == null || value === '') return '0'
+  const n = parseFloat(value)
+  if (!Number.isFinite(n)) return '0'
+  return n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+}
+
 onMounted(() => {
   fetchBarangays()
 })
 </script>
 
 <style scoped>
-.barangays-page {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+.page-container.barangays-page {
+  padding: 2rem;
+  max-width: none;
+  margin: 0 -1.5rem;
+  width: calc(100% + 3rem);
+  min-height: calc(100vh - 70px - 3rem);
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  color: #eefde6;
+  border-radius: 18px;
 }
 
-.page-header {
+.page-header-split {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.4rem 1.1rem;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e5e7eb;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.header-content {
+.page-header-split::before {
+  content: '';
+  position: absolute;
+  top: -62px;
+  right: -72px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.page-header-split::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
+  pointer-events: none;
+}
+
+.page-header-text {
+  position: relative;
+  z-index: 1;
   flex: 1;
+  min-width: 220px;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  color: #eefde6;
 }
 
 .page-subtitle {
-  font-size: 14px;
-  color: #6b7280;
   margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(229, 235, 231, 0.82);
 }
 
-.btn-primary {
-  display: flex;
+.btn-header-add {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  gap: 0.5rem;
+  padding: 0.62rem 1.15rem;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s;
+  color: #14532d;
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.btn-primary:hover {
-  background: #059669;
+.btn-header-add:hover {
+  filter: brightness(1.06);
   transform: translateY(-1px);
 }
 
-.btn-icon {
-  font-size: 18px;
+.btn-header-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .stat-card {
-  background: white;
-  padding: 20px;
+  background: rgba(24, 39, 30, 0.92);
+  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
-  gap: 16px;
-  transition: all 0.2s;
+  gap: 1rem;
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  border-left-width: 4px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24), inset 1px 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.15s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.stat-icon {
-  font-size: 36px;
-  width: 60px;
-  height: 60px;
+.stat-card.stat-total {
+  border-left-color: #3b82f6;
+}
+
+.stat-card.stat-active {
+  border-left-color: #22c55e;
+}
+
+.stat-icon-wrap {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #f3f4f6;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(190, 235, 203, 0.18);
+  color: rgba(186, 240, 200, 0.95);
+}
+
+.stat-icon-accent {
+  color: #86efac;
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.stat-svg {
+  width: 1.65rem;
+  height: 1.65rem;
 }
 
 .stat-content {
   flex: 1;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 4px;
+  min-width: 0;
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #eefde6;
+  line-height: 1.15;
 }
 
-.search-section {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
+.stat-label {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(229, 235, 231, 0.78);
+}
+
+.tools-card {
   display: flex;
-  gap: 16px;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  background: rgba(28, 42, 33, 0.85);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), inset 1px 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .search-bar {
   flex: 1;
-  min-width: 250px;
+  min-width: 240px;
   position: relative;
 }
 
-.search-icon {
+.search-icon-wrap {
   position: absolute;
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
-  color: #9ca3af;
+  display: flex;
+  color: rgba(186, 240, 200, 0.55);
+  pointer-events: none;
 }
 
-.search-input {
+.search-svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.toolbar-input,
+.toolbar-select {
   width: 100%;
-  padding: 10px 10px 10px 40px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
+  padding: 0.62rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.24);
+  color: #eefde6;
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
 }
 
-.search-input:focus {
+.toolbar-select {
+  cursor: pointer;
+  min-width: 150px;
+  width: auto;
+}
+
+.search-input-main {
+  padding-left: 2.5rem;
+}
+
+.toolbar-input:focus,
+.toolbar-select:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: rgba(74, 222, 128, 0.55);
+}
+
+.toolbar-select option {
+  background: #132119;
+  color: #eefde6;
 }
 
 .filter-group {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 0.65rem;
 }
 
-.filter-select {
-  padding: 10px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #10b981;
+.card {
+  background: rgba(28, 42, 33, 0.92);
+  border-radius: 12px;
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  min-height: 200px;
 }
 
 .table-container {
-  background: white;
+  overflow-x: auto;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
 }
 
-.data-table {
+.barangays-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 720px;
 }
 
-.data-table thead {
-  background: #f9fafb;
-}
-
-.data-table th {
-  padding: 16px;
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
-  font-size: 14px;
-}
-
-.data-table td {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
-  color: #1f2937;
-}
-
-.data-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-.text-center {
+.barangays-table th,
+.barangays-table td {
+  padding: 0.62rem 0.48rem;
   text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.barangays-table th:not(:last-child),
+.barangays-table td:not(:last-child) {
+  border-right: 1px solid rgba(203, 213, 225, 0.12);
+}
+
+.barangays-table th {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
+  font-weight: 700;
+  color: rgba(234, 241, 236, 0.94);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.barangays-table td {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: rgba(226, 234, 229, 0.92);
+}
+
+.barangays-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.07) !important;
+}
+
+.loading-cell,
+.empty-cell {
+  text-align: center;
+  padding: 2rem 1rem !important;
+  font-weight: 600;
+  color: rgba(229, 235, 231, 0.72);
+}
+
+.num-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+.area-cell {
+  text-align: center;
+}
+
+.area-value {
+  font-weight: 700;
+  color: #bbf7d0;
+}
+
+.btn-view-area {
+  padding: 0.28rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #14532d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-view-area:hover {
+  filter: brightness(1.08);
+}
+
+.td-name-link {
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.barangay-name-link {
+  cursor: pointer;
+  color: #86efac;
+  transition: color 0.15s ease;
+}
+
+.barangay-name-link:hover {
+  color: #bbf7d0;
+  text-decoration: underline;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  padding: 0.3rem 0.52rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  line-height: 1;
+  border: 1px solid rgba(190, 235, 203, 0.35);
+  background: transparent;
+}
+
+.status-pill.active {
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.55);
+}
+
+.status-pill.inactive {
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.td-actions {
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
+}
+
+.action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(226, 234, 229, 0.9);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-action svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.icon-action:hover {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.icon-places:hover {
+  color: #5eead4;
+}
+
+.icon-edit:hover {
+  color: #93c5fd;
+}
+
+.icon-delete:hover {
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.4);
 }
 
 .font-semibold {
   font-weight: 600;
 }
 
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-badge.active {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.inactive {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.actions-cell {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon-sm {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.btn-edit {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.btn-edit:hover {
-  background: #bfdbfe;
-}
-
-.btn-delete {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.btn-delete:hover {
-  background: #fecaca;
+.text-center {
+  text-align: center;
 }
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(6, 12, 9, 0.72);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  background: rgba(28, 42, 33, 0.96);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -761,39 +1192,81 @@ onMounted(() => {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #eefde6;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 28px;
-  color: #9ca3af;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(190, 235, 203, 0.15);
+  font-size: 1.5rem;
   line-height: 1;
-  padding: 0;
-  width: 32px;
-  height: 32px;
+  color: rgba(229, 235, 231, 0.65);
+  cursor: pointer;
+  width: 2.15rem;
+  height: 2.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: rgba(74, 222, 128, 0.12);
+  color: #eefde6;
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.modal-footer {
+  padding: 0.85rem 1.25rem 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  padding: 0.55rem 1.1rem;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(229, 235, 231, 0.9);
+  border: 1px solid rgba(190, 235, 203, 0.2);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(190, 235, 203, 0.32);
+}
+
+.btn-submit {
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #14532d;
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.btn-submit:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .form-group:last-child {
@@ -802,58 +1275,44 @@ onMounted(() => {
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #374151;
-  font-size: 14px;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: rgba(229, 235, 231, 0.88);
+  font-size: 0.8rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.24);
+  color: #eefde6;
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: rgba(74, 222, 128, 0.55);
 }
 
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+.form-input option {
+  background: #132119;
+  color: #eefde6;
 }
 
-.btn-secondary {
-  padding: 10px 20px;
-  background: #f3f4f6;
-  color: #374151;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
-}
-
-.barangay-name-link {
-  cursor: pointer;
-  color: #2563eb;
-  transition: all 0.2s;
-}
-
-.barangay-name-link:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
+.form-hint-area {
+  margin: 0 0 12px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgba(229, 235, 231, 0.78);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.16);
 }
 
 .modal-large {
@@ -862,128 +1321,305 @@ onMounted(() => {
   overflow-y: auto;
 }
 
-.modal-search-bar {
-  position: relative;
-  margin-bottom: 20px;
+.compact-form-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 10px;
+  align-items: end;
 }
 
-.modal-search-bar .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  color: #9ca3af;
-}
-
-.modal-search-bar .search-input {
-  width: 100%;
-  padding: 10px 10px 10px 40px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.modal-search-bar .search-input:focus {
-  outline: none;
-  border-color: #10b981;
+.filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.35rem;
+  border-bottom: 0 !important;
 }
 
 .details-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
 }
 
-.tab-btn {
-  padding: 12px 24px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  font-weight: 600;
-  color: #6b7280;
+.tab {
+  padding: 0.55rem 1rem;
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s ease;
 }
 
-.tab-btn:hover {
-  color: #1f2937;
-  background: #f9fafb;
+.tab:hover {
+  background: #f0fdf4 !important;
 }
 
-.tab-btn.active {
-  color: #10b981;
-  border-bottom-color: #10b981;
+.tab.active {
+  background: #dcfce7 !important;
+}
+
+.modal-search-bar {
+  position: relative;
+  margin-bottom: 1.1rem;
+}
+
+.modal-search-bar .search-icon-wrap {
+  left: 14px;
+}
+
+.modal-search-input {
+  padding-left: 2.65rem !important;
+  width: 100%;
 }
 
 .tab-content {
-  margin-top: 20px;
+  margin-top: 0.5rem;
 }
 
-.members-table {
+.members-table,
+.places-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.members-table thead {
-  background: #f9fafb;
-}
-
-.members-table th {
-  padding: 12px;
+.members-table th,
+.members-table td,
+.places-table th,
+.places-table td {
+  padding: 0.55rem 0.45rem;
+  font-size: 0.76rem;
   text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
-  font-size: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(226, 234, 229, 0.92);
 }
 
-.members-table td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
-  color: #1f2937;
+.places-table th,
+.places-table td {
+  font-size: 0.74rem;
 }
 
-.members-table tbody tr:hover {
-  background: #f9fafb;
+.members-table th,
+.places-table th {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
+  font-weight: 700;
+  color: rgba(234, 241, 236, 0.94);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.members-table tbody tr:hover,
+.places-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  background: transparent;
+}
+
+.status-badge.active {
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.status-badge.inactive {
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.45);
 }
 
 .role-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 0.22rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: capitalize;
+  border: 1px solid rgba(190, 235, 203, 0.2);
 }
 
 .role-badge.president {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: rgba(99, 102, 241, 0.2);
+  color: #c7d2fe;
 }
 
 .role-badge.treasurer {
-  background: #fce7f3;
-  color: #9f1239;
+  background: rgba(236, 72, 153, 0.18);
+  color: #fbcfe8;
 }
 
 .role-badge.auditor {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fde68a;
 }
 
 .role-badge.operator {
-  background: #e0f2fe;
-  color: #075985;
+  background: rgba(14, 165, 233, 0.2);
+  color: #bae6fd;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: #6b7280;
-  font-size: 14px;
+  padding: 2rem 1rem;
+  color: rgba(229, 235, 231, 0.65);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.empty-state.compact {
+  padding: 1.1rem 0.75rem;
+}
+
+.area-summary-card {
+  margin-bottom: 1.15rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.14) 0%, rgba(16, 185, 129, 0.08) 100%);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 12px;
+}
+
+.area-summary-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(187, 247, 208, 0.92);
+}
+
+.area-summary-value {
+  margin-top: 0.35rem;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #bbf7d0;
+}
+
+.area-summary-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(229, 235, 231, 0.72);
+}
+
+.places-card {
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.places-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.places-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #eefde6;
+}
+
+.places-header p {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: rgba(229, 235, 231, 0.65);
+}
+
+.places-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #14532d;
+  background: #bbf7d0;
+  border: 1px solid rgba(22, 101, 52, 0.35);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.place-form-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.6fr 0.9fr auto auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.place-status {
+  min-width: 110px;
+}
+
+.btn-place-save {
+  white-space: nowrap;
+}
+
+.places-table-wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 1024px) {
+  .page-container.barangays-page {
+    margin: 0 -1rem;
+    width: calc(100% + 2rem);
+  }
+}
+
+@media (min-width: 1400px) {
+  .page-container.barangays-page {
+    margin: 0 -2rem;
+    width: calc(100% + 4rem);
+  }
+}
+
+@media (max-width: 860px) {
+  .place-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container.barangays-page {
+    margin: 0 -0.75rem;
+    width: calc(100% + 1.5rem);
+    padding: 1rem;
+    border-radius: 0;
+  }
+
+  .barangays-table th,
+  .barangays-table td {
+    padding: 0.55rem 0.35rem;
+    font-size: 0.72rem;
+  }
+
+  .table-container {
+    max-height: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container.barangays-page {
+    margin: 0 -0.5rem;
+    width: calc(100% + 1rem);
+  }
 }
 </style>

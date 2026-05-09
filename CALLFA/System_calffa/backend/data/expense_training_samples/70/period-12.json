@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "period_index": 12,
+  "farmer_id": 70,
+  "farmer_member_id": "04-20-26-361-000002",
+  "farmer_full_name": "Faustino Verguerra Aclan",
+  "approximate_year_hint": 2026,
+  "area_hectares": 1.42,
+  "planting_method": "talok",
+  "irrigation_type": "NIA",
+  "land_preparation_cost": 9800,
+  "planting_cost": 6400,
+  "spraying_cost": 4750,
+  "harvester_cost": 7500,
+  "drying_cost": 6550,
+  "hauling_cost": 3400,
+  "tarasko_cost": 2150,
+  "fuel_cost": 4300,
+  "other_expenses": 5050,
+  "total_fertilizer_cost": 16150,
+  "total_pesticide_cost": 8350,
+  "total_labor_cost": 44850,
+  "total_expenses": 74400,
+  "sacks_harvested": 52,
+  "kg_per_sack": 50,
+  "price_per_kg": 32,
+  "gross_income": 83350,
+  "net_income": 8950,
+  "fertilizers_demo": [
+    {
+      "fertilizer_type": "14-14-14",
+      "sacks": 5,
+      "price_per_sack": 1850
+    },
+    {
+      "fertilizer_type": "46-0-0",
+      "sacks": 3,
+      "price_per_sack": 1620
+    }
+  ],
+  "pesticides_demo": [
+    {
+      "pesticide_type": "Carbaryl-based",
+      "quantity": 6,
+      "price_per_unit": 720
+    }
+  ],
+  "notes_ph": "Synthetic expense timeline for demos; modelo sa app ay tinataas lang ang kabuuang gastos sa hakbang ng panahon (walang crop season field)."
+}

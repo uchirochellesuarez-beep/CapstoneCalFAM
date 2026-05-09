@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const pool = require('../db');
 const {
@@ -9,6 +10,273 @@ const {
   normalizePhilippinePhoneNumber,
   sendSmsNotification
 } = require('../services/sms-service');
+const {
+  forecastFutureTotalExpenses,
+  getUserUploadedFoundationSummary,
+  saveUserUploadedFoundation,
+  clearUserUploadedFoundation,
+  MAX_UPLOAD_POINTS,
+  MAX_FOUNDATION_FILE_BYTES,
+} = require('../services/expenseForecastService');
+
+const uploadFoundationMem = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FOUNDATION_FILE_BYTES },
+});
+
+function decodeIncomeJwt(req) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return null;
+  try {
+    const jwt = require('jsonwebtoken');
+    return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+  } catch {
+    return null;
+  }
+}
+
+async function assertExpenseFoundationAccess(req, farmerId) {
+  const decoded = decodeIncomeJwt(req);
+  if (!decoded) {
+    return { ok: false, status: 401, error: 'Hindi authorized. Mag-login muna.' };
+  }
+  const uid = Number(farmerId);
+  if (!Number.isFinite(uid) || uid <= 0) {
+    return { ok: false, status: 400, error: 'Hindi wastong farmer ID.' };
+  }
+  const role = String(decoded.role || '');
+  if (role === 'farmer') {
+    if (Number(decoded.id) !== uid) {
+      return {
+        ok: false,
+        status: 403,
+        error: 'Maaari lamang i-upload ang pundasyon para sa sariling account.',
+      };
+    }
+    return { ok: true, decoded };
+  }
+  if (role === 'president') {
+    const userBarangayId =
+      decoded.barangay_id != null ? Number(decoded.barangay_id) : null;
+    const farmerBarangay = await getFarmerBarangay(uid);
+    if (userBarangayId != null && farmerBarangay !== userBarangayId) {
+      return { ok: false, status: 403, error: 'Access denied. Iba ang barangay.' };
+    }
+    return { ok: true, decoded };
+  }
+  return {
+    ok: false,
+    status: 403,
+    error:
+      'Tanging magsasaka o Barangay President lamang ang maaaring mag-manage ng pundasyong datos ng gastos.',
+  };
+}
+
+/**
+ * Bawat puntos ay dapat may tamang farmer_id (o tumugma ang farmer_id sa ugat ng object
+ * kung walang farmer_id sa bawat elemento) para hindi mahalo ang datos ng ibang magsasaka.
+ * ang period_index ay opsyonal (auto 1,2,3… kung wala).
+ */
+function parseFoundationPointsFromJson(body, expectedFarmerId) {
+  const uid = Number(expectedFarmerId);
+  if (!Number.isFinite(uid) || uid <= 0) {
+    return { ok: false, error: 'Hindi wastong farmer ID sa upload.' };
+  }
+  if (!body || typeof body !== 'object') {
+    return { ok: false, error: 'Hindi wastong JSON.' };
+  }
+  let raw = body.points;
+  if (!Array.isArray(raw) && Array.isArray(body)) raw = body;
+  if (!Array.isArray(raw)) {
+    return {
+      ok: false,
+      error:
+        'Kailangan ng "points" array. Halimbawa: { "farmer_id": ' +
+        uid +
+        ', "points": [ { "farmer_id": ' +
+        uid +
+        ', "total_expenses": 50000, "period_index": 1 } ] } — ang farmer_id sa bawat puntos (o sa ugat) ay dapat ' +
+        uid +
+        '.',
+    };
+  }
+  const rootFarmer =
+    body.farmer_id != null && Number.isFinite(Number(body.farmer_id))
+      ? Number(body.farmer_id)
+      : null;
+  if (rootFarmer != null && rootFarmer !== uid) {
+    return {
+      ok: false,
+      error: `Ang farmer_id sa ugat (${rootFarmer}) ay dapat ${uid} para sa upload na ito.`,
+    };
+  }
+  const points = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const p = raw[i];
+    const rowFarmer =
+      p && p.farmer_id != null && Number.isFinite(Number(p.farmer_id))
+        ? Number(p.farmer_id)
+        : rootFarmer;
+    if (rowFarmer == null || !Number.isFinite(rowFarmer)) {
+      return {
+        ok: false,
+        error: `Kulang o hindi wasto ang farmer_id sa puntos #${i + 1}. Ilagay ang numerong ID ng magsasaka (${uid}) sa bawat elemento, o isang "farmer_id": ${uid} sa ugat ng JSON.`,
+      };
+    }
+    if (rowFarmer !== uid) {
+      return {
+        ok: false,
+        error: `Hindi tumugma ang farmer_id sa puntos #${i + 1} (nakita: ${rowFarmer}; dapat: ${uid}). Hindi ise-save ang file para maiwasan ang paghalo ng record ng ibang magsasaka.`,
+      };
+    }
+    const total = p != null ? parseFloat(p.total_expenses) : NaN;
+    if (!Number.isFinite(total) || total < 0) continue;
+    const periodIndex =
+      p && p.period_index != null && Number.isFinite(Number(p.period_index))
+        ? Number(p.period_index)
+        : points.length + 1;
+    points.push({
+      farmer_id: uid,
+      period_index: periodIndex,
+      total_expenses: total,
+    });
+  }
+  if (points.length === 0) {
+    return { ok: false, error: 'Walang wastong puntos (total_expenses).' };
+  }
+  if (points.length > MAX_UPLOAD_POINTS) {
+    return { ok: false, error: `Labis sa ${MAX_UPLOAD_POINTS} na puntos.` };
+  }
+  return { ok: true, points };
+}
+
+/** Excel-style numbers: "80,000" o "1,234.56" → parseFloat-safe (tinatanggal ang comma bilang thousands separator) */
+function parseLocaleNumberCell(s) {
+  if (s == null) return NaN;
+  let t = String(s).trim().replace(/^["']|["']$/g, '');
+  if (!t) return NaN;
+  const lastComma = t.lastIndexOf(',');
+  const lastDot = t.lastIndexOf('.');
+  if (lastComma >= 0 && lastDot >= 0) {
+    if (lastDot > lastComma) t = t.replace(/,/g, '');
+    else t = t.replace(/\./g, '').replace(',', '.');
+  } else {
+    t = t.replace(/,/g, '');
+  }
+  return parseFloat(t);
+}
+
+function parseFoundationPointsFromText(text, expectedFarmerId) {
+  const uid = Number(expectedFarmerId);
+  if (!Number.isFinite(uid) || uid <= 0) {
+    return { ok: false, error: 'Hindi wastong farmer ID sa upload.' };
+  }
+  const t = String(text || '').trim();
+  if (!t) return { ok: false, error: 'Walang nilalaman ang file.' };
+  if (t.startsWith('[') || t.startsWith('{')) {
+    try {
+      const data = JSON.parse(t);
+      return parseFoundationPointsFromJson(data, uid);
+    } catch {
+      return { ok: false, error: 'Hindi mabasa ang JSON.' };
+    }
+  }
+  const lines = t
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return { ok: false, error: 'Walang linyang CSV.' };
+  let start = 0;
+  let cPeriod = -1;
+  let cTotal = 0;
+  const hdrCells = lines[0].split(',').map((h) => h.trim().toLowerCase());
+  const looksHeader =
+    hdrCells.some((h) => h.includes('total')) ||
+    hdrCells.some((h) => h.includes('gastos')) ||
+    hdrCells.some((h) => h.includes('expense')) ||
+    hdrCells.some((h) => h === 'farmer_id' || h.includes('farmer'));
+  let cFarmer = -1;
+  if (looksHeader) {
+    cFarmer = hdrCells.findIndex(
+      (h) => h === 'farmer_id' || h === 'farmer' || (h.includes('farmer') && h.includes('id'))
+    );
+    cTotal = hdrCells.findIndex(
+      (h) =>
+        h === 'total_expenses' ||
+        (h.includes('total') && h.includes('expense')) ||
+        h.includes('kabuuang') ||
+        h === 'gastos'
+    );
+    if (cTotal < 0) cTotal = Math.max(0, hdrCells.length - 1);
+    cPeriod = hdrCells.findIndex(
+      (h) => h.includes('period') || h.includes('index') || h.includes('panahon')
+    );
+    start = 1;
+    if (cFarmer < 0) {
+      return {
+        ok: false,
+        error:
+          'Kailangan ng column na farmer_id sa CSV (hal. farmer_id,total_expenses o farmer_id,period_index,total_expenses).',
+      };
+    }
+  } else if (hdrCells.length >= 2) {
+    cFarmer = 0;
+    cPeriod = hdrCells.length >= 3 ? 1 : -1;
+    cTotal = hdrCells.length >= 3 ? 2 : 1;
+    start = 0;
+  } else {
+    return {
+      ok: false,
+      error:
+        'Ang CSV ay dapat may hindi bababa sa 2 column: farmer_id, total_expenses (o may header na may farmer_id).',
+    };
+  }
+  const headerColCount = looksHeader ? hdrCells.length : 0;
+  const points = [];
+  for (let li = start; li < lines.length; li += 1) {
+    let parts = lines[li]
+      .split(',')
+      .map((c) => c.trim().replace(/^["']|["']$/g, ''));
+    if (parts.length === 0) continue;
+    if (looksHeader && headerColCount >= 2 && parts.length > headerColCount) {
+      const merged = parts.slice(0, headerColCount - 1);
+      merged.push(parts.slice(headerColCount - 1).join(','));
+      parts = merged;
+    } else if (!looksHeader && parts.length >= 2) {
+      const expectCols = cPeriod >= 0 ? 3 : 2;
+      if (parts.length > expectCols) {
+        const merged = parts.slice(0, expectCols - 1);
+        merged.push(parts.slice(expectCols - 1).join(','));
+        parts = merged;
+      }
+    }
+    const rowFarmer = parseLocaleNumberCell(parts[cFarmer] != null ? parts[cFarmer] : '');
+    if (!Number.isFinite(rowFarmer) || rowFarmer !== uid) {
+      return {
+        ok: false,
+        error: `Hindi tumugma ang farmer_id sa hilera ${li + 1} ng CSV (nakita: ${parts[cFarmer] || '—'}; dapat: ${uid}).`,
+      };
+    }
+    const total = parseLocaleNumberCell(parts[cTotal] != null ? parts[cTotal] : parts[0]);
+    const periodRaw =
+      cPeriod >= 0 && parts[cPeriod] != null
+        ? parseLocaleNumberCell(parts[cPeriod])
+        : NaN;
+    if (!Number.isFinite(total) || total < 0) continue;
+    points.push({
+      farmer_id: uid,
+      period_index: Number.isFinite(periodRaw) ? periodRaw : points.length + 1,
+      total_expenses: total,
+    });
+  }
+  if (points.length === 0) {
+    return { ok: false, error: 'Walang wastong hilera sa CSV.' };
+  }
+  if (points.length > MAX_UPLOAD_POINTS) {
+    return { ok: false, error: `Labis sa ${MAX_UPLOAD_POINTS} na puntos.` };
+  }
+  return { ok: true, points };
+}
 
 // Helper to get user barangay from token
 const getUserBarangayFromToken = (req) => {
@@ -286,6 +554,146 @@ router.get('/by-barangay/:barangayId', async (req, res) => {
   } catch (err) {
     console.error('Error fetching barangay income records:', err);
     res.status(500).json({ error: 'Hindi makuha ang mga talaan.' });
+  }
+});
+
+// GET /api/farmer-income/expense-forecast/:farmerId — Python sklearn (kapag ML_API_URL) / Node OLS fallback
+router.get('/expense-forecast/:farmerId', async (req, res) => {
+  try {
+    const { farmerId } = req.params;
+    const uid = Number(farmerId);
+    if (!Number.isFinite(uid)) {
+      return res.status(400).json({ ok: false, error: 'Hindi wastong farmer ID.' });
+    }
+
+    const userBarangayId = getUserBarangayFromToken(req);
+    const farmerBarangay = await getFarmerBarangay(uid);
+    if (userBarangayId && farmerBarangay !== userBarangayId) {
+      return res.status(403).json({
+        ok: false,
+        error: 'Access denied. Cannot forecast for other barangays.',
+      });
+    }
+
+    const decodedFc = decodeIncomeJwt(req);
+    if (
+      decodedFc &&
+      String(decodedFc.role) === 'farmer' &&
+      Number(decodedFc.id) !== uid
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: 'Access denied.',
+      });
+    }
+
+    const [records] = await pool.execute(
+      `SELECT * FROM farmer_income_records WHERE farmer_id = ?`,
+      [uid]
+    );
+
+    const result = await forecastFutureTotalExpenses(uid, records);
+    res.json(result);
+  } catch (err) {
+    console.error('Error forecasting farmer expenses:', err);
+    res.status(500).json({ ok: false, error: 'Hindi matagumpay ang paghula.' });
+  }
+});
+
+// GET /api/farmer-income/barangay-farmers/:barangayId — approved farmers list (president: expense foundation UI)
+router.get('/barangay-farmers/:barangayId', async (req, res) => {
+  try {
+    const decoded = decodeIncomeJwt(req);
+    if (!decoded) {
+      return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    }
+    if (String(decoded.role) !== 'president') {
+      return res.status(403).json({ ok: false, error: 'Access denied.' });
+    }
+    const bid = Number(req.params.barangayId);
+    if (!Number.isFinite(bid)) {
+      return res.status(400).json({ ok: false, error: 'Hindi wastong barangay ID.' });
+    }
+    if (Number(decoded.barangay_id) !== bid) {
+      return res.status(403).json({ ok: false, error: 'Access denied.' });
+    }
+    const [rows] = await pool.execute(
+      `SELECT id, full_name, reference_number
+       FROM farmers
+       WHERE barangay_id = ? AND role = 'farmer' AND status = 'approved'
+       ORDER BY full_name ASC`,
+      [bid]
+    );
+    res.json({ ok: true, farmers: rows });
+  } catch (err) {
+    console.error('barangay-farmers:', err);
+    res.status(500).json({ ok: false, error: 'Hindi makuha ang listahan.' });
+  }
+});
+
+// GET /api/farmer-income/expense-history-foundation/:farmerId — count / preview of uploaded foundation
+router.get('/expense-history-foundation/:farmerId', async (req, res) => {
+  try {
+    const gate = await assertExpenseFoundationAccess(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
+    }
+    const summary = getUserUploadedFoundationSummary(req.params.farmerId);
+    res.json(summary);
+  } catch (err) {
+    console.error('expense-history-foundation GET:', err);
+    res.status(500).json({ ok: false, error: 'Hindi makuha ang impormasyon.' });
+  }
+});
+
+// POST /api/farmer-income/expense-history-foundation/:farmerId — JSON body { points } or multipart file (.json/.csv)
+router.post(
+  '/expense-history-foundation/:farmerId',
+  uploadFoundationMem.single('file'),
+  async (req, res) => {
+    try {
+      const gate = await assertExpenseFoundationAccess(req, req.params.farmerId);
+      if (!gate.ok) {
+        return res.status(gate.status).json({ ok: false, error: gate.error });
+      }
+      const uid = Number(req.params.farmerId);
+
+      let parsed;
+      if (req.file && req.file.buffer) {
+        parsed = parseFoundationPointsFromText(req.file.buffer.toString('utf8'), uid);
+      } else {
+        parsed = parseFoundationPointsFromJson(req.body, uid);
+      }
+      if (!parsed.ok) {
+        return res.status(400).json({ ok: false, error: parsed.error });
+      }
+
+      const n = saveUserUploadedFoundation(uid, parsed.points);
+      res.json({
+        ok: true,
+        message: `Nai-save ang ${n} puntong pundasyon para sa paghula.`,
+        count: n,
+        farmer_id: uid,
+      });
+    } catch (err) {
+      console.error('expense-history-foundation POST:', err);
+      res.status(500).json({ ok: false, error: 'Hindi na-save ang pundasyon.' });
+    }
+  }
+);
+
+// DELETE /api/farmer-income/expense-history-foundation/:farmerId — remove uploaded foundation
+router.delete('/expense-history-foundation/:farmerId', async (req, res) => {
+  try {
+    const gate = await assertExpenseFoundationAccess(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
+    }
+    clearUserUploadedFoundation(req.params.farmerId);
+    res.json({ ok: true, message: 'Naalis ang naka-upload na pundasyon.' });
+  } catch (err) {
+    console.error('expense-history-foundation DELETE:', err);
+    res.status(500).json({ ok: false, error: 'Hindi naalis ang pundasyon.' });
   }
 });
 
@@ -789,8 +1197,11 @@ router.post('/distribution/create', async (req, res) => {
     const assistanceLabel = getAssistanceLabel(assistance_type);
     const smsMessage = buildAssistanceSmsMessage({
       farmerName: record.farmer_name,
-      assistanceLabel,
-      notes
+      assistanceType: assistance_type,
+      quantity,
+      unit,
+      notes,
+      assistanceLabel
     });
 
     // Insert distribution record
@@ -817,7 +1228,7 @@ router.post('/distribution/create', async (req, res) => {
     await conn.commit();
     transactionCommitted = true;
 
-    const notificationMessage = `Hello ${record.farmer_name}, you have been approved to receive ${assistanceLabel}. Please wait for further instructions regarding the schedule and distribution details.`;
+    const notificationMessage = smsMessage;
     let notificationCreated = false;
     let smsResult = {
       success: false,
@@ -1002,13 +1413,18 @@ router.post('/distribution/:id/retry-sms', async (req, res) => {
     }
 
     const assistanceLabel = getAssistanceLabel(distribution.assistance_type);
-    const smsMessage = distribution.sms_message || buildAssistanceSmsMessage({
-      farmerName: distribution.farmer_name,
-      assistanceLabel,
-      notes: distribution.notes
-    });
+    const smsMessage =
+      distribution.sms_message ||
+      buildAssistanceSmsMessage({
+        farmerName: distribution.farmer_name,
+        assistanceType: distribution.assistance_type,
+        quantity: distribution.quantity,
+        unit: distribution.unit,
+        notes: distribution.notes,
+        assistanceLabel
+      });
 
-    const notificationMessage = `Hello ${distribution.farmer_name}, you have been approved to receive ${assistanceLabel}. Please wait for further instructions regarding the schedule and distribution details.`;
+    const notificationMessage = smsMessage;
     await createIncomeAssistanceNotification({
       farmerId: distribution.farmer_id,
       distributionId: distribution.id,
@@ -1081,6 +1497,13 @@ router.put('/distribution/:id/confirm', async (req, res) => {
       [userId, id]
     );
 
+    const [distRowsAfter] = await conn.execute(
+      `SELECT id, farmer_id, barangay_id, assistance_type, quantity, received_date, status
+       FROM income_assistance_distributions WHERE id = ?`,
+      [id]
+    );
+    const distAfter = distRowsAfter[0];
+
     // Update the income record status to 'Received' if all distributions are confirmed
     const recordId = dist.income_record_id;
     const [allDistributions] = await conn.execute(
@@ -1101,7 +1524,10 @@ router.put('/distribution/:id/confirm', async (req, res) => {
     }
 
     await conn.commit();
-    res.json({ message: 'Matagumpay na nakonpirma ang pagkuha ng assistance!' });
+    res.json({
+      message: 'Matagumpay na nakonpirma ang pagkuha ng assistance!',
+      distribution: distAfter,
+    });
   } catch (err) {
     await conn.rollback();
     console.error('Error confirming distribution:', err);

@@ -45,7 +45,7 @@
           <span class="nav-icon">👥</span>
           <span class="nav-text">Members</span>
         </router-link>
-        <router-link to="/system-activity" class="quick-nav-item">
+        <router-link to="/dashboard" class="quick-nav-item">
           <span class="nav-icon">📋</span>
           <span class="nav-text">System Activity</span>
         </router-link>
@@ -282,7 +282,7 @@
         <div class="section-header">
           <span class="section-icon">📋</span>
           <h3>System Activity</h3>
-          <router-link to="/system-activity" class="view-all-link">View →</router-link>
+          <router-link to="/dashboard" class="view-all-link">View →</router-link>
         </div>
         <div class="section-body">
           <p class="description">Monitor system-wide activities and events.</p>

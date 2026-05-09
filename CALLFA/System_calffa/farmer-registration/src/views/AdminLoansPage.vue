@@ -8,49 +8,63 @@
     <!-- Loan Statistics -->
     <div class="stats-grid">
       <div class="stat-card pending">
-        <div class="stat-icon">⏳</div>
+        <div class="stat-icon">
+          <img :src="pendingApplicationsIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.pending }}</div>
           <div class="stat-label">Pending Applications</div>
         </div>
       </div>
       <div class="stat-card approved">
-        <div class="stat-icon">✓</div>
+        <div class="stat-icon">
+          <img :src="approvedLoansIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.approved }}</div>
           <div class="stat-label">Approved Loans</div>
         </div>
       </div>
       <div class="stat-card active">
-        <div class="stat-icon">💳</div>
+        <div class="stat-icon">
+          <img :src="partialPaidIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.active }}</div>
           <div class="stat-label">Partial Paid</div>
         </div>
       </div>
       <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white;">
-        <div class="stat-icon">⚠️</div>
+        <div class="stat-icon">
+          <img :src="overdueLoansIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.overdue }}</div>
           <div class="stat-label">Overdue Loans</div>
         </div>
       </div>
       <div class="stat-card paid">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon">
+          <img :src="fullPaidIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.paid }}</div>
           <div class="stat-label">Full Paid</div>
         </div>
       </div>
       <div class="stat-card rejected">
-        <div class="stat-icon">✗</div>
+        <div class="stat-icon">
+          <img :src="rejectedApplicationsIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.rejected }}</div>
           <div class="stat-label">Rejected Applications</div>
         </div>
       </div>
       <div class="stat-card total">
-        <div class="stat-icon">💵</div>
+        <div class="stat-icon">
+          <img :src="totalLoanAmountIcon" alt="" class="stat-icon-image" aria-hidden="true" />
+        </div>
         <div class="stat-content">
           <div class="stat-value">₱{{ stats.totalAmount.toLocaleString() }}</div>
           <div class="stat-label">Total Loan Amount</div>
@@ -81,7 +95,6 @@
       <button
         :class="['tab', { active: activeTab === 'overdue' }]"
         @click="activeTab = 'overdue'"
-        style="color: #d32f2f; font-weight: bold;"
       >
         ⚠️ Overdue ({{ stats.overdue }})
       </button>
@@ -109,18 +122,30 @@
     <div class="card">
       <div class="table-container">
         <table class="loans-table">
+          <colgroup>
+            <col class="col-name" />
+            <col class="col-amount" />
+            <col class="col-purpose" />
+            <col class="col-payer" />
+            <col class="col-date" />
+            <col class="col-date" />
+            <col class="col-date" />
+            <col class="col-term" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
-              <th>Farmer Name</th>
-              <th>Amount</th>
-              <th>Purpose</th>
-              <th>Payer Status</th>
-              <th>Application Date</th>
-              <th>Approved Date</th>
-              <th>Last Payment Date</th>
-              <th>Payment Term</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th class="th-name">Farmer Name</th>
+              <th class="th-amount">Amount</th>
+              <th class="th-purpose">Purpose</th>
+              <th class="th-payer">Payer Status</th>
+              <th class="th-date">Application Date</th>
+              <th class="th-date">Approved Date</th>
+              <th class="th-date">Last Payment Date</th>
+              <th class="th-term">Payment Term</th>
+              <th class="th-status">Status</th>
+              <th class="th-actions">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -131,12 +156,12 @@
               <td colspan="10" class="empty-cell">No loans found</td>
             </tr>
             <tr v-else v-for="loan in filteredLoans" :key="loan.id" :data-loan-id="loan.id" :class="{ 'notification-highlight-row': highlightedLoanId == loan.id }">
-              <td>{{ loan.full_name }}</td>
-              <td class="amount">
+              <td class="td-name">{{ loan.full_name }}</td>
+              <td class="td-amount amount">
                 ₱{{ (loan.status === 'active' ? (loan.remaining_balance || 0) : loan.loan_amount).toLocaleString() }}
               </td>
-              <td>{{ formatPurpose(loan.loan_purpose) }}</td>
-              <td>
+              <td class="td-purpose">{{ formatPurpose(loan.loan_purpose) }}</td>
+              <td class="td-payer">
                 <div v-if="getPayerAssessment(loan.farmer_id)" class="payer-cell">
                   <div :class="['payer-badge', getPayerAssessment(loan.farmer_id).assessment.riskLevel.toLowerCase()]">
                     <span class="payer-icon">{{ getPayerAssessmentIcon(getPayerAssessment(loan.farmer_id).assessment.classification) }}</span>
@@ -145,28 +170,28 @@
                   <div class="payer-reason">
                     <span class="credit-score">Credit Score: <strong>{{ getPayerAssessment(loan.farmer_id).assessment.creditScore }}/100</strong></span>
                     <div class="score-factors">
-                      <span title="Payment History (40% weight)">📋 {{ getPayerAssessment(loan.farmer_id).scoreComponents.paymentHistoryScore }}%</span>
-                      <span title="Default History (30% weight)">🛡️ {{ getPayerAssessment(loan.farmer_id).scoreComponents.defaultHistoryScore }}%</span>
-                      <span title="Loan Volume (15% weight)">📊 {{ getPayerAssessment(loan.farmer_id).scoreComponents.loanVolumeScore }}%</span>
-                      <span title="Activity Recency (15% weight)">🕐 {{ getPayerAssessment(loan.farmer_id).scoreComponents.activityRecencyScore }}%</span>
+                      <span title="Payment History (40% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.paymentHistoryScore }}%</span>
+                      <span title="Default History (30% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.defaultHistoryScore }}%</span>
+                      <span title="Loan Volume (15% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.loanVolumeScore }}%</span>
+                      <span title="Activity Recency (15% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.activityRecencyScore }}%</span>
                     </div>
-                    <span class="payer-desc">{{ getPayerAssessment(loan.farmer_id).assessment.description }}</span>
                   </div>
                 </div>
-                <div v-else class="payer-badge loading">
-                  <span>⏳ Loading...</span>
+                <div v-else class="payer-badge unknown">
+                  <span class="payer-icon">-</span>
+                  <span class="payer-text">Not Available</span>
                 </div>
               </td>
-              <td>{{ formatDate(loan.application_date) }}</td>
-              <td>{{ formatDate(loan.approval_date) }}</td>
-              <td>{{ formatDate(loan.last_payment_date) }}</td>
-              <td>{{ loan.payment_term }} months</td>
-              <td>
+              <td class="td-date">{{ formatDate(loan.application_date) }}</td>
+              <td class="td-date">{{ formatDate(loan.approval_date) }}</td>
+              <td class="td-date">{{ formatDate(loan.last_payment_date) }}</td>
+              <td class="td-term">{{ loan.payment_term }} months</td>
+              <td class="td-status">
                 <span :class="['status-badge', loan.status]">
                   {{ loan.status }}
                 </span>
               </td>
-              <td>
+              <td class="td-actions">
                 <div class="action-buttons">
                   <button
                     v-if="loan.status === 'pending'"
@@ -174,7 +199,7 @@
                     class="btn btn-approve"
                     title="Approve Loan"
                   >
-                    ✓ Approve
+                    Approve
                   </button>
                   <button
                     v-if="loan.status === 'pending'"
@@ -182,7 +207,7 @@
                     class="btn btn-reject"
                     title="Reject Loan"
                   >
-                    ✗ Reject
+                    Reject
                   </button>
                   <button
                     v-if="(loan.status === 'approved' || loan.status === 'active') && canRecordPayment(loan)"
@@ -190,7 +215,7 @@
                     class="btn btn-payment"
                     title="Record Payment"
                   >
-                    💵 Record Payment
+                    Record Payment
                   </button>
                   <button
                     v-else-if="loan.status === 'approved' || loan.status === 'active'"
@@ -199,14 +224,14 @@
                     :title="`You cannot record payments for ${loan.applicant_role === 'treasurer' ? 'Treasurer' : loan.applicant_role === 'president' ? 'President' : 'this'} loans`"
                     disabled
                   >
-                    💵 Record Payment
+                    Record Payment
                   </button>
                   <button
                     @click="viewLoanDetails(loan)"
                     class="btn btn-view"
                     title="View Details"
                   >
-                    👁 View
+                    View
                   </button>
                 </div>
               </td>
@@ -542,6 +567,13 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import pendingApplicationsIcon from '../assets/icon-loan-pending.svg'
+import approvedLoansIcon from '../assets/icon-loan-approved.svg'
+import partialPaidIcon from '../assets/icon-loan-partial.svg'
+import overdueLoansIcon from '../assets/icon-loan-overdue.svg'
+import fullPaidIcon from '../assets/icon-loan-paid.svg'
+import rejectedApplicationsIcon from '../assets/icon-loan-rejected.svg'
+import totalLoanAmountIcon from '../assets/icon-loan-total.svg'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -627,9 +659,9 @@ const filteredLoans = computed(() => {
 const pageTitle = computed(() => {
   const userRole = authStore.currentUser?.role;
   if (userRole === 'president') {
-    return '💰 Treasurer Loan Approvals';
+    return 'Treasurer Loan Approvals';
   }
-  return '💰 Loan Management';
+  return 'Loan Management';
 })
 
 const pageSubtitle = computed(() => {
@@ -721,9 +753,9 @@ async function fetchLoans() {
         // Admin sees all loans
         loans.value = data.loans;
       }
-      
-      // Fetch ML assessments for all unique farmers in the loans
-      await fetchFarmerAssessments();
+
+      // Fetch payer assessments for loan table badges
+      await fetchFarmerAssessments()
     }
   } catch (error) {
     console.error('Error fetching loans:', error)
@@ -735,31 +767,30 @@ async function fetchLoans() {
 
 async function fetchFarmerAssessments() {
   try {
-    const uniqueFarmerIds = [...new Set(loans.value.map(l => l.farmer_id))];
-    
+    const uniqueFarmerIds = [...new Set(loans.value.map(l => l.farmer_id))]
+
     for (const farmerId of uniqueFarmerIds) {
       try {
-        const token = authStore.token;
+        const token = authStore.token
         const headers = {
           'Content-Type': 'application/json'
-        };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
         }
-        
-        const response = await fetch(`/api/ml-assessments/farmer/${farmerId}`, { headers });
-        const data = await response.json();
-        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        const response = await fetch(`/api/ml-assessments/farmer/${farmerId}`, { headers })
+        const data = await response.json()
+
         if (data.success) {
-          farmerAssessments.value[farmerId] = data.data;
+          farmerAssessments.value[farmerId] = data.data
         }
       } catch (error) {
-        console.error(`Error fetching assessment for farmer ${farmerId}:`, error);
-        // Continue with next farmer if one fails
+        console.error(`Error fetching assessment for farmer ${farmerId}:`, error)
       }
     }
   } catch (error) {
-    console.error('Error fetching farmer assessments:', error);
+    console.error('Error fetching farmer assessments:', error)
   }
 }
 
@@ -768,18 +799,7 @@ function getPayerAssessment(farmerId) {
 }
 
 function getPayerAssessmentIcon(classification) {
-  switch (classification) {
-    case 'GOOD_PAYER':
-      return '🟢';
-    case 'AVERAGE_PAYER':
-      return '🟡';
-    case 'HIGH_RISK_PAYER':
-      return '🔴';
-    case 'NEW_BORROWER':
-      return '🔵';
-    default:
-      return '⭕';
-  }
+  return ''
 }
 
 function formatPayerStatus(classification) {
@@ -1121,19 +1141,52 @@ onUnmounted(() => {
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.4rem;
+  padding: 1.2rem 1.4rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -62px;
+  right: -72px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, rgba(74, 222, 128, 0) 68%);
+  pointer-events: none;
 }
 
 .page-title {
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
   color: #1e293b;
-  margin-bottom: 0.5rem;
 }
 
 .page-subtitle {
   color: #64748b;
   font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.45rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
 }
 
 /* Stats Grid */
@@ -1180,7 +1233,19 @@ onUnmounted(() => {
 }
 
 .stat-icon {
-  font-size: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 
 .stat-value {
@@ -1243,26 +1308,95 @@ onUnmounted(() => {
 /* Table */
 .table-container {
   overflow-x: auto;
+  border-radius: 12px;
 }
 
 .loans-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 0;
 }
 
 .loans-table th,
 .loans-table td {
-  padding: 1rem;
-  text-align: left;
+  padding: 0.62rem 0.48rem;
+  text-align: center;
   border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.loans-table th:not(:last-child),
+.loans-table td:not(:last-child) {
+  border-right: 1px solid rgba(203, 213, 225, 0.22);
 }
 
 .loans-table th {
   background: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
   color: #475569;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.loans-table td {
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.loans-table col.col-name { width: 13%; }
+.loans-table col.col-amount { width: 9%; }
+.loans-table col.col-purpose { width: 10%; }
+.loans-table col.col-payer { width: 18%; }
+.loans-table col.col-date { width: 9%; }
+.loans-table col.col-term { width: 8%; }
+.loans-table col.col-status { width: 9%; }
+.loans-table col.col-actions { width: 17%; }
+
+.td-name {
+  font-weight: 700;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.td-purpose {
+  text-align: center;
+  word-break: break-word;
+}
+
+.th-payer,
+.td-payer,
+.th-actions,
+.td-actions {
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
+}
+
+.th-date,
+.td-date,
+.th-term,
+.td-term,
+.th-status,
+.td-status {
+  text-align: center !important;
+}
+
+.th-date,
+.th-term {
+  white-space: normal;
+  line-height: 1.2;
+  font-size: 0.66rem;
+}
+
+.td-date,
+.td-term,
+.td-status {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
 }
 
 .loans-table tbody tr:hover {
@@ -1270,41 +1404,50 @@ onUnmounted(() => {
 }
 
 .amount {
-  font-weight: 600;
+  font-weight: 800;
   color: #059669;
+  white-space: normal;
 }
 
 .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  padding: 0.3rem 0.52rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  line-height: 1;
+  white-space: nowrap;
+  background: transparent !important;
+  border: 1px solid rgba(190, 235, 203, 0.35);
 }
 
 .status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
+  color: #facc15;
+  border-color: rgba(245, 158, 11, 0.55);
 }
 
 .status-badge.approved {
-  background: #d1fae5;
-  color: #065f46;
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.55);
 }
 
 .status-badge.rejected {
-  background: #fee2e2;
-  color: #991b1b;
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.58);
 }
 
 .status-badge.active {
-  background: #dbeafe;
-  color: #1e40af;
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.55);
 }
 
 .status-badge.paid {
-  background: #d1fae5;
-  color: #059669;
+  color: #6ee7b7;
+  border-color: rgba(5, 150, 105, 0.58);
 }
 
 .loading-cell,
@@ -1317,54 +1460,62 @@ onUnmounted(() => {
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.22rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.32rem 0.4rem;
   border: none;
   border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1.1;
 }
 
 .btn-approve {
-  background: #10b981;
-  color: white;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  color: #14532d;
+  border: 1px solid rgba(22, 163, 74, 0.35);
 }
 
 .btn-approve:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
 }
 
 .btn-reject {
-  background: #ef4444;
-  color: white;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.28);
 }
 
 .btn-reject:hover {
-  background: #dc2626;
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
 }
 
 .btn-payment {
-  background: #8b5cf6;
-  color: white;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #5b21b6;
+  border: 1px solid rgba(124, 58, 237, 0.24);
 }
 
 .btn-payment:hover {
-  background: #7c3aed;
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
 }
 
 .btn-view {
-  background: #3b82f6;
-  color: white;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid rgba(22, 163, 74, 0.3);
 }
 
 .btn-view:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
 }
 
 .btn-cancel {
@@ -1660,6 +1811,22 @@ onUnmounted(() => {
     padding: 1rem;
   }
 
+  .page-header {
+    margin-bottom: 1.8rem;
+    padding: 1.1rem 1rem 1rem;
+    gap: 0.45rem;
+  }
+
+  .page-title {
+    font-size: 1.55rem;
+    line-height: 1.25;
+  }
+
+  .page-subtitle {
+    font-size: 0.96rem;
+    line-height: 1.45;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -1699,21 +1866,21 @@ onUnmounted(() => {
 }
 
 .payer-badge.low {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
+  background: rgba(134, 239, 172, 0.28);
+  color: #d9fbe8;
+  border: 1px solid rgba(134, 239, 172, 0.55);
 }
 
 .payer-badge.medium {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background: rgba(253, 224, 71, 0.24);
+  color: #fef3c7;
+  border: 1px solid rgba(250, 204, 21, 0.5);
 }
 
 .payer-badge.high {
-  background: #fee2e2;
-  color: #7f1d1d;
-  border: 1px solid #fca5a5;
+  background: rgba(248, 113, 113, 0.25);
+  color: #fee2e2;
+  border: 1px solid rgba(248, 113, 113, 0.55);
 }
 
 .payer-badge.loading {
@@ -1723,13 +1890,13 @@ onUnmounted(() => {
 }
 
 .payer-badge.unknown {
-  background: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
+  background: rgba(125, 211, 252, 0.2);
+  color: #dbeafe;
+  border: 1px solid rgba(125, 211, 252, 0.48);
 }
 
 .payer-icon {
-  font-size: 1.1rem;
+  display: none;
 }
 
 .payer-text {
@@ -1739,16 +1906,19 @@ onUnmounted(() => {
 .payer-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.22rem;
+  min-width: 0;
+  align-items: center;
+  text-align: center;
 }
 
 .payer-reason {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.75rem;
+  gap: 0.14rem;
+  font-size: 0.65rem;
   color: #555;
-  line-height: 1.3;
+  line-height: 1.15;
 }
 
 .credit-score {
@@ -1757,10 +1927,11 @@ onUnmounted(() => {
 
 .score-factors {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.24rem;
   flex-wrap: wrap;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   color: #6b7280;
+  justify-content: center;
 }
 
 .score-factors span {
@@ -1770,6 +1941,172 @@ onUnmounted(() => {
 .payer-desc {
   font-style: italic;
   color: #6b7280;
-  font-size: 0.7rem;
+  font-size: 0.76rem;
+}
+
+/* Dashboard theme override */
+.page-container {
+  min-height: 100vh;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  color: #eefde6;
+  border-radius: 18px;
+}
+
+.page-header,
+.card,
+.modal-content,
+.summary-card,
+.alert-card {
+  background: rgba(28, 42, 33, 0.92) !important;
+  border: 1px solid rgba(190, 235, 203, 0.14) !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+.stat-card:not([style]) {
+  background: rgba(24, 39, 30, 0.92) !important;
+  border: 1px solid rgba(190, 235, 203, 0.14) !important;
+  border-left-width: 4px !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24), inset 1px 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+.stat-card[style] {
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-left-width: 4px !important;
+}
+
+.page-header {
+  padding: 1.35rem 1.5rem 1.2rem !important;
+  margin-bottom: 2.5rem !important;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.15rem 1rem 1rem !important;
+    margin-bottom: 1.9rem !important;
+  }
+}
+
+.page-title,
+.stat-value,
+.detail-item p,
+.payment-history-section h4 { color: #eefde6 !important; }
+
+.page-subtitle,
+.stat-label,
+.detail-item label,
+.form-group small,
+.score-factors,
+.payer-desc { color: rgba(229, 235, 231, 0.82) !important; }
+
+.stat-card[style] .stat-value,
+.stat-card[style] .stat-label {
+  color: #ffffff !important;
+}
+
+.stat-icon-image {
+  opacity: 0.96;
+}
+
+.payer-badge,
+.payer-reason,
+.credit-score,
+.score-factors,
+.payer-desc,
+.payer-text {
+  color: rgba(238, 245, 240, 0.96) !important;
+}
+
+.payer-text {
+  color: inherit !important;
+}
+
+.payer-badge.low,
+.payer-badge.medium,
+.payer-badge.high,
+.payer-badge.loading,
+.payer-badge.unknown {
+  color: inherit !important;
+}
+
+.payer-badge.low {
+  background: rgba(134, 239, 172, 0.28) !important;
+  border-color: rgba(134, 239, 172, 0.55) !important;
+  color: #d9fbe8 !important;
+}
+
+.payer-badge.medium {
+  background: rgba(253, 224, 71, 0.24) !important;
+  border-color: rgba(250, 204, 21, 0.5) !important;
+  color: #fef3c7 !important;
+}
+
+.payer-badge.high {
+  background: rgba(248, 113, 113, 0.25) !important;
+  border-color: rgba(248, 113, 113, 0.55) !important;
+  color: #fee2e2 !important;
+}
+
+.payer-badge.unknown {
+  background: rgba(125, 211, 252, 0.2) !important;
+  border-color: rgba(125, 211, 252, 0.48) !important;
+  color: #dbeafe !important;
+}
+
+.filter-tabs {
+  border-bottom: 0 !important;
+  gap: 0.75rem !important;
+}
+
+.tab {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.tab:hover {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+}
+
+.tab.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  border-color: #166534 !important;
+}
+
+.tab.active::after {
+  display: none !important;
+  content: none !important;
+}
+
+.loans-table th,
+.payment-history-table th {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%) !important;
+  color: rgba(234, 241, 236, 0.94) !important;
+  border-bottom-color: rgba(190, 235, 203, 0.2) !important;
+}
+
+.loans-table td,
+.payment-history-table td {
+  color: rgba(226, 234, 229, 0.92) !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+.loans-table tbody tr:hover { background: rgba(74, 222, 128, 0.07) !important; }
+
+.form-group input,
+.form-group textarea,
+.form-group select,
+.payment-type-btn {
+  background: rgba(0,0,0,0.24) !important;
+  color: #eefde6 !important;
+  border-color: rgba(190, 235, 203, 0.24) !important;
+}
+
+.payment-type-btn.active {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(34, 197, 94, 0.2)) !important;
+  border-color: rgba(74, 222, 128, 0.38) !important;
 }
 </style>
