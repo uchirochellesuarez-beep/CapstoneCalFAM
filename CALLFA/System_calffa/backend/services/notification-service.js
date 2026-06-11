@@ -2,7 +2,9 @@ const pool = require('../db');
 
 const STATUS_NOTIFICATION_TYPES = ['booking_approved', 'booking_rejected', 'booking_expired'];
 const ASSISTANCE_NOTIFICATION_TYPES = ['assistance_allocated'];
-const REFERENCE_TYPE_VALUES = ['loan', 'machinery_booking', 'income_assistance_distribution'];
+const ANNOUNCEMENT_NOTIFICATION_TYPES = ['announcement_posted'];
+const FARMER_REFERENCE_TYPES = ['loan', 'machinery_booking', 'income_assistance_distribution'];
+const REFERENCE_TYPE_VALUES = [...FARMER_REFERENCE_TYPES, 'announcement'];
 const NOTIFICATION_ENUM_VALUES = [
   'last_month',
   'last_week',
@@ -12,7 +14,8 @@ const NOTIFICATION_ENUM_VALUES = [
   'due_day',
   'overdue_penalty',
   ...ASSISTANCE_NOTIFICATION_TYPES,
-  ...STATUS_NOTIFICATION_TYPES
+  ...STATUS_NOTIFICATION_TYPES,
+  ...ANNOUNCEMENT_NOTIFICATION_TYPES
 ];
 
 let notificationSchemaPromise = null;
@@ -44,28 +47,35 @@ async function ensureNotificationSchema() {
       const [typeColumn] = await pool.execute("SHOW COLUMNS FROM due_date_notifications LIKE 'notification_type'");
       const [referenceTypeColumn] = await pool.execute("SHOW COLUMNS FROM due_date_notifications LIKE 'reference_type'");
 
-      if (
+      const typeDef = typeColumn[0]?.Type || '';
+      const referenceDef = referenceTypeColumn[0]?.Type || '';
+
+      const needsTypeUpdate =
         typeColumn.length > 0 &&
-        typeof typeColumn[0].Type === 'string' &&
-        typeColumn[0].Type.startsWith('enum(') &&
-        !STATUS_NOTIFICATION_TYPES.every((type) => typeColumn[0].Type.includes(`'${type}'`))
-      ) {
+        typeof typeDef === 'string' &&
+        typeDef.startsWith('enum(') &&
+        !NOTIFICATION_ENUM_VALUES.every((value) => typeDef.includes(`'${value}'`));
+
+      const needsReferenceUpdate =
+        referenceTypeColumn.length > 0 &&
+        typeof referenceDef === 'string' &&
+        referenceDef.startsWith('enum(') &&
+        !REFERENCE_TYPE_VALUES.every((value) => referenceDef.includes(`'${value}'`));
+
+      if (needsTypeUpdate) {
         const enumValuesSql = NOTIFICATION_ENUM_VALUES.map((value) => `'${value}'`).join(', ');
         await pool.query(
           `ALTER TABLE due_date_notifications MODIFY COLUMN notification_type ENUM(${enumValuesSql}) NOT NULL`
         );
+        console.log('✅ Updated due_date_notifications.notification_type enum');
       }
 
-      if (
-        referenceTypeColumn.length > 0 &&
-        typeof referenceTypeColumn[0].Type === 'string' &&
-        referenceTypeColumn[0].Type.startsWith('enum(') &&
-        !REFERENCE_TYPE_VALUES.every((value) => referenceTypeColumn[0].Type.includes(`'${value}'`))
-      ) {
+      if (needsReferenceUpdate) {
         const referenceTypeSql = REFERENCE_TYPE_VALUES.map((value) => `'${value}'`).join(', ');
         await pool.query(
           `ALTER TABLE due_date_notifications MODIFY COLUMN reference_type ENUM(${referenceTypeSql}) NOT NULL`
         );
+        console.log('✅ Updated due_date_notifications.reference_type enum');
       }
     })().catch((error) => {
       notificationSchemaPromise = null;
@@ -122,7 +132,11 @@ async function upsertNotification(data) {
     return true;
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') return false;
-    console.error('Error inserting notification:', error.message);
+    console.error('Error inserting notification:', error.message, {
+      farmer_id: data.farmer_id,
+      reference_type: data.reference_type,
+      notification_type: data.notification_type
+    });
     return false;
   }
 }
@@ -145,6 +159,14 @@ async function createBookingStatusNotification({
   const farmerIdNum = parseInt(farmerId, 10);
   if (isNaN(farmerIdNum) || farmerIdNum <= 0) {
     console.error('❌ [createBookingStatusNotification] Invalid farmerId:', farmerId);
+    return false;
+  }
+
+  const [farmerRows] = await pool.execute(
+    'SELECT id FROM farmers WHERE id = ? AND role = ?',
+    [farmerIdNum, 'farmer']
+  );
+  if (farmerRows.length === 0) {
     return false;
   }
 
@@ -227,10 +249,19 @@ async function createIncomeAssistanceNotification({
     return false;
   }
 
+  const farmerIdNum = parseInt(farmerId, 10);
+  const [farmerRows] = await pool.execute(
+    'SELECT id FROM farmers WHERE id = ? AND role = ?',
+    [farmerIdNum, 'farmer']
+  );
+  if (farmerRows.length === 0) {
+    return false;
+  }
+
   const triggerDate = formatLocalDate(new Date());
 
   return upsertNotification({
-    farmer_id: farmerId,
+    farmer_id: farmerIdNum,
     reference_type: 'income_assistance_distribution',
     reference_id: distributionId,
     notification_type: 'assistance_allocated',
@@ -241,8 +272,58 @@ async function createIncomeAssistanceNotification({
   });
 }
 
+async function createAnnouncementPostedNotifications({
+  announcementId,
+  title,
+  authorId,
+  authorName,
+  authorRole
+}) {
+  const announcementIdNum = parseInt(announcementId, 10);
+  const authorIdNum = parseInt(authorId, 10);
+
+  if (!announcementIdNum || !authorIdNum || !title) {
+    return 0;
+  }
+
+  await ensureNotificationSchema();
+
+  const [recipients] = await pool.execute(
+    `SELECT id FROM farmers WHERE id != ?`,
+    [authorIdNum]
+  );
+
+  const [dateRows] = await pool.execute('SELECT DATE(NOW()) AS today');
+  const triggerDate = normalizeDateString(dateRows[0]?.today) || formatLocalDate(new Date());
+  const posterLabel = authorName || authorRole || 'An officer';
+  const trimmedTitle = String(title).trim().slice(0, 120);
+  let created = 0;
+
+  for (const recipient of recipients) {
+    const inserted = await upsertNotification({
+      farmer_id: recipient.id,
+      reference_type: 'announcement',
+      reference_id: announcementIdNum,
+      notification_type: 'announcement_posted',
+      title: 'New Announcement Posted',
+      message: `${posterLabel} posted: ${trimmedTitle}`,
+      due_date: triggerDate,
+      trigger_date: triggerDate
+    });
+    if (inserted) created += 1;
+  }
+
+  console.log(
+    `📢 Announcement #${announcementIdNum}: created ${created} notification(s) for ${recipients.length} recipient(s)`
+  );
+
+  return created;
+}
+
 module.exports = {
+  ANNOUNCEMENT_NOTIFICATION_TYPES,
   ASSISTANCE_NOTIFICATION_TYPES,
+  FARMER_REFERENCE_TYPES,
   STATUS_NOTIFICATION_TYPES,
   REFERENCE_TYPE_VALUES,
   formatLocalDate,
@@ -250,5 +331,6 @@ module.exports = {
   ensureNotificationSchema,
   upsertNotification,
   createBookingStatusNotification,
-  createIncomeAssistanceNotification
+  createIncomeAssistanceNotification,
+  createAnnouncementPostedNotifications
 };

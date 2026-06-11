@@ -1,32 +1,16 @@
 <template>
-  <div class="pending-members-card section-card">
+  <div class="registered-members-card pending-members-card">
     <div class="section-header-with-actions">
-      <h2 class="section-title">Pending Member Approvals</h2>
-      <div v-if="filteredFarmers.length > 0" class="bulk-actions">
+      <h2 class="registered-members-title">Pending Member Approvals</h2>
+      <div v-if="farmers.length > 0" class="bulk-actions">
         <button @click="approveAllPending" class="bulk-approve-btn" :disabled="processingBulk">
-          <span v-if="!processingBulk">Approve All ({{ filteredFarmers.length }})</span>
+          <span v-if="!processingBulk">Approve All ({{ farmers.length }})</span>
           <span v-else>Processing...</span>
         </button>
         <button @click="$emit('refresh')" class="refresh-btn" :disabled="loading">
           Refresh
         </button>
       </div>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="search-container">
-      <span class="search-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-      </span>
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search by name, reference number, or phone..."
-        class="search-input"
-      />
     </div>
 
     <!-- Loading State -->
@@ -42,8 +26,8 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredFarmers.length === 0" class="empty-state">
-      <p>No pending members to approve.</p>
+    <div v-else-if="farmers.length === 0" class="empty-state">
+      <p>No pending members found.</p>
       <p class="empty-hint">If you expect pending accounts, verify that:</p>
       <ul class="empty-checklist">
         <li>- You are logged in as an admin account</li>
@@ -53,88 +37,127 @@
     </div>
 
     <!-- Pending Members Table -->
-    <div v-else class="members-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Reference Number</th>
-            <th>Full Name</th>
-            <th>Date of Birth</th>
-            <th>Phone Number</th>
-            <th>Education</th>
-            <th>Role</th>
-            <th>Membership Status</th>
-            <th>Barangay</th>
-            <th>Registered Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="member in filteredFarmers" :key="member.id">
-            <td>{{ member.reference_number }}</td>
-            <td>{{ member.full_name }}</td>
-            <td>{{ formatDate(member.date_of_birth) }}</td>
-            <td>{{ member.phone_number }}</td>
-            <td>{{ member.educational_status || 'N/A' }}</td>
-            <td>
-              <select 
-                :value="member.role" 
-                @change="updateRole(member.id, $event.target.value)"
-                class="role-select"
-                :disabled="processingId === member.id"
-              >
-                <option value="farmer">Farmer</option>
-                <option value="president">President</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="auditor">Auditor</option>
-                <option value="operator">Operator</option>
-                <option value="operation_manager">Operation Manager</option>
-                <option value="business_manager">Business Manager</option>
-                <option value="agriculturist">Agriculturist</option>
-                <option value="admin">Admin</option>
-              </select>
-            </td>
-            <td>
-              <select 
-                :value="member.membership_status || 'member'" 
-                @change="updateMembershipStatus(member.id, $event.target.value)"
-                class="role-select"
-                :disabled="processingId === member.id"
-              >
-                <option value="member">Member</option>
-                <option value="non-member">Non-Member</option>
-              </select>
-            </td>
-            <td>{{ member.barangay_name || 'Not assigned' }}</td>
-            <td>{{ formatDate(member.registered_on) }}</td>
-            <td>
-              <div class="action-buttons">
-                <button
-                  @click="approveMember(member.id)"
-                  class="approve-btn"
-                  :disabled="processingId === member.id || member.role === 'admin'"
+    <div v-else class="registered-table-scroll">
+      <div class="members-table-container">
+        <table class="members-table">
+          <colgroup>
+            <col class="members-col-photo" />
+            <col class="members-col-ref" />
+            <col class="members-col-name" />
+            <col class="members-col-dob" />
+            <col class="members-col-phone" />
+            <col class="members-col-edu" />
+            <col class="members-col-role" />
+            <col class="members-col-member" />
+            <col class="members-col-address" />
+            <col class="members-col-reg" />
+            <col class="members-col-status" />
+            <col class="members-col-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Ref #</th>
+              <th>Name</th>
+              <th>DOB</th>
+              <th>Phone</th>
+              <th>Education</th>
+              <th>Role</th>
+              <th>Membership</th>
+              <th>Barangay</th>
+              <th>Registered</th>
+              <th>Status</th>
+              <th class="members-th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="member in farmers" :key="member.id" class="members-data-row">
+              <td class="members-cell-center">
+                <div class="member-avatar-wrap">
+                  <img
+                    v-if="member.profile_picture"
+                    :src="getProfilePictureUrl(member.profile_picture)"
+                    alt="Profile"
+                    class="member-avatar"
+                  />
+                  <div v-else class="member-avatar member-avatar-fallback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" class="text-gray-400">
+                      <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </td>
+              <td class="members-cell members-td-ref">{{ member.reference_number }}</td>
+              <td class="members-cell members-td-name">{{ member.full_name }}</td>
+              <td class="members-cell">{{ formatDate(member.date_of_birth) }}</td>
+              <td class="members-cell">{{ member.phone_number }}</td>
+              <td class="members-cell">{{ member.educational_status || 'N/A' }}</td>
+              <td class="members-cell">
+                <select
+                  :value="member.role"
+                  class="table-select"
+                  :disabled="processingId === member.id"
+                  @change="updateRole(member.id, $event.target.value)"
                 >
-                  {{ processingId === member.id ? 'Processing...' : 'Approve' }}
-                </button>
-                <button
-                  @click="rejectMember(member.id)"
-                  class="reject-btn"
-                  :disabled="processingId === member.id || member.role === 'admin'"
+                  <option value="farmer">Farmer</option>
+                  <option value="president">President</option>
+                  <option value="treasurer">Treasurer</option>
+                  <option value="auditor">Auditor</option>
+                  <option value="operator">Operator</option>
+                  <option value="operation_manager">Operation Manager</option>
+                  <option value="business_manager">Business Manager</option>
+                  <option value="agriculturist">Agriculturist</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </td>
+              <td class="members-cell">
+                <select
+                  :value="member.membership_status || 'member'"
+                  class="table-select"
+                  :disabled="processingId === member.id"
+                  @change="updateMembershipStatus(member.id, $event.target.value)"
                 >
-                  Reject
-                </button>
-                <button
-                  @click="deleteMember(member.id)"
-                  class="delete-btn"
-                  :disabled="processingId === member.id || member.role === 'admin'"
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  <option value="member">Member</option>
+                  <option value="non-member">Non-Member</option>
+                </select>
+              </td>
+              <td class="members-cell">{{ member.barangay_name || 'Not assigned' }}</td>
+              <td class="members-cell">{{ formatDate(member.registered_on) }}</td>
+              <td class="members-cell">
+                <span class="status-chip status-chip-pending">Pending</span>
+              </td>
+              <td class="members-cell members-actions-cell">
+                <div class="members-action-row">
+                  <button
+                    type="button"
+                    class="action-btn action-btn-view"
+                    :disabled="processingId === member.id || member.role === 'admin'"
+                    @click="approveMember(member.id)"
+                  >
+                    {{ processingId === member.id ? '...' : 'Approve' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn action-btn-edit"
+                    :disabled="processingId === member.id || member.role === 'admin'"
+                    @click="rejectMember(member.id)"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn action-btn-delete"
+                    :disabled="processingId === member.id || member.role === 'admin'"
+                    @click="deleteMember(member.id)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Success Message -->
@@ -167,27 +190,24 @@ const props = defineProps({
   }
 })
 
-const searchQuery = ref('')
 const processingId = ref(null)
 const processingBulk = ref(false)
 const successMessage = ref('')
 
-const filteredFarmers = computed(() => {
-  const farmerList = props.farmers || []
-  if (!searchQuery.value) return farmerList
-
-  const query = searchQuery.value.toLowerCase()
-  return farmerList.filter(farmer =>
-    farmer.full_name?.toLowerCase().includes(query) ||
-    farmer.reference_number?.toLowerCase().includes(query) ||
-    farmer.phone_number?.includes(query)
-  )
-})
+const farmers = computed(() => props.farmers || [])
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const getProfilePictureUrl = (profilePicture) => {
+  if (!profilePicture) return null
+  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
+    return profilePicture
+  }
+  return profilePicture
 }
 
 const approveMember = async (memberId) => {
@@ -313,11 +333,11 @@ const updateMembershipStatus = async (memberId, newStatus) => {
 }
 
 const approveAllPending = async () => {
-  if (filteredFarmers.value.length === 0) {
+  if (farmers.value.length === 0) {
     return
   }
 
-  if (!confirm(`Are you sure you want to approve all ${filteredFarmers.value.length} pending members?`)) {
+  if (!confirm(`Are you sure you want to approve all ${farmers.value.length} pending members?`)) {
     return
   }
 
@@ -326,11 +346,11 @@ const approveAllPending = async () => {
 
   try {
     // Emit approve for each member
-    for (const member of filteredFarmers.value) {
+    for (const member of farmers.value) {
       emit('approve', member.id)
     }
     
-    successMessage.value = `Successfully processing ${filteredFarmers.value.length} member(s) for approval!`
+    successMessage.value = `Successfully processing ${farmers.value.length} member(s) for approval!`
     
     setTimeout(() => {
       successMessage.value = ''
@@ -345,12 +365,26 @@ const approveAllPending = async () => {
 </script>
 
 <style scoped>
-.pending-members-card {
+@import '../styles/members-table.css';
+
+.registered-members-card {
   background: rgba(28, 42, 33, 0.92);
   border: 1px solid rgba(190, 235, 203, 0.14);
   border-radius: 12px;
-  padding: 1.5rem;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  margin-bottom: 24px;
+}
+
+.registered-members-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #eefde6;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.pending-members-card {
   margin-bottom: 24px;
 }
 
@@ -361,14 +395,6 @@ const approveAllPending = async () => {
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 16px;
-}
-
-.section-title {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #eefde6;
-  margin: 0;
-  letter-spacing: 0.02em;
 }
 
 .bulk-actions {
@@ -411,53 +437,6 @@ const approveAllPending = async () => {
 .refresh-btn:hover:not(:disabled) {
   background: rgba(74, 222, 128, 0.12);
   color: #bbf7d0;
-}
-
-.search-container {
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 14px 10px 44px;
-  border: 1px solid rgba(190, 235, 203, 0.24);
-  border-radius: 8px;
-  font-size: 13px;
-  color: #eefde6;
-  background: rgba(0, 0, 0, 0.24);
-  transition: all 0.2s;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: rgba(134, 239, 172, 0.9);
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.22);
-  pointer-events: none;
-}
-
-.search-icon svg {
-  display: block;
-}
-
-.search-input::placeholder {
-  color: rgba(229, 235, 231, 0.45);
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: rgba(74, 222, 128, 0.45);
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
 .loading-state,
@@ -534,182 +513,6 @@ const approveAllPending = async () => {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-}
-
-.members-table {
-  overflow-x: auto;
-  border-radius: 12px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-thead tr {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%);
-  border-bottom: 1px solid rgba(190, 235, 203, 0.2);
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
-}
-
-th {
-  padding: 8px 6px;
-  text-align: center;
-  font-weight: 700;
-  color: rgba(234, 241, 236, 0.94);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-}
-
-td {
-  padding: 8px 6px;
-  color: rgba(226, 234, 229, 0.92) !important;
-  font-size: 11px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  vertical-align: middle;
-  background: transparent !important;
-}
-
-tbody tr {
-  transition: none;
-  background: transparent !important;
-}
-
-tbody tr:hover {
-  background: rgba(74, 222, 128, 0.07) !important;
-}
-
-/* Remove click/tap highlight on member rows */
-tbody tr,
-tbody tr td {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Also remove tap/click highlight from interactive controls in rows */
-.members-table button,
-.members-table select,
-.members-table input,
-.members-table td,
-.members-table tr {
-  -webkit-tap-highlight-color: transparent;
-}
-
-tbody tr:active,
-tbody tr:focus,
-tbody tr:focus-within,
-tbody tr:active td,
-tbody tr:focus td,
-tbody tr:focus-within td {
-  background: transparent !important;
-  outline: none;
-}
-
-.role-select {
-  padding: 5px 8px;
-  border: 1px solid rgba(190, 235, 203, 0.28);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.28);
-  color: rgba(226, 234, 229, 0.95);
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: capitalize;
-  max-width: 100%;
-}
-
-.role-select:hover:not(:disabled) {
-  border-color: rgba(74, 222, 128, 0.45);
-}
-
-.role-select:focus {
-  outline: none;
-  border-color: rgba(74, 222, 128, 0.45);
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
-  background: rgba(0, 0, 0, 0.32);
-}
-
-.role-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.role-select option {
-  color: #111827;
-  background: #fff;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.approve-btn,
-.reject-btn,
-.delete-btn {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  font-weight: 700;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.approve-btn {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
-  color: #14532d;
-  border-color: rgba(22, 163, 74, 0.35);
-}
-
-.approve-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%);
-}
-
-.reject-btn {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #b91c1c;
-  border-color: rgba(220, 38, 38, 0.28);
-}
-
-.reject-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-}
-
-.delete-btn {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-  border-color: rgba(217, 119, 6, 0.28);
-}
-
-.delete-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-}
-
-.approve-btn:disabled,
-.reject-btn:disabled,
-.delete-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Prevent focus/active click flash on action buttons */
-.approve-btn:focus,
-.reject-btn:focus,
-.delete-btn:focus,
-.approve-btn:active,
-.reject-btn:active,
-.delete-btn:active {
-  outline: none;
-  box-shadow: none;
 }
 
 .success-message-banner {
