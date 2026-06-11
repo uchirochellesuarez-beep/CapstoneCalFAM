@@ -1,700 +1,707 @@
 <template>
   <div class="financial-overview-container glass-module-page">
-    <!-- Header -->
-    <div class="page-header">
+    <div class="page-header no-print">
       <div class="page-header-left">
-        <h1 class="page-title">
-          Financial Overview
-        </h1>
-        <h2 class="page-subtitle">System-wide financial metrics, income, expenses, and savings breakdown</h2>
+        <h1 class="page-title">Financial Overview</h1>
       </div>
       <div class="header-actions">
-        <button class="export-btn" @click="exportReport('csv')">📥 Export CSV</button>
-        <button class="export-btn" @click="exportReport('pdf')">📄 Export PDF</button>
+        <button class="export-btn" @click="printReport">🖨️ Print Report</button>
+        <button class="export-btn" @click="exportCSV">📥 Download CSV</button>
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-info">
-          <div class="stat-label">Total Loans Disbursed</div>
-          <div class="stat-value income">₱{{ totalLoansDisbursed.toLocaleString() }}</div>
-        </div>
+    <div class="filters-bar no-print">
+      <div v-if="isAdmin" class="filter-group">
+        <label class="filter-label">Barangay</label>
+        <select v-model="filterBarangay" class="filter-input">
+          <option value="">All Barangays</option>
+          <option v-for="b in barangayOptions" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
+        </select>
       </div>
-      <div class="stat-card">
-        <div class="stat-info">
-          <div class="stat-label">Payments Received</div>
-          <div class="stat-value savings">₱{{ totalPaymentsReceived.toLocaleString() }}</div>
-        </div>
+      <div class="filter-group">
+        <label class="filter-label">From</label>
+        <input v-model="filterDateFrom" type="date" class="filter-input" />
       </div>
-      <div class="stat-card">
-        <div class="stat-info">
-          <div class="stat-label">Outstanding Balance</div>
-          <div class="stat-value expense">₱{{ outstandingBalance.toLocaleString() }}</div>
-        </div>
+      <div class="filter-group">
+        <label class="filter-label">To</label>
+        <input v-model="filterDateTo" type="date" class="filter-input" />
       </div>
-      <div class="stat-card">
-        <div class="stat-info">
-          <div class="stat-label">Active Loans</div>
-          <div class="stat-value">{{ activeLoansCount }}</div>
-        </div>
-      </div>
+      <button class="filter-clear-btn" @click="clearFilters">Clear</button>
     </div>
 
-    <!-- Charts -->
-    <div class="charts-section">
-      <div class="chart-card">
-        <h3 class="chart-title">Financial Breakdown</h3>
-        <!-- Perfect-circle wrapper to ensure exact donut shape -->
-        <div class="donut-wrap">
-          <DonutChart
-            :income="totalIncome"
-            :expenses="totalExpenses"
-            :savings="netSavings"
-            :size="chartSize"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 1: Approved Loans -->
-    <div class="info-section">
-      <div class="section-header">
-        <h3 class="section-title">✓ Approved Loans</h3>
-        <div class="section-actions">
-          <span class="section-badge">{{ approvedLoans.length }} Loans</span>
-          <button class="print-btn" @click="printSection('approved-loans')">🖨️ Print</button>
-        </div>
-      </div>
-      
-      <div class="section-stats">
-        <div class="summary-stat">
-          <span class="stat-label">Total Approved Amount:</span>
-          <span class="stat-value approved">₱{{ approvedLoansTotal.toLocaleString() }}</span>
-        </div>
+    <div id="printable-report" class="printable-report">
+      <div class="report-banner print-only">
+        <h2>Financial Overview — System Summary Report</h2>
+        <p>{{ reportScope }}</p>
+        <p class="report-date">Generated: {{ reportGeneratedAt }}</p>
       </div>
 
-      <div id="approved-loans" class="data-table-container">
-        <table class="data-table">
+      <!-- System-wide KPIs -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Loan Collections</div>
+            <div class="stat-value collected">₱{{ totalCollected.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Loan Outstanding</div>
+            <div class="stat-value outstanding">₱{{ outstandingBalance.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Machinery Income</div>
+            <div class="stat-value collected">₱{{ machineryIncome.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Machinery Expenses</div>
+            <div class="stat-value expense">₱{{ machineryExpenses.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Machinery Net</div>
+            <div class="stat-value" :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Share Capital Balance</div>
+            <div class="stat-value">₱{{ shareCapitalBalance.toLocaleString() }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Share Capital Contributed</div>
+            <div class="stat-value collected">₱{{ shareCapitalContributed.toLocaleString() }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3 class="chart-title">Finance by Module (Inflows)</h3>
+          <div class="chart-canvas-wrap">
+            <canvas ref="moduleChartRef"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Machinery Income vs Expenses</h3>
+          <div class="chart-canvas-wrap">
+            <canvas ref="machineryChartRef"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consolidated module summary -->
+      <div class="financial-table-section">
+        <div class="table-header">
+          <h3 class="section-title">Consolidated Financial Summary</h3>
+        </div>
+        <table class="financial-table">
           <thead>
             <tr>
-              <th>Ref No.</th>
-              <th>Farmer Name</th>
-              <th>Loan Type</th>
-              <th>Loan Amount</th>
-              <th>Approval Date</th>
-              <th>Due Date</th>
-              <th>Approved By</th>
+              <th>Module</th>
+              <th>Inflows / Collected</th>
+              <th>Outflows / Disbursed</th>
+              <th>Net / Balance</th>
+              <th>Detail Page</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading" class="loading-row">
-              <td colspan="7">Loading approved loans...</td>
+            <tr v-if="loading">
+              <td colspan="5" class="loading-cell">Loading financial data...</td>
             </tr>
-            <tr v-else-if="approvedLoans.length === 0" class="empty-row">
-              <td colspan="7">No approved loans</td>
+            <template v-else>
+              <tr v-for="row in moduleSummaryRows" :key="row.key">
+                <td><strong>{{ row.label }}</strong></td>
+                <td class="collected">₱{{ row.inflow.toLocaleString() }}</td>
+                <td class="expense">₱{{ row.outflow.toLocaleString() }}</td>
+                <td :class="row.net >= 0 ? 'collected' : 'overdue'">₱{{ row.net.toLocaleString() }}</td>
+                <td class="module-link-cell no-print">
+                  <router-link :to="row.route" class="inline-link">{{ row.linkLabel }} →</router-link>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Loans summary -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">Loans — Summary</h3>
+          <router-link to="/admin-loans" class="view-all-link no-print">Loan Management →</router-link>
+        </div>
+        <table class="financial-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
             </tr>
-            <tr v-else v-for="loan in approvedLoans" :key="loan.id" class="data-row">
-              <td>{{ loan.reference_number || 'N/A' }}</td>
-              <td class="farmer-name">{{ loan.full_name }}</td>
-              <td>{{ formatLoanType(loan.loan_type) }}</td>
-              <td class="amount">₱{{ parseFloat(loan.loan_amount).toLocaleString() }}</td>
-              <td>{{ formatDate(loan.approval_date) }}</td>
-              <td>{{ formatDate(loan.due_date) }}</td>
-              <td>{{ loan.approved_by_name || 'N/A' }}</td>
+          </thead>
+          <tbody>
+            <tr><td>Total disbursed</td><td class="amount">₱{{ totalDisbursed.toLocaleString() }}</td></tr>
+            <tr><td>Total collected</td><td class="collected">₱{{ totalCollected.toLocaleString() }}</td></tr>
+            <tr><td>Outstanding balance</td><td class="outstanding">₱{{ outstandingBalance.toLocaleString() }}</td></tr>
+            <tr><td>Overdue ({{ overdueCount }} loans)</td><td class="overdue">₱{{ overdueAmount.toLocaleString() }}</td></tr>
+            <tr><td>Collection rate</td><td class="rate">{{ collectionRate }}%</td></tr>
+            <tr><td>Active portfolio</td><td>{{ activePortfolioCount }} loans</td></tr>
+            <tr><td>Payment transactions</td><td>{{ collectionsPerformance.paymentCount }}</td></tr>
+          </tbody>
+        </table>
+        <table class="financial-table sub-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Loans</th>
+              <th>Outstanding</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in statusSummaryRows" :key="row.status">
+              <td>{{ row.label }}</td>
+              <td>{{ row.count }}</td>
+              <td class="outstanding">₱{{ row.outstanding.toLocaleString() }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Section 2: Partial Payment History -->
-    <div class="info-section">
-      <div class="section-header">
-        <h3 class="section-title">💳 Partial Payment History</h3>
-        <div class="section-actions">
-          <span class="section-badge">{{ partialPayments.length }} Payments</span>
-          <button class="print-btn" @click="printSection('partial-payments')">🖨️ Print</button>
+      <!-- Machinery summary -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">Machinery — Summary</h3>
+          <router-link to="/machinery-financial" class="view-all-link no-print">Machinery Financial →</router-link>
         </div>
-      </div>
-      
-      <div class="section-stats">
-        <div class="summary-stat">
-          <span class="stat-label">Total Partial Payments:</span>
-          <span class="stat-value partial">₱{{ totalPartialPayments.toLocaleString() }}</span>
-        </div>
-        <div class="summary-stat">
-          <span class="stat-label">Outstanding Balance:</span>
-          <span class="stat-value warning">₱{{ activeLoansBalance.toLocaleString() }}</span>
-        </div>
-      </div>
-
-      <div id="partial-payments" class="data-table-container">
-        <table class="data-table">
+        <table class="financial-table">
           <thead>
             <tr>
-              <th>Payment Date</th>
-              <th>Farmer Name</th>
-              <th>Loan Type</th>
-              <th>Original Amount</th>
-              <th>Payment Amount</th>
-              <th>Remaining Balance</th>
-              <th>Receipt No.</th>
-              <th>Payment Method</th>
+              <th>Metric</th>
+              <th>Value</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading" class="loading-row">
-              <td colspan="8">Loading partial payments...</td>
-            </tr>
-            <tr v-else-if="partialPayments.length === 0" class="empty-row">
-              <td colspan="8">No partial payments found</td>
-            </tr>
-            <tr v-else v-for="payment in partialPayments" :key="payment.id" class="data-row">
-              <td>{{ formatDate(payment.payment_date) }}</td>
-              <td class="farmer-name">{{ payment.farmer_name }}</td>
-              <td>{{ formatLoanType(payment.loan_type) }}</td>
-              <td class="amount">₱{{ parseFloat(payment.loan_amount).toLocaleString() }}</td>
-              <td class="amount highlight">₱{{ parseFloat(payment.amount).toLocaleString() }}</td>
-              <td class="amount warning">₱{{ parseFloat(payment.remaining_after_payment || 0).toLocaleString() }}</td>
-              <td>{{ payment.reference_number || '-' }}</td>
-              <td>{{ payment.payment_method || 'Cash' }}</td>
-            </tr>
+            <tr><td>Total income</td><td class="collected">₱{{ machineryIncome.toLocaleString() }}</td></tr>
+            <tr><td>Total expenses</td><td class="expense">₱{{ machineryExpenses.toLocaleString() }}</td></tr>
+            <tr><td>Net profit / loss</td><td :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Section 3: Completed Loans (Fully Paid) -->
-    <div class="info-section">
-      <div class="section-header">
-        <h3 class="section-title">✅ Completed Loans (Fully Paid)</h3>
-        <div class="section-actions">
-          <span class="section-badge success">{{ paidLoans.length }} Completed</span>
-          <button class="print-btn" @click="printSection('completed-loans')">🖨️ Print</button>
+      <!-- Share capital summary -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">Share Capital — Summary</h3>
+          <router-link to="/share-capital" class="view-all-link no-print">Share Capital →</router-link>
         </div>
-      </div>
-      
-      <div class="section-stats">
-        <div class="summary-stat">
-          <span class="stat-label">Total Loans Completed:</span>
-          <span class="stat-value success">{{ paidLoans.length }}</span>
-        </div>
-        <div class="summary-stat">
-          <span class="stat-label">Total Amount Collected:</span>
-          <span class="stat-value success">₱{{ totalPaidLoansAmount.toLocaleString() }}</span>
-        </div>
-      </div>
-
-      <div id="completed-loans" class="data-table-container">
-        <table class="data-table">
+        <table class="financial-table">
           <thead>
             <tr>
-              <th>Ref No.</th>
-              <th>Farmer Name</th>
-              <th>Loan Type</th>
-              <th>Loan Amount</th>
-              <th>Total Paid</th>
-              <th>Approval Date</th>
-              <th>Paid Date</th>
-              <th>Duration (Days)</th>
+              <th>Metric</th>
+              <th>Value</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading" class="loading-row">
-              <td colspan="8">Loading completed loans...</td>
-            </tr>
-            <tr v-else-if="paidLoans.length === 0" class="empty-row">
-              <td colspan="8">No completed loans</td>
-            </tr>
-            <tr v-else v-for="loan in paidLoans" :key="loan.id" class="data-row">
-              <td>{{ loan.reference_number || 'N/A' }}</td>
-              <td class="farmer-name">{{ loan.full_name }}</td>
-              <td>{{ formatLoanType(loan.loan_type) }}</td>
-              <td class="amount">₱{{ parseFloat(loan.loan_amount).toLocaleString() }}</td>
-              <td class="amount success">₱{{ parseFloat(loan.total_paid).toLocaleString() }}</td>
-              <td>{{ formatDate(loan.approval_date) }}</td>
-              <td>{{ formatDate(loan.paid_date) }}</td>
-              <td>{{ calculateDuration(loan.approval_date, loan.paid_date) }}</td>
-            </tr>
+            <tr><td>Members with share capital</td><td>{{ shareCapitalMembers }}</td></tr>
+            <tr><td>Total contributed</td><td class="collected">₱{{ shareCapitalContributed.toLocaleString() }}</td></tr>
+            <tr><td>Total withdrawn</td><td class="expense">₱{{ shareCapitalWithdrawn.toLocaleString() }}</td></tr>
+            <tr><td>Current balance</td><td class="amount">₱{{ shareCapitalBalance.toLocaleString() }}</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Table -->
-    <div class="financial-table-section">
-      <div class="table-header">
-        <h3 class="section-title">Financial Summary by Category</h3>
-        <div class="table-actions">
-          <label class="filter-label">Sort by:</label>
-          <select v-model="sortKey" class="sort-select">
-            <option value="">None</option>
-            <option value="category">Category</option>
-            <option value="income">Income</option>
-            <option value="expenses">Expenses</option>
-            <option value="net">Net</option>
-          </select>
-          <button class="sort-dir-btn" @click="toggleSortDir" :disabled="!sortKey">
-            {{ sortAsc ? '⬆️ Asc' : '⬇️ Desc' }}
-          </button>
-        </div>
-      </div>
-
-      <table class="financial-table">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Income</th>
-            <th>Expenses</th>
-            <th>Net</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in sortedSummary" :key="item.category">
-            <td>{{ item.category }}</td>
-            <td class="income">{{ formatCurrency(item.income) }}</td>
-            <td class="expense">{{ formatCurrency(item.expenses) }}</td>
-            <td :class="item.net >= 0 ? 'positive' : 'negative'">
-              {{ formatCurrency(item.net) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <p class="report-footer print-only">
+        CaLFFA Financial Overview — system summary only. Use Loan Management, Machinery Financial, and Share Capital for detailed records.
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '../stores/authStore'
-import DonutChart from '../components/DonutChart.vue'
+import { Chart, registerables } from 'chart.js'
+
+Chart.register(...registerables)
 
 const authStore = useAuthStore()
 
-// Real data refs
 const loading = ref(true)
-const approvedLoans = ref([])
-const activeLoans = ref([])
-const paidLoans = ref([])
+const allLoans = ref([])
 const paymentHistory = ref([])
-const paymentFilter = ref('all')
+const barangays = ref([])
+const machinerySummary = ref({ total_income: 0, total_expenses: 0, net_profit: 0 })
+const shareCapitalTotals = ref({ total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 })
 
-// Keep chart size fixed to avoid distortion
-const chartSize = ref(260)
+const filterBarangay = ref('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
 
-// Computed values from real data
-const totalLoansDisbursed = computed(() => {
-  return [...approvedLoans.value, ...activeLoans.value, ...paidLoans.value]
-    .reduce((sum, loan) => sum + parseFloat(loan.loan_amount || 0), 0)
+const moduleChartRef = ref(null)
+const machineryChartRef = ref(null)
+let moduleChart = null
+let machineryChart = null
+
+const STATUS_ORDER = [
+  { key: 'pending', label: 'Pending' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'active', label: 'Partial Paid' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'paid', label: 'Fully Paid' },
+  { key: 'rejected', label: 'Rejected' }
+]
+
+const reportGeneratedAt = computed(() =>
+  new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+)
+
+const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
+const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
+const canViewShareCapital = computed(() => ['admin', 'president', 'treasurer'].includes(authStore.currentUser?.role))
+
+const barangayOptions = computed(() =>
+  barangays.value.map(b => ({
+    id: b.id || b.barangay_id,
+    name: b.name || b.barangay_name || String(b.id)
+  }))
+)
+
+const userBarangayName = computed(() => {
+  if (!userBarangayId.value) return ''
+  const match = barangayOptions.value.find(b => String(b.id) === String(userBarangayId.value))
+  return match?.name || ''
 })
 
-const totalPaymentsReceived = computed(() => {
-  return paymentHistory.value.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
+const selectedBarangayName = computed(() => {
+  if (!filterBarangay.value) return ''
+  const match = barangayOptions.value.find(b => String(b.id) === String(filterBarangay.value))
+  return match?.name || ''
 })
 
-const outstandingBalance = computed(() => {
-  const approvedTotal = approvedLoans.value.reduce((sum, loan) => sum + parseFloat(loan.loan_amount || 0), 0)
-  const activeTotal = activeLoans.value.reduce((sum, loan) => sum + parseFloat(loan.remaining_balance || 0), 0)
-  return approvedTotal + activeTotal
+const getLoanBarangayId = (loan) => String(loan.barangay_id || loan.farmer_barangay || '')
+
+const filteredLoans = computed(() => {
+  let list = allLoans.value
+  if (filterBarangay.value) {
+    list = list.filter(loan => getLoanBarangayId(loan) === String(filterBarangay.value))
+  }
+  if (filterDateFrom.value) {
+    list = list.filter(loan => (loan.application_date || '').slice(0, 10) >= filterDateFrom.value)
+  }
+  if (filterDateTo.value) {
+    list = list.filter(loan => (loan.application_date || '').slice(0, 10) <= filterDateTo.value)
+  }
+  return list
 })
 
-const activeLoansCount = computed(() => approvedLoans.value.length + activeLoans.value.length)
+const filteredLoanIds = computed(() => new Set(filteredLoans.value.map(l => l.id)))
 
-const approvedLoansTotal = computed(() => {
-  return approvedLoans.value.reduce((sum, loan) => sum + parseFloat(loan.loan_amount || 0), 0)
+const portfolioLoans = computed(() =>
+  filteredLoans.value.filter(l => ['approved', 'active', 'overdue', 'paid'].includes(l.status))
+)
+
+const totalDisbursed = computed(() =>
+  portfolioLoans.value.reduce((sum, loan) => sum + parseFloat(loan.loan_amount || 0), 0)
+)
+
+const totalCollected = computed(() =>
+  portfolioLoans.value.reduce((sum, loan) => sum + parseFloat(loan.total_paid || 0), 0)
+)
+
+const outstandingBalance = computed(() =>
+  filteredLoans.value
+    .filter(l => ['approved', 'active', 'overdue'].includes(l.status))
+    .reduce((sum, loan) => {
+      if (loan.status === 'approved') return sum + parseFloat(loan.loan_amount || 0)
+      return sum + parseFloat(loan.remaining_balance || loan.loan_amount || 0)
+    }, 0)
+)
+
+const overdueCount = computed(() => filteredLoans.value.filter(l => l.status === 'overdue').length)
+
+const overdueAmount = computed(() =>
+  filteredLoans.value
+    .filter(l => l.status === 'overdue')
+    .reduce((sum, loan) => sum + parseFloat(loan.total_with_penalty || loan.remaining_balance || loan.loan_amount || 0), 0)
+)
+
+const collectionRate = computed(() => {
+  if (totalDisbursed.value <= 0) return '0.0'
+  return ((totalCollected.value / totalDisbursed.value) * 100).toFixed(1)
 })
 
-const activeLoansBalance = computed(() => {
-  return activeLoans.value.reduce((sum, loan) => sum + parseFloat(loan.remaining_balance || 0), 0)
-})
-
-const monthlyPayments = computed(() => {
-  const now = new Date()
-  const thisMonth = paymentHistory.value.filter(payment => {
-    const paymentDate = new Date(payment.payment_date)
-    return paymentDate.getMonth() === now.getMonth() && paymentDate.getFullYear() === now.getFullYear()
-  })
-  return thisMonth.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
-})
+const activePortfolioCount = computed(() =>
+  filteredLoans.value.filter(l => ['approved', 'active', 'overdue'].includes(l.status)).length
+)
 
 const filteredPayments = computed(() => {
-  if (paymentFilter.value === 'all') return paymentHistory.value
-  if (paymentFilter.value === 'full') return paymentHistory.value.filter(p => p.loan_status === 'paid')
-  if (paymentFilter.value === 'partial') return paymentHistory.value.filter(p => p.loan_status === 'active')
-  return paymentHistory.value
+  let payments = paymentHistory.value.filter(p => filteredLoanIds.value.has(p.loan_id))
+  if (filterDateFrom.value) {
+    payments = payments.filter(p => (p.payment_date || '').slice(0, 10) >= filterDateFrom.value)
+  }
+  if (filterDateTo.value) {
+    payments = payments.filter(p => (p.payment_date || '').slice(0, 10) <= filterDateTo.value)
+  }
+  return payments
 })
 
-// Partial payments only (status = active)
-const partialPayments = computed(() => {
-  return paymentHistory.value.filter(p => p.loan_status === 'active' && parseFloat(p.remaining_after_payment || 0) > 0)
-})
+const collectionsPerformance = computed(() => ({
+  paymentCount: filteredPayments.value.length,
+  totalAmount: filteredPayments.value.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
+}))
 
-const totalPartialPayments = computed(() => {
-  return partialPayments.value.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
-})
+const machineryIncome = computed(() => parseFloat(machinerySummary.value.total_income || 0))
+const machineryExpenses = computed(() => parseFloat(machinerySummary.value.total_expenses || 0))
+const machineryNet = computed(() => parseFloat(machinerySummary.value.net_profit || 0))
 
-const totalPaidLoansAmount = computed(() => {
-  return paidLoans.value.reduce((sum, loan) => sum + parseFloat(loan.total_paid || 0), 0)
-})
+const shareCapitalMembers = computed(() => shareCapitalTotals.value.total_farmers || 0)
+const shareCapitalContributed = computed(() => parseFloat(shareCapitalTotals.value.total_collected || 0))
+const shareCapitalWithdrawn = computed(() => parseFloat(shareCapitalTotals.value.total_withdrawn || 0))
+const shareCapitalBalance = computed(() => parseFloat(shareCapitalTotals.value.total_balance || 0))
 
-// Updated chart data based on real financial data
-const totalIncome = computed(() => totalPaymentsReceived.value)
-const totalExpenses = computed(() => totalLoansDisbursed.value - totalPaymentsReceived.value)
-const netSavings = computed(() => totalPaymentsReceived.value - (totalLoansDisbursed.value - totalPaymentsReceived.value))
-
-const financialSummary = ref([
-  { category: 'Agricultural Loans', income: 0, expenses: 0, net: 0 },
-  { category: 'Provident Loans', income: 0, expenses: 0, net: 0 },
-  { category: 'Educational Loans', income: 0, expenses: 0, net: 0 },
-  { category: 'Total', income: 0, expenses: 0, net: 0 }
+const moduleSummaryRows = computed(() => [
+  {
+    key: 'loans',
+    label: 'Loans',
+    inflow: totalCollected.value,
+    outflow: totalDisbursed.value,
+    net: totalCollected.value - outstandingBalance.value,
+    route: '/admin-loans',
+    linkLabel: 'Loan Management'
+  },
+  {
+    key: 'machinery',
+    label: 'Machinery',
+    inflow: machineryIncome.value,
+    outflow: machineryExpenses.value,
+    net: machineryNet.value,
+    route: '/machinery-financial',
+    linkLabel: 'Machinery Financial'
+  },
+  {
+    key: 'share-capital',
+    label: 'Share Capital',
+    inflow: shareCapitalContributed.value,
+    outflow: shareCapitalWithdrawn.value,
+    net: shareCapitalBalance.value,
+    route: '/share-capital',
+    linkLabel: 'Share Capital'
+  }
 ])
 
-// Sort controls
-const sortKey = ref('')
-const sortAsc = ref(true)
+const sumLoanMetrics = (loans) => {
+  const outstanding = loans
+    .filter(l => ['approved', 'active', 'overdue'].includes(l.status))
+    .reduce((sum, l) => {
+      if (l.status === 'approved') return sum + parseFloat(l.loan_amount || 0)
+      return sum + parseFloat(l.remaining_balance || l.loan_amount || 0)
+    }, 0)
+  return { count: loans.length, outstanding }
+}
 
-const sortedSummary = computed(() => {
-  const items = [...financialSummary.value]
-  if (!sortKey.value) return items
-  return items.sort((a, b) => {
-    const A = a[sortKey.value]
-    const B = b[sortKey.value]
-    // Category sort should be alphabetic
-    if (sortKey.value === 'category') {
-      return sortAsc.value
-        ? String(A).localeCompare(String(B))
-        : String(B).localeCompare(String(A))
-    }
-    // Numeric sort for income/expenses/net
-    return sortAsc.value ? A - B : B - A
-  })
+const statusSummaryRows = computed(() =>
+  STATUS_ORDER.map(({ key, label }) => {
+    const loans = filteredLoans.value.filter(l => l.status === key)
+    return { status: key, label, ...sumLoanMetrics(loans) }
+  }).filter(row => row.count > 0)
+)
+
+const reportScope = computed(() => {
+  const parts = []
+  if (isAdmin.value) {
+    parts.push(filterBarangay.value ? `Barangay: ${selectedBarangayName.value}` : 'All barangays')
+  } else if (userBarangayName.value) {
+    parts.push(`Barangay: ${userBarangayName.value}`)
+  }
+  if (filterDateFrom.value || filterDateTo.value) {
+    parts.push(`Period: ${filterDateFrom.value || '…'} to ${filterDateTo.value || '…'}`)
+  }
+  return parts.length ? parts.join(' · ') : 'All financial modules'
 })
 
-const toggleSortDir = () => {
-  if (!sortKey.value) return
-  sortAsc.value = !sortAsc.value
+const getDeviceDate = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const formatCurrency = (amount) => {
-  const formatter = new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    maximumFractionDigits: amount >= 1000000 ? 1 : 0,
-    notation: amount >= 1000000 ? 'compact' : 'standard'
-  })
-  return formatter.format(amount)
+const getAuthHeaders = () => {
+  const headers = { 'Content-Type': 'application/json' }
+  if (authStore.token) headers['Authorization'] = `Bearer ${authStore.token}`
+  return headers
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-const formatLoanType = (type) => {
-  if (!type) return 'N/A'
-  return type.charAt(0).toUpperCase() + type.slice(1)
-}
-
-const calculateDuration = (startDate, endDate) => {
-  if (!startDate || !endDate) return 'N/A'
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  const diffTime = Math.abs(end - start)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
-}
-
-const printSection = (sectionId) => {
-  const section = document.getElementById(sectionId)
-  if (!section) return
-  
-  const printWindow = window.open('', '_blank')
-  const scriptTag = '<script>window.onload = function() { window.print(); window.onafterprint = function() { window.close(); } }<\/script>'
-  
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Print - ${sectionId}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-          }
-          .farmer-name {
-            font-weight: 600;
-          }
-          .amount {
-            text-align: right;
-          }
-          h1 {
-            color: #333;
-            margin-bottom: 10px;
-          }
-          .print-date {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${sectionId.replace(/-/g, ' ').toUpperCase()}</h1>
-        <div class="print-date">Printed on: ${new Date().toLocaleString()}</div>
-        ${section.innerHTML}
-        ${scriptTag}
-      </body>
-    </html>
-  `)
-  printWindow.document.close()
-}
-
-// Data loading functions
-const loadApprovedLoans = async () => {
+const loadBarangays = async () => {
   try {
-    const token = authStore.token;
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(`http://localhost:3000/api/loans?status=approved&deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`, { headers });
-    if (response.ok) {
-      const data = await response.json();
-      approvedLoans.value = data.loans || [];
-    }
-  } catch (error) {
-    console.error('Error loading approved loans:', error);
+    const response = await fetch('/api/barangays')
+    const data = await response.json()
+    barangays.value = data.barangays || data.data || (Array.isArray(data) ? data : [])
+  } catch (err) {
+    console.error('Error loading barangays:', err)
   }
 }
 
-const loadActiveLoans = async () => {
+const loadAllLoans = async () => {
   try {
-    const token = authStore.token;
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(`http://localhost:3000/api/loans?status=active&deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`, { headers });
+    const response = await fetch(`/api/loans?deviceDate=${getDeviceDate()}`, { headers: getAuthHeaders() })
     if (response.ok) {
-      const data = await response.json();
-      activeLoans.value = data.loans || [];
+      const data = await response.json()
+      allLoans.value = data.loans || []
     }
-  } catch (error) {
-    console.error('Error loading active loans:', error);
-  }
-}
-
-const loadPaidLoans = async () => {
-  try {
-    const token = authStore.token;
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(`http://localhost:3000/api/loans?status=paid&deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`, { headers });
-    if (response.ok) {
-      const data = await response.json();
-      paidLoans.value = data.loans || [];
-    }
-  } catch (error) {
-    console.error('Error loading paid loans:', error);
+  } catch (err) {
+    console.error('Error loading loans:', err)
   }
 }
 
 const loadPaymentHistory = async () => {
   try {
-    const token = authStore.token;
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch('http://localhost:3000/api/loan-payments/history', { headers })
+    const response = await fetch('/api/loan-payments/history', { headers: getAuthHeaders() })
     if (response.ok) {
       const data = await response.json()
       paymentHistory.value = data.payments || []
     }
-  } catch (error) {
-    console.error('Error loading payment history:', error)
-    // Fallback to empty array
+  } catch (err) {
+    console.error('Error loading payment history:', err)
     paymentHistory.value = []
   }
 }
 
-const updateFinancialSummary = () => {
-  const allLoans = [...approvedLoans.value, ...activeLoans.value, ...paidLoans.value]
-  const allPayments = paymentHistory.value
-  
-  // Group by loan type
-  const agricultural = allLoans.filter(l => l.loan_type === 'agricultural')
-  const provident = allLoans.filter(l => l.loan_type === 'provident')
-  const educational = allLoans.filter(l => l.loan_type === 'educational')
-  
-  // Calculate disbursed amounts and payments received for each type
-  const agriculturealDisbursed = agricultural.reduce((sum, l) => sum + parseFloat(l.loan_amount || 0), 0)
-  const providentDisbursed = provident.reduce((sum, l) => sum + parseFloat(l.loan_amount || 0), 0)
-  const educationalDisbursed = educational.reduce((sum, l) => sum + parseFloat(l.loan_amount || 0), 0)
-  
-  const agriculturalPayments = allPayments.filter(p => p.loan_type === 'agricultural').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
-  const providentPayments = allPayments.filter(p => p.loan_type === 'provident').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
-  const educationalPayments = allPayments.filter(p => p.loan_type === 'educational').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
-  
-  financialSummary.value = [
-    { 
-      category: 'Agricultural Loans', 
-      income: agriculturalPayments, 
-      expenses: agriculturealDisbursed, 
-      net: agriculturalPayments - agriculturealDisbursed 
-    },
-    { 
-      category: 'Provident Loans', 
-      income: providentPayments, 
-      expenses: providentDisbursed, 
-      net: providentPayments - providentDisbursed 
-    },
-    { 
-      category: 'Educational Loans', 
-      income: educationalPayments, 
-      expenses: educationalDisbursed, 
-      net: educationalPayments - educationalDisbursed 
-    },
-    { 
-      category: 'Total', 
-      income: totalPaymentsReceived.value, 
-      expenses: totalLoansDisbursed.value, 
-      net: totalPaymentsReceived.value - totalLoansDisbursed.value 
+const loadMachinerySummary = async () => {
+  try {
+    const userId = authStore.currentUser?.id
+    if (!userId) return
+    const params = new URLSearchParams({ user_id: String(userId) })
+    if (filterDateFrom.value) params.set('start_date', filterDateFrom.value)
+    if (filterDateTo.value) params.set('end_date', filterDateTo.value)
+    if (isAdmin.value && filterBarangay.value) params.set('barangay_id', filterBarangay.value)
+    const response = await fetch(`/api/machinery-financial/profit-summary?${params}`, { headers: getAuthHeaders() })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.summary) {
+        machinerySummary.value = data.summary
+      }
     }
-  ]
-}
-
-const exportReport = (format) => {
-  if (format === 'csv') {
-    exportCSV()
-  } else if (format === 'pdf') {
-    exportPDF()
+  } catch (err) {
+    console.error('Error loading machinery summary:', err)
   }
 }
 
+const loadShareCapitalSummary = async () => {
+  if (!canViewShareCapital.value) {
+    shareCapitalTotals.value = { total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 }
+    return
+  }
+
+  const targets = []
+  if (isAdmin.value) {
+    if (filterBarangay.value) {
+      targets.push(filterBarangay.value)
+    } else {
+      targets.push(...barangayOptions.value.map(b => String(b.id)))
+    }
+  } else if (userBarangayId.value) {
+    targets.push(String(userBarangayId.value))
+  }
+
+  const aggregated = { total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 }
+
+  for (const barangayId of targets) {
+    try {
+      const params = new URLSearchParams({ barangay_id: barangayId })
+      const response = await fetch(`/api/share-capital/overview?${params}`, { headers: getAuthHeaders() })
+      if (!response.ok) continue
+      const data = await response.json()
+      if (!data.success || !data.totals) continue
+      aggregated.total_farmers += data.totals.total_farmers || 0
+      aggregated.total_collected += parseFloat(data.totals.total_collected || 0)
+      aggregated.total_withdrawn += parseFloat(data.totals.total_withdrawn || 0)
+      aggregated.total_balance += parseFloat(data.totals.total_balance || 0)
+    } catch (err) {
+      console.error(`Error loading share capital for barangay ${barangayId}:`, err)
+    }
+  }
+
+  shareCapitalTotals.value = aggregated
+}
+
+const loadAllData = async () => {
+  loading.value = true
+  await Promise.all([
+    loadAllLoans(),
+    loadPaymentHistory(),
+    loadMachinerySummary(),
+    loadShareCapitalSummary()
+  ])
+  loading.value = false
+  await nextTick()
+  renderCharts()
+}
+
+const clearFilters = () => {
+  filterBarangay.value = ''
+  filterDateFrom.value = ''
+  filterDateTo.value = ''
+}
+
+const printReport = () => window.print()
+
+const renderCharts = () => {
+  renderModuleChart()
+  renderMachineryChart()
+}
+
+const renderModuleChart = () => {
+  if (!moduleChartRef.value) return
+  if (moduleChart) moduleChart.destroy()
+
+  const labels = ['Loans', 'Machinery', 'Share Capital']
+  const data = [totalCollected.value, machineryIncome.value, shareCapitalContributed.value]
+  const colors = ['#4ade80', '#38bdf8', '#a78bfa']
+
+  moduleChart = new Chart(moduleChartRef.value.getContext('2d'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '58%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#d1fae5', boxWidth: 12, font: { size: 11 } } }
+      }
+    }
+  })
+}
+
+const renderMachineryChart = () => {
+  if (!machineryChartRef.value) return
+  if (machineryChart) machineryChart.destroy()
+
+  machineryChart = new Chart(machineryChartRef.value.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Income', 'Expenses', 'Net'],
+      datasets: [{
+        data: [machineryIncome.value, machineryExpenses.value, machineryNet.value],
+        backgroundColor: ['#4ade80', '#f87171', machineryNet.value >= 0 ? '#38bdf8' : '#fb923c'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#bbf7d0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        y: {
+          ticks: { color: '#bbf7d0', font: { size: 10 }, callback: (v) => '₱' + Number(v).toLocaleString() },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        }
+      }
+    }
+  })
+}
+
+const csvEscape = (val) => {
+  const str = String(val ?? '')
+  return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str
+}
+
 const exportCSV = () => {
-  const csvData = [
-    ['Category', 'Income', 'Expenses', 'Net'],
-    ...financialSummary.value.map(item => [
-      item.category,
-      item.income,
-      item.expenses,
-      item.net
-    ])
+  const rows = [
+    ['Financial Overview — System Summary Report'],
+    ['Generated', reportGeneratedAt.value],
+    ['Scope', reportScope.value],
+    [],
+    ['CONSOLIDATED SUMMARY'],
+    ['Module', 'Inflows', 'Outflows', 'Net/Balance'],
+    ...moduleSummaryRows.value.map(r => [r.label, r.inflow, r.outflow, r.net]),
+    [],
+    ['LOANS'],
+    ['Total disbursed', totalDisbursed.value],
+    ['Total collected', totalCollected.value],
+    ['Outstanding', outstandingBalance.value],
+    ['Overdue amount', overdueAmount.value],
+    ['Overdue loans', overdueCount.value],
+    ['Collection rate (%)', collectionRate.value],
+    ['Active portfolio', activePortfolioCount.value],
   ]
-  
-  const csvContent = csvData.map(row => row.join(',')).join('\n')
-  const blob = new Blob([csvContent], { type: 'text/csv' })
+
+  rows.push([], ['LOANS BY STATUS'], ['Status', 'Count', 'Outstanding'])
+  rows.push(...statusSummaryRows.value.map(r => [r.label, r.count, r.outstanding]))
+
+  rows.push(
+    [],
+    ['MACHINERY'],
+    ['Total income', machineryIncome.value],
+    ['Total expenses', machineryExpenses.value],
+    ['Net profit', machineryNet.value],
+    [],
+    ['SHARE CAPITAL'],
+    ['Members', shareCapitalMembers.value],
+    ['Contributed', shareCapitalContributed.value],
+    ['Withdrawn', shareCapitalWithdrawn.value],
+    ['Balance', shareCapitalBalance.value]
+  )
+
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `financial-report-${new Date().toISOString().split('T')[0]}.csv`
+  a.download = `financial-overview-${new Date().toISOString().split('T')[0]}.csv`
   a.click()
   window.URL.revokeObjectURL(url)
 }
 
-const exportPDF = () => {
-  // Simple PDF export using window.print
-  window.print()
-}
+watch([filterBarangay, filterDateFrom, filterDateTo], () => {
+  loadMachinerySummary()
+  loadShareCapitalSummary()
+})
+
+watch([filteredLoans, machinerySummary, shareCapitalTotals], async () => {
+  await nextTick()
+  renderCharts()
+})
 
 onMounted(async () => {
-  loading.value = true
-  await Promise.all([
-    loadApprovedLoans(),
-    loadActiveLoans(),
-    loadPaidLoans(),
-    loadPaymentHistory()
-  ])
-  updateFinancialSummary()
-  loading.value = false
+  if (isAdmin.value) await loadBarangays()
+  await loadAllData()
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Open+Sans:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
-/* Container and base layout */
 .financial-overview-container {
   min-height: calc(100vh - 70px);
-  padding: 28px 20px 20px;
-  max-width: 1280px;
+  padding: 24px 18px;
+  max-width: none;
+  width: 100%;
   margin: 0 auto;
-  background: #f9fafb;
-  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', sans-serif;
   position: relative;
   isolation: isolate;
 }
 
-.financial-overview-container::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(45, 212, 191, 0.10) 0%, transparent 60%),
-    radial-gradient(circle at 75% 75%, rgba(163, 230, 53, 0.08) 0%, transparent 30%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Header */
 .page-header {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr auto;
   gap: 16px;
   align-items: start;
-  margin-bottom: 20px;
-  padding: 20px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
   background: white;
   border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
 }
 
-@media (min-width: 769px) {
-  .page-header {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-  }
-}
-
-.page-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
 .page-title {
-  font-size: 34px;
-  line-height: 1.1;
+  font-size: 28px;
   font-weight: 800;
   color: #111827;
   margin: 0;
@@ -702,611 +709,235 @@ onMounted(async () => {
 }
 
 .page-subtitle {
-  font-size: 20px;
-  line-height: 1.4;
-  color: #374151;
-  margin: 8px 0 0 0;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #6b7280;
+  margin: 6px 0 0;
+  line-height: 1.5;
 }
 
-.header-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
+.page-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 8px 0 0;
+  line-height: 1.45;
 }
+
+.inline-link, .view-all-link {
+  font-weight: 700;
+  color: #059669;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.inline-link:hover, .view-all-link:hover { text-decoration: underline; }
+
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .export-btn {
-  padding: 11px 18px;
-  min-width: 138px;
+  padding: 9px 16px;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 13.5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  font-size: 12px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  min-height: 40px;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
 }
 
-.export-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
 }
 
-/* Stats grid */
+.filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+.filter-input {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 130px;
+}
+.filter-clear-btn {
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.print-only { display: none; }
+
+.report-banner { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+.report-banner h2 { margin: 0 0 6px; font-size: 18px; }
+.report-banner p { margin: 0; font-size: 12px; color: #6b7280; }
+.report-footer { margin-top: 20px; font-size: 11px; color: #6b7280; line-height: 1.5; }
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
-  }
-}
-@media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .stat-card {
   background: white;
-  border-radius: 14px;
-  min-height: 112px;
-  padding: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
-}
-
-.stat-icon {
-  font-size: 34px;
-  width: 56px;
-  height: 56px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
   border-radius: 12px;
-  flex: 0 0 56px;
-}
-
-.stat-info {
-  display: grid;
-  grid-template-rows: auto auto;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  justify-items: center;
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #ffffff;
-  margin: 0;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.2px;
-  color: #ffffff;
-}
-
-.stat-value.income { color: #ffffff; }
-.stat-value.expense { color: #ffffff; }
-.stat-value.savings { color: #ffffff; }
-
-/* Charts section */
-.charts-section {
-  background: linear-gradient(135deg, rgba(6, 37, 26, 0.96), rgba(12, 78, 58, 0.96));
-  border-radius: 28px;
-  padding: 28px;
-  margin-bottom: 26px;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-}
-
-.chart-card {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.chart-title {
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0 auto;
-  color: #e6ffed;
-  text-align: center;
-}
-
-/* Ensures the wrapper gives the donut component enough room for left/right layout */
-.donut-wrap {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px 0;
-}
-.donut-wrap > * {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Table section */
-.financial-table-section {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 14px;
   border: 1px solid #e5e7eb;
 }
 
-.table-header {
+.stat-info { text-align: center; }
+.stat-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+.stat-value { font-size: 18px; font-weight: 800; color: #111827; margin-top: 4px; font-family: 'Poppins', sans-serif; }
+.stat-value.collected { color: #059669; }
+.stat-value.outstanding { color: #d97706; }
+.stat-value.overdue { color: #dc2626; }
+.stat-value.expense { color: #dc2626; }
+.stat-value.rate { color: #2563eb; }
+.stat-meta { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+.charts-row {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0;
+.chart-card {
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  border-radius: 14px;
+  padding: 16px;
 }
 
-.table-actions {
-  display: inline-flex;
+.chart-title { font-size: 14px; font-weight: 800; color: #eefde6; margin: 0 0 10px; text-align: center; }
+.chart-canvas-wrap { height: 220px; position: relative; }
+
+.financial-table-section {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.module-section { margin-top: 4px; }
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
-.filter-label {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.sort-select {
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 13px;
-  color: #374151;
-}
-
-.sort-dir-btn {
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-  font-size: 13px;
-  color: #374151;
-  cursor: pointer;
-}
-.sort-dir-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.section-title { font-size: 16px; font-weight: 800; color: #111827; margin: 0; }
 
 .financial-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* keeps columns balanced */
+  margin-bottom: 12px;
 }
+
+.financial-table:last-child { margin-bottom: 0; }
 
 .financial-table th,
 .financial-table td {
-  padding: 12px;
+  padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
 }
 
 .financial-table th {
   background: #f9fafb;
   font-weight: 700;
-  font-size: 12.5px;
   color: #6b7280;
-  border-bottom: 2px solid #e5e7eb;
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
-.financial-table td {
-  font-size: 13.5px;
-  color: #ffffff;
-}
+.sub-table { margin-top: 8px; }
 
-.financial-table td.income {
-  color: #ffffff;
-  font-weight: 700;
-}
+.financial-table .amount { font-weight: 700; }
+.financial-table .collected { color: #059669; font-weight: 700; }
+.financial-table .outstanding { color: #d97706; font-weight: 700; }
+.financial-table .overdue { color: #dc2626; font-weight: 700; }
+.financial-table .expense { color: #dc2626; font-weight: 700; }
+.financial-table .rate { color: #2563eb; font-weight: 700; }
+.financial-table .loading-cell { text-align: center; color: #9ca3af; font-style: italic; }
 
-.financial-table td.expense {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.financial-table td.positive {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.financial-table td.negative {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-/* Info Sections */
-.info-section {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 2px solid #f3f4f6;
-}
-
-.info-section .section-title,
-.financial-table-section .table-header .section-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.financial-table-section .table-header .section-title {
-  font-size: 18px;
-}
-
-.section-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.section-badge {
-  padding: 6px 14px;
-  background: rgba(33, 68, 51, 0.9);
-  color: #dcfce7;
-  border: 1px solid rgba(120, 201, 158, 0.35);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.section-badge.success {
-  background: rgba(31, 92, 63, 0.92);
-  color: #d7ffe8;
-}
-
-.print-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-  font-size: 13px;
-}
-
-.print-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-}
-
-.section-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-
-.summary-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.summary-stat .stat-label {
-  font-size: 13px;
-  color: #ffffff;
-}
-
-.summary-stat .stat-value {
-  font-size: 20px;
-  font-weight: 800;
-  font-family: 'Poppins', sans-serif;
-  color: #ffffff;
-}
-
-.summary-stat .stat-value.approved {
-  color: #ffffff;
-}
-
-.summary-stat .stat-value.partial {
-  color: #ffffff;
-}
-
-.summary-stat .stat-value.warning {
-  color: #ffffff;
-}
-
-.summary-stat .stat-value.success {
-  color: #ffffff;
-}
-
-.data-table-container {
-  overflow-x: auto;
-  border-radius: 16px;
-  border: 1px solid rgba(165, 220, 185, 0.2);
-  background: linear-gradient(145deg, rgba(19, 41, 31, 0.96), rgba(15, 32, 25, 0.98));
-  box-shadow: inset 0 1px 0 rgba(226, 255, 238, 0.06);
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
-  background: rgba(18, 40, 30, 0.96);
-}
-
-.data-table th,
-.data-table td {
-  padding: 18px 16px;
-  text-align: left;
-  border: 1px solid rgba(156, 212, 180, 0.14);
-}
-
-.data-table th {
-  background: linear-gradient(135deg, rgba(64, 128, 92, 0.42), rgba(49, 102, 78, 0.38));
-  font-weight: 800;
-  font-size: 14.5px;
-  line-height: 1.35;
-  color: #d8fbe6;
-  text-transform: none;
-  letter-spacing: 0.01em;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.data-table td {
-  font-size: 13.5px;
-  color: #effff5;
-  text-align: left;
-  background: rgba(17, 36, 28, 0.88);
-  vertical-align: middle;
-}
-
-.data-table .farmer-name {
-  font-weight: 700;
-  color: #f6fff9;
-}
-
-.data-table .amount {
-  text-align: right;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #f2fff7;
-}
-
-.data-table .amount.highlight {
-  color: #7ee7ff;
-}
-
-.data-table .amount.warning {
-  color: #ff9b9b;
-}
-
-.data-table .amount.success {
-  color: #95f2b8;
-}
-
-.data-table .loading-row td,
-.data-table .empty-row td {
-  text-align: center;
-  color: #bbdec8;
-  font-style: italic;
-  padding: 32px 16px;
-  background: rgba(20, 42, 32, 0.9);
-}
-
-.data-table .data-row:hover td {
-  background: rgba(43, 82, 61, 0.72);
-}
-
-/* Print styles */
 @media print {
-  .page-header,
-  .stats-grid,
-  .charts-section,
-  .financial-table-section {
-    display: none;
-  }
-  
-  .section-header .section-actions {
-    display: none;
-  }
-  
-  .info-section {
-    page-break-inside: avoid;
-    margin-bottom: 30px;
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .financial-overview-container { background: #fff !important; color: #111 !important; padding: 0 !important; }
+  .stat-card, .chart-card, .financial-table-section { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; }
 }
 
-@media (max-width: 900px) {
-  .table-header {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-
-  .table-actions {
-    flex-wrap: wrap;
-  }
+@media (max-width: 768px) {
+  .page-header { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 640px) {
-  .financial-overview-container {
-    padding: 16px;
-  }
-
-  .stat-card,
-  .charts-section,
-  .financial-table-section,
-  .info-section {
-    padding: 18px;
-  }
-
-  .section-header {
-    align-items: flex-start;
-  }
-
-  .data-table th,
-  .data-table td,
-  .financial-table th,
-  .financial-table td {
-    padding: 12px 10px;
-  }
-
-  .data-table th {
-    font-size: 12.8px;
-  }
-}
-
-/* Dashboard theme override */
+/* Glass theme */
 .financial-overview-container {
   background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%) !important;
   color: #eefde6;
   border-radius: 18px;
 }
 
-.page-title,
-.chart-title,
-.info-section .section-title,
-.financial-table-section .table-header .section-title,
-.data-table .farmer-name { color: #eefde6 !important; }
-
-.page-subtitle,
-.stats-grid .stat-card .stat-label,
-.filter-label,
-.summary-stat .stat-label,
-.data-table td,
-.data-table .loading-row td,
-.data-table .empty-row td { color: rgba(220, 238, 211, 0.78) !important; }
-
-.stats-grid .stat-card,
-.charts-section,
-.financial-table-section,
-.page-header,
-.info-section {
+.page-header, .filters-bar, .stat-card, .financial-table-section {
   background: rgba(28, 42, 33, 0.92) !important;
   border: 1px solid rgba(190, 235, 203, 0.14) !important;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255,255,255,0.05) !important;
 }
 
-.stat-icon {
-  background: rgba(255,255,255,0.08) !important;
-}
+.page-title, .section-title { color: #eefde6 !important; }
+.page-subtitle, .stat-label, .filter-label { color: rgba(220, 238, 211, 0.72) !important; }
+.page-note { color: rgba(220, 238, 211, 0.62) !important; }
+.stat-value { color: #eefde6 !important; }
+.stat-value.collected { color: #86efac !important; }
+.stat-value.outstanding { color: #fcd34d !important; }
+.stat-value.overdue, .stat-value.expense { color: #fca5a5 !important; }
+.stat-value.rate { color: #93c5fd !important; }
 
-.financial-overview-container .export-btn,
-.financial-overview-container .print-btn {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(34, 197, 94, 0.14)) !important;
-  color: #dcfce7 !important;
-  border: 1px solid rgba(74, 222, 128, 0.34) !important;
-  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.18) !important;
-}
-
-.sort-select {
+.filter-input, .filter-clear-btn {
   background: rgba(0,0,0,0.24) !important;
   color: #eefde6 !important;
   border-color: rgba(190, 235, 203, 0.24) !important;
 }
 
-.sort-dir-btn {
-  background: rgba(255,255,255,0.06) !important;
-  color: #eefde6 !important;
-  border-color: rgba(190, 235, 203, 0.24) !important;
-}
+.inline-link, .view-all-link { color: #86efac !important; }
 
 .financial-table th {
   background: rgba(34, 55, 44, 0.95) !important;
   color: #b6f7cb !important;
-  border-bottom-color: rgba(190, 235, 203, 0.2) !important;
 }
 
 .financial-table td {
-  border-bottom-color: rgba(255,255,255,0.06) !important;
   color: rgba(238, 253, 230, 0.92) !important;
-}
-
-.financial-table td.income {
-  color: #86efac !important;
-}
-
-.financial-table td.expense {
-  color: #fca5a5 !important;
-}
-
-.financial-table td.positive {
-  color: #86efac !important;
-}
-
-.financial-table td.negative {
-  color: #fca5a5 !important;
-}
-
-.data-table th {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%) !important;
-  color: #b6f7cb !important;
-  border-bottom-color: rgba(190, 235, 203, 0.2) !important;
-}
-
-.data-table td {
   border-bottom-color: rgba(255,255,255,0.06) !important;
 }
 
-.data-table .data-row:hover td {
-  background: rgba(74, 222, 128, 0.07) !important;
+.financial-table .collected { color: #86efac !important; }
+.financial-table .outstanding { color: #fcd34d !important; }
+.financial-table .overdue, .financial-table .expense { color: #fca5a5 !important; }
+.financial-table .rate { color: #93c5fd !important; }
+
+.financial-overview-container .export-btn {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(34, 197, 94, 0.14)) !important;
+  color: #dcfce7 !important;
+  border: 1px solid rgba(74, 222, 128, 0.34) !important;
 }
 </style>

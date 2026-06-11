@@ -7,6 +7,7 @@ const router = express.Router();
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
 const {
+  ANNOUNCEMENT_NOTIFICATION_TYPES,
   ASSISTANCE_NOTIFICATION_TYPES,
   STATUS_NOTIFICATION_TYPES,
   formatLocalDate,
@@ -14,8 +15,26 @@ const {
 } = require('../services/notification-service');
 const { syncExpiredMachineryBookings } = require('../services/booking-status-sync');
 
-const VISIBLE_NOTIFICATION_TYPES = ['1_day', 'overdue_penalty', ...STATUS_NOTIFICATION_TYPES, ...ASSISTANCE_NOTIFICATION_TYPES];
+const FARMER_NOTIFICATION_TYPES = ['1_day', 'overdue_penalty', ...STATUS_NOTIFICATION_TYPES, ...ASSISTANCE_NOTIFICATION_TYPES];
+const VISIBLE_NOTIFICATION_TYPES = [...FARMER_NOTIFICATION_TYPES, ...ANNOUNCEMENT_NOTIFICATION_TYPES];
 const VISIBLE_NOTIFICATION_TYPES_SQL = VISIBLE_NOTIFICATION_TYPES.map((value) => `'${value}'`).join(', ');
+const normalizeRole = (role) => (role || '').toLowerCase();
+
+const isFarmerRole = (role) => normalizeRole(role) === 'farmer';
+
+const buildNotificationVisibilityClause = (role) => {
+  if (isFarmerRole(role)) {
+    return {
+      clause: `n.notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL})`,
+      params: []
+    };
+  }
+
+  return {
+    clause: `n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')`,
+    params: []
+  };
+};
 
 const parseBookingDate = (value) => {
   if (!value) return null;
@@ -52,24 +71,25 @@ router.get('/', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    await syncExpiredMachineryBookings();
-    await generateDueDateNotifications();
+    if (isFarmerRole(userRole)) {
+      await syncExpiredMachineryBookings();
+      await generateDueDateNotifications();
+    }
 
-    let query, params;
     const todayStr = formatLocalDate(new Date());
+    const visibility = buildNotificationVisibilityClause(userRole);
 
-    // Notifications are always farmer-specific: only return notifications for the logged-in farmer.
-    query = `
+    const query = `
       SELECT n.*, f.full_name AS farmer_name, f.reference_number
       FROM due_date_notifications n
       JOIN farmers f ON n.farmer_id = f.id
       WHERE n.farmer_id = ?
         AND n.trigger_date <= ?
-        AND n.notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL})
+        AND ${visibility.clause}
       ORDER BY n.is_read ASC, n.trigger_date DESC
       LIMIT 50
     `;
-    params = [userId, todayStr];
+    const params = [userId, todayStr, ...visibility.params];
 
     const [notifications] = await pool.execute(query, params);
     res.json({ success: true, notifications });
@@ -85,21 +105,23 @@ router.get('/unread-count', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    await syncExpiredMachineryBookings();
-    await generateDueDateNotifications();
+    if (isFarmerRole(userRole)) {
+      await syncExpiredMachineryBookings();
+      await generateDueDateNotifications();
+    }
 
-    let query, params;
     const todayStr = formatLocalDate(new Date());
+    const visibility = buildNotificationVisibilityClause(userRole);
 
-    query = `
+    const query = `
       SELECT COUNT(*) as count 
       FROM due_date_notifications 
       WHERE farmer_id = ?
         AND is_read = 0 
         AND trigger_date <= ?
-        AND notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL})
+        AND ${visibility.clause.replace(/n\./g, '')}
     `;
-    params = [userId, todayStr];
+    const params = [userId, todayStr, ...visibility.params];
 
     const [rows] = await pool.execute(query, params);
     res.json({ success: true, count: rows[0].count });
@@ -136,14 +158,15 @@ router.put('/read-all', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     const todayStr = formatLocalDate(new Date());
+    const visibility = buildNotificationVisibilityClause(userRole);
 
     await pool.execute(`
       UPDATE due_date_notifications 
       SET is_read = 1 
       WHERE farmer_id = ?
         AND trigger_date <= ? 
-        AND notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL})
-    `, [userId, todayStr]);
+        AND ${visibility.clause.replace(/n\./g, '')}
+    `, [userId, todayStr, ...visibility.params]);
     res.json({ success: true, message: 'All notifications marked as read' });
   } catch (err) {
     console.error('Error marking all read:', err);
@@ -191,7 +214,8 @@ async function generateDueDateNotifications(testDate = null) {
              l.loan_type, l.status, f.full_name
       FROM loans l
       JOIN farmers f ON l.farmer_id = f.id
-      WHERE l.status IN ('active', 'approved', 'overdue')
+      WHERE f.role = 'farmer'
+        AND l.status IN ('active', 'approved', 'overdue')
         AND l.remaining_balance > 0
         AND l.due_date IS NOT NULL
     `);
@@ -267,7 +291,8 @@ async function generateDueDateNotifications(testDate = null) {
              l.loan_type, l.status, f.full_name
       FROM loans l
       JOIN farmers f ON l.farmer_id = f.id
-      WHERE l.status = 'overdue'
+      WHERE f.role = 'farmer'
+        AND l.status = 'overdue'
         AND l.remaining_balance > 0
         AND l.due_date IS NOT NULL
         AND l.due_date < ?
@@ -341,7 +366,8 @@ async function generateDueDateNotifications(testDate = null) {
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
-      WHERE mb.payment_status IN ('Unpaid', 'Partial')
+      WHERE f.role = 'farmer'
+        AND mb.payment_status IN ('Unpaid', 'Partial')
         AND mb.remaining_balance > 0
         AND mb.status NOT IN ('Rejected', 'Cancelled')
     `);
@@ -410,7 +436,8 @@ async function generateDueDateNotifications(testDate = null) {
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
-      WHERE mb.payment_status IN ('Unpaid', 'Partial')
+      WHERE f.role = 'farmer'
+        AND mb.payment_status IN ('Unpaid', 'Partial')
         AND mb.status IN ('Approved', 'Completed')
         AND DATE_ADD(mb.booking_date, INTERVAL 30 DAY) < ?
         AND (mb.total_price - COALESCE(mb.total_paid, 0)) > 0

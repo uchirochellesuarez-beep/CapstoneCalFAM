@@ -6,6 +6,7 @@ const multer = require('multer');
 
 const pool = require('../db');
 const { verifyToken } = require('../middleware/auth');
+const { createAnnouncementPostedNotifications } = require('../services/notification-service');
 
 const normalizeRole = (role) => (role || '').toLowerCase();
 
@@ -429,10 +430,21 @@ router.post('/announcements', verifyToken, (req, res, next) => {
       [title, content, image, req.user.id, authorRole]
     );
 
+    const announcementId = result.insertId;
+    const authorName = req.user.full_name || authorRole;
+
+    const notifiedCount = await createAnnouncementPostedNotifications({
+      announcementId,
+      title,
+      authorId: req.user.id,
+      authorName,
+      authorRole
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Announcement posted successfully.',
-      data: { id: result.insertId }
+      data: { id: announcementId, notifications_sent: notifiedCount }
     });
   } catch (err) {
     console.error('Error creating announcement:', err);

@@ -400,13 +400,16 @@ const operationsItems = computed(() => {
     items.push({ text: "Machinery Approval", route: "/machinery-approval", icon: ApprovalIcon });
   }
 
-  // Machinery Financial Management for admin, president, and treasurer
+  // Machinery Financial for admin, president, and treasurer; Loan Portfolio for officers (admin has it under ADMIN)
   if (canManageFinancial.value) {
     items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: MoneyIcon });
+    if (!isAdmin.value) {
+      items.push({ text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon });
+    }
   }
 
-  // Share Capital (Savings) for farmer + financial officers
-  if (['admin', 'farmer', 'treasurer', 'president'].includes(role)) {
+  // Share Capital for farmer + officers (admin has it under ADMIN section)
+  if (['farmer', 'treasurer', 'president'].includes(role)) {
     items.push({ text: 'Share Capital', route: '/share-capital', icon: BankIcon });
   }
   
@@ -436,7 +439,7 @@ const communityItems = computed(() => {
 
 const insightsItems = [
   { text: "News", route: "/news", icon: NewsIcon, badge: null },
-  { text: "Announcements", route: "/announcement", icon: AnnouncementIcon, badge: 1 },
+  { text: "Announcements", route: "/announcement", icon: AnnouncementIcon, badge: null },
 ];
 
 const adminItems = [
@@ -444,6 +447,7 @@ const adminItems = [
   { text: "Loan Management", route: "/admin-loans", icon: MoneyIcon, badge: null },
   { text: "Machinery Management", route: "/machinery-management", icon: MachineryIcon, badge: null },
   { text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon, badge: null },
+  { text: "Share Capital", route: "/share-capital", icon: BankIcon, badge: null },
 ];
 
 const isActiveRoute = (path) => {

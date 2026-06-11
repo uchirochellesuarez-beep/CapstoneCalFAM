@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h1 class="page-title">{{ pageTitle }}</h1>
-      <p class="page-subtitle">{{ pageSubtitle }}</p>
+      <p v-if="pageSubtitle" class="page-subtitle">{{ pageSubtitle }}</p>
     </div>
 
     <!-- Loan Statistics -->
@@ -72,6 +72,18 @@
       </div>
     </div>
 
+    <!-- Barangay Filter (admin) -->
+    <div v-if="isAdmin" class="barangay-filter-bar">
+      <label for="loan-barangay-filter" class="barangay-filter-label">Barangay</label>
+      <select id="loan-barangay-filter" v-model="filterBarangay" class="barangay-filter-select">
+        <option value="">All Barangays</option>
+        <option v-for="b in barangayOptions" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
+      </select>
+      <span v-if="filterBarangay" class="barangay-filter-hint">
+        Showing loans from {{ selectedBarangayName }}
+      </span>
+    </div>
+
     <!-- Filter Tabs -->
     <div class="filter-tabs">
       <button
@@ -136,14 +148,14 @@
           </colgroup>
           <thead>
             <tr>
-              <th class="th-name">Farmer Name</th>
+              <th class="th-name">Name</th>
               <th class="th-amount">Amount</th>
               <th class="th-purpose">Purpose</th>
-              <th class="th-payer">Payer Status</th>
-              <th class="th-date">Application Date</th>
-              <th class="th-date">Approved Date</th>
-              <th class="th-date">Last Payment Date</th>
-              <th class="th-term">Payment Term</th>
+              <th class="th-payer">Payer</th>
+              <th class="th-date">Applied</th>
+              <th class="th-date">Approved</th>
+              <th class="th-date">Last Paid</th>
+              <th class="th-term">Term</th>
               <th class="th-status">Status</th>
               <th class="th-actions">Actions</th>
             </tr>
@@ -156,36 +168,26 @@
               <td colspan="10" class="empty-cell">No loans found</td>
             </tr>
             <tr v-else v-for="loan in filteredLoans" :key="loan.id" :data-loan-id="loan.id" :class="{ 'notification-highlight-row': highlightedLoanId == loan.id }">
-              <td class="td-name">{{ loan.full_name }}</td>
+              <td class="td-name" :title="loan.full_name">{{ loan.full_name }}</td>
               <td class="td-amount amount">
                 ₱{{ (loan.status === 'active' ? (loan.remaining_balance || 0) : loan.loan_amount).toLocaleString() }}
               </td>
-              <td class="td-purpose">{{ formatPurpose(loan.loan_purpose) }}</td>
+              <td class="td-purpose" :title="formatPurpose(loan.loan_purpose)">{{ formatPurposeShort(loan.loan_purpose) }}</td>
               <td class="td-payer">
                 <div v-if="getPayerAssessment(loan.farmer_id)" class="payer-cell">
                   <div :class="['payer-badge', getPayerAssessment(loan.farmer_id).assessment.riskLevel.toLowerCase()]">
-                    <span class="payer-icon">{{ getPayerAssessmentIcon(getPayerAssessment(loan.farmer_id).assessment.classification) }}</span>
-                    <span class="payer-text">{{ formatPayerStatus(getPayerAssessment(loan.farmer_id).assessment.classification) }}</span>
+                    <span class="payer-text">{{ formatPayerStatusShort(getPayerAssessment(loan.farmer_id).assessment.classification) }}</span>
                   </div>
-                  <div class="payer-reason">
-                    <span class="credit-score">Credit Score: <strong>{{ getPayerAssessment(loan.farmer_id).assessment.creditScore }}/100</strong></span>
-                    <div class="score-factors">
-                      <span title="Payment History (40% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.paymentHistoryScore }}%</span>
-                      <span title="Default History (30% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.defaultHistoryScore }}%</span>
-                      <span title="Loan Volume (15% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.loanVolumeScore }}%</span>
-                      <span title="Activity Recency (15% weight)">{{ getPayerAssessment(loan.farmer_id).scoreComponents.activityRecencyScore }}%</span>
-                    </div>
-                  </div>
+                  <span class="credit-score-compact">{{ getPayerAssessment(loan.farmer_id).assessment.creditScore }}/100</span>
                 </div>
                 <div v-else class="payer-badge unknown">
-                  <span class="payer-icon">-</span>
-                  <span class="payer-text">Not Available</span>
+                  <span class="payer-text">N/A</span>
                 </div>
               </td>
-              <td class="td-date">{{ formatDate(loan.application_date) }}</td>
-              <td class="td-date">{{ formatDate(loan.approval_date) }}</td>
-              <td class="td-date">{{ formatDate(loan.last_payment_date) }}</td>
-              <td class="td-term">{{ loan.payment_term }} months</td>
+              <td class="td-date">{{ formatTableDate(loan.application_date) }}</td>
+              <td class="td-date">{{ formatTableDate(loan.approval_date) }}</td>
+              <td class="td-date">{{ formatTableDate(loan.last_payment_date) }}</td>
+              <td class="td-term">{{ loan.payment_term }}mo</td>
               <td class="td-status">
                 <span :class="['status-badge', loan.status]">
                   {{ loan.status }}
@@ -194,7 +196,7 @@
               <td class="td-actions">
                 <div class="action-buttons">
                   <button
-                    v-if="loan.status === 'pending'"
+                    v-if="canModifyLoans && loan.status === 'pending'"
                     @click="openApproveModal(loan)"
                     class="btn btn-approve"
                     title="Approve Loan"
@@ -202,7 +204,7 @@
                     Approve
                   </button>
                   <button
-                    v-if="loan.status === 'pending'"
+                    v-if="canModifyLoans && loan.status === 'pending'"
                     @click="openRejectModal(loan)"
                     class="btn btn-reject"
                     title="Reject Loan"
@@ -210,21 +212,21 @@
                     Reject
                   </button>
                   <button
-                    v-if="(loan.status === 'approved' || loan.status === 'active') && canRecordPayment(loan)"
+                    v-if="canModifyLoans && (loan.status === 'approved' || loan.status === 'active') && canRecordPayment(loan)"
                     @click="openPaymentModal(loan)"
                     class="btn btn-payment"
                     title="Record Payment"
                   >
-                    Record Payment
+                    Payment
                   </button>
                   <button
-                    v-else-if="loan.status === 'approved' || loan.status === 'active'"
+                    v-else-if="canModifyLoans && (loan.status === 'approved' || loan.status === 'active')"
                     class="btn btn-payment"
                     style="opacity: 0.5; cursor: not-allowed;"
                     :title="`You cannot record payments for ${loan.applicant_role === 'treasurer' ? 'Treasurer' : loan.applicant_role === 'president' ? 'President' : 'this'} loans`"
                     disabled
                   >
-                    Record Payment
+                    Payment
                   </button>
                   <button
                     @click="viewLoanDetails(loan)"
@@ -336,6 +338,10 @@
             <div class="detail-item">
               <label>Farmer Name</label>
               <p>{{ selectedLoan.full_name }}</p>
+            </div>
+            <div class="detail-item" v-if="selectedLoan.barangay_name">
+              <label>Barangay</label>
+              <p>{{ selectedLoan.barangay_name }}</p>
             </div>
             <div class="detail-item">
               <label>Reference Number</label>
@@ -581,6 +587,8 @@ const route = useRoute()
 const highlightedLoanId = ref(null)
 
 const loans = ref([])
+const barangays = ref([])
+const filterBarangay = ref('')
 const loading = ref(true)
 const activeTab = ref('pending')
 const showApproveModal = ref(false)
@@ -622,15 +630,38 @@ const paymentForm = ref({
   remarks: ''
 })
 
+const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
+const canModifyLoans = computed(() => !isAdmin.value)
+
+const barangayOptions = computed(() => {
+  return barangays.value.map(b => ({
+    id: b.id || b.barangay_id,
+    name: b.name || b.barangay_name || b.barangay || String(b.id)
+  }))
+})
+
+const selectedBarangayName = computed(() => {
+  if (!filterBarangay.value) return ''
+  const match = barangayOptions.value.find(b => String(b.id) === String(filterBarangay.value))
+  return match?.name || ''
+})
+
+const getLoanBarangayId = (loan) => String(loan.barangay_id || loan.farmer_barangay || '')
+
+const loansByBarangay = computed(() => {
+  if (!filterBarangay.value) return loans.value
+  return loans.value.filter(loan => getLoanBarangayId(loan) === String(filterBarangay.value))
+})
+
 const stats = computed(() => {
   return {
-    pending: loans.value.filter(l => l.status === 'pending').length,
-    approved: loans.value.filter(l => l.status === 'approved').length,
-    active: loans.value.filter(l => l.status === 'active').length,
-    overdue: loans.value.filter(l => l.status === 'overdue').length,
-    paid: loans.value.filter(l => l.status === 'paid').length,
-    rejected: loans.value.filter(l => l.status === 'rejected').length,
-    totalAmount: loans.value.reduce((sum, l) => {
+    pending: loansByBarangay.value.filter(l => l.status === 'pending').length,
+    approved: loansByBarangay.value.filter(l => l.status === 'approved').length,
+    active: loansByBarangay.value.filter(l => l.status === 'active').length,
+    overdue: loansByBarangay.value.filter(l => l.status === 'overdue').length,
+    paid: loansByBarangay.value.filter(l => l.status === 'paid').length,
+    rejected: loansByBarangay.value.filter(l => l.status === 'rejected').length,
+    totalAmount: loansByBarangay.value.reduce((sum, l) => {
       if (l.status === 'approved') {
         // For approved loans, include full loan amount
         return sum + parseFloat(l.loan_amount || 0)
@@ -651,9 +682,9 @@ const stats = computed(() => {
 
 const filteredLoans = computed(() => {
   if (activeTab.value === 'all') {
-    return loans.value
+    return loansByBarangay.value
   }
-  return loans.value.filter(loan => loan.status === activeTab.value)
+  return loansByBarangay.value.filter(loan => loan.status === activeTab.value)
 })
 
 const pageTitle = computed(() => {
@@ -666,6 +697,9 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   const userRole = authStore.currentUser?.role;
+  if (userRole === 'admin') {
+    return '';
+  }
   if (userRole === 'president') {
     return 'Review and approve treasurer loan applications';
   } else if (userRole === 'treasurer') {
@@ -679,9 +713,6 @@ const canRecordPayment = computed(() => {
     const userRole = authStore.currentUser?.role;
     const userId = authStore.currentUser?.id;
     const isOfficerLoan = ['treasurer', 'president'].includes(loan.applicant_role);
-    
-    // Admin can always record payments
-    if (userRole === 'admin') return true;
     
     // Officer loans require cross-approval for payment recording
     if (isOfficerLoan) {
@@ -708,6 +739,22 @@ const minDueDate = computed(() => {
   today.setDate(today.getDate() + 1)
   return today.toISOString().split('T')[0]
 })
+
+async function fetchBarangays() {
+  try {
+    const response = await fetch('/api/barangays')
+    const data = await response.json()
+    if (Array.isArray(data)) {
+      barangays.value = data
+    } else if (data.success && Array.isArray(data.barangays)) {
+      barangays.value = data.barangays
+    } else if (data.success && Array.isArray(data.data)) {
+      barangays.value = data.data
+    }
+  } catch (error) {
+    console.error('Error fetching barangays:', error)
+  }
+}
 
 async function fetchLoans() {
   loading.value = true
@@ -885,6 +932,11 @@ function closeModals() {
 }
 
 async function approveLoan() {
+  if (!canModifyLoans.value) {
+    alert('Admins have view-only access and cannot approve loans.')
+    return
+  }
+
   processing.value = true
   try {
     const adminId = authStore.currentUser?.id || authStore.userId
@@ -935,6 +987,11 @@ async function approveLoan() {
 }
 
 async function rejectLoan() {
+  if (!canModifyLoans.value) {
+    alert('Admins have view-only access and cannot reject loans.')
+    return
+  }
+
   processing.value = true
   try {
     const adminId = authStore.currentUser?.id || authStore.userId
@@ -975,6 +1032,11 @@ async function rejectLoan() {
 }
 
 async function recordPayment() {
+  if (!canModifyLoans.value) {
+    alert('Admins have view-only access and cannot record payments.')
+    return
+  }
+
   if (!paymentForm.value.paymentType) {
     alert('Please select payment type (Full or Partial)')
     return
@@ -1042,6 +1104,12 @@ function formatDate(dateString) {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function formatTableDate(dateString) {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })
+}
+
 function formatPurpose(purpose) {
   if (!purpose) return 'N/A'
   const purposes = {
@@ -1052,6 +1120,28 @@ function formatPurpose(purpose) {
     other: 'Other'
   }
   return purposes[purpose] || purpose
+}
+
+function formatPurposeShort(purpose) {
+  if (!purpose) return '—'
+  const short = {
+    seeds: 'Seeds',
+    equipment: 'Equipment',
+    fertilizer: 'Fertilizer',
+    irrigation: 'Irrigation',
+    other: 'Other'
+  }
+  return short[purpose] || purpose
+}
+
+function formatPayerStatusShort(classification) {
+  switch (classification) {
+    case 'GOOD_PAYER': return 'Good'
+    case 'AVERAGE_PAYER': return 'Average'
+    case 'HIGH_RISK_PAYER': return 'High Risk'
+    case 'NEW_BORROWER': return 'New'
+    default: return '—'
+  }
 }
 
 // Function to detect system time/date changes and refresh loan statuses
@@ -1084,6 +1174,9 @@ function stopTimeChangeDetection() {
 }
 
 onMounted(async () => {
+  if (isAdmin.value) {
+    await fetchBarangays()
+  }
   await fetchLoans()
 
   // Start detecting system time/date changes
@@ -1135,8 +1228,9 @@ onUnmounted(() => {
 }
 
 .page-container {
-  padding: 2rem;
-  max-width: 1400px;
+  padding: 1.25rem 1rem;
+  max-width: none;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -1259,6 +1353,41 @@ onUnmounted(() => {
   font-size: 0.875rem;
 }
 
+.barangay-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.barangay-filter-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.barangay-filter-select {
+  min-width: 220px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #fff;
+}
+
+.barangay-filter-hint {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
 /* Filter Tabs */
 .filter-tabs {
   display: flex;
@@ -1320,7 +1449,7 @@ onUnmounted(() => {
 
 .loans-table th,
 .loans-table td {
-  padding: 0.62rem 0.48rem;
+  padding: 0.38rem 0.28rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -1335,28 +1464,34 @@ onUnmounted(() => {
   background: #f8fafc;
   font-weight: 700;
   color: #475569;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
+  font-size: 0.6rem;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .loans-table td {
-  font-size: 0.76rem;
-  line-height: 1.2;
+  font-size: 0.68rem;
+  line-height: 1.15;
 }
 
-.loans-table col.col-name { width: 13%; }
-.loans-table col.col-amount { width: 9%; }
-.loans-table col.col-purpose { width: 10%; }
-.loans-table col.col-payer { width: 18%; }
-.loans-table col.col-date { width: 9%; }
-.loans-table col.col-term { width: 8%; }
-.loans-table col.col-status { width: 9%; }
-.loans-table col.col-actions { width: 17%; }
+.loans-table col.col-name { width: 12%; }
+.loans-table col.col-amount { width: 8%; }
+.loans-table col.col-purpose { width: 8%; }
+.loans-table col.col-payer { width: 11%; }
+.loans-table col.col-date { width: 7%; }
+.loans-table col.col-term { width: 5%; }
+.loans-table col.col-status { width: 8%; }
+.loans-table col.col-actions { width: 14%; }
+
+.th-name,
+.td-name {
+  text-align: left;
+  padding-left: 0.4rem !important;
+}
 
 .td-name {
-  font-weight: 700;
+  font-weight: 600;
   word-break: break-word;
   white-space: normal;
 }
@@ -1364,6 +1499,8 @@ onUnmounted(() => {
 .td-purpose {
   text-align: center;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .th-payer,
@@ -1386,8 +1523,8 @@ onUnmounted(() => {
 .th-date,
 .th-term {
   white-space: normal;
-  line-height: 1.2;
-  font-size: 0.66rem;
+  line-height: 1.1;
+  font-size: 0.58rem;
 }
 
 .td-date,
@@ -1413,10 +1550,10 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 74px;
-  padding: 0.3rem 0.52rem;
-  border-radius: 10px;
-  font-size: 0.68rem;
+  min-width: 0;
+  padding: 0.18rem 0.32rem;
+  border-radius: 6px;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: capitalize;
   line-height: 1;
@@ -1460,19 +1597,19 @@ onUnmounted(() => {
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 0.22rem;
+  gap: 0.15rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .btn {
-  padding: 0.32rem 0.4rem;
+  padding: 0.22rem 0.3rem;
   border: none;
-  border-radius: 6px;
-  font-size: 0.64rem;
+  border-radius: 4px;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: normal;
+  letter-spacing: 0;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
   line-height: 1.1;
@@ -1835,13 +1972,9 @@ onUnmounted(() => {
     overflow-x: auto;
   }
 
-  .loans-table {
-    font-size: 0.875rem;
-  }
-
   .loans-table th,
   .loans-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.35rem 0.25rem;
   }
 
   .action-buttons {
@@ -1857,12 +1990,21 @@ onUnmounted(() => {
 .payer-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.14rem 0.32rem;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.58rem;
   white-space: nowrap;
+  line-height: 1.1;
+}
+
+.credit-score-compact {
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1;
 }
 
 .payer-badge.low {
@@ -1906,7 +2048,7 @@ onUnmounted(() => {
 .payer-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.22rem;
+  gap: 0.12rem;
   min-width: 0;
   align-items: center;
   text-align: center;
@@ -2010,6 +2152,7 @@ onUnmounted(() => {
 .payer-badge,
 .payer-reason,
 .credit-score,
+.credit-score-compact,
 .score-factors,
 .payer-desc,
 .payer-text {

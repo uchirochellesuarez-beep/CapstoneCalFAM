@@ -92,7 +92,7 @@
               <div class="notification-content">
                 <div class="notification-title">{{ notification.title }}</div>
                 <div class="notification-message">{{ notification.message }}</div>
-                <div class="notification-date">{{ formatNotificationDate(notification.trigger_date) }}</div>
+                <div class="notification-date">{{ formatNotificationDate(notification.created_at || notification.trigger_date) }}</div>
               </div>
               <div v-if="!notification.is_read" class="unread-indicator"></div>
             </div>
@@ -252,55 +252,91 @@ const loadNotifications = async () => {
 const getNotificationIcon = (referenceType) => {
   const icons = {
     'loan': '💰',
-    'machinery_booking': '🚜'
+    'machinery_booking': '🚜',
+    'announcement': '📢',
+    'income_assistance_distribution': '🌾'
   }
   return icons[referenceType] || '🔔'
 }
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null
+
+  if (dateStr instanceof Date) {
+    return Number.isNaN(dateStr.getTime()) ? null : dateStr
+  }
+
+  if (typeof dateStr !== 'string') {
+    const d = new Date(dateStr)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+
+  const trimmed = dateStr.trim()
+
+  // Strict date-only (no time component)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-').map(Number)
+    return new Date(year, month - 1, day, 0, 0, 0, 0)
+  }
+
+  // MySQL datetime: 2026-06-11 19:32:00
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(trimmed)) {
+    const [datePart, timePart] = trimmed.split(' ')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hour, minute, second = 0] = timePart.split(':').map(Number)
+    return new Date(year, month - 1, day, hour, minute, second, 0)
+  }
+
+  // ISO 8601 and other formats (preserves actual post time in local TZ)
+  const d = new Date(trimmed)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+const MANILA_TZ = 'Asia/Manila'
+
+const formatManilaTime = (date) =>
+  date.toLocaleTimeString('en-PH', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: MANILA_TZ
+  })
+
+const startOfLocalDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const calendarDayDiff = (from, to) => {
+  const diffMs = startOfLocalDay(to).getTime() - startOfLocalDay(from).getTime()
+  return Math.round(diffMs / (1000 * 60 * 60 * 24))
+}
+
 const formatNotificationDate = (dateStr) => {
   if (!dateStr) return 'No date'
-  
+
   try {
-    let d;
-    
-    // Handle string dates
-    if (typeof dateStr === 'string') {
-      // Remove time portion if present
-      const dateOnly = dateStr.split('T')[0]
-      
-      // Parse YYYY-MM-DD format
-      if (dateOnly.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dateOnly.split('-').map(Number)
-        d = new Date(year, month - 1, day, 0, 0, 0, 0)
-      } else {
-        d = new Date(dateStr)
-      }
-    } else {
-      d = new Date(dateStr)
+    const d = parseLocalDate(dateStr)
+    if (!d) {
+      return String(dateStr).substring(0, 10) || 'Invalid date'
     }
-    
-    // Validate date
-    if (isNaN(d.getTime())) {
-      console.warn('⚠️ Invalid date:', dateStr)
-      return dateStr ? dateStr.substring(0, 10) : 'Invalid date'
-    }
-    
-    // Calculate difference using only date parts (no time component)
+
     const now = new Date()
-    const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
-    const notifMs = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
-    const diffDays = Math.round((notifMs - todayMs) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Tomorrow'
-    if (diffDays === -1) return 'Yesterday'
-    if (diffDays > 0 && diffDays < 7) return `In ${diffDays} days`
-    if (diffDays < 0 && diffDays > -7) return `${Math.abs(diffDays)} days ago`
-    
+    const dayDiff = calendarDayDiff(d, now)
+
+    if (dayDiff === 0) {
+      const diffMs = now.getTime() - d.getTime()
+      if (diffMs < 60 * 1000) return 'Just now'
+      if (diffMs < 60 * 60 * 1000) return `${Math.max(1, Math.floor(diffMs / (60 * 1000)))} min ago`
+      return `Today, ${formatManilaTime(d)}`
+    }
+
+    if (dayDiff === 1) return 'Tomorrow'
+    if (dayDiff === -1) return 'Yesterday'
+    if (dayDiff > 1 && dayDiff < 7) return `In ${dayDiff} days`
+    if (dayDiff < -1 && dayDiff > -7) return `${Math.abs(dayDiff)} days ago`
+
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch (err) {
     console.error('Error formatting notification date:', err)
-    return dateStr ? String(dateStr).substring(0, 10) : 'Invalid date'
+    return String(dateStr).substring(0, 10) || 'Invalid date'
   }
 }
 
@@ -345,6 +381,8 @@ const handleNotificationClick = async (notification) => {
     } else {
       router.push({ path: '/farmer-income-hub', query: { tab: role === 'agriculturist' ? 'distribution' : 'eligible' } })
     }
+  } else if (notification.reference_type === 'announcement') {
+    router.push('/announcement')
   }
 }
 

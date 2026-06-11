@@ -72,9 +72,16 @@
     <div class="card">
       <div class="table-container">
       <table class="barangays-table">
+        <colgroup>
+          <col class="col-name" />
+          <col class="col-area" />
+          <col class="col-num" />
+          <col class="col-num" />
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
         <thead>
           <tr>
-            <th>#</th>
             <th>Barangay Name</th>
             <th>Land Area (Ha)</th>
             <th>Farmers</th>
@@ -85,14 +92,13 @@
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="loading-cell">Loading barangays...</td>
+            <td colspan="6" class="loading-cell">Loading barangays...</td>
           </tr>
           <tr v-else-if="filteredBarangays.length === 0">
-            <td colspan="7" class="empty-cell">No barangays found</td>
+            <td colspan="6" class="empty-cell">No barangays found</td>
           </tr>
           <template v-else>
-          <tr v-for="(barangay, index) in filteredBarangays" :key="barangay.id">
-            <td>{{ index + 1 }}</td>
+          <tr v-for="barangay in filteredBarangays" :key="barangay.id">
             <td class="td-name-link barangay-name-link" @click="viewBarangayDetails(barangay)">
               {{ barangay.name }}
             </td>
@@ -986,12 +992,24 @@ onMounted(() => {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  min-width: 720px;
+  min-width: 0;
+}
+
+.barangays-table col.col-name { width: 22%; }
+.barangays-table col.col-area { width: 12%; }
+.barangays-table col.col-num { width: 8%; }
+.barangays-table col.col-status { width: 10%; }
+.barangays-table col.col-actions { width: 18%; }
+
+.barangays-table th:first-child,
+.barangays-table td:first-child {
+  text-align: left;
+  padding-left: 0.4rem !important;
 }
 
 .barangays-table th,
 .barangays-table td {
-  padding: 0.62rem 0.48rem;
+  padding: 0.35rem 0.28rem;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   vertical-align: middle;
@@ -1006,15 +1024,15 @@ onMounted(() => {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
   font-weight: 700;
   color: rgba(234, 241, 236, 0.94);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .barangays-table td {
-  font-size: 0.78rem;
-  line-height: 1.25;
+  font-size: 0.68rem;
+  line-height: 1.15;
   color: rgba(226, 234, 229, 0.92);
 }
 
@@ -1044,8 +1062,8 @@ onMounted(() => {
 }
 
 .btn-view-area {
-  padding: 0.28rem 0.6rem;
-  font-size: 0.68rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.6rem;
   font-weight: 700;
   color: #14532d;
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
@@ -1081,10 +1099,10 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 74px;
-  padding: 0.3rem 0.52rem;
-  border-radius: 10px;
-  font-size: 0.68rem;
+  min-width: 58px;
+  padding: 0.18rem 0.38rem;
+  border-radius: 8px;
+  font-size: 0.58rem;
   font-weight: 700;
   text-transform: capitalize;
   line-height: 1;
@@ -1109,20 +1127,20 @@ onMounted(() => {
 
 .action-buttons-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.22rem;
 }
 
 .icon-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.55rem;
+  height: 1.55rem;
   padding: 0;
-  border-radius: 10px;
+  border-radius: 7px;
   border: 1px solid rgba(190, 235, 203, 0.22);
   background: rgba(0, 0, 0, 0.22);
   color: rgba(226, 234, 229, 0.9);
@@ -1131,8 +1149,8 @@ onMounted(() => {
 }
 
 .icon-action svg {
-  width: 1rem;
-  height: 1rem;
+  width: 0.78rem;
+  height: 0.78rem;
 }
 
 .icon-action:hover {

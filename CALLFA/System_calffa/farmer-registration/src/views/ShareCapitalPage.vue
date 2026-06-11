@@ -12,7 +12,7 @@
     <div v-if="!isAllowedRole" class="tab-content">
       <div class="empty-state">
         <div class="empty-title">Access limited</div>
-        <div class="empty-text">This module is available to Members, Treasurers, and Presidents.</div>
+        <div class="empty-text">This module is available to Members, Treasurers, Presidents, and Admins.</div>
       </div>
     </div>
 
@@ -28,13 +28,8 @@
         </div>
       </div>
 
-      <div v-if="isAdmin" class="empty-state empty-state--panel">
-        <div class="empty-title">Barangay-based module</div>
-        <div class="empty-text">Login as a barangay Treasurer/President or as a Farmer to use Share Capital.</div>
-      </div>
-
       <!-- Farmer view -->
-      <div v-else-if="isFarmer">
+      <div v-if="isFarmer">
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">Total Shares Contributed</div>
@@ -118,8 +113,28 @@
         </div>
       </div>
 
-      <!-- Treasurer/President view -->
-      <div v-else>
+      <!-- Treasurer / President / Admin view -->
+      <div v-else-if="isOfficerView">
+        <div v-if="isAdmin" class="admin-filter-bar">
+          <label for="share-capital-barangay" class="admin-filter-label">Barangay</label>
+          <select
+            id="share-capital-barangay"
+            v-model="selectedBarangayId"
+            class="input admin-filter-select"
+            @change="onBarangayChange"
+          >
+            <option value="">Select barangay...</option>
+            <option v-for="b in barangayOptions" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
+          </select>
+          <span v-if="selectedBarangayName" class="admin-filter-hint">Viewing: {{ selectedBarangayName }}</span>
+        </div>
+
+        <div v-if="isAdmin && !selectedBarangayId" class="empty-state empty-state--panel">
+          <div class="empty-title">Select a barangay</div>
+          <div class="empty-text">Choose a barangay above to view share capital records for that area.</div>
+        </div>
+
+        <template v-else>
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">Total Members</div>
@@ -142,7 +157,7 @@
         <div class="grid-2">
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">Members (Your Barangay)</h2>
+              <h2 class="card-title">{{ membersPanelTitle }}</h2>
               <button type="button" class="btn btn-primary-action" @click="loadOverview" :disabled="loading">
                 Refresh
               </button>
@@ -333,6 +348,7 @@
             </div>
           </div>
         </div>
+        </template>
       </div>
     </div>
   </div>
@@ -349,8 +365,32 @@ const isAdmin = computed(() => role.value === 'admin')
 const isFarmer = computed(() => ['farmer', 'operation_manager', 'business_manager', 'operator'].includes(role.value))
 const isTreasurer = computed(() => role.value === 'treasurer')
 const isPresident = computed(() => role.value === 'president')
+const isOfficerView = computed(() => isTreasurer.value || isPresident.value || isAdmin.value)
 const isAllowedRole = computed(() => ['admin', 'farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role.value))
 const canEdit = computed(() => isTreasurer.value || isPresident.value || isAdmin.value)
+
+const barangays = ref([])
+const selectedBarangayId = ref('')
+
+const barangayOptions = computed(() =>
+  barangays.value.map(b => ({
+    id: b.id || b.barangay_id,
+    name: b.name || b.barangay_name || String(b.id)
+  }))
+)
+
+const selectedBarangayName = computed(() => {
+  if (!selectedBarangayId.value) return ''
+  const match = barangayOptions.value.find(b => String(b.id) === String(selectedBarangayId.value))
+  return match?.name || ''
+})
+
+const membersPanelTitle = computed(() => {
+  if (isAdmin.value && selectedBarangayName.value) {
+    return `Members — ${selectedBarangayName.value}`
+  }
+  return 'Members (Your Barangay)'
+})
 
 const filteredFarmers = computed(() => {
   if (!searchQuery.value.trim()) return farmers.value
@@ -427,13 +467,41 @@ async function apiFetch(path, options = {}) {
   return response
 }
 
+async function loadBarangays() {
+  try {
+    const res = await fetch('/api/barangays')
+    const data = await res.json()
+    barangays.value = data.barangays || data.data || (Array.isArray(data) ? data : [])
+  } catch (e) {
+    console.error('Error loading barangays:', e)
+  }
+}
+
+function onBarangayChange() {
+  selectedFarmer.value = null
+  selectedContributions.value = []
+  selectedWithdrawals.value = []
+  searchQuery.value = ''
+  loadOverview()
+}
+
 async function loadOverview() {
-  if (!(isTreasurer.value || isPresident.value || isAdmin.value)) return
+  if (!isOfficerView.value) return
+  if (isAdmin.value && !selectedBarangayId.value) {
+    farmers.value = []
+    overviewTotals.value = { total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 }
+    return
+  }
 
   error.value = ''
   loading.value = true
   try {
-    const res = await apiFetch('/api/share-capital/overview')
+    const params = new URLSearchParams()
+    if (isAdmin.value && selectedBarangayId.value) {
+      params.set('barangay_id', selectedBarangayId.value)
+    }
+    const query = params.toString()
+    const res = await apiFetch(`/api/share-capital/overview${query ? `?${query}` : ''}`)
     const data = await res.json().catch(() => null)
     if (!res.ok || !data?.success) {
       throw new Error(data?.message || 'Failed to load overview')
@@ -616,8 +684,12 @@ onMounted(async () => {
   if (!authStore.token) return
   if (isFarmer.value) {
     await loadMe()
-  } else if (isTreasurer.value || isPresident.value) {
-    await loadOverview()
+  } else if (isOfficerView.value) {
+    if (isAdmin.value) {
+      await loadBarangays()
+    } else {
+      await loadOverview()
+    }
   }
 })
 </script>
@@ -937,6 +1009,37 @@ onMounted(async () => {
   padding: 16px 18px 18px;
   position: relative;
   z-index: 1;
+}
+
+.admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-line);
+}
+
+.admin-filter-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.admin-filter-select {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.admin-filter-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
 }
 
 .filter-section {

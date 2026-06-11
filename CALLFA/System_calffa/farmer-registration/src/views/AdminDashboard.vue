@@ -13,11 +13,12 @@
           <h1 class="dashboard-title">Dashboard</h1>
           <p class="dashboard-subtitle">{{ dashboardSubtitle }}</p>
         </div>
-        <div class="header-time-card" aria-label="Current time and date">
+        <div class="header-time-card" :aria-label="`Current time and date, ${displayUserRole}`">
           <div class="header-time-label">Live Time</div>
           <div class="header-time-value">{{ currentTime }}</div>
           <div class="header-time-day">Day: {{ currentDay }}</div>
           <div class="header-time-date">{{ currentDate }}</div>
+          <div v-if="displayUserRole" class="header-time-role" :class="userRole">{{ displayUserRole }}</div>
         </div>
       </div>
 
@@ -58,19 +59,6 @@
               <div class="stat-value">{{ animatedPending }}</div>
               <div class="stat-pill stat-pill-yellow">Needs review</div>
             </div>
-          </div>
-
-          <!-- Pending Loans - Red/Orange -->
-          <div class="stat-card stat-red" @click="goToLoans" style="cursor: pointer;">
-            <div class="stat-icon-wrap stat-icon-red">
-              <img src="https://cdn-icons-png.flaticon.com/256/11254/11254160.png" alt="Pending Loans" class="stat-icon-img" />
-            </div>
-            <div class="stat-body">
-              <div class="stat-label">Pending Loans</div>
-              <div class="stat-value">{{ animatedLoans }}</div>
-              <div class="stat-pill stat-pill-red">Awaiting action</div>
-            </div>
-            <div v-if="pendingLoansCount > 0" class="notification-badge">{{ pendingLoansCount }}</div>
           </div>
         </template>
       </div>
@@ -219,7 +207,6 @@ const authStore = useAuthStore()
 // State
 const allFarmers = ref([])
 const barangays = ref([])
-const pendingLoans = ref([])
 const allApprovedLoans = ref([])
 const allActiveLoans = ref([])
 const allOverdueLoans = ref([])
@@ -235,7 +222,6 @@ let timeInterval = null
 const animatedFarmers = ref(0)
 const animatedBarangays = ref(0)
 const animatedPending = ref(0)
-const animatedLoans = ref(0)
 
 // Farmer-specific financial data
 const farmerShares = ref(0)
@@ -265,6 +251,14 @@ const appliedDateTo = ref('')
 
 // Computed
 const userRole = computed(() => authStore.currentUser?.role || '')
+const displayUserRole = computed(() => {
+  const role = userRole.value
+  if (!role) return ''
+  return role
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+})
 const isAdmin = computed(() => userRole.value === 'admin')
 const isFarmer = computed(() => userRole.value === 'farmer')
 
@@ -361,8 +355,6 @@ const filteredTotalCount = computed(() => filteredAnalyticsFarmers.value.length)
 const pendingCount = computed(() => filteredFarmers.value.filter(f =>
   isMemberRole(f.role) && (f.status === 'pending' || !f.status)
 ).length)
-const pendingLoansCount = computed(() => pendingLoans.value.length)
-
 // Helper: outstanding amount for a loan record
 const outstandingAmount = (loan) => parseFloat(loan?.remaining_balance || 0)
 
@@ -400,18 +392,6 @@ const loadBarangays = async () => {
 const getDeviceDate = () => {
   const d = new Date()
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
-}
-
-const loadPendingLoans = async () => {
-  try {
-    const response = await fetch(`http://localhost:3000/api/loans?status=pending&deviceDate=${getDeviceDate()}`)
-    if (response.ok) {
-      const data = await response.json()
-      pendingLoans.value = data.loans || []
-    }
-  } catch (err) {
-    console.error('Error loading pending loans:', err)
-  }
 }
 
 const loadApprovedLoans = async () => {
@@ -510,10 +490,6 @@ const loadFarmerFinancialData = async () => {
   }
 }
 
-const goToLoans = () => {
-  router.push('/admin-loans')
-}
-
 const goToApprovals = () => {
   router.push('/farmers-table')
   fabOpen.value = false
@@ -593,7 +569,6 @@ const animateOverviewCounters = () => {
   animateCounter(animatedFarmers, totalFarmersCount.value)
   animateCounter(animatedBarangays, barangaysCount.value)
   animateCounter(animatedPending, pendingCount.value)
-  animateCounter(animatedLoans, pendingLoansCount.value)
 }
 
 const renderCharts = () => {
@@ -874,8 +849,7 @@ onMounted(async () => {
   // Common loaders for everyone
   const tasks = [
     loadAllFarmers(),
-    loadBarangays(),
-    loadPendingLoans()
+    loadBarangays()
   ]
 
   if (isAdmin.value) {
@@ -1056,6 +1030,50 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 700;
   color: rgba(220, 238, 211, 0.86);
+}
+
+.header-time-role {
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: capitalize;
+  color: #f5ffe9;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.28) 0%, rgba(34, 197, 94, 0.18) 100%);
+  border: 1px solid rgba(134, 239, 172, 0.55);
+  box-shadow:
+    0 0 14px rgba(74, 222, 128, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.header-time-role.admin {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.32) 0%, rgba(245, 158, 11, 0.2) 100%);
+  border-color: rgba(252, 211, 77, 0.6);
+  color: #fef3c7;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.header-time-role.president {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.32) 0%, rgba(99, 102, 241, 0.2) 100%);
+  border-color: rgba(165, 180, 252, 0.6);
+  color: #e0e7ff;
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.header-time-role.treasurer {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(236, 72, 153, 0.18) 100%);
+  border-color: rgba(249, 168, 212, 0.58);
+  color: #fce7f3;
+  box-shadow: 0 0 14px rgba(244, 114, 182, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.header-time-role.farmer {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.18) 100%);
+  border-color: rgba(147, 197, 253, 0.58);
+  color: #dbeafe;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .header-eyebrow {

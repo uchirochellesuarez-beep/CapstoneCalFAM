@@ -84,31 +84,38 @@
             ➕ Add New Machinery
           </button>
         </div>
-        <table class="inventory-table">
+        <table class="inventory-table inventory-table-admin">
+          <colgroup>
+            <col class="col-name" />
+            <col class="col-type" />
+            <col class="col-barangay" />
+            <col class="col-pricing" />
+            <col class="col-capacity" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Name</th>
               <th>Type</th>
               <th>Barangay</th>
               <th>Pricing</th>
-              <th>Max Capacity</th>
+              <th>Max Cap.</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="8" class="loading-cell">
+              <td colspan="7" class="loading-cell">
                 <div class="loading-spinner"></div>
                 <span>Loading machinery...</span>
               </td>
             </tr>
             <tr v-else-if="filteredInventory.length === 0">
-              <td colspan="8" class="empty-cell">No machinery found matching the filters</td>
+              <td colspan="7" class="empty-cell">No machinery found matching the filters</td>
             </tr>
             <tr v-else v-for="machine in filteredInventory" :key="machine.id">
-              <td>{{ machine.id }}</td>
               <td>{{ machine.machinery_name }}</td>
               <td>
                 <span class="badge" :class="'badge-' + getMachineryTypeClass(machine.machinery_type)">
@@ -166,7 +173,14 @@
       </div>
 
       <div v-else class="inventory-table-container">
-        <table class="inventory-table">
+        <table class="inventory-table inventory-table-president">
+          <colgroup>
+            <col class="col-name" />
+            <col class="col-type" />
+            <col class="col-pricing" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
               <th>Name</th>
@@ -246,9 +260,18 @@
       <!-- Bookings Table -->
       <div class="table-container">
         <table class="bookings-table">
+          <colgroup>
+            <col class="col-farmer" />
+            <col class="col-machinery" />
+            <col class="col-date" />
+            <col class="col-location" />
+            <col class="col-area" />
+            <col class="col-total" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Farmer</th>
               <th>Machinery</th>
               <th>Date</th>
@@ -261,18 +284,17 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="9" class="loading-cell">
+              <td colspan="8" class="loading-cell">
                 <div class="loading-spinner"></div>
                 <span>Loading bookings...</span>
               </td>
             </tr>
             <tr v-else-if="bookings.length === 0">
-              <td colspan="9" class="empty-cell">
+              <td colspan="8" class="empty-cell">
                 No bookings found.
               </td>
             </tr>
             <tr v-else v-for="booking in bookings" :key="booking.id">
-              <td>{{ booking.id }}</td>
               <td>
                 <div class="farmer-info">
                   <strong>{{ booking.farmer_name }}</strong>
@@ -400,7 +422,6 @@
             <table class="inv2-table">
               <thead>
                 <tr>
-                  <th style="width:60px">ID</th>
                   <th>Name</th>
                   <th>Type</th>
                   <th>Member Rate</th>
@@ -412,13 +433,12 @@
               </thead>
               <tbody>
                 <tr v-if="invFiltered.length === 0">
-                  <td colspan="8" class="inv2-empty">
+                  <td colspan="7" class="inv2-empty">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     <div>No machinery found</div>
                   </td>
                 </tr>
                 <tr v-else v-for="(m, i) in invPaged" :key="m.id" class="inv2-row" :class="i % 2 === 0 ? 'inv2-row-a' : 'inv2-row-b'">
-                  <td style="text-align:center"><span class="inv2-id">#{{ m.id }}</span></td>
                   <td>
                     <div class="inv2-name-wrap">
                       <div class="inv2-machine-icon">
@@ -481,7 +501,6 @@
                   <span class="inv2-card-name">{{ m.machinery_name }}</span>
                   <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
                 </div>
-                <div class="inv2-card-id">#{{ m.id }}</div>
                 <!-- Pricing rows -->
                 <div class="inv2-card-pricing">
                   <div class="inv2-card-price-row">
@@ -1864,11 +1883,6 @@ export default {
 .inv2-row:hover td {
   background: rgba(74, 222, 128, 0.06) !important;
 }
-.inv2-id {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(200, 235, 210, 0.45);
-}
 .inv2-name-wrap {
   display: flex;
   align-items: center;
@@ -2017,11 +2031,6 @@ export default {
   flex: 1;
   min-width: 0;
   word-break: break-word;
-}
-.inv2-card-id {
-  font-size: 10px;
-  color: rgba(200, 235, 210, 0.4);
-  margin-bottom: 10px;
 }
 .inv2-card-pricing {
   display: flex;
@@ -2177,10 +2186,33 @@ export default {
 .bookings-table,
 .inventory-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  table-layout: auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 0;
 }
+
+.bookings-table col.col-farmer { width: 13%; }
+.bookings-table col.col-machinery { width: 14%; }
+.bookings-table col.col-date { width: 8%; }
+.bookings-table col.col-location { width: 12%; }
+.bookings-table col.col-area { width: 8%; }
+.bookings-table col.col-total { width: 9%; }
+.bookings-table col.col-status { width: 9%; }
+.bookings-table col.col-actions { width: 6%; }
+
+.inventory-table-admin col.col-name { width: 13%; }
+.inventory-table-admin col.col-type { width: 9%; }
+.inventory-table-admin col.col-barangay { width: 10%; }
+.inventory-table-admin col.col-pricing { width: 22%; }
+.inventory-table-admin col.col-capacity { width: 9%; }
+.inventory-table-admin col.col-status { width: 9%; }
+.inventory-table-admin col.col-actions { width: 7%; }
+
+.inventory-table-president col.col-name { width: 18%; }
+.inventory-table-president col.col-type { width: 12%; }
+.inventory-table-president col.col-pricing { width: 28%; }
+.inventory-table-president col.col-status { width: 12%; }
+.inventory-table-president col.col-actions { width: 10%; }
 
 .bookings-table thead,
 .inventory-table thead {
@@ -2189,36 +2221,30 @@ export default {
 
 .bookings-table th,
 .inventory-table th {
-  padding: 18px 20px;
-  text-align: left;
+  padding: 0.38rem 0.3rem;
+  text-align: center;
   vertical-align: middle;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 11px;
+  font-size: 0.62rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.9px;
+  letter-spacing: 0.03em;
   color: var(--text-muted);
-  white-space: nowrap;
+  line-height: 1.1;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .bookings-table td,
 .inventory-table td {
-  padding: 18px 20px;
-  vertical-align: top;
+  padding: 0.35rem 0.28rem;
+  vertical-align: middle;
+  text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.inventory-table th {
-  font-size: 12.5px;
-  letter-spacing: 0.7px;
-}
-
-.inventory-table td {
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 0.68rem;
+  line-height: 1.15;
+  word-break: break-word;
 }
 
 .bookings-table tbody tr,
@@ -2231,87 +2257,67 @@ export default {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.bookings-table th:first-child,
-.inventory-table th:first-child,
-.bookings-table td:first-child,
-.inventory-table td:first-child {
-  padding-left: 24px;
-}
-
-.bookings-table th:last-child,
-.inventory-table th:last-child,
-.bookings-table td:last-child,
-.inventory-table td:last-child {
-  padding-right: 24px;
-}
-
-.inventory-table th:nth-child(1),
-.inventory-table td:nth-child(1) {
-  width: 74px;
-}
-
-.inventory-table th:nth-child(5),
-.inventory-table td:nth-child(5) {
-  min-width: 240px;
-}
-
-.inventory-table th:last-child,
-.inventory-table td:last-child,
-.bookings-table th:last-child,
-.bookings-table td:last-child {
-  width: 110px;
-}
-
 .farmer-info,
 .machinery-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0.12rem;
+  align-items: center;
+  text-align: center;
 }
 
 .farmer-info strong,
 .machinery-info strong {
   color: var(--text-main);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 .farmer-info small,
 .machinery-info small {
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 0.58rem;
+  line-height: 1.1;
 }
 
 .price-cell {
   font-weight: 800;
   color: #9af0b5;
-  white-space: nowrap;
+  font-size: 0.65rem;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .price-display {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 0.15rem;
   min-width: 0;
+  align-items: center;
 }
 
 .price-row {
-  display: grid;
-  grid-template-columns: minmax(96px, 108px) minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
-  font-size: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem;
+  font-size: 0.62rem;
+  line-height: 1.15;
 }
 
 .price-label {
   font-weight: 700;
   color: var(--text-soft);
-  font-size: 13px;
+  font-size: 0.58rem;
 }
 
 .price-value {
   font-weight: 800;
   color: #9af0b5;
   word-break: break-word;
-  font-size: 14.5px;
+  font-size: 0.62rem;
 }
 
 .badge,
@@ -2320,13 +2326,15 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 7px 13px;
+  gap: 0.15rem;
+  padding: 0.15rem 0.38rem;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 0.58rem;
   font-weight: 700;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1.1;
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
 }
 
 .badge-primary {
@@ -2392,7 +2400,9 @@ export default {
 .actions-cell {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 0.22rem;
+  flex-wrap: nowrap;
 }
 
 .btn-icon-small,
@@ -2400,11 +2410,12 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
-  height: 38px;
-  padding: 0 12px;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.28rem;
+  font-size: 0.72rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-main);
   cursor: pointer;
@@ -2449,8 +2460,8 @@ export default {
 }
 
 .booking-view-icon {
-  width: 17px;
-  height: 17px;
+  width: 0.85rem;
+  height: 0.85rem;
   display: block;
 }
 
@@ -2930,11 +2941,6 @@ export default {
     justify-content: flex-start;
   }
 
-  .bookings-table,
-  .inventory-table {
-    min-width: 920px;
-  }
-
   .table-container,
   .inventory-table-container {
     overflow-x: auto;
@@ -3009,8 +3015,8 @@ export default {
   .inventory-table th,
   .bookings-table td,
   .inventory-table td {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 0.32rem;
+    padding-bottom: 0.32rem;
   }
 }
 

@@ -1,6 +1,5 @@
 <template>
   <div class="farmer-table-page glass-module-page">
-    <DashboardHeader :user="authStore.currentUser" />
     <div class="page-inner">
       <div class="page-top-row">
         <h1 class="page-title">Members Management</h1>
@@ -59,6 +58,36 @@
         </button>
       </div>
 
+      <div class="filter-bar">
+        <div class="filter-search-wrap">
+          <span class="filter-search-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </span>
+          <input
+            id="members-search"
+            v-model.trim="searchQuery"
+            type="search"
+            class="filter-search-input"
+            placeholder="Search by name, reference #, or phone..."
+          />
+        </div>
+        <template v-if="isAdmin">
+          <label for="members-barangay-filter" class="filter-label">Barangay</label>
+          <select id="members-barangay-filter" v-model="selectedBarangayId" class="filter-select">
+            <option value="">All Barangays</option>
+            <option v-for="barangay in barangays" :key="barangay.id" :value="String(barangay.id)">
+              {{ barangay.name }}
+            </option>
+          </select>
+        </template>
+        <span v-if="hasActiveFilters" class="filter-hint">
+          {{ filterSummary }}
+        </span>
+      </div>
+
       <!-- Tab Content -->
       <div v-if="activeTab === 'pending'">
         <PendingFarmersTab
@@ -74,55 +103,87 @@
         />
       </div>
       <div v-else-if="activeTab === 'rejected'">
-        <div class="rejected-card">
-          <h2 class="rejected-title">Rejected Accounts</h2>
+        <div class="registered-members-card">
+          <h2 class="registered-members-title">Rejected Accounts</h2>
           <div v-if="loading" class="state-center">
             <div class="spinner"></div>
             <p class="state-text">Loading...</p>
           </div>
           <div v-else-if="rejectedFarmers.length === 0" class="state-center">
-            <p class="state-text">No rejected accounts</p>
+            <p class="state-text">No rejected accounts found.</p>
           </div>
-          <div v-else class="table-wrap">
-            <table class="rej-table">
-              <thead>
-                <tr>
-                  <th>Photo</th>
-                  <th>Name</th>
-                  <th>Reference #</th>
-                  <th>Contact</th>
-                  <th>Role</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="farmer in rejectedFarmers" :key="farmer.id">
-                  <td class="td-center">
-                    <img
-                      v-if="farmer.profile_picture"
-                      :src="getProfilePictureUrl(farmer.profile_picture)"
-                      alt="Profile"
-                      class="avatar"
-                    />
-                    <div v-else class="avatar-placeholder">👤</div>
-                  </td>
-                  <td class="td-name">{{ farmer.full_name }}</td>
-                  <td class="td-muted">{{ farmer.reference_number }}</td>
-                  <td class="td-muted">{{ farmer.contact_number }}</td>
-                  <td>
-                    <span class="role-badge">{{ farmer.role }}</span>
-                  </td>
-                  <td class="td-actions">
-                    <button type="button" class="act-approve" @click="handleApprove(farmer.id)">
-                      Approve
-                    </button>
-                    <button type="button" class="act-delete" @click="handleDelete(farmer.id)">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else class="registered-table-scroll">
+            <div class="members-table-container">
+              <table class="members-table">
+                <colgroup>
+                  <col class="members-col-photo" />
+                  <col class="members-col-ref" />
+                  <col class="members-col-name" />
+                  <col class="members-col-dob" />
+                  <col class="members-col-phone" />
+                  <col class="members-col-edu" />
+                  <col class="members-col-role" />
+                  <col class="members-col-reg" />
+                  <col class="members-col-status" />
+                  <col class="members-col-actions" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Ref #</th>
+                    <th>Name</th>
+                    <th>DOB</th>
+                    <th>Phone</th>
+                    <th>Education</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th class="members-th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="farmer in rejectedFarmers" :key="farmer.id" class="members-data-row">
+                    <td class="members-cell-center">
+                      <div class="member-avatar-wrap">
+                        <img
+                          v-if="farmer.profile_picture"
+                          :src="getProfilePictureUrl(farmer.profile_picture)"
+                          alt="Profile"
+                          class="member-avatar"
+                        />
+                        <div v-else class="member-avatar member-avatar-fallback">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="members-cell members-td-ref">{{ farmer.reference_number }}</td>
+                    <td class="members-cell members-td-name">{{ farmer.full_name }}</td>
+                    <td class="members-cell">{{ formatMemberDate(farmer.date_of_birth) }}</td>
+                    <td class="members-cell">{{ farmer.phone_number || farmer.contact_number || 'N/A' }}</td>
+                    <td class="members-cell">{{ farmer.educational_status || 'N/A' }}</td>
+                    <td class="members-cell">
+                      <span class="role-badge" :class="farmer.role">{{ farmer.role }}</span>
+                    </td>
+                    <td class="members-cell">{{ formatMemberDate(farmer.registered_on) }}</td>
+                    <td class="members-cell">
+                      <span class="status-chip status-chip-rejected">Rejected</span>
+                    </td>
+                    <td class="members-cell members-actions-cell">
+                      <div class="members-action-row">
+                        <button type="button" class="action-btn action-btn-view" @click="handleApprove(farmer.id)">
+                          Approve
+                        </button>
+                        <button type="button" class="action-btn action-btn-delete" @click="handleDelete(farmer.id)">
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -144,7 +205,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import DashboardHeader from '../components/DashboardHeader.vue'
 import FarmerTable from '../components/FarmerTable.vue'
 import PendingFarmersTab from '../components/PendingFarmersTab.vue'
 import { useAuthStore } from '../stores/authStore'
@@ -153,6 +213,9 @@ const router = useRouter()
 const authStore = useAuthStore()
 const activeTab = ref('pending')
 const allFarmers = ref([])
+const barangays = ref([])
+const selectedBarangayId = ref('')
+const searchQuery = ref('')
 const loading = ref(false)
 const error = ref(null)
 
@@ -160,14 +223,16 @@ const error = ref(null)
 // Handles both external Google URLs and local uploaded pictures
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
-  // Check if it's already a full URL (Google profile pictures start with https://)
   if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
     return profilePicture
   }
-  // For local uploads (starts with /uploads/), return as-is
-  // The /uploads path is proxied to the backend via Vite in development
-  // and served directly by the backend in production
   return profilePicture
+}
+
+const formatMemberDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 // Check authorization - only admin, president, and treasurer can access
@@ -197,16 +262,55 @@ const canViewMemberSummary = computed(() => {
   return ['admin', 'president', 'treasurer'].includes(role)
 })
 
+const applyBarangayFilter = (farmers) => {
+  if (!isAdmin.value || !selectedBarangayId.value) return farmers
+  const barangayId = Number(selectedBarangayId.value)
+  return farmers.filter((f) => Number(f.barangay_id) === barangayId)
+}
+
+const applySearchFilter = (farmers) => {
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return farmers
+  return farmers.filter((f) => {
+    const name = String(f.full_name || '').toLowerCase()
+    const ref = String(f.reference_number || '').toLowerCase()
+    const phone = String(f.phone_number || f.contact_number || '')
+    return name.includes(q) || ref.includes(q) || phone.includes(q)
+  })
+}
+
+const filterFarmers = (farmers) => applySearchFilter(applyBarangayFilter(farmers))
+
+const selectedBarangayName = computed(() => {
+  if (!selectedBarangayId.value) return ''
+  const match = barangays.value.find((b) => String(b.id) === String(selectedBarangayId.value))
+  return match?.name || 'selected barangay'
+})
+
+const hasActiveFilters = computed(() => {
+  return Boolean(searchQuery.value.trim()) || (isAdmin.value && selectedBarangayId.value)
+})
+
+const filterSummary = computed(() => {
+  const parts = []
+  if (searchQuery.value.trim()) parts.push(`matching "${searchQuery.value.trim()}"`)
+  if (isAdmin.value && selectedBarangayId.value) parts.push(`in ${selectedBarangayName.value}`)
+  return parts.length ? `Showing members ${parts.join(' ')}` : ''
+})
+
 const pendingFarmers = computed(() => {
-  return allFarmers.value.filter((f) => f.status === 'pending' || !f.status)
+  const list = allFarmers.value.filter((f) => f.status === 'pending' || !f.status)
+  return filterFarmers(list)
 })
 
 const registeredFarmers = computed(() => {
-  return allFarmers.value.filter((f) => f.status === 'approved')
+  const list = allFarmers.value.filter((f) => f.status === 'approved')
+  return filterFarmers(list)
 })
 
 const rejectedFarmers = computed(() => {
-  return allFarmers.value.filter((f) => f.status === 'rejected')
+  const list = allFarmers.value.filter((f) => f.status === 'rejected')
+  return filterFarmers(list)
 })
 
 const pendingCount = computed(() => pendingFarmers.value.length)
@@ -214,6 +318,23 @@ const pendingCount = computed(() => pendingFarmers.value.length)
 const registeredCount = computed(() => registeredFarmers.value.length)
 
 const rejectedCount = computed(() => rejectedFarmers.value.length)
+
+const loadBarangays = async () => {
+  if (!isAdmin.value) return
+  try {
+    const response = await fetch('/api/barangays')
+    const data = await response.json()
+    if (Array.isArray(data)) {
+      barangays.value = data
+    } else if (data.success && Array.isArray(data.barangays)) {
+      barangays.value = data.barangays
+    } else if (data.success && Array.isArray(data.data)) {
+      barangays.value = data.data
+    }
+  } catch (err) {
+    console.error('Error loading barangays:', err)
+  }
+}
 
 const loadFarmers = async () => {
   loading.value = true
@@ -378,6 +499,7 @@ onMounted(() => {
     router.push('/dashboard')
     return
   }
+  loadBarangays()
   loadFarmers()
 })
 
@@ -386,6 +508,23 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+@import '../styles/members-table.css';
+
+.registered-members-card {
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+}
+
+.registered-members-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #eefde6;
+  margin: 0 0 0.85rem;
+  letter-spacing: 0.02em;
+}
 
 /* ============================================
    PAGE — Dark Green Glassmorphic Theme
@@ -420,8 +559,94 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .page-inner {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
+}
+
+/* ============================================
+   FILTER BAR (shared across tabs)
+   ============================================ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: rgba(28, 42, 33, 0.9);
+  border: 1px solid var(--glass-line);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.filter-search-wrap {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+}
+
+.filter-search-icon {
+  position: absolute;
+  left: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(134, 239, 172, 0.9);
+  pointer-events: none;
+}
+
+.filter-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.filter-search-input::placeholder {
+  color: rgba(229, 235, 231, 0.45);
+}
+
+.filter-search-input:focus {
+  outline: none;
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #b6f7cb;
+  white-space: nowrap;
+}
+
+.filter-select {
+  min-width: 180px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.filter-select option {
+  background: #132119;
+  color: var(--text-main);
+}
+
+.filter-hint {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex: 1 1 100%;
 }
 
 /* ============================================
@@ -538,26 +763,6 @@ const goToMembersSummary = () => router.push('/members-summary')
   box-shadow: 0 2px 10px rgba(74, 222, 128, 0.18);
 }
 
-/* ============================================
-   REJECTED CARD & TABLE
-   ============================================ */
-.rejected-card {
-  background: rgba(28, 42, 33, 0.9);
-  border: 1px solid var(--glass-line);
-  border-radius: 16px;
-  padding: 22px;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.rejected-title {
-  margin: 0 0 16px 0;
-  font-size: 17px;
-  font-weight: 800;
-  color: #b6f7cb;
-}
-
 .state-center {
   text-align: center;
   padding: 32px 0;
@@ -566,125 +771,6 @@ const goToMembersSummary = () => router.push('/members-summary')
 .state-text {
   color: var(--text-muted);
   margin-top: 8px;
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-.rej-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.rej-table thead {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
-}
-
-.rej-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 800;
-  color: #b6f7cb;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  border-bottom: 1px solid rgba(190, 235, 203, 0.15);
-}
-
-.rej-table th:first-child {
-  text-align: center;
-}
-
-.rej-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 13px;
-  color: var(--text-main);
-  vertical-align: middle;
-}
-
-.rej-table tbody tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.rej-table tbody tr:hover td {
-  background: rgba(74, 222, 128, 0.07);
-}
-
-.td-center {
-  text-align: center;
-}
-
-.td-name {
-  font-weight: 700;
-}
-
-.td-muted {
-  color: var(--text-muted);
-}
-
-.td-actions {
-  white-space: nowrap;
-}
-
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(74, 222, 128, 0.35);
-}
-
-.avatar-placeholder {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-muted);
-}
-
-.act-approve {
-  background: none;
-  border: none;
-  color: var(--green);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  margin-right: 12px;
-  padding: 0;
-}
-
-.act-approve:hover {
-  text-decoration: underline;
-}
-
-.act-delete {
-  background: none;
-  border: none;
-  color: var(--red);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0;
-}
-
-.act-delete:hover {
-  text-decoration: underline;
 }
 
 .spinner {

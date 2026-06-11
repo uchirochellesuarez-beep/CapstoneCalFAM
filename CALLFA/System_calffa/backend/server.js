@@ -21,6 +21,7 @@ const newsRoutes = require('./routes/news');
 const shareCapitalRoutes = require('./routes/share-capital');
 const seedFertilizerPlanRoutes = require('./routes/seed-fertilizer-plan');
 const { startNotificationScheduler } = require('./scheduler/notification-scheduler');
+const { ensureNotificationSchema } = require('./services/notification-service');
 const pool = require('./db');
 const { ensureBarangayServicePlaces } = require('./schema/ensureBarangayServicePlaces');
 const { runExpenseTrainingSampleSeed } = require('./services/expenseSampleSeedRunner');
@@ -71,9 +72,10 @@ app.use('/api', newsRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  ensureBarangayServicePlaces(pool)
+  Promise.all([ensureBarangayServicePlaces(pool), ensureNotificationSchema()])
     .then(async () => {
       console.log('✅ Barangay service places schema ready (table + booking link if needed).');
+      console.log('✅ Notification schema ready (due_date_notifications enums).');
 
       if (shouldRunStartupExpenseSampleSeed()) {
         try {

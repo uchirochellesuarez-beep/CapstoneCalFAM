@@ -393,9 +393,12 @@ router.get('/', async (req, res) => {
     }
 
     // Barangay filtering
-    // Officers can only see loans from their barangay
+    // Admin may optionally filter by barangay_id; officers are scoped to their barangay
     const targetBarangayId = barangay_id || userBarangayId;
-    if (userRole !== 'admin' && targetBarangayId) {
+    if (userRole === 'admin' && barangay_id) {
+      query += ' AND f.barangay_id = ?';
+      params.push(barangay_id);
+    } else if (userRole !== 'admin' && targetBarangayId) {
       query += ' AND f.barangay_id = ?';
       params.push(targetBarangayId);
     }
@@ -882,6 +885,13 @@ router.put('/:id/approve', async (req, res) => {
 
       const approver = approvers[0];
 
+      if (approver.role === 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Admins have view-only access and cannot approve loans'
+        });
+      }
+
       // Determine if this is an officer loan or farmer loan
       const isOfficerLoan = ['treasurer', 'president'].includes(loan.applicant_role);
 
@@ -923,11 +933,11 @@ router.put('/:id/approve', async (req, res) => {
           });
         }
         
-        const allowedApproverRoles = ['treasurer', 'operation_manager', 'business_manager', 'admin'];
+        const allowedApproverRoles = ['treasurer', 'operation_manager', 'business_manager'];
         if (!allowedApproverRoles.includes(approver.role)) {
           return res.status(403).json({ 
             success: false, 
-            message: 'Only treasurers or admins can approve farmer loans' 
+            message: 'Only treasurers can approve farmer loans' 
           });
         }
       }
@@ -1029,6 +1039,13 @@ router.put('/:id/reject', async (req, res) => {
 
       const rejecter = rejecters[0];
 
+      if (rejecter.role === 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Admins have view-only access and cannot reject loans'
+        });
+      }
+
       // Determine if this is an officer loan or farmer loan
       const isOfficerLoan = ['treasurer', 'president'].includes(loan.applicant_role);
 
@@ -1057,7 +1074,7 @@ router.put('/:id/reject', async (req, res) => {
       } else {
         // Farmer loan rejection logic - only treasurer, operation_manager, business_manager, or admin can reject
         // President cannot reject farmer loans (can only view and approve/reject officer loans)
-        const rejecterRoles = ['treasurer', 'operation_manager', 'business_manager', 'admin'];
+        const rejecterRoles = ['treasurer', 'operation_manager', 'business_manager'];
         
         if (!rejecterRoles.includes(rejecter.role)) {
           return res.status(403).json({ 
@@ -1370,24 +1387,30 @@ router.post('/:id/payment', async (req, res) => {
       }
 
       const recorder = recorders[0];
-      const allowedRoles = ['treasurer', 'operation_manager', 'business_manager', 'president', 'admin'];
+
+      if (recorder.role === 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Admins have view-only access and cannot record payments'
+        });
+      }
+
+      const allowedRoles = ['treasurer', 'operation_manager', 'business_manager', 'president'];
       
       if (!allowedRoles.includes(recorder.role)) {
         return res.status(403).json({ 
           success: false, 
-          message: 'Only treasurers, operation managers, business managers, presidents, or admins can record payments' 
+          message: 'Only treasurers, operation managers, business managers, or presidents can record payments' 
         });
       }
 
       // Check barangay access - officers of the same barangay can record payments
-      // Admins can record for any barangay
       const recorderBarangayId = parseInt(recorder.barangay_id);
       const loanBarangayId = parseInt(loan.barangay_id);
       
-      const isAdmin = recorder.role === 'admin';
       const isSameBarangay = !isNaN(recorderBarangayId) && !isNaN(loanBarangayId) && recorderBarangayId === loanBarangayId;
       
-      if (!isAdmin && !isSameBarangay) {
+      if (!isSameBarangay) {
         return res.status(403).json({ 
           success: false, 
           message: `Officers can only record payments for loans from their barangay. Loan is in barangay ${loanBarangayId}, but you are assigned to barangay ${recorderBarangayId}.` 
