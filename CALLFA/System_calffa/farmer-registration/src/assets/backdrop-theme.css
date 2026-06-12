@@ -16,10 +16,10 @@
   --backdrop-light-accent: #a7f3d0;     /* Soft mint accent */
   --backdrop-light-beige: #fef3c7;      /* Soft beige texture */
   
-  /* Dark Mode Variant */
-  --backdrop-dark-base: #064e3b;        /* Deep forest green base */
-  --backdrop-dark-accent: #065f46;      /* Slightly lighter forest */
-  --backdrop-dark-gold: #fbbf24;        /* Golden rice accents */
+  /* Dark Mode Variant — night farm */
+  --backdrop-dark-base: #0a1f15;        /* Deep forest night */
+  --backdrop-dark-accent: #143d2a;      /* Field green horizon */
+  --backdrop-dark-gold: #e8c468;        /* Warm rice gold */
   
   /* Organic Texture Colors */
   --mottle-green-1: rgba(34, 139, 34, 0.12);    /* Forest green mottling */
@@ -308,67 +308,13 @@
 .backdrop-theme-dark {
   position: relative;
   background:
-    /* Base gradient - deep forest green */
-    linear-gradient(135deg, var(--backdrop-dark-base) 0%, #065f46 50%, var(--backdrop-dark-accent) 100%),
-    
-    /* Golden rice accents */
-    radial-gradient(ellipse 900px 450px at 20% 25%, rgba(251, 191, 36, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 700px 350px at 80% 75%, rgba(251, 191, 36, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 500px 250px at 50% 50%, rgba(251, 191, 36, 0.06) 0%, transparent 45%),
-    
-    /* Forest green mottling */
-    radial-gradient(ellipse 800px 400px at 15% 70%, rgba(34, 139, 34, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 300px at 85% 30%, rgba(22, 101, 52, 0.08) 0%, transparent 50%),
-    
-    /* Subtle soil tones */
-    radial-gradient(ellipse 400px 200px at 30% 60%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 350px 175px at 70% 40%, rgba(160, 82, 45, 0.04) 0%, transparent 45%),
-    
-    /* Rice leaf patterns */
-    radial-gradient(ellipse 200px 80px at 25% 45%, rgba(34, 139, 34, 0.05) 0%, transparent 40%),
-    radial-gradient(ellipse 180px 70px at 75% 55%, rgba(251, 191, 36, 0.04) 0%, transparent 35%),
-    
-    /* Deep grain texture */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.04) 2px,
-      rgba(0, 0, 0, 0.04) 3px,
-      transparent 3px,
-      transparent 5px
-    ),
-    repeating-linear-gradient(
-      45deg,
-      rgba(0, 0, 0, 0.03),
-      rgba(0, 0, 0, 0.03) 1px,
-      transparent 1px,
-      transparent 8px
-    );
-  
-  background-size:
-    100% 100%,
-    1200px 800px,
-    1000px 600px,
-    900px 500px,
-    1000px 700px,
-    800px 500px,
-    600px 350px,
-    500px 300px,
-    400px 160px,
-    360px 140px,
-    40px 40px,
-    16px 16px;
-  
-  background-blend-mode:
-    normal,
-    overlay, overlay, overlay,
-    multiply, multiply,
-    multiply, multiply,
-    normal, normal,
-    normal, normal;
-  
-  opacity: 0.8;
+    linear-gradient(160deg, var(--backdrop-dark-base) 0%, #0f2e1f 48%, var(--backdrop-dark-accent) 100%),
+    radial-gradient(ellipse 900px 450px at 18% 22%, rgba(232, 196, 104, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 700px 380px at 82% 78%, rgba(110, 231, 168, 0.06) 0%, transparent 52%),
+    radial-gradient(ellipse 500px 260px at 50% 55%, rgba(20, 83, 45, 0.12) 0%, transparent 50%);
+  background-size: 100% 100%, 1200px 800px, 1000px 600px, 900px 500px;
+  background-blend-mode: normal, overlay, overlay, multiply;
+  opacity: 0.75;
 }
 
 .backdrop-theme-dark::before {

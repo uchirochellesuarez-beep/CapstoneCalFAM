@@ -3,9 +3,9 @@
     <!-- Sidebar Navigation -->
     <nav
       class="sidebar"
-      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer }"
+      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer, 'light-theme': isLight }"
     >
-      <div class="backdrop-sidebar backdrop-theme"></div>
+      <div class="backdrop-sidebar" :class="backdropThemeClass"></div>
       <!-- CALFFA LOGO HEADER -->
     <div class="sidebar-header">
       <div class="calffa-logo-container">
@@ -274,6 +274,7 @@
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
+import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
 import MachineryIcon from "./icons/MachineryIcon.vue";
 import MoneyIcon from "./icons/MoneyIcon.vue";
@@ -290,6 +291,8 @@ const emit = defineEmits(['menu-click', 'active-menu', 'toggle']);
 
 const route = useRoute();
 const authStore = useAuthStore();
+const { backdropThemeClass, isDark } = useBackdropTheme();
+const isLight = computed(() => !isDark.value);
 const isCollapsed = ref(false);
 
 const currentUser = computed(() => authStore.currentUser);
@@ -1161,6 +1164,79 @@ const isActiveRoute = (path) => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* Light theme — high-contrast icons (senior-friendly) */
+.sidebar.light-theme .nav-link {
+  color: #000000;
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar.light-theme .nav-link:hover {
+  color: #000000;
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  filter: none;
+}
+
+.sidebar.light-theme .active .nav-link {
+  color: #000000;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-color: #374151;
+  box-shadow: 0 0 0 1px rgba(55, 65, 81, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.light-theme .active .nav-link::before {
+  background: linear-gradient(180deg, #9ca3af 0%, #374151 100%);
+  box-shadow: none;
+}
+
+.sidebar.light-theme .icon-component {
+  color: #000000;
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  box-shadow: none;
+}
+
+.sidebar.light-theme .icon-component :deep(svg) {
+  color: #000000;
+}
+
+.sidebar.light-theme .icon-component :deep(:is(path, rect, circle, line, polyline)) {
+  stroke: #000000;
+}
+
+.sidebar.light-theme .icon-component :deep([fill]:not([fill='none']):not([fill='white'])) {
+  fill: #000000;
+}
+
+.sidebar.light-theme .nav-link:hover .icon-component {
+  color: #000000;
+  background: #e5e7eb;
+  border-color: #374151;
+  box-shadow: none;
+}
+
+.sidebar.light-theme .active .nav-link .icon-component {
+  color: #000000;
+  background: #d1d5db;
+  border-color: #1f2937;
+  box-shadow: none;
+}
+
+.sidebar.light-theme .section-header {
+  color: #000000;
+  background: linear-gradient(152deg, #f3f4f6, #e5e7eb);
+  border-color: #d1d5db;
+}
+
+.sidebar.light-theme .toggle-btn {
+  color: #000000;
+  background: #ffffff;
+  border-color: #d1d5db;
 }
 
 /* Hide scrollbars (keep scrolling: wheel / trackpad / touch) */

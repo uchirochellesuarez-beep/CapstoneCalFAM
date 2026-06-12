@@ -1,0 +1,379 @@
+/**
+ * Night Farm Dashboard — dark mode
+ * Deep forest green with matte, readable surfaces (not cyber/neon black).
+ */
+
+body.glass-dark {
+  --farm-night-bg-deep: #0c2418;
+  --farm-night-bg-mid: #123222;
+  --farm-night-bg-horizon: #1a4d35;
+  --farm-night-surface: #1e4234;
+  --farm-night-surface-raised: #255241;
+  --farm-night-surface-soft: #2d5c4a;
+  --farm-night-border: rgba(167, 211, 178, 0.22);
+  --farm-night-border-strong: rgba(187, 227, 196, 0.32);
+  --farm-night-text: #ecfdf5;
+  --farm-night-text-soft: #b8dcc6;
+  --farm-night-text-muted: #8fb89e;
+  --farm-night-gold: #e8c468;
+  --farm-night-gold-soft: rgba(232, 196, 104, 0.18);
+  --farm-night-shadow: 0 10px 28px rgba(4, 18, 12, 0.35);
+
+  --glass-bg-start: var(--farm-night-bg-deep);
+  --glass-bg-mid: var(--farm-night-bg-mid);
+  --glass-bg-end: var(--farm-night-bg-horizon);
+  --glass-surface: rgba(30, 66, 52, 0.88);
+  --glass-surface-strong: rgba(37, 82, 65, 0.94);
+  --glass-border: var(--farm-night-border);
+  --glass-text: var(--farm-night-text);
+  --glass-text-soft: var(--farm-night-text-soft);
+  --glass-shadow: var(--farm-night-shadow);
+  --glass-shadow-soft: 0 6px 18px rgba(4, 18, 12, 0.28);
+  --glass-approved: #6ee7a8;
+  --glass-cta-b: #3d7a5c;
+}
+
+/* Ambient — moonlit field, not neon glow */
+body.glass-dark::before {
+  background:
+    radial-gradient(ellipse at 12% 6%, rgba(110, 231, 168, 0.07), transparent 50%),
+    radial-gradient(ellipse at 88% 10%, rgba(232, 196, 104, 0.05), transparent 48%),
+    radial-gradient(ellipse at 50% 100%, rgba(26, 95, 63, 0.12), transparent 58%) !important;
+  opacity: 0.9 !important;
+}
+
+body.glass-dark::after {
+  opacity: 0.28 !important;
+  background:
+    linear-gradient(122deg, rgba(255, 255, 255, 0.04) 0%, transparent 20%),
+    linear-gradient(170deg, transparent 65%, rgba(0, 0, 0, 0.08) 100%) !important;
+  filter: blur(2px) !important;
+}
+
+/* Backdrop — deep forest wall */
+body.glass-dark .backdrop-theme-dark {
+  background: linear-gradient(
+    160deg,
+    #0a1f15 0%,
+    #0f2e1f 42%,
+    #143d2a 100%
+  ) !important;
+  opacity: 0.72 !important;
+}
+
+body.glass-dark .backdrop-theme-dark::before {
+  background: radial-gradient(circle at 50% 20%, rgba(232, 196, 104, 0.04) 0%, transparent 55%) !important;
+  opacity: 0.35 !important;
+  animation: none !important;
+}
+
+/* Header — matte barn board */
+body.glass-dark .top-header {
+  background: linear-gradient(
+    118deg,
+    #143528 0%,
+    #1a4032 50%,
+    #1e4a3a 100%
+  ) !important;
+  border-bottom: 1px solid var(--farm-night-border-strong) !important;
+  box-shadow: 0 6px 20px rgba(4, 18, 12, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.glass-dark .top-header :is(.icon-btn, .user-profile, .theme-toggle-btn) {
+  background: rgba(37, 82, 65, 0.65) !important;
+  border-color: var(--farm-night-border) !important;
+  color: var(--farm-night-text) !important;
+  box-shadow: 0 2px 8px rgba(4, 18, 12, 0.2) !important;
+}
+
+body.glass-dark .top-header .profile-name,
+body.glass-dark .top-header .profile-id {
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .top-header .profile-status {
+  color: #0f2e1f !important;
+  background: linear-gradient(135deg, #a7f3c8 0%, #6ee7a8 100%) !important;
+  border-color: rgba(110, 231, 168, 0.45) !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar — night field panel */
+body.glass-dark .sidebar:not(.light-theme) {
+  background: linear-gradient(
+    168deg,
+    #0d2218 0%,
+    #123222 30%,
+    #1a3d2e 68%,
+    #1f4a38 100%
+  ) !important;
+  border-right-color: var(--farm-night-border) !important;
+  box-shadow: 8px 0 24px rgba(4, 18, 12, 0.3) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme)::before {
+  opacity: 0.12 !important;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 18% 8%, rgba(110, 231, 168, 0.08) 0%, transparent 42%),
+    radial-gradient(ellipse 70% 50% at 88% 92%, rgba(232, 196, 104, 0.06) 0%, transparent 40%) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .calffa-tagline {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .section-header {
+  color: var(--farm-night-text-soft) !important;
+  background: linear-gradient(152deg, rgba(30, 66, 52, 0.95), rgba(24, 54, 42, 0.92)) !important;
+  border-color: var(--farm-night-border) !important;
+  box-shadow: none !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .nav-link {
+  color: var(--farm-night-text) !important;
+  background: linear-gradient(152deg, rgba(30, 66, 52, 0.92), rgba(26, 58, 46, 0.9)) !important;
+  border-color: var(--farm-night-border) !important;
+  box-shadow: 0 2px 8px rgba(4, 18, 12, 0.18) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .nav-link:hover {
+  color: #ffffff !important;
+  background: linear-gradient(152deg, rgba(37, 82, 65, 0.96), rgba(30, 66, 52, 0.94)) !important;
+  border-color: var(--farm-night-border-strong) !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22) !important;
+  filter: none !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link {
+  color: #ffffff !important;
+  background: linear-gradient(152deg, rgba(45, 92, 74, 0.98), rgba(37, 82, 65, 0.96)) !important;
+  border-color: rgba(232, 196, 104, 0.35) !important;
+  box-shadow: 0 0 0 1px rgba(232, 196, 104, 0.12), 0 6px 16px rgba(4, 18, 12, 0.24) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link::before {
+  background: linear-gradient(180deg, #f0d78c 0%, #6ee7a8 55%, #3d9a6e 100%) !important;
+  box-shadow: 0 0 6px rgba(232, 196, 104, 0.25) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .icon-component {
+  color: var(--farm-night-text) !important;
+  background: rgba(20, 48, 38, 0.75) !important;
+  border-color: var(--farm-night-border) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .nav-link:hover .icon-component,
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link .icon-component {
+  background: rgba(45, 92, 74, 0.55) !important;
+  border-color: var(--farm-night-border-strong) !important;
+  box-shadow: none !important;
+}
+
+body.glass-dark .sidebar:not(.light-theme) .toggle-btn {
+  background: rgba(37, 82, 65, 0.7) !important;
+  border-color: var(--farm-night-border) !important;
+  color: var(--farm-night-text) !important;
+}
+
+/* Dashboard — readable matte panels */
+body.glass-dark .dashboard-container .dashboard-header,
+body.glass-dark .dashboard-container .filter-panel,
+body.glass-dark .dashboard-container .header-time-card {
+  background: var(--farm-night-surface) !important;
+  border: 1px solid var(--farm-night-border) !important;
+  box-shadow: var(--farm-night-shadow) !important;
+}
+
+body.glass-dark .dashboard-container .analytics-section {
+  background: linear-gradient(
+    135deg,
+    #122a1f 0%,
+    #1a3d2e 45%,
+    #224f3c 100%
+  ) !important;
+  box-shadow: var(--farm-night-shadow) !important;
+}
+
+body.glass-dark .dashboard-container .glass-chart-card {
+  background: linear-gradient(165deg, #1e4234 0%, #255241 55%, #2a5a48 100%) !important;
+  border: 1px solid var(--farm-night-border) !important;
+  box-shadow: var(--farm-night-shadow) !important;
+}
+
+body.glass-dark .dashboard-container .glass-chart-card:hover {
+  box-shadow: 0 12px 32px rgba(4, 18, 12, 0.38) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.glass-dark .dashboard-container .stat-card {
+  background: linear-gradient(165deg, #f7fdf9 0%, #eef8f1 55%, #e4f3ea 100%) !important;
+  border: 1px solid rgba(167, 211, 178, 0.45) !important;
+  box-shadow: 0 4px 14px rgba(4, 18, 12, 0.12) !important;
+}
+
+body.glass-dark .dashboard-container .stat-card:hover {
+  box-shadow: 0 8px 22px rgba(4, 18, 12, 0.16) !important;
+}
+
+/* Page shells — cooperative night surfaces */
+body.glass-dark :is(
+  .page-container .page-header,
+  .page-container .card,
+  .page-container .stat-card,
+  .financial-overview-container:not(.light-theme) .page-header,
+  .financial-overview-container:not(.light-theme) .stat-card,
+  .financial-overview-container:not(.light-theme) .filters-bar,
+  .financial-overview-container:not(.light-theme) .chart-card,
+  .financial-overview-container:not(.light-theme) .financial-table-section
+) {
+  background: var(--farm-night-surface) !important;
+  border: 1px solid var(--farm-night-border) !important;
+  box-shadow: var(--farm-night-shadow) !important;
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark :is(
+  .financial-overview-container:not(.light-theme) .stat-label,
+  .financial-overview-container:not(.light-theme) .section-title,
+  .financial-overview-container:not(.light-theme) .chart-title
+) {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark :is(
+  .financial-overview-container:not(.light-theme) .stat-value,
+  .financial-overview-container:not(.light-theme) .page-title,
+  .financial-overview-container:not(.light-theme) .section-title
+) {
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(
+  .page-subtitle, .stat-label, .filter-label, .chart-subtitle
+) {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .stat-value.collected {
+  color: #6ee7a8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(.inline-link, .view-all-link) {
+  color: #a7f3c8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .chart-title {
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) :is(
+  .tabs-container, .table-wrap, .section-card, .page-header
+) {
+  background: var(--farm-night-surface) !important;
+  border-color: var(--farm-night-border) !important;
+}
+
+/* Tables — readable rows on green */
+body.glass-dark :is(.members-table th, .data-table th, .loans-table th, .barangays-table th) {
+  background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
+  color: var(--farm-night-text) !important;
+  border-bottom-color: var(--farm-night-border-strong) !important;
+}
+
+body.glass-dark :is(.members-table td, .data-table td, .loans-table td) {
+  color: var(--farm-night-text-soft) !important;
+  border-color: rgba(167, 211, 178, 0.12) !important;
+}
+
+body.glass-dark :is(.members-table tbody tr:hover td, .data-table tbody tr:hover td) {
+  background: rgba(110, 231, 168, 0.06) !important;
+}
+
+/* Buttons — earthy CTA, not neon */
+body.glass-dark :is(.btn-primary, .btn-success, .export-btn, .btn-submit) {
+  background: linear-gradient(135deg, #3d7a5c 0%, #2d5c4a 100%) !important;
+  border-color: rgba(110, 231, 168, 0.35) !important;
+  color: #ecfdf5 !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.25) !important;
+}
+
+body.glass-dark :is(.btn-primary, .btn-success, .export-btn):hover {
+  background: linear-gradient(135deg, #4a8f6c 0%, #3d7a5c 100%) !important;
+  filter: none !important;
+}
+
+/* Softer active nav glow globally */
+body.glass-dark :is(.tab.active, .tab-btn.active, .active .nav-link) {
+  box-shadow: 0 0 0 1px rgba(232, 196, 104, 0.2), 0 8px 18px rgba(4, 18, 12, 0.22) !important;
+}
+
+/* Form fields in dark pages */
+body.glass-dark :is(
+  .page-container, .financial-overview-container:not(.light-theme), .farmer-table-page:not(.light-theme)
+) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']) {
+  color: var(--farm-night-text) !important;
+  background: rgba(20, 48, 38, 0.85) !important;
+  border: 1px solid var(--farm-night-border) !important;
+}
+
+body.glass-dark :is(
+  .page-container, .financial-overview-container:not(.light-theme)
+) :is(input, select, textarea):focus {
+  border-color: rgba(110, 231, 168, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(110, 231, 168, 0.12) !important;
+}
+
+/* Machinery Management — night farm surfaces */
+body.glass-dark .machinery-management-page:not(.light-theme) {
+  background: linear-gradient(160deg, #0c2418 0%, #123222 42%, #1a3d2e 100%) !important;
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .page-header, .section, .stat-card, .filters-section, .table-container,
+  .inventory-table-container, .modal-content, .inv2-modal, .inv2-card
+) {
+  background: var(--farm-night-surface) !important;
+  border-color: var(--farm-night-border) !important;
+  box-shadow: var(--farm-night-shadow) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .inventory-table th, .bookings-table th, .inv2-table th
+) {
+  background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .inventory-table td, .bookings-table td, .inv2-table td
+) {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .page-title, .section-title, .stat-value, .inv2-title
+) {
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .page-subtitle, .stat-label, .filter-label, .form-label, .inv2-subtitle
+) {
+  color: var(--farm-night-text-soft) !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
+  .filter-select, .form-input, .form-select, .inv2-search-input, .inv2-select
+) {
+  color: var(--farm-night-text) !important;
+  background: rgba(20, 48, 38, 0.9) !important;
+  border-color: var(--farm-night-border) !important;
+}

@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container glass-module-page">
+  <div class="dashboard-container glass-module-page" :class="{ 'light-theme': isLight }">
     <!-- Multi-layer background -->
     <div class="dashboard-bg-layer" aria-hidden="true"></div>
     <div class="dashboard-bg-orbs" aria-hidden="true"></div>
@@ -194,15 +194,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 // State
 const allFarmers = ref([])
@@ -571,16 +574,39 @@ const animateOverviewCounters = () => {
   animateCounter(animatedPending, pendingCount.value)
 }
 
+const getChartAxisStyle = () => {
+  if (isLight.value) {
+    return {
+      tickColor: '#000000',
+      gridColor: 'rgba(0, 0, 0, 0.12)',
+      borderColor: 'rgba(0, 0, 0, 0.2)',
+      doughnutBorder: '#ffffff',
+      legendColor: '#000000'
+    }
+  }
+  return {
+    tickColor: '#b8dcc6',
+    gridColor: 'rgba(167, 211, 178, 0.14)',
+    borderColor: 'rgba(167, 211, 178, 0.22)',
+    doughnutBorder: 'rgba(236, 253, 245, 0.12)'
+  }
+}
+
 const renderCharts = () => {
   renderStatusChart()
   if (isAdmin.value) renderBarangayChart()
   renderFinancialChart()
 }
 
+watch(isLight, () => {
+  nextTick(() => renderCharts())
+})
+
 const renderStatusChart = () => {
   if (!statusChartRef.value) return
   if (statusChart) statusChart.destroy()
 
+  const axis = getChartAxisStyle()
   const ctx = statusChartRef.value.getContext('2d')
   statusChart = new Chart(ctx, {
     type: 'doughnut',
@@ -591,7 +617,7 @@ const renderStatusChart = () => {
         backgroundColor: ['#22c55e', '#facc15', '#fb7185'],
         hoverBackgroundColor: ['#16a34a', '#eab308', '#f43f5e'],
         borderWidth: 3,
-        borderColor: 'rgba(255,255,255,0.15)',
+        borderColor: axis.doughnutBorder,
         hoverOffset: 10,
         spacing: 2
       }]
@@ -655,6 +681,7 @@ const renderBarangayChart = () => {
     .sort((a, b) => barangaySortDesc.value ? b[1] - a[1] : a[1] - b[1])
     .slice(0, 10)
 
+  const axis = getChartAxisStyle()
   const ctx = barangayChartRef.value.getContext('2d')
   let gradientColor = null
 
@@ -702,21 +729,21 @@ const renderBarangayChart = () => {
         x: {
           grid: { display: false },
           ticks: {
-            color: 'rgba(240, 253, 244, 0.9)',
+            color: axis.tickColor,
             font: { size: 10, family: 'Inter, system-ui, sans-serif', weight: '600' },
             maxRotation: 35
           },
-          border: { color: 'rgba(233, 250, 222, 0.22)' }
+          border: { color: axis.borderColor }
         },
         y: {
           beginAtZero: true,
-          grid: { color: 'rgba(220, 252, 231, 0.12)', lineWidth: 1 },
+          grid: { color: axis.gridColor, lineWidth: 1 },
           ticks: {
             stepSize: 1,
-            color: 'rgba(240, 253, 244, 0.9)',
-            font: { size: 11, family: 'Inter, system-ui, sans-serif' }
+            color: axis.tickColor,
+            font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' }
           },
-          border: { color: 'rgba(233, 250, 222, 0.22)' }
+          border: { color: axis.borderColor }
         }
       }
     }
@@ -727,6 +754,7 @@ const renderFinancialChart = () => {
   if (!financialChartRef.value) return
   if (financialChart) financialChart.destroy()
 
+  const axis = getChartAxisStyle()
   const ctx = financialChartRef.value.getContext('2d')
 
   let labels = []
@@ -817,20 +845,20 @@ const renderFinancialChart = () => {
         x: {
           grid: { display: false },
           ticks: {
-            color: 'rgba(240, 253, 244, 0.9)',
+            color: axis.tickColor,
             font: { size: 12, family: 'Inter, system-ui, sans-serif', weight: '700' }
           },
-          border: { color: 'rgba(233, 250, 222, 0.22)' }
+          border: { color: axis.borderColor }
         },
         y: {
           beginAtZero: true,
-          grid: { color: 'rgba(220, 252, 231, 0.12)', lineWidth: 1 },
+          grid: { color: axis.gridColor, lineWidth: 1 },
           ticks: {
-            color: 'rgba(240, 253, 244, 0.9)',
-            font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+            color: axis.tickColor,
+            font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' },
             callback: (value) => '₱' + Number(value).toLocaleString()
           },
-          border: { color: 'rgba(233, 250, 222, 0.22)' }
+          border: { color: axis.borderColor }
         }
       }
     }
@@ -1762,5 +1790,233 @@ canvas {
   .dashboard-title { font-size: 22px; }
   .filter-panel-grid { grid-template-columns: 1fr; }
   .fab-wrap { bottom: 16px; right: 16px; }
+}
+
+/* =============================================
+   LIGHT MODE — Senior-friendly (warm, bright, readable)
+   ============================================= */
+.dashboard-container.light-theme {
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%);
+}
+
+.dashboard-container.light-theme .dashboard-bg-layer,
+.dashboard-container.light-theme .dashboard-bg-orbs {
+  opacity: 0.35;
+}
+
+.dashboard-container.light-theme .dashboard-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f4fdf7 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 10px 30px rgba(22, 101, 52, 0.12);
+}
+
+.dashboard-container.light-theme .header-top {
+  border-bottom-color: rgba(22, 101, 52, 0.16);
+}
+
+.dashboard-container.light-theme .header-eyebrow {
+  color: #166534;
+  font-size: 12px;
+}
+
+.dashboard-container.light-theme .dashboard-title {
+  color: #052e16;
+  font-size: 40px;
+  text-shadow: none;
+}
+
+.dashboard-container.light-theme .dashboard-subtitle {
+  color: #14532d;
+  font-size: 15px;
+}
+
+.dashboard-container.light-theme .header-time-card {
+  background: #ecfdf5;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1);
+}
+
+.dashboard-container.light-theme .header-time-label,
+.dashboard-container.light-theme .header-time-date,
+.dashboard-container.light-theme .header-time-day {
+  color: #14532d;
+  font-size: 12px;
+}
+
+.dashboard-container.light-theme .header-time-value {
+  color: #065f46;
+  font-size: 26px;
+}
+
+.dashboard-container.light-theme .header-time-role {
+  color: #052e16;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  border-color: #4ade80;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12);
+}
+
+.dashboard-container.light-theme .stat-card {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.dashboard-container.light-theme .stat-card:hover {
+  background: #ffffff;
+  border-color: #4ade80;
+  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.14);
+}
+
+.dashboard-container.light-theme .stat-label {
+  color: #166534;
+  font-size: 12px;
+}
+
+.dashboard-container.light-theme .stat-value {
+  color: #052e16;
+  font-size: 34px;
+  text-shadow: none;
+}
+
+.dashboard-container.light-theme .stat-pill-green {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #4ade80;
+}
+
+.dashboard-container.light-theme .stat-pill-teal {
+  background: #ccfbf1;
+  color: #0f766e;
+  border-color: #2dd4bf;
+}
+
+.dashboard-container.light-theme .stat-pill-yellow {
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #fbbf24;
+}
+
+.dashboard-container.light-theme .analytics-section {
+  background: linear-gradient(135deg, #e8f9ed 0%, #d1f5dc 50%, #bbf7d0 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 12px 36px rgba(22, 101, 52, 0.1);
+}
+
+.dashboard-container.light-theme .analytics-section-title {
+  color: #052e16;
+  font-size: 28px;
+  text-shadow: none;
+}
+
+.dashboard-container.light-theme .analytics-section-sub {
+  color: #14532d;
+  font-size: 15px;
+}
+
+.dashboard-container.light-theme .filter-toggle-btn {
+  background: #ffffff;
+  color: #14532d;
+  border: 2px solid #4ade80;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08);
+}
+
+.dashboard-container.light-theme .filter-toggle-btn:hover,
+.dashboard-container.light-theme .filter-toggle-btn.active {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #052e16;
+}
+
+.dashboard-container.light-theme .filter-panel {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08);
+}
+
+.dashboard-container.light-theme .filter-label {
+  color: #14532d;
+  font-size: 12px;
+}
+
+.dashboard-container.light-theme .glass-chart-card {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08);
+}
+
+.dashboard-container.light-theme .glass-chart-card:hover {
+  background: #ffffff;
+  border-color: #4ade80;
+  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.12);
+}
+
+.dashboard-container.light-theme .glass-chart-header {
+  border-bottom-color: rgba(22, 101, 52, 0.14);
+}
+
+.dashboard-container.light-theme .glass-chart-title {
+  color: #052e16;
+  font-size: 17px;
+  text-shadow: none;
+}
+
+.dashboard-container.light-theme .glass-chart-sub {
+  color: #166534;
+  font-size: 13px;
+}
+
+.dashboard-container.light-theme .glass-chart-badge {
+  background: #dcfce7;
+  color: #14532d;
+  border-color: #86efac;
+}
+
+.dashboard-container.light-theme .glass-chart-badge--finance {
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #fbbf24;
+}
+
+.dashboard-container.light-theme .sort-toggle-btn {
+  background: #ffffff;
+  color: #14532d;
+  border: 2px solid #86efac;
+}
+
+.dashboard-container.light-theme .donut-center-num {
+  color: #052e16;
+  text-shadow: none;
+  font-size: 30px;
+}
+
+.dashboard-container.light-theme .donut-center-text {
+  color: #166534;
+  font-size: 12px;
+}
+
+.dashboard-container.light-theme .gl-item {
+  color: #14532d;
+  font-size: 13px;
+}
+
+.dashboard-container.light-theme .gl-item strong {
+  color: #052e16;
+}
+
+.dashboard-container.light-theme .gl-dot {
+  box-shadow: 0 0 4px rgba(22, 101, 52, 0.2);
+}
+
+.dashboard-container.light-theme .fab-main {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-color: #86efac;
+  color: #ffffff;
+}
+
+.dashboard-container.light-theme .fab-action {
+  background: #ffffff;
+  color: #14532d;
+  border: 2px solid #86efac;
 }
 </style>

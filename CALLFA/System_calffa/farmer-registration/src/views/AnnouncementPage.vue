@@ -1,5 +1,5 @@
 <template>
-  <div class="announcement-page">
+  <div class="announcement-page" :class="{ 'light-theme': isLight }">
     <!-- Hero -->
     <header class="notice-hero">
       <div class="hero-left">
@@ -303,11 +303,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const API_ORIGIN = 'http://localhost:3000'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const userRole = computed(() => (authStore.currentUser?.role || '').toLowerCase())
 const userId = computed(() => authStore.currentUser?.id)
 const token = computed(() => authStore.token)
@@ -1683,5 +1686,236 @@ onMounted(fetchAnnouncements)
     width: 100%;
     height: 72px;
   }
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.announcement-page.light-theme {
+  --bg-card: #ffffff;
+  --line: rgba(34, 197, 94, 0.28);
+  --line-strong: #86efac;
+  --green: #15803d;
+  --green-dim: #dcfce7;
+  --text: #052e16;
+  --text-muted: #166534;
+  --text-soft: #64748b;
+
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: var(--text);
+}
+
+.announcement-page.light-theme .notice-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.announcement-page.light-theme .hero-icon {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.announcement-page.light-theme .hero-eyebrow {
+  color: #15803d;
+}
+
+.announcement-page.light-theme .notice-hero h1 {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .hero-desc {
+  color: #166534;
+}
+
+.announcement-page.light-theme .hero-stat {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.announcement-page.light-theme .hero-stat-value {
+  color: #15803d;
+}
+
+.announcement-page.light-theme .hero-stat-label {
+  color: #64748b;
+}
+
+.announcement-page.light-theme .search-ico {
+  color: #15803d;
+}
+
+.announcement-page.light-theme .search-input,
+.announcement-page.light-theme .sort-select {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.announcement-page.light-theme .search-input::placeholder {
+  color: #64748b;
+}
+
+.announcement-page.light-theme .sort-select option {
+  background: #ffffff;
+  color: #052e16;
+}
+
+.announcement-page.light-theme .state-panel {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  color: #166534;
+}
+
+.announcement-page.light-theme .state-empty h2 {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .state-empty p {
+  color: #166534;
+}
+
+.announcement-page.light-theme .notice-card {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+}
+
+.announcement-page.light-theme .notice-card:hover {
+  border-color: #22c55e;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.12);
+}
+
+.announcement-page.light-theme .notice-card--featured {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 8px 22px rgba(22, 101, 52, 0.12);
+}
+
+.announcement-page.light-theme .notice-card-header {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.announcement-page.light-theme .author-name,
+.announcement-page.light-theme .notice-date {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .notice-time,
+.announcement-page.light-theme .notice-card-footer,
+.announcement-page.light-theme .notice-figure-cap {
+  color: #64748b;
+}
+
+.announcement-page.light-theme .author-role.role-president { color: #4338ca; }
+.announcement-page.light-theme .author-role.role-admin { color: #15803d; }
+.announcement-page.light-theme .author-role.role-other { color: #64748b; }
+
+.announcement-page.light-theme .notice-title {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .notice-content {
+  color: #14532d;
+}
+
+.announcement-page.light-theme .read-more-btn {
+  color: #15803d;
+}
+
+.announcement-page.light-theme .read-more-btn:hover {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .notice-badge-latest {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.announcement-page.light-theme .action-btn {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.announcement-page.light-theme .action-btn--danger {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.announcement-page.light-theme .notice-card-footer {
+  border-top: 1px solid #e2e8f0;
+}
+
+.announcement-page.light-theme .edited-tag {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.announcement-page.light-theme .modal {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  color: #052e16;
+}
+
+.announcement-page.light-theme .modal-head {
+  border-bottom: 1px solid #bbf7d0;
+}
+
+.announcement-page.light-theme .modal-head h3 {
+  color: #052e16;
+}
+
+.announcement-page.light-theme .modal-close {
+  background: #f0fdf4;
+  color: #64748b;
+}
+
+.announcement-page.light-theme .modal-foot {
+  border-top: 1px solid #bbf7d0;
+}
+
+.announcement-page.light-theme .form-field label {
+  color: #166534;
+}
+
+.announcement-page.light-theme .form-field input,
+.announcement-page.light-theme .form-field textarea {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.announcement-page.light-theme .upload-zone {
+  border-color: #bbf7d0;
+  background: #f8fdf9;
+}
+
+.announcement-page.light-theme .upload-placeholder span {
+  color: #166534;
+}
+
+.announcement-page.light-theme .btn-ghost {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #14532d;
+}
+
+.announcement-page.light-theme .btn-ghost:hover {
+  background: #f0fdf4;
+}
+
+.announcement-page.light-theme .delete-warning {
+  color: #166534;
+}
+
+.announcement-page.light-theme .preview-close {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #052e16;
+}
+
+.announcement-page.light-theme .preview-caption {
+  color: #166534;
 }
 </style>

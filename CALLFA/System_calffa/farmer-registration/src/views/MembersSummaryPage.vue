@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 lg:p-6">
+  <div class="members-summary-page min-h-screen p-4 lg:p-6" :class="{ 'light-theme': isLight }">
     <DashboardHeader :user="authStore.currentUser" />
     <div class="max-w-6xl mx-auto">
       <div class="flex items-center justify-between gap-3 mb-6">
@@ -7,7 +7,17 @@
           <h1 class="text-3xl font-bold text-gray-800">Members Summary</h1>
           <p class="text-sm text-gray-500">Search a farmer first, then view the full summary.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center flex-wrap justify-end gap-3">
+          <button
+            type="button"
+            @click="goToMembersManagement"
+            class="back-to-management-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="back-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Members Management
+          </button>
           <button
             v-if="selectedFarmer"
             type="button"
@@ -395,9 +405,12 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardHeader from '../components/DashboardHeader.vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const pageError = ref('')
 const farmers = ref([])
@@ -560,6 +573,8 @@ const resetSelection = () => {
   activeTab.value = 'overview'
 }
 
+const goToMembersManagement = () => router.push('/farmers-table')
+
 const formatNumber = (num) => new Intl.NumberFormat('en-PH').format(num || 0)
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
@@ -588,7 +603,34 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Back to Members Dashboard button */
+.back-to-management-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 2px solid #166534;
+  background: #ffffff;
+  color: #14532d;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+}
+
+.back-to-management-btn:hover {
+  background: #f0fdf4;
+  color: #052e16;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.16);
+}
+
+.back-to-management-btn:active {
+  transform: translateY(0);
+}
+
+/* Back to search (when viewing a farmer profile) */
 .back-to-members-btn {
   display: inline-flex;
   align-items: center;
@@ -823,110 +865,41 @@ onMounted(async () => {
   font-size: 22px;
 }
 
-/* ── Dark green theme override ── */
-
-/* Page background */
-.min-h-screen {
+/* ── Dark green theme — only when dark mode is active ── */
+.members-summary-page:not(.light-theme) {
   background: linear-gradient(145deg, #0a1a0f 0%, #0f2518 30%, #163020 60%, #1c3d28 100%) !important;
 }
 
-/* Page title & subtitle */
-h1, .text-gray-800 { color: #ffffff !important; }
-.text-gray-500 { color: rgba(200, 235, 210, 0.7) !important; }
-
-/* Back button */
-button.border { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.18) !important; color: #ffffff !important; }
-
-/* Search & list container */
-.bg-white {
-  background: rgba(20, 45, 28, 0.95) !important;
-  border-color: rgba(100, 200, 130, 0.18) !important;
-  color: #ffffff !important;
-}
-
-/* Search input */
-input[type="text"] {
-  background: rgba(0, 0, 0, 0.3) !important;
-  border-color: rgba(100, 200, 130, 0.3) !important;
-  color: #ffffff !important;
-}
-input[type="text"]::placeholder { color: rgba(200, 235, 210, 0.5) !important; }
-
-/* Farmer list items */
-button.w-full.text-left {
-  background: transparent !important;
-  border-color: rgba(100, 200, 130, 0.15) !important;
-}
-button.w-full.text-left:hover { background: rgba(255,255,255,0.06) !important; }
-.text-gray-900 { color: #ffffff !important; }
-
-/* Profile header gradient */
-.bg-gradient-to-r {
-  background: linear-gradient(135deg, rgba(18, 50, 30, 0.98), rgba(25, 65, 40, 0.98)) !important;
-  border-color: rgba(100, 200, 130, 0.15) !important;
-}
-
-/* Info boxes in profile header */
-.bg-white.rounded-lg {
-  background: rgba(15, 38, 22, 0.9) !important;
-  border-color: rgba(100, 200, 130, 0.2) !important;
-}
-
-/* All label text */
-.text-gray-500, .text-xs.font-semibold.text-gray-500 { color: rgba(180, 230, 195, 0.7) !important; }
-.text-gray-600, .text-gray-700 { color: rgba(200, 235, 210, 0.85) !important; }
-
-/* Value text in boxes */
-.text-indigo-600, .text-blue-600, .text-green-600, .text-yellow-600,
-.text-blue-900, .text-amber-900, .text-green-900, .text-red-900, .text-purple-900 {
-  color: #ffffff !important;
-}
-
-/* Section headers */
-h3 { color: #ffffff !important; }
-
-/* Divider lines */
-.border-t { border-color: rgba(100, 200, 130, 0.15) !important; }
-
-/* Financial & share capital boxes */
-.border-2 {
-  border-color: rgba(100, 200, 130, 0.25) !important;
-}
-.bg-blue-50, .bg-amber-50, .bg-green-50, .bg-red-50, .bg-purple-50 {
-  background: rgba(18, 50, 30, 0.85) !important;
-}
-.text-blue-600, .text-amber-600, .text-green-600, .text-red-600, .text-purple-600 {
-  color: rgba(160, 230, 185, 0.9) !important;
-}
-.text-blue-700, .text-amber-700 { color: rgba(200, 235, 210, 0.8) !important; }
-
-/* Assistance items */
-.bg-gray-50 { background: rgba(18, 50, 30, 0.7) !important; border-color: rgba(100, 200, 130, 0.15) !important; }
-.bg-gray-50:hover { background: rgba(25, 65, 40, 0.9) !important; }
-
-/* Empty state */
-.text-gray-500 { color: rgba(200, 235, 210, 0.6) !important; }
-
-/* Error box */
-.bg-red-50 { background: rgba(80, 10, 10, 0.6) !important; }
-
-/* Refresh button */
-button.border-2.border-indigo-300 {
-  background: rgba(255,255,255,0.07) !important;
-  border-color: rgba(100, 200, 130, 0.4) !important;
-  color: #aff5c8 !important;
-}
-button.border-2.border-indigo-300:hover { background: rgba(100, 200, 130, 0.12) !important; }
-
-/* Membership badge */
-.bg-blue-100 { background: rgba(30, 80, 120, 0.5) !important; }
-.bg-gray-100 { background: rgba(255,255,255,0.08) !important; }
-.text-blue-800 { color: #a5d8f5 !important; }
-.text-gray-700 { color: rgba(200, 235, 210, 0.85) !important; }
-
-/* Confirmed badge */
-.bg-green-100 { background: rgba(20, 90, 45, 0.5) !important; }
-.text-green-800 { color: #a8f0c0 !important; }
+.members-summary-page:not(.light-theme) :is(h1, .text-gray-800) { color: #ffffff !important; }
+.members-summary-page:not(.light-theme) .text-gray-500 { color: rgba(200, 235, 210, 0.7) !important; }
+.members-summary-page:not(.light-theme) button.border { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.18) !important; color: #ffffff !important; }
+.members-summary-page:not(.light-theme) .bg-white { background: rgba(20, 45, 28, 0.95) !important; border-color: rgba(100, 200, 130, 0.18) !important; color: #ffffff !important; }
+.members-summary-page:not(.light-theme) input[type="text"] { background: rgba(0, 0, 0, 0.3) !important; border-color: rgba(100, 200, 130, 0.3) !important; color: #ffffff !important; }
+.members-summary-page:not(.light-theme) input[type="text"]::placeholder { color: rgba(200, 235, 210, 0.5) !important; }
+.members-summary-page:not(.light-theme) button.w-full.text-left { background: transparent !important; border-color: rgba(100, 200, 130, 0.15) !important; }
+.members-summary-page:not(.light-theme) button.w-full.text-left:hover { background: rgba(255,255,255,0.06) !important; }
+.members-summary-page:not(.light-theme) .text-gray-900 { color: #ffffff !important; }
+.members-summary-page:not(.light-theme) .bg-gradient-to-r { background: linear-gradient(135deg, rgba(18, 50, 30, 0.98), rgba(25, 65, 40, 0.98)) !important; border-color: rgba(100, 200, 130, 0.15) !important; }
+.members-summary-page:not(.light-theme) .bg-white.rounded-lg { background: rgba(15, 38, 22, 0.9) !important; border-color: rgba(100, 200, 130, 0.2) !important; }
+.members-summary-page:not(.light-theme) :is(.text-gray-500, .text-xs.font-semibold.text-gray-500) { color: rgba(180, 230, 195, 0.7) !important; }
+.members-summary-page:not(.light-theme) :is(.text-gray-600, .text-gray-700) { color: rgba(200, 235, 210, 0.85) !important; }
+.members-summary-page:not(.light-theme) :is(.text-indigo-600, .text-blue-600, .text-green-600, .text-yellow-600, .text-blue-900, .text-amber-900, .text-green-900, .text-red-900, .text-purple-900) { color: #ffffff !important; }
+.members-summary-page:not(.light-theme) h3 { color: #ffffff !important; }
+.members-summary-page:not(.light-theme) .border-t { border-color: rgba(100, 200, 130, 0.15) !important; }
+.members-summary-page:not(.light-theme) .border-2 { border-color: rgba(100, 200, 130, 0.25) !important; }
+.members-summary-page:not(.light-theme) :is(.bg-blue-50, .bg-amber-50, .bg-green-50, .bg-red-50, .bg-purple-50) { background: rgba(18, 50, 30, 0.85) !important; }
+.members-summary-page:not(.light-theme) :is(.text-blue-600, .text-amber-600, .text-green-600, .text-red-600, .text-purple-600) { color: rgba(160, 230, 185, 0.9) !important; }
+.members-summary-page:not(.light-theme) :is(.text-blue-700, .text-amber-700) { color: rgba(200, 235, 210, 0.8) !important; }
+.members-summary-page:not(.light-theme) .bg-gray-50 { background: rgba(18, 50, 30, 0.7) !important; border-color: rgba(100, 200, 130, 0.15) !important; }
+.members-summary-page:not(.light-theme) .bg-gray-50:hover { background: rgba(25, 65, 40, 0.9) !important; }
+.members-summary-page:not(.light-theme) .bg-red-50 { background: rgba(80, 10, 10, 0.6) !important; }
+.members-summary-page:not(.light-theme) button.border-2.border-indigo-300 { background: rgba(255,255,255,0.07) !important; border-color: rgba(100, 200, 130, 0.4) !important; color: #aff5c8 !important; }
+.members-summary-page:not(.light-theme) button.border-2.border-indigo-300:hover { background: rgba(100, 200, 130, 0.12) !important; }
+.members-summary-page:not(.light-theme) .bg-blue-100 { background: rgba(30, 80, 120, 0.5) !important; }
+.members-summary-page:not(.light-theme) .bg-gray-100 { background: rgba(255,255,255,0.08) !important; }
+.members-summary-page:not(.light-theme) .text-blue-800 { color: #a5d8f5 !important; }
+.members-summary-page:not(.light-theme) .bg-green-100 { background: rgba(20, 90, 45, 0.5) !important; }
+.members-summary-page:not(.light-theme) .text-green-800 { color: #a8f0c0 !important; }
 
 /* ══════════════════════════════════════════════════════
    FARMER PROFILE REDESIGN — Modern Card UI
@@ -1259,4 +1232,350 @@ button.border-2.border-indigo-300:hover { background: rgba(100, 200, 130, 0.12) 
 .empty-state { text-align: center; padding: 48px 24px; color: rgba(200,235,210,0.45); }
 .empty-icon  { margin-bottom: 12px; }
 .empty-text  { font-size: 14px; }
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.members-summary-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: #052e16;
+}
+
+.members-summary-page.light-theme :is(h1, .text-gray-800) {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme :is(.text-gray-500, .text-gray-600, .text-gray-700) {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .bg-white {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.members-summary-page.light-theme input[type="text"] {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme input[type="text"]::placeholder {
+  color: #64748b !important;
+}
+
+.members-summary-page.light-theme .bg-gray-50 {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .back-to-management-btn {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+}
+
+.members-summary-page.light-theme .back-to-management-btn:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.12) !important;
+}
+
+.members-summary-page.light-theme .back-to-members-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+  color: #15803d !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+}
+
+.members-summary-page.light-theme .back-to-members-btn:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  border-color: #22c55e !important;
+}
+
+.members-summary-page:not(.light-theme) .back-to-management-btn {
+  background: linear-gradient(135deg, rgba(14, 25, 19, 0.97), rgba(10, 19, 15, 0.96));
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: #86efac;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.members-summary-page:not(.light-theme) .back-to-management-btn:hover {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.45), rgba(16, 120, 54, 0.55));
+  border-color: rgba(74, 222, 128, 0.65);
+  color: #ecfdf5;
+}
+
+.members-summary-page.light-theme :deep(.dashboard-banner) {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1) !important;
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme :deep(.banner-title) {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme :deep(.banner-subtitle) {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme :deep(.farm-info) {
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.members-summary-page.light-theme :deep(.farm-label),
+.members-summary-page.light-theme :deep(.farm-name),
+.members-summary-page.light-theme :deep(.farm-size) {
+  color: #14532d !important;
+}
+
+.members-summary-page.light-theme .search-results-table thead th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  border-color: #86efac !important;
+}
+
+.members-summary-page.light-theme .search-results-table tbody td {
+  background: #ffffff !important;
+  color: #14532d !important;
+  border-color: #e2e8f0 !important;
+}
+
+.members-summary-page.light-theme .result-row:hover td {
+  background: #ecfdf5 !important;
+}
+
+.members-summary-page.light-theme .name-primary {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .name-secondary {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .resume-label {
+  color: #64748b !important;
+}
+
+.members-summary-page.light-theme .resume-value {
+  color: #14532d !important;
+}
+
+.members-summary-page.light-theme .avatar-fallback-icon {
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .profile-hero {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.members-summary-page.light-theme .hero-name {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .hero-since {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .refresh-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .refresh-btn:hover:not(:disabled) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .info-tile {
+  background: #f8fdf9 !important;
+  border: 1.5px solid #bbf7d0 !important;
+}
+
+.members-summary-page.light-theme .info-tile:hover {
+  background: #ecfdf5 !important;
+  border-color: #86efac !important;
+}
+
+.members-summary-page.light-theme .info-tile-icon {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .info-tile-label {
+  color: #64748b !important;
+}
+
+.members-summary-page.light-theme .info-tile-value {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .ref-highlight {
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .copy-btn {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .profile-tabs-nav {
+  background: #f4faf6 !important;
+  border: 2px solid #86efac !important;
+}
+
+.members-summary-page.light-theme .tab-pill {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .tab-pill:hover:not(.active) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .tab-pill.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.18) !important;
+}
+
+.members-summary-page.light-theme .tab-content-area {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.members-summary-page.light-theme .tab-section-heading {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .fin-card {
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.08) !important;
+}
+
+.members-summary-page.light-theme .fin-card-blue {
+  background: #eff6ff !important;
+  border-color: #93c5fd !important;
+}
+
+.members-summary-page.light-theme .fin-card-amber {
+  background: #fffbeb !important;
+  border-color: #fcd34d !important;
+}
+
+.members-summary-page.light-theme .fin-card-green {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.members-summary-page.light-theme .fin-card-red {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+.members-summary-page.light-theme .fin-card-purple {
+  background: #faf5ff !important;
+  border-color: #d8b4fe !important;
+}
+
+.members-summary-page.light-theme .fin-card-label {
+  color: #64748b !important;
+}
+
+.members-summary-page.light-theme .fin-card-value {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .fin-card-sub {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .pi-item {
+  background: #f8fdf9 !important;
+  border: 1.5px solid #bbf7d0 !important;
+}
+
+.members-summary-page.light-theme .pi-item:hover {
+  background: #ecfdf5 !important;
+}
+
+.members-summary-page.light-theme .pi-label {
+  color: #64748b !important;
+}
+
+.members-summary-page.light-theme .pi-value {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .assistance-item {
+  background: #f8fdf9 !important;
+  border: 1.5px solid #bbf7d0 !important;
+}
+
+.members-summary-page.light-theme .assistance-item:hover {
+  background: #ecfdf5 !important;
+}
+
+.members-summary-page.light-theme .assist-type {
+  color: #052e16 !important;
+}
+
+.members-summary-page.light-theme .assist-meta {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .count-chip {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .empty-state {
+  color: #166534 !important;
+}
+
+.members-summary-page.light-theme .badge-role {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .badge-status-approved {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.members-summary-page.light-theme .badge-status-pending {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+  color: #a16207 !important;
+}
+
+.members-summary-page.light-theme .badge-status-rejected {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.members-summary-page.light-theme .assist-confirmed {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+
+.members-summary-page.light-theme .assist-distributed {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+}
 </style>

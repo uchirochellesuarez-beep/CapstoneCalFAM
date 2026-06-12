@@ -1,6 +1,8 @@
 <template>
   <div class="login-page glass-auth-page">
-    <div class="page-language-toggle" role="group" aria-label="Language selector">
+    <div class="page-top-controls">
+      <ThemeToggle variant="floating" />
+      <div class="page-language-toggle" role="group" aria-label="Language selector">
       <button
         type="button"
         @click="language = 'en'"
@@ -15,6 +17,7 @@
       >
         Tagalog
       </button>
+      </div>
     </div>
 
     <main class="layout-shell">
@@ -170,6 +173,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -275,11 +279,18 @@ const goToSignUp = () => {
   display: none;
 }
 
-.page-language-toggle {
+.page-top-controls {
   position: fixed;
   top: 0.8rem;
   right: 0.8rem;
   z-index: 300;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-language-toggle {
+  display: inline-flex;
   display: inline-flex;
   align-items: center;
   gap: 0.18rem;
@@ -932,9 +943,10 @@ const goToSignUp = () => {
 }
 
 @media (max-width: 420px) {
-  .page-language-toggle {
+  .page-top-controls {
     top: 0.48rem;
     right: 0.48rem;
+    gap: 0.35rem;
   }
 
   .layout-shell {

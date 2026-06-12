@@ -1,5 +1,5 @@
 <template>
-  <div class="financial-container glass-module-page">
+  <div class="financial-container glass-module-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <div class="header-content">
         <h1>Machinery Financial Management</h1>
@@ -584,7 +584,7 @@
 
         <div class="usage-leaders-card">
           <div class="section-subheader">
-            <h3>🚜 Most Used Machinery (Completed Bookings Only)</h3>
+            <h3>Most Used Machinery (Completed Bookings Only)</h3>
           </div>
           <div v-if="bookingUsageLeaders.length === 0" class="empty-state">
             <p>No completed booking usage found for current filters.</p>
@@ -676,7 +676,7 @@
 
         <!-- Profit Distribution Breakdown -->
         <div v-if="profitSummary.net_profit > 0" class="profit-distribution-section">
-          <h3>💰 Profit Distribution Allocation</h3>
+          <h3>Profit Distribution Allocation</h3>
           <p class="info-text">Net profit is distributed as follows:</p>
           
           <div class="distribution-grid">
@@ -1551,10 +1551,13 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import { useBackdropTheme } from '../composables/useBackdropTheme';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { isDark } = useBackdropTheme();
+const isLight = computed(() => !isDark.value);
 const reportLogoUrl = 'https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3';
 
 const highlightedBookingId = ref(null);
@@ -5762,25 +5765,25 @@ onBeforeUnmount(() => {
   letter-spacing: -0.03em;
 }
 
-/* Expense Breakdown readability: make rows bolder and clearer */
-.profit-breakdown .breakdown-card:nth-child(2) .expense-item {
+/* Expense Breakdown readability — dark mode only */
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item {
   padding: 8px 0;
 }
 
-.profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
   font-weight: 800;
   color: #effbe8;
   letter-spacing: 0.2px;
 }
 
-.profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
   font-weight: 900;
   font-size: 15px;
   color: #f8fff5;
 }
 
-.profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
-.profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
   font-weight: 900;
 }
 
@@ -6255,6 +6258,473 @@ tr.selected {
   .profit-breakdown {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright sage theme ===== */
+.financial-container.light-theme {
+  --glass-bg: #fffef9;
+  --glass-bg-soft: #f4fdf7;
+  --glass-panel: #ffffff;
+  --glass-line: rgba(34, 197, 94, 0.28);
+  --glass-line-strong: rgba(22, 101, 52, 0.35);
+  --text-main: #052e16;
+  --text-muted: #14532d;
+  --text-soft: #166534;
+  --green: #15803d;
+
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%);
+  color: var(--text-main);
+}
+
+.financial-container.light-theme::before,
+.financial-container.light-theme::after {
+  opacity: 0.28;
+}
+
+.financial-container.light-theme .page-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 10px 28px rgba(22, 101, 52, 0.12);
+}
+
+.financial-container.light-theme .page-header h1 {
+  background: linear-gradient(90deg, #065f46 0%, #15803d 45%, #22c55e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.financial-container.light-theme .page-subtitle {
+  color: #14532d;
+  font-size: 17px;
+}
+
+.financial-container.light-theme .denied-content {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .summary-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .summary-card:hover {
+  border-color: #4ade80;
+  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.14);
+}
+
+.financial-container.light-theme .card-label {
+  color: #166534;
+  font-size: 14px;
+}
+
+.financial-container.light-theme .card-amount {
+  color: #052e16;
+}
+
+.financial-container.light-theme .income-card .card-amount {
+  color: #15803d;
+}
+
+.financial-container.light-theme .expense-card .card-amount {
+  color: #c2410c;
+}
+
+.financial-container.light-theme .profit-card .card-amount {
+  color: #065f46;
+}
+
+.financial-container.light-theme .profit-card.negative .card-amount {
+  color: #b91c1c;
+}
+
+.financial-container.light-theme .tab-content {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .filters-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 2px solid #bbf7d0;
+}
+
+.financial-container.light-theme .filter-label {
+  color: #14532d;
+  font-size: 14px;
+}
+
+.financial-container.light-theme .filter-input,
+.financial-container.light-theme .filter-select-glass,
+.financial-container.light-theme .barangay-select {
+  background: #ffffff;
+  color: #052e16;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.financial-container.light-theme .filter-input:focus,
+.financial-container.light-theme .filter-select-glass:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.financial-container.light-theme .table-container {
+  background: #ffffff;
+  border: 2px solid #bbf7d0;
+  box-shadow: 0 4px 16px rgba(22, 101, 52, 0.08);
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) th {
+  color: #052e16;
+  background: transparent;
+  border-bottom-color: #86efac;
+  font-size: 14px;
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td {
+  color: #14532d;
+  border-bottom-color: #e2e8f0;
+  font-size: 15px;
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) tbody tr:nth-child(even) {
+  background: #f8fdf9;
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) tbody tr:hover {
+  background: #ecfdf5;
+}
+
+.financial-container.light-theme .amount-cell {
+  color: #15803d;
+}
+
+.financial-container.light-theme .amount-cell.balance {
+  color: #166534;
+}
+
+.financial-container.light-theme .summary-container > .summary-card {
+  background: #fffef9;
+  border: 2px solid #86efac;
+}
+
+.financial-container.light-theme .summary-container > .summary-card .card-label {
+  color: #166534;
+  text-shadow: none;
+}
+
+.financial-container.light-theme .summary-container > .summary-card .card-amount {
+  text-shadow: none;
+}
+
+.financial-container.light-theme .summary-container .ar-card .card-amount {
+  color: #15803d;
+}
+
+.financial-container.light-theme .summary-container .collected-card .card-amount {
+  color: #0f766e;
+}
+
+.financial-container.light-theme .summary-container .balance-card .card-amount {
+  color: #b91c1c;
+}
+
+.financial-container.light-theme .profit-distribution-section h3 {
+  color: #052e16;
+}
+
+.financial-container.light-theme .distribution-card {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .distribution-card.org {
+  background: linear-gradient(160deg, #fffbeb 0%, #fffef9 60%);
+  border-color: #fcd34d;
+}
+
+.financial-container.light-theme .distribution-card.training {
+  background: linear-gradient(160deg, #f0fdfa 0%, #fffef9 60%);
+  border-color: #5eead4;
+}
+
+.financial-container.light-theme .distribution-card.members {
+  background: linear-gradient(160deg, #f0fdf4 0%, #fffef9 60%);
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .distribution-content h4 {
+  color: #166534;
+}
+
+.financial-container.light-theme .distribution-content .percentage {
+  color: #052e16;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .distribution-content .amount {
+  text-shadow: none;
+}
+
+.financial-container.light-theme .distribution-content .per-member {
+  color: #14532d;
+  background: #f0fdf4;
+}
+
+.financial-container.light-theme .btn-secondary,
+.financial-container.light-theme .btn-secondary-outline {
+  background: #ffffff;
+  color: #14532d;
+  border: 1.5px solid #86efac;
+}
+
+.financial-container.light-theme .btn-secondary:hover,
+.financial-container.light-theme .btn-secondary-outline:hover {
+  background: #f0fdf4;
+  border-color: #4ade80;
+}
+
+.financial-container.light-theme .btn-primary {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+.financial-container.light-theme .status-badge.full-payment,
+.financial-container.light-theme .status-badge.partial-payment {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.financial-container.light-theme .status-badge.unpaid {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.financial-container.light-theme .barangay-context,
+.financial-container.light-theme .context-badge {
+  color: #14532d;
+}
+
+.financial-container.light-theme .report-generator-panel,
+.financial-container.light-theme .report-option-card,
+.financial-container.light-theme .actions-card {
+  background: #fffef9 !important;
+  border: 2px solid #86efac !important;
+  color: #14532d !important;
+}
+
+.financial-container.light-theme .breakdown-card {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  color: #14532d;
+}
+
+.financial-container.light-theme .breakdown-card h3 {
+  color: #052e16;
+  border-bottom-color: #bbf7d0;
+}
+
+.financial-container.light-theme .breakdown-card .amount {
+  color: #15803d;
+  text-shadow: none;
+}
+
+.financial-container.light-theme .expense-item span:first-child {
+  color: #14532d;
+}
+
+.financial-container.light-theme .expense-item span:last-child {
+  color: #15803d;
+}
+
+.financial-container.light-theme .expense-item.total span:first-child {
+  color: #052e16;
+}
+
+.financial-container.light-theme .profit.breakdown-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fffef9 100%);
+  border-color: #4ade80;
+}
+
+.financial-container.light-theme .modal-overlay {
+  background: rgba(5, 46, 22, 0.35);
+}
+
+.financial-container.light-theme .modal-content {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  color: #14532d;
+  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.16);
+}
+
+.financial-container.light-theme .modal-header {
+  border-bottom-color: #bbf7d0;
+}
+
+.financial-container.light-theme .modal-header h2 {
+  color: #052e16;
+}
+
+.financial-container.light-theme .form-group label,
+.financial-container.light-theme .form-label {
+  color: #14532d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.financial-container.light-theme :is(.input, .form-input, textarea, select) {
+  background: #ffffff;
+  color: #052e16;
+  border: 1.5px solid #cbd5e1;
+}
+
+.financial-container.light-theme .empty-state {
+  color: #166534;
+}
+
+.financial-container.light-theme .view-only-badge {
+  color: #14532d;
+  background: #fef9c3;
+  border: 1px solid #fbbf24;
+}
+
+/* Expense breakdown — force dark readable text (beats nth-child dark rules) */
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item {
+  padding: 8px 0;
+  border-bottom-color: #e2e8f0;
+}
+
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
+  font-weight: 700;
+  font-size: 15px;
+  color: #052e16 !important;
+  letter-spacing: 0.01em;
+}
+
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
+  font-weight: 800;
+  font-size: 15px;
+  color: #15803d !important;
+}
+
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total {
+  border-top-color: #86efac;
+}
+
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
+.financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
+  color: #052e16 !important;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+/* Most Used Machinery card */
+.financial-container.light-theme .usage-leaders-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .usage-leaders-card .section-subheader h3 {
+  color: #052e16;
+  font-size: 18px;
+}
+
+.financial-container.light-theme .tab-content .data-table thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.financial-container.light-theme .tab-content .data-table th {
+  color: #052e16;
+  border-bottom-color: #86efac;
+  font-size: 13px;
+}
+
+.financial-container.light-theme .tab-content .data-table td {
+  color: #14532d;
+  border-bottom-color: #e2e8f0;
+  font-size: 15px;
+}
+
+.financial-container.light-theme .tab-content .data-table tbody tr:nth-child(even) {
+  background: #f8fdf9;
+}
+
+.financial-container.light-theme .tab-content .data-table tbody tr:hover {
+  background: #ecfdf5;
+}
+
+.financial-container.light-theme .tab-content table.data-table tbody td.amount {
+  color: #15803d;
+}
+
+.financial-container.light-theme .usage-table td small {
+  color: #166534;
+}
+
+.financial-container.light-theme .section-subheader h3 {
+  color: #052e16;
+}
+
+.financial-container.light-theme .section-header h2 {
+  color: #052e16;
+}
+
+.financial-container.light-theme .farmer-name {
+  color: #052e16;
+}
+
+.financial-container.light-theme .farmer-meta,
+.financial-container.light-theme .empty-message,
+.financial-container.light-theme .empty-title,
+.financial-container.light-theme .empty-text {
+  color: #14532d;
+}
+
+.financial-container.light-theme .barangay-select {
+  background: #ffffff;
+  color: #052e16;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.financial-container.light-theme .admin-filter label {
+  color: #14532d;
+}
+
+.financial-container.light-theme .inline-label {
+  color: #166534;
+}
+
+.financial-container.light-theme .expense-item {
+  border-bottom-color: #e2e8f0;
+}
+
+.financial-container.light-theme .expense-item span:first-child {
+  color: #052e16 !important;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.financial-container.light-theme .expense-item span:last-child {
+  color: #15803d !important;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.financial-container.light-theme .expense-item.total span:last-child {
+  color: #065f46 !important;
 }
 
 </style>

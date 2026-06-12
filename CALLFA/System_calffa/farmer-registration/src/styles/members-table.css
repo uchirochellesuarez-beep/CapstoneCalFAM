@@ -351,3 +351,94 @@
   border-color: rgba(148, 163, 184, 0.28);
   cursor: not-allowed;
 }
+
+/* ===== Light mode (senior-friendly) — under Members Management page ===== */
+.farmer-table-page.light-theme .members-table-container {
+  background: #ffffff;
+  border: 2px solid #86efac;
+}
+
+.farmer-table-page.light-theme .members-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  border-bottom: 1px solid #86efac !important;
+}
+
+.farmer-table-page.light-theme .members-table th:not(:last-child),
+.farmer-table-page.light-theme .members-table td:not(:last-child) {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.farmer-table-page.light-theme .members-table td {
+  color: #14532d !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.farmer-table-page.light-theme .members-table tbody tr.members-data-row {
+  background: #ffffff;
+}
+
+.farmer-table-page.light-theme .members-table tbody tr.members-data-row:nth-child(even) {
+  background: #f8fdf9;
+}
+
+.farmer-table-page.light-theme .members-table tbody tr:hover {
+  background: #ecfdf5 !important;
+}
+
+.farmer-table-page.light-theme .members-empty-row {
+  color: #166534 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.farmer-table-page.light-theme .member-chip {
+  color: #14532d;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.farmer-table-page.light-theme .member-chip-member {
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.farmer-table-page.light-theme .member-chip-nonmember {
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.farmer-table-page.light-theme .status-chip-approved {
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.farmer-table-page.light-theme .status-chip-rejected {
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.farmer-table-page.light-theme .status-chip-pending {
+  color: #a16207;
+  border-color: #fde68a;
+}
+
+.farmer-table-page.light-theme .role-badge,
+.farmer-table-page.light-theme .role-badge.farmer,
+.farmer-table-page.light-theme .role-badge.admin,
+.farmer-table-page.light-theme .role-badge.treasurer,
+.farmer-table-page.light-theme .role-badge.president,
+.farmer-table-page.light-theme .role-badge.auditor,
+.farmer-table-page.light-theme .role-badge.operator,
+.farmer-table-page.light-theme .role-badge.agriculturist,
+.farmer-table-page.light-theme .role-badge.operation_manager,
+.farmer-table-page.light-theme .role-badge.business_manager {
+  color: #000000;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.farmer-table-page.light-theme .members-table .table-select {
+  background: #ffffff;
+  color: #052e16;
+  border: 1.5px solid #cbd5e1;
+}

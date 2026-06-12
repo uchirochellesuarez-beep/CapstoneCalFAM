@@ -1,0 +1,1173 @@
+/**
+ * Senior-friendly light mode
+ * Warm sage greens — bright and readable, not harsh white.
+ */
+
+body.glass-light {
+  --senior-bg-start: #d4f1dc;
+  --senior-bg-mid: #b8e8c4;
+  --senior-bg-end: #9edfb0;
+  --senior-surface: #fffef8;
+  --senior-surface-alt: #f0faf3;
+  --senior-border: #4ade80;
+  --senior-border-soft: #86efac;
+  --senior-text: #000000;
+  --senior-text-body: #000000;
+  --senior-text-muted: #000000;
+  --senior-accent: #15803d;
+  --senior-accent-bright: #22c55e;
+
+  --glass-bg-start: var(--senior-bg-start);
+  --glass-bg-mid: var(--senior-bg-mid);
+  --glass-bg-end: var(--senior-bg-end);
+  --glass-surface: rgba(255, 254, 248, 0.92);
+  --glass-surface-strong: #fffef8;
+  --glass-border: rgba(34, 197, 94, 0.35);
+  --glass-text: var(--senior-text);
+  --glass-text-soft: var(--senior-text-body);
+  --glass-shadow: 0 10px 28px rgba(22, 101, 52, 0.14);
+  --glass-shadow-soft: 0 6px 18px rgba(22, 101, 52, 0.1);
+
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--senior-text-body);
+}
+
+body.glass-light .backdrop-dashboard.backdrop-theme-light {
+  opacity: 0.55;
+}
+
+body.glass-light .main-content {
+  background: transparent !important;
+}
+
+/* Override dark dashboard rules from glass-unified-theme */
+body.glass-light .dashboard-container .dashboard-header,
+body.glass-light .dashboard-container.light-theme .dashboard-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f4fdf7 100%) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.glass-light .dashboard-container .header-time-card {
+  background: var(--senior-surface-alt) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .dashboard-container .analytics-section {
+  background: linear-gradient(135deg, #e8f9ed 0%, #d1f5dc 52%, #bbf7d0 100%) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.glass-light .dashboard-container .glass-chart-card {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .dashboard-container .glass-chart-card:hover {
+  border-color: var(--senior-border) !important;
+  box-shadow: 0 12px 32px rgba(22, 101, 52, 0.16) !important;
+}
+
+body.glass-light .dashboard-container .filter-panel {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .dashboard-container .stat-card {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .dashboard-container .stat-card :is(.stat-label, .stat-value) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .dashboard-container .stat-card .stat-label {
+  color: var(--senior-text-muted) !important;
+  font-size: 12px !important;
+}
+
+body.glass-light .dashboard-container .stat-card .stat-value {
+  font-size: 34px !important;
+}
+
+body.glass-light .chart-legend .legend-item,
+body.glass-light .chart-legend .legend-label,
+body.glass-light .chart-legend .legend-value,
+body.glass-light .glass-chart-header,
+body.glass-light .chart-title,
+body.glass-light .metric-label,
+body.glass-light .metric-status {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .chart-total,
+body.glass-light .metric-value,
+body.glass-light .chart-amount {
+  color: var(--senior-text) !important;
+}
+
+/* Sidebar — light sage panel */
+body.glass-light .sidebar.light-theme {
+  background: linear-gradient(180deg, #f0faf3 0%, #e3f5e9 55%, #d4f0dc 100%);
+  color: var(--senior-text);
+  border-right: 2px solid var(--senior-border-soft);
+  box-shadow: 8px 0 24px rgba(22, 101, 52, 0.1);
+}
+
+body.glass-light .sidebar.light-theme .calffa-brand {
+  color: #000000;
+}
+
+body.glass-light .sidebar.light-theme .calffa-tagline {
+  color: #000000;
+}
+
+body.glass-light .sidebar.light-theme .section-header {
+  color: #000000;
+  background: linear-gradient(152deg, #dcfce7, #bbf7d0);
+  border: 1px solid var(--senior-border-soft);
+  box-shadow: none;
+  font-size: 12px;
+}
+
+body.glass-light .sidebar.light-theme .nav-link {
+  color: #000000;
+  background: #ffffff;
+  border: 1.5px solid #c6ead0;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.06);
+  font-size: 15px;
+  min-height: 50px;
+}
+
+body.glass-light .sidebar.light-theme .nav-link:hover {
+  color: #000000 !important;
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  filter: none !important;
+}
+
+body.glass-light .sidebar.light-theme .active .nav-link {
+  color: #000000;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 2px solid var(--senior-border);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 8px 20px rgba(22, 101, 52, 0.12);
+  font-weight: 700;
+}
+
+body.glass-light .sidebar.light-theme .toggle-btn {
+  background: #ffffff;
+  border: 1.5px solid var(--senior-border-soft);
+  color: var(--senior-accent);
+}
+
+body.glass-light .sidebar.light-theme .icon-component {
+  color: #000000 !important;
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .sidebar.light-theme .icon-component svg {
+  color: #000000 !important;
+}
+
+body.glass-light .sidebar.light-theme .icon-component :is(path, rect, circle, line, polyline) {
+  stroke: #000000 !important;
+}
+
+body.glass-light .sidebar.light-theme .icon-component [fill]:not([fill='none']):not([fill='white']) {
+  fill: #000000 !important;
+}
+
+body.glass-light .sidebar.light-theme .nav-link:hover .icon-component,
+body.glass-light .sidebar.light-theme .active .nav-link .icon-component {
+  color: #000000 !important;
+  background: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+
+body.glass-light .sidebar.light-theme .active .nav-link .icon-component {
+  background: #d1d5db !important;
+  border-color: #1f2937 !important;
+}
+
+/* Other pages — readable light panels */
+body.glass-light :is(
+  .farmer-table-page .tabs-container,
+  .farmer-table-page .table-wrap,
+  .farmer-table-page .section-card,
+  .page-container .page-header,
+  .page-container .card,
+  .blockchain-audit-page .page-header,
+  .blockchain-audit-page .summary-card
+) {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text-body) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page :is(.section-title, .member-name, .members-table th, .members-table td) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-container.light-theme,
+body.glass-light .financial-container {
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-container .tab-content,
+body.glass-light .financial-container.light-theme .tab-content {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text-body) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .financial-container .page-header,
+body.glass-light .financial-container.light-theme .page-header {
+  background: linear-gradient(135deg, #ffffff, #f0fdf4) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+body.glass-light .financial-container .table-container {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .financial-container[class] .summary-card {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .financial-container[class] .summary-cards > .summary-card .card-label,
+body.glass-light .financial-container[class] .summary-card .card-label {
+  color: var(--senior-text-muted) !important;
+  font-size: 14px !important;
+}
+
+body.glass-light .financial-container[class] .summary-cards > .summary-card .card-amount {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .financial-container[class] .income-card .card-amount {
+  color: #15803d !important;
+}
+
+body.glass-light .financial-container[class] .expense-card .card-amount {
+  color: #c2410c !important;
+}
+
+body.glass-light .financial-container .page-header h1,
+body.glass-light .financial-container .section-header h2 {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .financial-container .page-subtitle,
+body.glass-light .financial-container .filter-label {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-container.light-theme .usage-leaders-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+}
+
+body.glass-light .financial-container.light-theme .profit-breakdown .expense-item span,
+body.glass-light .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span {
+  color: #052e16 !important;
+}
+
+body.glass-light .financial-container.light-theme .profit-breakdown .expense-item span:last-child,
+body.glass-light .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
+  color: #15803d !important;
+}
+
+body.glass-light .financial-container.light-theme .tab-content .data-table :is(th, td) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-container.light-theme .tab-content .data-table thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+body.glass-light .financial-container.light-theme .section-subheader h3,
+body.glass-light .financial-container.light-theme .section-header h2 {
+  color: var(--senior-text) !important;
+}
+
+/* ===== Members Management — beat glass-unified dark !important rules ===== */
+body.glass-light .farmer-table-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .page-title {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .filter-bar {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .filter-search-input,
+body.glass-light .farmer-table-page.light-theme .filter-select,
+body.glass-light .farmer-table-page.light-theme .search-input,
+body.glass-light .farmer-table-page.light-theme .role-select,
+body.glass-light .farmer-table-page.light-theme .edit-input {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .filter-search-input::placeholder,
+body.glass-light .farmer-table-page.light-theme .search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .tab-btn,
+body.glass-light .farmer-table-page.light-theme .role-tab,
+body.glass-light .farmer-table-page.light-theme .refresh-btn {
+  background: #ffffff !important;
+  border: 1.5px solid var(--senior-border-soft) !important;
+  color: var(--senior-text-body) !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .tab-btn:hover,
+body.glass-light .farmer-table-page.light-theme .role-tab:hover,
+body.glass-light .farmer-table-page.light-theme .refresh-btn:hover {
+  background: #f0fdf4 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .tab-btn.active,
+body.glass-light .farmer-table-page.light-theme .role-tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tabs {
+  background: #f4faf6 !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tab-label {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tab-count {
+  color: var(--senior-accent) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tab.active .role-tab-label,
+body.glass-light .farmer-table-page.light-theme .role-tab.active .role-tab-count {
+  color: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tab-icon {
+  filter: none !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(
+  .tabs-container,
+  .rejected-card,
+  .table-wrap,
+  .section-card,
+  .modal-content,
+  .table-container,
+  .registered-members-card,
+  .pending-members-card,
+  .members-table-container
+) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(
+  .section-title,
+  .rejected-title,
+  .state-text,
+  .td-muted,
+  .detail-value,
+  .member-name,
+  .modal-title,
+  .registered-members-title,
+  .pending-members-card > .section-header-with-actions .section-title,
+  .loading-state,
+  .error-state
+) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+  border-bottom: 1px solid #86efac !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table td {
+  color: var(--senior-text-body) !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table tbody tr:nth-child(even) td,
+body.glass-light .farmer-table-page.light-theme .rej-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table tbody tr:hover td,
+body.glass-light .farmer-table-page.light-theme .rej-table tbody tr:hover td {
+  background: #ecfdf5 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-empty-row {
+  color: var(--senior-text-muted) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .empty-state {
+  background: #f8fdf9 !important;
+  border: 1.5px solid var(--senior-border-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .empty-state > p:first-child {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(.empty-hint, .empty-checklist, .empty-checklist li) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .empty-checklist code {
+  background: #ecfdf5 !important;
+  color: #14532d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table .table-select {
+  background: #ffffff !important;
+  color: var(--senior-text-body) !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-badge,
+body.glass-light .farmer-table-page.light-theme .member-chip {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(
+  .registered-members-muted,
+  .state-text,
+  .filter-label,
+  .filter-hint
+) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .registered-members-error {
+  color: #b91c1c !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .modal-overlay {
+  background: rgba(15, 23, 42, 0.45) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .modal-content {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .modal-content :is(
+  .modal-title,
+  .detail-label,
+  .detail-value
+) {
+  color: var(--senior-text-body) !important;
+}
+
+/* ===== Members Summary page ===== */
+body.glass-light .members-summary-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .members-summary-page.light-theme :is(h1, .text-gray-800) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .members-summary-page.light-theme :is(.text-gray-500, .text-gray-600, .text-gray-700) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .members-summary-page.light-theme .bg-white {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .members-summary-page.light-theme input[type="text"] {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .members-summary-page.light-theme input[type="text"]::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .members-summary-page.light-theme .bg-gray-50 {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .members-summary-page.light-theme .profile-hero,
+body.glass-light .members-summary-page.light-theme .tab-content-area {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .members-summary-page.light-theme .search-results-table thead th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .members-summary-page.light-theme .search-results-table tbody td {
+  background: #ffffff !important;
+  color: var(--senior-text-body) !important;
+}
+
+/* ===== Community News page ===== */
+body.glass-light .news-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .news-page.light-theme .notice-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .news-page.light-theme :is(.notice-hero h1, .hero-desc, .section-head h2) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .news-page.light-theme :is(.search-input, .sort-select) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .news-page.light-theme .search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .news-page.light-theme :deep(.notice-card) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .news-page.light-theme :deep(.notice-title) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .news-page.light-theme :deep(.notice-content) {
+  color: var(--senior-text-body) !important;
+}
+
+/* ===== Official Announcements page ===== */
+body.glass-light .announcement-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .announcement-page.light-theme .notice-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .announcement-page.light-theme :is(.notice-hero h1, .hero-desc) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .announcement-page.light-theme :is(.search-input, .sort-select) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .announcement-page.light-theme .search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .announcement-page.light-theme .notice-card {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .announcement-page.light-theme .notice-title {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .announcement-page.light-theme .notice-content {
+  color: var(--senior-text-body) !important;
+}
+
+/* ===== Barangay Management page ===== */
+body.glass-light .page-container.barangays-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.page-header, .page-header-split) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.page-title, .stat-value) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.page-subtitle, .stat-label) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.stat-card, .tools-card, .card) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table td {
+  color: var(--senior-text-body) !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:hover td {
+  background: #ecfdf5 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .modal-content {
+  background: #fffef9 !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge.president {
+  background: #e0e7ff !important;
+  color: #4338ca !important;
+  border-color: #a5b4fc !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge.treasurer {
+  background: #fce7f3 !important;
+  color: #be185d !important;
+  border-color: #f9a8d4 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge.auditor {
+  background: #fef9c3 !important;
+  color: #a16207 !important;
+  border-color: #fcd34d !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge.operator {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #7dd3fc !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .role-badge.operation_manager,
+body.glass-light .page-container.barangays-page.light-theme .role-badge.business_manager {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+
+/* ===== Admin Loan Management page ===== */
+body.glass-light .page-container.admin-loans-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.page-header, .card, .modal-content) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .stat-card.overdue :is(.stat-value, .stat-label) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .status-badge.pending {
+  background: #fef9c3 !important;
+  border-color: #ca8a04 !important;
+  color: #92400e !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .status-badge.overdue {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .status-badge.approved,
+body.glass-light .page-container.admin-loans-page.light-theme .status-badge.paid {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .stat-card:not([style]) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.page-title, .stat-value) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.page-subtitle, .stat-label) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .barangay-filter-select {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
+  color: var(--senior-text-body) !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .loans-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+/* ===== Machinery Management page ===== */
+body.glass-light .machinery-management-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(
+  .page-header, .section, .stat-card, .table-container, .inventory-table-container, .modal-content, .inv2-modal
+) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.page-title, .section-title, .stat-value) {
+  color: var(--senior-text) !important;
+  text-shadow: none !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.page-subtitle, .stat-label, .filter-label) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.filter-select, .form-input, .inv2-search-input, .inv2-select) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .status-success {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .status-warning {
+  background: #fef9c3 !important;
+  border-color: #ca8a04 !important;
+  color: #92400e !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .status-danger {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.form-hint, .barangay-hint) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .barangay-warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .barangay-label {
+  color: #92400e !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .barangay-assignment-group {
+  background: #fef9c3 !important;
+  border-color: #ca8a04 !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.barangay-selected, .barangay-read-only) {
+  color: #15803d !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.inv2-name, .inv2-card-name) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.inv2-cap, .inv2-card-cap, .inv2-unit) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .inv2-search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .sidebar.light-theme .nav-link {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 1.5px solid #c6ead0 !important;
+}
+
+body.glass-light .sidebar.light-theme .section-header {
+  color: #000000 !important;
+  background: linear-gradient(152deg, #dcfce7, #bbf7d0) !important;
+  border: 1px solid var(--senior-border-soft) !important;
+}
+
+body.glass-light .sidebar.light-theme .active .nav-link {
+  color: #000000 !important;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+/* ===== Financial Overview page ===== */
+body.glass-light .financial-overview-container.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .financial-overview-container.light-theme :is(
+  .page-header, .filters-bar, .stat-card, .financial-table-section, .chart-card
+) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .financial-overview-container.light-theme :is(.page-title, .section-title, .chart-title) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .financial-overview-container.light-theme :is(.stat-label, .filter-label, .stat-value) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .stat-value.collected {
+  color: #15803d !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .filter-input,
+body.glass-light .financial-overview-container.light-theme .filter-clear-btn {
+  background: #ffffff !important;
+  color: var(--senior-text) !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .financial-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .financial-table td {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .financial-overview-container.light-theme :is(.inline-link, .view-all-link) {
+  color: #15803d !important;
+}
+
+/* ===== Share Capital page ===== */
+body.glass-light .share-capital-page.light-theme {
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .share-capital-page.light-theme :is(.page-header, .tab-content, .stat-card) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .page-header h1 {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .share-capital-page.light-theme :is(.page-subtitle, .admin-filter-label, .empty-text) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .admin-filter-bar {
+  background: #f0fdf4 !important;
+  border: 2px solid var(--senior-border-soft) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .empty-state--panel {
+  background: #f8fdf9 !important;
+  border: 2px dashed var(--senior-border-soft) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .empty-title {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .share-capital-page.light-theme :is(.stat-value, .empty-title) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .input {
+  background: #ffffff !important;
+  color: var(--senior-text) !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .tab-content .data-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .tab-content .data-table td {
+  color: var(--senior-text-body) !important;
+}
+
+/* ============================================================
+   GLOBAL — Pure black text in light mode (senior-readable)
+   ============================================================ */
+body.glass-light {
+  color: #000000 !important;
+}
+
+/* All common text elements */
+body.glass-light :is(
+  h1, h2, h3, h4, h5, h6,
+  p, span, label, li, dt, dd, figcaption,
+  td, th, caption,
+  small, strong, b, em,
+  a,
+  .page-title, .page-subtitle, .section-title, .chart-title,
+  .card-title, .card-label, .stat-label, .stat-value,
+  .filter-label, .form-label, .admin-filter-label, .inline-label,
+  .empty-title, .empty-text, .empty-state, .empty-hint,
+  .nav-link, .section-header, .section-title, .calffa-brand, .calffa-tagline,
+  .role-badge, .status-badge, .status-pill, .badge, .member-chip,
+  .barangay-name-link, .inline-link, .view-all-link,
+  .detail-item label, .form-hint, .muted, .name, .font-semibold,
+  .inv2-name, .inv2-subtitle, .inv2-card-name, .inv2-unit,
+  .price-label, .price-value, .price-cell, .amount, .amount-cell,
+  .area-summary-title, .area-summary-note, .area-value,
+  .modal-header h2, .inv2-title, .tab, .tab-btn, .role-tab-label,
+  .payer-text, .payer-desc, .score-factors, .td-name,
+  .notice-title, .notice-content, .hero-desc,
+  .top-header .profile-name, .top-header .profile-id,
+  .top-header .profile-status, .top-header .theme-toggle-btn,
+  .top-header .icon-btn
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* No gradient-clipped titles — solid black */
+body.glass-light :is(
+  .page-header .page-title,
+  .page-header h1,
+  .page-header h2,
+  .header-card h1,
+  .header-card h2,
+  .dashboard-title,
+  .form-title,
+  .signup-title,
+  .registered-members-title,
+  .notice-hero h1
+) {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Form fields */
+body.glass-light :is(
+  input:not([type='submit']):not([type='button']):not([type='reset']):not([type='checkbox']):not([type='radio']):not([type='hidden']),
+  select,
+  textarea,
+  option
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light :is(input, textarea)::placeholder {
+  color: #4b5563 !important;
+}
+
+/* Status / money accents → black (user requested all text black) */
+body.glass-light :is(
+  .collected, .outstanding, .overdue, .expense, .rate,
+  .stat-value.collected, .stat-value.outstanding, .stat-value.overdue, .stat-value.expense,
+  .inv2-price, .inv2-price-member, .inv2-price-nonmember, .inv2-cap,
+  .financial-table .collected, .financial-table .outstanding, .financial-table .overdue
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* White text only on solid green primary buttons */
+body.glass-light :is(
+  .btn-primary,
+  .btn-success,
+  .export-btn,
+  .btn-submit,
+  .btn-header-add,
+  .inv2-add-btn,
+  .login-btn,
+  .submit-btn,
+  button.btn-primary-action
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Beat page-scoped colored role/status overrides */
+body.glass-light [class*="light-theme"] :is(
+  .role-badge,
+  .role-badge.president,
+  .role-badge.treasurer,
+  .role-badge.auditor,
+  .role-badge.operator,
+  .role-badge.farmer,
+  .role-badge.admin,
+  .role-badge.agriculturist,
+  .role-badge.operation_manager,
+  .role-badge.business_manager,
+  .status-badge,
+  .status-badge.pending,
+  .status-badge.approved,
+  .status-badge.paid,
+  .status-badge.overdue,
+  .status-badge.active,
+  .status-badge.inactive
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .glass-legend :is(.legend-item, .legend-label, .legend-value, span) {
+  color: #000000 !important;
+}

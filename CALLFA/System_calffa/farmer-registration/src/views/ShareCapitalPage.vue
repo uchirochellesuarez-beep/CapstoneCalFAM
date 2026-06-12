@@ -1,5 +1,5 @@
 <template>
-  <div class="financial-container glass-module-page share-capital-page">
+  <div class="financial-container glass-module-page share-capital-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <div class="header-content">
         <h1>Share Capital</h1>
@@ -357,8 +357,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const role = computed(() => authStore.currentUser?.role)
 const isAdmin = computed(() => role.value === 'admin')
@@ -1341,6 +1344,234 @@ onMounted(async () => {
 
 select.input {
   cursor: pointer;
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.financial-container.share-capital-page.light-theme {
+  --glass-bg: #fffef9;
+  --glass-panel: #ffffff;
+  --glass-line: rgba(34, 197, 94, 0.28);
+  --glass-line-strong: rgba(22, 101, 52, 0.35);
+  --text-main: #052e16;
+  --text-muted: #14532d;
+  --text-soft: #166534;
+  --green: #15803d;
+
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--text-main);
+}
+
+.financial-container.share-capital-page.light-theme::before,
+.financial-container.share-capital-page.light-theme::after {
+  opacity: 0.25;
+}
+
+.financial-container.share-capital-page.light-theme .page-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 10px 28px rgba(22, 101, 52, 0.12) !important;
+}
+
+.financial-container.share-capital-page.light-theme .page-header h1 {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.financial-container.share-capital-page.light-theme .admin-filter-bar {
+  background: #f0fdf4 !important;
+  border: 2px solid #bbf7d0 !important;
+}
+
+.financial-container.share-capital-page.light-theme .admin-filter-label {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .admin-filter-hint {
+  color: #15803d !important;
+}
+
+.financial-container.share-capital-page.light-theme .empty-state {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .empty-state--panel {
+  background: #f8fdf9 !important;
+  border: 2px dashed #86efac !important;
+}
+
+.financial-container.share-capital-page.light-theme .empty-title {
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .empty-text {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.financial-container.share-capital-page.light-theme .stat-label {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .stat-value {
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .card {
+  background: #ffffff !important;
+  border: 2px solid #bbf7d0 !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .card-header {
+  background: #f0fdf4 !important;
+  border-bottom: 1px solid #bbf7d0 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .card-title {
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .data-table thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .data-table th {
+  color: #052e16 !important;
+  border-bottom-color: #86efac !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .data-table td {
+  color: #14532d !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .data-table tbody tr:nth-child(even) {
+  background: #f8fdf9 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content .data-table tbody tr:hover {
+  background: #ecfdf5 !important;
+}
+
+.financial-container.share-capital-page.light-theme .tab-content table.data-table tbody td.amount {
+  color: #15803d !important;
+}
+
+.financial-container.share-capital-page.light-theme .input {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.financial-container.share-capital-page.light-theme .input:focus {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2) !important;
+}
+
+.financial-container.share-capital-page.light-theme .filter-section {
+  background: #f8fdf9 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+.financial-container.share-capital-page.light-theme .farmer-summary {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+}
+
+.financial-container.share-capital-page.light-theme .farmer-name {
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .farmer-meta {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .section-title {
+  color: #15803d !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+.financial-container.share-capital-page.light-theme .inline-label {
+  color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .muted {
+  color: #15803d !important;
+}
+
+.financial-container.share-capital-page.light-theme .name {
+  color: #052e16 !important;
+}
+
+.financial-container.share-capital-page.light-theme .badge-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.financial-container.share-capital-page.light-theme .badge-muted {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn-primary-action {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #86efac !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn-muted {
+  background: #ffffff !important;
+  color: #166534 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  color: #ffffff !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn-danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+.financial-container.share-capital-page.light-theme .info-banner {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #14532d !important;
+}
+
+.financial-container.share-capital-page.light-theme .info-banner--error {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
 }
 
 @media (max-width: 768px) {

@@ -2,6 +2,7 @@
   <div class="landing-page" :class="{ leaving: isLeaving }">
     <!-- Top Sign In -->
     <div class="top-bar">
+      <ThemeToggle variant="floating" />
       <button class="signin-btn" @click="goTo('/login')">
         Sign In
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -68,6 +69,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const cardVisible = ref(false)
@@ -147,6 +149,9 @@ async function goTo(path) {
   top: 0.90rem;
   right: 0.90rem;
   z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   animation: slideDown 0.52s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 

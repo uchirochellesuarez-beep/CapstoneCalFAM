@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container barangays-page">
+  <div class="page-container barangays-page" :class="{ 'light-theme': isLight }">
     <div class="page-header page-header-split">
       <div class="page-header-text">
         <h1 class="page-title">Barangay Management</h1>
@@ -385,9 +385,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const isAdmin = computed(() => farmerStore.role === 'admin')
 
 const authHeaders = (json = true) => {
@@ -1639,5 +1642,317 @@ onMounted(() => {
     margin: 0 -0.5rem;
     width: calc(100% + 1rem);
   }
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.page-container.barangays-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .page-header-split {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.page-container.barangays-page.light-theme .page-title {
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .page-subtitle {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .stat-card {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+}
+
+.page-container.barangays-page.light-theme .stat-icon-wrap {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .stat-value {
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .stat-label {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .tools-card {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+}
+
+.page-container.barangays-page.light-theme .search-icon-wrap {
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .toolbar-input,
+.page-container.barangays-page.light-theme .toolbar-select {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .toolbar-select option {
+  background: #ffffff;
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .card {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.page-container.barangays-page.light-theme .barangays-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #052e16;
+  border-bottom: 1px solid #86efac;
+}
+
+.page-container.barangays-page.light-theme .barangays-table td {
+  color: #14532d;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
+.page-container.barangays-page.light-theme .barangays-table td:not(:last-child) {
+  border-right: 1px solid #e2e8f0;
+}
+
+.page-container.barangays-page.light-theme .barangays-table tbody tr:hover {
+  background: #ecfdf5 !important;
+}
+
+.page-container.barangays-page.light-theme .loading-cell,
+.page-container.barangays-page.light-theme .empty-cell {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .area-value {
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .barangay-name-link {
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .barangay-name-link:hover {
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .status-pill.active {
+  color: #15803d;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.page-container.barangays-page.light-theme .status-pill.inactive {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.page-container.barangays-page.light-theme .icon-action {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .modal-content {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .modal-header {
+  border-bottom: 1px solid #bbf7d0;
+}
+
+.page-container.barangays-page.light-theme .modal-header h2 {
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .close-btn {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #64748b;
+}
+
+.page-container.barangays-page.light-theme .modal-footer {
+  border-top: 1px solid #bbf7d0;
+}
+
+.page-container.barangays-page.light-theme .form-group label {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .form-input {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .form-hint-area {
+  background: #f8fdf9;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .btn-secondary {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #14532d;
+}
+
+.page-container.barangays-page.light-theme .btn-secondary:hover {
+  background: #f0fdf4;
+}
+
+.page-container.barangays-page.light-theme .members-table th,
+.page-container.barangays-page.light-theme .places-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .members-table td,
+.page-container.barangays-page.light-theme .places-table td {
+  color: #14532d;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.page-container.barangays-page.light-theme .members-table tbody tr:hover,
+.page-container.barangays-page.light-theme .places-table tbody tr:hover {
+  background: #ecfdf5;
+}
+
+.page-container.barangays-page.light-theme .empty-state {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .area-summary-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+}
+
+.page-container.barangays-page.light-theme .area-summary-title {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .area-summary-value {
+  color: #15803d;
+}
+
+.page-container.barangays-page.light-theme .area-summary-note {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .places-card {
+  background: #f8fdf9;
+  border-color: #bbf7d0;
+}
+
+.page-container.barangays-page.light-theme .places-header h3 {
+  color: #052e16;
+}
+
+.page-container.barangays-page.light-theme .places-header p {
+  color: #166534;
+}
+
+.page-container.barangays-page.light-theme .status-badge.active {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.page-container.barangays-page.light-theme .status-badge.inactive {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.page-container.barangays-page.light-theme .role-badge {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #14532d !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.president {
+  background: #e0e7ff !important;
+  color: #4338ca !important;
+  border-color: #a5b4fc !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.treasurer {
+  background: #fce7f3 !important;
+  color: #be185d !important;
+  border-color: #f9a8d4 !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.auditor {
+  background: #fef9c3 !important;
+  color: #a16207 !important;
+  border-color: #fcd34d !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.operator {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #7dd3fc !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.farmer {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.admin {
+  background: #fef9c3 !important;
+  color: #a16207 !important;
+  border-color: #fcd34d !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.agriculturist {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+
+.page-container.barangays-page.light-theme .role-badge.operation_manager,
+.page-container.barangays-page.light-theme .role-badge.business_manager {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+
+.page-container.barangays-page.light-theme .modal-search-input {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #052e16 !important;
+}
+
+.page-container.barangays-page.light-theme .tab.active {
+  color: #052e16 !important;
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+
+.page-container.barangays-page.light-theme .members-table tbody tr:nth-child(even) td,
+.page-container.barangays-page.light-theme .places-table tbody tr:nth-child(even) td {
+  background: #f8fdf9;
+}
+
+.page-container.barangays-page.light-theme .font-semibold {
+  color: #052e16;
 }
 </style>

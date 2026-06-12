@@ -24,16 +24,111 @@
 }
 
 body.glass-dark {
-  --glass-bg-start: #0a2418;
-  --glass-bg-mid: #134e2a;
-  --glass-bg-end: #1a6f47;
-  --glass-surface: rgba(18, 31, 31, 0.42);
-  --glass-surface-strong: rgba(18, 31, 31, 0.6);
-  --glass-border: rgba(129, 214, 174, 0.26);
-  --glass-text: #f0fdf4;
-  --glass-text-soft: rgba(220, 252, 231, 0.88);
-  --glass-shadow: 0 20px 52px rgba(0, 0, 0, 0.48);
-  --glass-shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.36);
+  --glass-bg-start: #0c2418;
+  --glass-bg-mid: #123222;
+  --glass-bg-end: #1a4d35;
+  --glass-surface: rgba(30, 66, 52, 0.88);
+  --glass-surface-strong: rgba(37, 82, 65, 0.94);
+  --glass-border: rgba(167, 211, 178, 0.22);
+  --glass-text: #ecfdf5;
+  --glass-text-soft: #b8dcc6;
+  --glass-shadow: 0 10px 28px rgba(4, 18, 12, 0.35);
+  --glass-shadow-soft: 0 6px 18px rgba(4, 18, 12, 0.28);
+}
+
+body.glass-light {
+  --glass-bg-start: #d4f1dc;
+  --glass-bg-mid: #b8e8c4;
+  --glass-bg-end: #9edfb0;
+  --glass-surface: rgba(255, 254, 248, 0.92);
+  --glass-surface-strong: #fffef8;
+  --glass-border: rgba(34, 197, 94, 0.35);
+  --glass-text: #000000;
+  --glass-text-soft: #000000;
+  --glass-shadow: 0 10px 28px rgba(22, 101, 52, 0.14);
+  --glass-shadow-soft: 0 6px 18px rgba(22, 101, 52, 0.1);
+}
+
+body.glass-light::before {
+  background:
+    radial-gradient(ellipse at 5% 8%, rgba(74, 222, 128, 0.12), transparent 48%),
+    radial-gradient(ellipse at 94% 12%, rgba(250, 204, 21, 0.1), transparent 52%),
+    radial-gradient(ellipse at 50% 100%, rgba(22, 163, 74, 0.08), transparent 58%);
+}
+
+body.glass-light::after {
+  opacity: 0.35;
+  background:
+    linear-gradient(122deg, rgba(255, 255, 255, 0.45) 0%, transparent 18%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.28) 0%, transparent 26%),
+    linear-gradient(170deg, transparent 62%, rgba(255, 255, 255, 0.18) 100%);
+}
+
+body.glass-light .top-header {
+  background: linear-gradient(
+    118deg,
+    #f0fdf4 0%,
+    #dcfce7 48%,
+    #bbf7d0 100%
+  ) !important;
+  border-bottom: 2px solid #86efac !important;
+  box-shadow:
+    0 8px 24px rgba(22, 101, 52, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+body.glass-light :is(
+  .registration-form .form-input,
+  .profile-form input,
+  .profile-form select,
+  .filter-input,
+  .input,
+  .form-input,
+  textarea,
+  select,
+  input[type='text'],
+  input[type='password'],
+  input[type='date'],
+  input[type='number'],
+  input[type='tel']
+) {
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+body.glass-light :is(input, select, textarea)::placeholder {
+  color: #6b7280 !important;
+}
+
+body.glass-light :is(.page-header .page-title, .page-header h1, .page-header h2, .header-card h1, .header-card h2) {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #000000 !important;
+  color: #000000 !important;
+}
+
+body.glass-light .top-header .icon-btn,
+body.glass-light .top-header .user-profile {
+  border-color: rgba(22, 101, 52, 0.18) !important;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 244, 0.92)) !important;
+  color: #166534 !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.1) !important;
+}
+
+body.glass-light .top-header .profile-name,
+body.glass-light .top-header .profile-id,
+body.glass-light .top-header .profile-chevron,
+body.glass-light .top-header .theme-toggle-btn {
+  color: #000000 !important;
+}
+
+body.glass-light .top-header .profile-status {
+  color: #000000 !important;
+  background: linear-gradient(135deg, rgba(187, 247, 208, 0.95), rgba(134, 239, 172, 0.88)) !important;
+  border-color: rgba(22, 101, 52, 0.22) !important;
 }
 
 html,
