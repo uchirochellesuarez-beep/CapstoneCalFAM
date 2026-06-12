@@ -1,5 +1,5 @@
 <template>
-  <div class="farmer-table-page glass-module-page">
+  <div class="farmer-table-page glass-module-page" :class="{ 'light-theme': isLight }">
     <div class="page-inner">
       <div class="page-top-row">
         <h1 class="page-title">Members Management</h1>
@@ -208,9 +208,12 @@ import { useRouter } from 'vue-router'
 import FarmerTable from '../components/FarmerTable.vue'
 import PendingFarmersTab from '../components/PendingFarmersTab.vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const activeTab = ref('pending')
 const allFarmers = ref([])
 const barangays = ref([])
@@ -787,5 +790,272 @@ const goToMembersSummary = () => router.push('/members-summary')
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright sage theme ===== */
+.farmer-table-page.light-theme {
+  --text-main: #052e16;
+  --text-muted: #14532d;
+  --glass-line: rgba(34, 197, 94, 0.28);
+  --green: #15803d;
+
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: var(--text-main);
+}
+
+.farmer-table-page.light-theme::before {
+  opacity: 0.25;
+}
+
+.farmer-table-page.light-theme .page-title {
+  color: #052e16;
+  font-size: 30px;
+}
+
+.farmer-table-page.light-theme .filter-bar {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1);
+}
+
+.farmer-table-page.light-theme .filter-search-icon {
+  color: #15803d;
+}
+
+.farmer-table-page.light-theme .filter-search-input,
+.farmer-table-page.light-theme .filter-select {
+  background: #ffffff;
+  color: #052e16;
+  border: 1.5px solid #cbd5e1;
+}
+
+.farmer-table-page.light-theme .filter-search-input::placeholder {
+  color: #64748b;
+}
+
+.farmer-table-page.light-theme .filter-label,
+.farmer-table-page.light-theme .filter-hint,
+.farmer-table-page.light-theme .state-text {
+  color: #14532d;
+}
+
+.farmer-table-page.light-theme .filter-select option {
+  background: #ffffff;
+  color: #052e16;
+}
+
+.farmer-table-page.light-theme .tab-btn {
+  background: #ffffff;
+  color: #14532d;
+  border: 1.5px solid #bbf7d0;
+}
+
+.farmer-table-page.light-theme .tab-btn:hover {
+  background: #f0fdf4;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.farmer-table-page.light-theme .tab-btn.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-color: #15803d;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.2);
+}
+
+.farmer-table-page.light-theme .registered-members-card {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.farmer-table-page.light-theme .registered-members-title {
+  color: #052e16;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+}
+
+.farmer-table-page.light-theme :deep(.registered-members-card) {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.farmer-table-page.light-theme :deep(.registered-members-title) {
+  color: #052e16;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+}
+
+.farmer-table-page.light-theme :deep(.empty-state) {
+  background: #f8fdf9;
+  border: 1.5px solid #bbf7d0;
+  color: #14532d;
+}
+
+.farmer-table-page.light-theme :deep(.empty-state > p:first-child) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.empty-hint),
+.farmer-table-page.light-theme :deep(.empty-checklist),
+.farmer-table-page.light-theme :deep(.empty-checklist li) {
+  color: #166534 !important;
+  font-size: 14px;
+}
+
+.farmer-table-page.light-theme :deep(.empty-checklist code) {
+  background: #ecfdf5;
+  color: #14532d !important;
+  border: 1px solid #bbf7d0;
+}
+
+.farmer-table-page.light-theme :deep(.loading-state),
+.farmer-table-page.light-theme :deep(.error-state) {
+  color: #14532d;
+}
+
+.farmer-table-page.light-theme :deep(.refresh-btn) {
+  background: #ffffff;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+
+.farmer-table-page.light-theme :deep(.refresh-btn:hover:not(:disabled)) {
+  background: #f0fdf4;
+  color: #052e16;
+}
+
+.farmer-table-page.light-theme :deep(.registered-members-muted) {
+  color: #166534 !important;
+}
+
+.farmer-table-page.light-theme .tab-icon,
+.farmer-table-page.light-theme .btn-tab-icon {
+  filter: none;
+}
+
+/* Registered Members — role filter cards */
+.farmer-table-page.light-theme :deep(.role-tabs) {
+  background: #f4faf6 !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08) !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab) {
+  background: #ffffff !important;
+  border: 1.5px solid #bbf7d0 !important;
+  color: #14532d !important;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.06) !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab-label) {
+  color: #052e16 !important;
+  font-size: 12px;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab-count) {
+  color: #15803d !important;
+  font-weight: 700;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab-icon) {
+  filter: none !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab:hover) {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.1) !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab:hover .role-tab-label) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab.active) {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.22) !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab.active .role-tab-label),
+.farmer-table-page.light-theme :deep(.role-tab.active .role-tab-count) {
+  color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme :deep(.edit-input),
+.farmer-table-page.light-theme :deep(.edit-input-modal) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.farmer-table-page.light-theme :deep(.edit-input-modal::placeholder) {
+  color: #64748b !important;
+}
+
+.farmer-table-page.light-theme :deep(.edit-label),
+.farmer-table-page.light-theme :deep(.detail-label) {
+  color: #166534 !important;
+}
+
+.farmer-table-page.light-theme :deep(.detail-value),
+.farmer-table-page.light-theme :deep(.member-name),
+.farmer-table-page.light-theme :deep(.edit-photo-name) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.edit-photo-sub),
+.farmer-table-page.light-theme :deep(.edit-hint) {
+  color: #166534 !important;
+}
+
+.farmer-table-page.light-theme :deep(.edit-photo-row) {
+  background: #f8fdf9 !important;
+  border: 1.5px solid #bbf7d0 !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-content) {
+  background: #fffef9 !important;
+  border: 2px solid #86efac !important;
+  color: #052e16 !important;
+  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.15) !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-header) {
+  border-bottom: 1px solid #bbf7d0 !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-title) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-header button) {
+  color: #64748b !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-header button:hover) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-footer) {
+  border-top: 1px solid #bbf7d0 !important;
+}
+
+.farmer-table-page.light-theme :deep(.btn-secondary) {
+  background: #ffffff !important;
+  color: #14532d !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.farmer-table-page.light-theme :deep(.btn-secondary:hover) {
+  background: #f0fdf4 !important;
 }
 </style>

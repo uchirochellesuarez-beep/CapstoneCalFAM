@@ -10,6 +10,7 @@
           </div>
         </div>
         <nav class="nav-links">
+          <ThemeToggle variant="inline" />
         </nav>
       </div>
     </header>
@@ -25,6 +26,7 @@
 import { computed, onMounted } from 'vue'
 import { useAuthStore } from './stores/authStore'
 import { useBackdropTheme } from './composables/useBackdropTheme'
+import ThemeToggle from './components/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const { initTheme, watchSystemTheme } = useBackdropTheme()

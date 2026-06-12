@@ -3,7 +3,7 @@
     class="authenticated-layout"
     :class="{ 'farmer-theme': isFarmer, 'sidebar-collapsed': sidebarCollapsed }"
   >
-    <div class="backdrop-dashboard" :class="isFarmer ? 'backdrop-theme-farmer' : 'backdrop-theme'"></div>
+    <div class="backdrop-dashboard" :class="isFarmer ? 'backdrop-theme-farmer' : backdropThemeClass"></div>
     <TopHeader />
     <Sidebar @toggle="onSidebarToggle" />
     <main class="main-content-wrapper">
@@ -17,10 +17,12 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 import TopHeader from '../components/TopHeader.vue'
 import Sidebar from '../components/Sidebar.vue'
 
 const authStore = useAuthStore()
+const { backdropThemeClass } = useBackdropTheme()
 const isFarmer = computed(() => authStore.currentUser?.role === 'farmer')
 
 const sidebarCollapsed = ref(false)

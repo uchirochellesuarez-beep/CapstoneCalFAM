@@ -7,80 +7,84 @@
 
 import { ref, computed } from 'vue'
 
-const themeMode = ref('standard') // 'standard' | 'light' | 'dark'
+const themeMode = ref('dark') // 'light' | 'dark'
+
+function normalizeMode(mode) {
+  return mode === 'light' ? 'light' : 'dark'
+}
 
 /**
  * Get the current theme mode
  */
 export function useBackdropTheme() {
+  const isDark = computed(() => themeMode.value !== 'light')
+
+  const backdropThemeClass = computed(() =>
+    themeMode.value === 'light' ? 'backdrop-theme-light' : 'backdrop-theme-dark'
+  )
+
   /**
    * Set the theme mode
-   * @param {string} mode - 'standard' | 'light' | 'dark'
+   * @param {string} mode - 'light' | 'dark' (legacy 'standard' maps to dark)
    */
   const setTheme = (mode) => {
-    if (['standard', 'light', 'dark'].includes(mode)) {
-      themeMode.value = mode
-      applyTheme(mode)
-      // Save to localStorage
-      localStorage.setItem('backdrop-theme', mode)
-    }
+    const normalized = normalizeMode(mode === 'standard' ? 'dark' : mode)
+    if (!['light', 'dark'].includes(normalized)) return
+
+    themeMode.value = normalized
+    applyTheme(normalized)
+    localStorage.setItem('backdrop-theme', normalized)
   }
 
   /**
    * Toggle between light and dark modes
    */
   const toggleTheme = () => {
-    if (themeMode.value === 'light') {
-      setTheme('dark')
-    } else if (themeMode.value === 'dark') {
-      setTheme('standard')
-    } else {
-      setTheme('light')
-    }
+    setTheme(themeMode.value === 'light' ? 'dark' : 'light')
   }
 
   /**
    * Apply theme to the document body
    */
   const applyTheme = (mode) => {
-    // Remove all theme classes
+    const normalized = normalizeMode(mode)
+
     document.body.classList.remove(
       'backdrop-theme',
       'backdrop-theme-light',
-      'backdrop-theme-dark'
+      'backdrop-theme-dark',
+      'glass-light',
+      'glass-dark'
     )
 
-    // Add the appropriate theme class
-    if (mode === 'light') {
-      document.body.classList.add('backdrop-theme-light')
-    } else if (mode === 'dark') {
-      document.body.classList.add('backdrop-theme-dark')
+    if (normalized === 'light') {
+      document.body.classList.add('backdrop-theme-light', 'glass-light')
     } else {
-      document.body.classList.add('backdrop-theme')
+      document.body.classList.add('backdrop-theme-dark', 'glass-dark')
     }
 
-    // Update data attribute for CSS custom properties
-    document.documentElement.setAttribute('data-theme', mode)
+    document.documentElement.setAttribute('data-theme', normalized)
+    document.documentElement.classList.toggle('dark', normalized === 'dark')
   }
 
   /**
    * Initialize theme from localStorage or system preference
    */
   const initTheme = () => {
-    // Check localStorage first
     const savedTheme = localStorage.getItem('backdrop-theme')
-    if (savedTheme && ['standard', 'light', 'dark'].includes(savedTheme)) {
+    if (savedTheme === 'light' || savedTheme === 'dark') {
       setTheme(savedTheme)
       return
     }
-
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (savedTheme === 'standard') {
       setTheme('dark')
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return
+    }
+
+    if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
       setTheme('light')
     } else {
-      setTheme('standard')
+      setTheme('dark')
     }
   }
 
@@ -117,6 +121,8 @@ export function useBackdropTheme() {
 
   return {
     themeMode: computed(() => themeMode.value),
+    isDark,
+    backdropThemeClass,
     setTheme,
     toggleTheme,
     applyTheme,
@@ -136,11 +142,9 @@ export function applyBackdropToElement(element, variant = 'dashboard', mode = nu
 
   const currentMode = mode || themeMode.value
   const variantClass = `backdrop-${variant}`
-  const themeClass = currentMode === 'light' 
-    ? 'backdrop-theme-light' 
-    : currentMode === 'dark' 
-    ? 'backdrop-theme-dark' 
-    : 'backdrop-theme'
+  const themeClass = currentMode === 'light'
+    ? 'backdrop-theme-light'
+    : 'backdrop-theme-dark'
 
   // Remove existing backdrop classes
   element.classList.remove(
@@ -171,11 +175,9 @@ export function createBackdropElement(container, variant = 'dashboard', mode = n
   const backdrop = document.createElement('div')
   const currentMode = mode || themeMode.value
   const variantClass = `backdrop-${variant}`
-  const themeClass = currentMode === 'light' 
-    ? 'backdrop-theme-light' 
-    : currentMode === 'dark' 
-    ? 'backdrop-theme-dark' 
-    : 'backdrop-theme'
+  const themeClass = currentMode === 'light'
+    ? 'backdrop-theme-light'
+    : 'backdrop-theme-dark'
 
   backdrop.classList.add(themeClass, variantClass)
   container.appendChild(backdrop)

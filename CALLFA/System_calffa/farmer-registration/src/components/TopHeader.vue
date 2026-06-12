@@ -3,6 +3,8 @@
     <div class="header-content">
       <!-- Right: User Controls -->
       <div class="user-controls">
+        <ThemeToggle variant="header" class="theme-toggle-btn" />
+
         <!-- Notifications -->
         <div class="notification-container">
           <button class="icon-btn notification-btn" :class="{ 'has-unread': notificationCount > 0 }" @click="toggleNotifications" title="Notifications">
@@ -130,6 +132,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import ThemeToggle from './ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -766,6 +769,15 @@ onMounted(() => {
 
 .icon-btn:active {
   transform: translateY(0);
+}
+
+.theme-toggle-btn {
+  color: #fbbf24;
+}
+
+.theme-toggle-btn:hover {
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.55);
 }
 
 .notification-btn .notification-icon {

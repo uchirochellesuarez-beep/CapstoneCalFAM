@@ -1,5 +1,5 @@
 <template>
-  <div class="news-page">
+  <div class="news-page" :class="{ 'light-theme': isLight }">
     <header class="notice-hero">
       <div class="hero-left">
         <div class="hero-icon" aria-hidden="true">
@@ -274,12 +274,15 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 import NewsPostCard from '../components/NewsPostCard.vue'
 
 const API_ORIGIN = 'http://localhost:3000'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const userRole = computed(() => (authStore.currentUser?.role || '').toLowerCase())
 const currentUserId = computed(() => Number(authStore.currentUser?.id || 0))
@@ -1193,5 +1196,255 @@ onMounted(fetchNews)
   .notice-toolbar { flex-direction: column; }
   .sort-select { width: 100%; }
 }
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.news-page.light-theme {
+  --bg-card: #ffffff;
+  --line: rgba(34, 197, 94, 0.28);
+  --line-strong: #86efac;
+  --green: #15803d;
+  --green-dim: #dcfce7;
+  --text: #052e16;
+  --text-muted: #166534;
+  --text-soft: #64748b;
+
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: var(--text);
+}
+
+.news-page.light-theme .notice-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.news-page.light-theme .hero-icon {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.news-page.light-theme .hero-eyebrow {
+  color: #15803d;
+}
+
+.news-page.light-theme .notice-hero h1 {
+  color: #052e16;
+}
+
+.news-page.light-theme .hero-desc {
+  color: #166534;
+}
+
+.news-page.light-theme .hero-stat {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.news-page.light-theme .hero-stat-value {
+  color: #15803d;
+}
+
+.news-page.light-theme .hero-stat-label {
+  color: #64748b;
+}
+
+.news-page.light-theme .btn-ghost-header {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #14532d;
+}
+
+.news-page.light-theme .btn-ghost-header:hover {
+  background: #f0fdf4;
+  color: #052e16;
+}
+
+.news-page.light-theme .search-ico {
+  color: #15803d;
+}
+
+.news-page.light-theme .search-input,
+.news-page.light-theme .sort-select {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.news-page.light-theme .search-input::placeholder {
+  color: #64748b;
+}
+
+.news-page.light-theme .sort-select option {
+  background: #ffffff;
+  color: #052e16;
+}
+
+.news-page.light-theme .section-head h2 {
+  color: #052e16;
+}
+
+.news-page.light-theme .section-head span {
+  color: #166534;
+}
+
+.news-page.light-theme .state-panel {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  color: #166534;
+}
+
+.news-page.light-theme .modal {
+  background: #fffef9;
+  border: 2px solid #86efac;
+  color: #052e16;
+}
+
+.news-page.light-theme .modal-head {
+  border-bottom: 1px solid #bbf7d0;
+}
+
+.news-page.light-theme .modal-head h3 {
+  color: #052e16;
+}
+
+.news-page.light-theme .modal-close {
+  background: #f0fdf4;
+  color: #64748b;
+}
+
+.news-page.light-theme .modal-foot {
+  border-top: 1px solid #bbf7d0;
+}
+
+.news-page.light-theme .form-field label {
+  color: #166534;
+}
+
+.news-page.light-theme .form-field input,
+.news-page.light-theme .form-field textarea {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.news-page.light-theme .upload-zone {
+  border-color: #bbf7d0;
+  background: #f8fdf9;
+}
+
+.news-page.light-theme .upload-placeholder {
+  color: #64748b;
+}
+
+.news-page.light-theme .upload-placeholder span {
+  color: #166534;
+}
+
+.news-page.light-theme .btn-ghost {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #14532d;
+}
+
+.news-page.light-theme .btn-ghost:hover {
+  background: #f0fdf4;
+}
+
+.news-page.light-theme .delete-warning {
+  color: #166534;
+}
+
+.news-page.light-theme .preview-close {
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  color: #052e16;
+}
+
+.news-page.light-theme .preview-caption {
+  color: #166534;
+}
+
+/* News post cards (child component) */
+.news-page.light-theme :deep(.notice-card) {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+}
+
+.news-page.light-theme :deep(.notice-card--featured) {
+  border-color: #22c55e;
+}
+
+.news-page.light-theme :deep(.notice-card-header) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.news-page.light-theme :deep(.author-name),
+.news-page.light-theme :deep(.notice-date) {
+  color: #052e16;
+}
+
+.news-page.light-theme :deep(.notice-time),
+.news-page.light-theme :deep(.notice-card-footer),
+.news-page.light-theme :deep(.notice-figure-cap) {
+  color: #64748b;
+}
+
+.news-page.light-theme :deep(.notice-title) {
+  color: #052e16;
+}
+
+.news-page.light-theme :deep(.notice-content) {
+  color: #14532d;
+}
+
+.news-page.light-theme :deep(.read-more-btn) {
+  color: #15803d;
+}
+
+.news-page.light-theme :deep(.notice-badge-latest) {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.news-page.light-theme :deep(.action-btn) {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.news-page.light-theme :deep(.action-btn--danger) {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.news-page.light-theme :deep(.notice-card-footer) {
+  border-top: 1px solid #e2e8f0;
+}
+
+.news-page.light-theme :deep(.edited-tag) {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.news-page.light-theme :deep(.status-pending) {
+  color: #a16207;
+  background: #fef9c3;
+  border-color: #fde047;
+}
+
+.news-page.light-theme :deep(.status-published) {
+  color: #15803d;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.news-page.light-theme :deep(.role-president) { color: #4338ca; }
+.news-page.light-theme :deep(.role-admin) { color: #15803d; }
+.news-page.light-theme :deep(.role-farmer) { color: #a16207; }
+.news-page.light-theme :deep(.role-other) { color: #64748b; }
 </style>
 

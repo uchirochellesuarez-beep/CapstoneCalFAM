@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container admin-loans-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <h1 class="page-title">{{ pageTitle }}</h1>
       <p v-if="pageSubtitle" class="page-subtitle">{{ pageSubtitle }}</p>
@@ -34,7 +34,7 @@
           <div class="stat-label">Partial Paid</div>
         </div>
       </div>
-      <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white;">
+      <div class="stat-card overdue">
         <div class="stat-icon">
           <img :src="overdueLoansIcon" alt="" class="stat-icon-image" aria-hidden="true" />
         </div>
@@ -580,9 +580,12 @@ import overdueLoansIcon from '../assets/icon-loan-overdue.svg'
 import fullPaidIcon from '../assets/icon-loan-paid.svg'
 import rejectedApplicationsIcon from '../assets/icon-loan-rejected.svg'
 import totalLoanAmountIcon from '../assets/icon-loan-total.svg'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const highlightedLoanId = ref(null)
 
@@ -1322,6 +1325,10 @@ onUnmounted(() => {
   border-left-color: #ef4444;
 }
 
+.stat-card.overdue {
+  border-left-color: #ef4444;
+}
+
 .stat-card.total {
   border-left-color: #3b82f6;
 }
@@ -1565,6 +1572,11 @@ onUnmounted(() => {
 .status-badge.pending {
   color: #facc15;
   border-color: rgba(245, 158, 11, 0.55);
+}
+
+.status-badge.overdue {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.58);
 }
 
 .status-badge.approved {
@@ -2086,121 +2098,113 @@ onUnmounted(() => {
   font-size: 0.76rem;
 }
 
-/* Dashboard theme override */
-.page-container {
+/* Dashboard theme override — dark mode only */
+.page-container.admin-loans-page:not(.light-theme) {
   min-height: 100vh;
   background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
   color: #eefde6;
   border-radius: 18px;
 }
 
-.page-header,
-.card,
-.modal-content,
-.summary-card,
-.alert-card {
+.page-container.admin-loans-page:not(.light-theme) :is(.page-header, .card, .modal-content, .summary-card, .alert-card) {
   background: rgba(28, 42, 33, 0.92) !important;
   border: 1px solid rgba(190, 235, 203, 0.14) !important;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255,255,255,0.05) !important;
 }
 
-.stat-card:not([style]) {
+.page-container.admin-loans-page:not(.light-theme) .stat-card:not([style]) {
   background: rgba(24, 39, 30, 0.92) !important;
   border: 1px solid rgba(190, 235, 203, 0.14) !important;
   border-left-width: 4px !important;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24), inset 1px 1px 0 rgba(255,255,255,0.04) !important;
 }
 
-.stat-card[style] {
+.page-container.admin-loans-page:not(.light-theme) .stat-card.overdue {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-left-width: 4px !important;
+  border-left-color: #ef4444 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .stat-card.overdue :is(.stat-value, .stat-label) {
+  color: #ffffff !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .stat-card[style] {
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-left-width: 4px !important;
 }
 
-.page-header {
+.page-container.admin-loans-page:not(.light-theme) .page-header {
   padding: 1.35rem 1.5rem 1.2rem !important;
   margin-bottom: 2.5rem !important;
 }
 
 @media (max-width: 768px) {
-  .page-header {
+  .page-container.admin-loans-page:not(.light-theme) .page-header {
     padding: 1.15rem 1rem 1rem !important;
     margin-bottom: 1.9rem !important;
   }
 }
 
-.page-title,
-.stat-value,
-.detail-item p,
-.payment-history-section h4 { color: #eefde6 !important; }
+.page-container.admin-loans-page:not(.light-theme) :is(.page-title, .stat-value, .detail-item p, .payment-history-section h4) {
+  color: #eefde6 !important;
+}
 
-.page-subtitle,
-.stat-label,
-.detail-item label,
-.form-group small,
-.score-factors,
-.payer-desc { color: rgba(229, 235, 231, 0.82) !important; }
+.page-container.admin-loans-page:not(.light-theme) :is(.page-subtitle, .stat-label, .detail-item label, .form-group small, .score-factors, .payer-desc) {
+  color: rgba(229, 235, 231, 0.82) !important;
+}
 
-.stat-card[style] .stat-value,
-.stat-card[style] .stat-label {
+.page-container.admin-loans-page:not(.light-theme) .stat-card[style] :is(.stat-value, .stat-label) {
   color: #ffffff !important;
 }
 
-.stat-icon-image {
+.page-container.admin-loans-page:not(.light-theme) .stat-icon-image {
   opacity: 0.96;
 }
 
-.payer-badge,
-.payer-reason,
-.credit-score,
-.credit-score-compact,
-.score-factors,
-.payer-desc,
-.payer-text {
+.page-container.admin-loans-page:not(.light-theme) :is(.payer-badge, .payer-reason, .credit-score, .credit-score-compact, .score-factors, .payer-desc, .payer-text) {
   color: rgba(238, 245, 240, 0.96) !important;
 }
 
-.payer-text {
+.page-container.admin-loans-page:not(.light-theme) .payer-text {
   color: inherit !important;
 }
 
-.payer-badge.low,
-.payer-badge.medium,
-.payer-badge.high,
-.payer-badge.loading,
-.payer-badge.unknown {
+.page-container.admin-loans-page:not(.light-theme) :is(.payer-badge.low, .payer-badge.medium, .payer-badge.high, .payer-badge.loading, .payer-badge.unknown) {
   color: inherit !important;
 }
 
-.payer-badge.low {
+.page-container.admin-loans-page:not(.light-theme) .payer-badge.low {
   background: rgba(134, 239, 172, 0.28) !important;
   border-color: rgba(134, 239, 172, 0.55) !important;
   color: #d9fbe8 !important;
 }
 
-.payer-badge.medium {
+.page-container.admin-loans-page:not(.light-theme) .payer-badge.medium {
   background: rgba(253, 224, 71, 0.24) !important;
   border-color: rgba(250, 204, 21, 0.5) !important;
   color: #fef3c7 !important;
 }
 
-.payer-badge.high {
+.page-container.admin-loans-page:not(.light-theme) .payer-badge.high {
   background: rgba(248, 113, 113, 0.25) !important;
   border-color: rgba(248, 113, 113, 0.55) !important;
   color: #fee2e2 !important;
 }
 
-.payer-badge.unknown {
+.page-container.admin-loans-page:not(.light-theme) .payer-badge.unknown {
   background: rgba(125, 211, 252, 0.2) !important;
   border-color: rgba(125, 211, 252, 0.48) !important;
   color: #dbeafe !important;
 }
 
-.filter-tabs {
+.page-container.admin-loans-page:not(.light-theme) .filter-tabs {
   border-bottom: 0 !important;
   gap: 0.75rem !important;
 }
 
-.tab {
+.page-container.admin-loans-page:not(.light-theme) .tab {
   background: #ffffff !important;
   border: 2px solid #166534 !important;
   color: #14532d !important;
@@ -2209,47 +2213,307 @@ onUnmounted(() => {
   box-shadow: none !important;
 }
 
-.tab:hover {
+.page-container.admin-loans-page:not(.light-theme) .tab:hover {
   background: #f0fdf4 !important;
   color: #14532d !important;
 }
 
-.tab.active {
+.page-container.admin-loans-page:not(.light-theme) .tab.active {
   background: #dcfce7 !important;
   color: #14532d !important;
   border-color: #166534 !important;
 }
 
-.tab.active::after {
+.page-container.admin-loans-page:not(.light-theme) .tab.active::after {
   display: none !important;
   content: none !important;
 }
 
-.loans-table th,
-.payment-history-table th {
+.page-container.admin-loans-page:not(.light-theme) :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.10) 100%) !important;
   color: rgba(234, 241, 236, 0.94) !important;
   border-bottom-color: rgba(190, 235, 203, 0.2) !important;
 }
 
-.loans-table td,
-.payment-history-table td {
+.page-container.admin-loans-page:not(.light-theme) :is(.loans-table td, .payment-history-table td) {
   color: rgba(226, 234, 229, 0.92) !important;
   border-bottom-color: rgba(255,255,255,0.06) !important;
 }
-.loans-table tbody tr:hover { background: rgba(74, 222, 128, 0.07) !important; }
 
-.form-group input,
-.form-group textarea,
-.form-group select,
-.payment-type-btn {
+.page-container.admin-loans-page:not(.light-theme) .loans-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.07) !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) :is(.form-group input, .form-group textarea, .form-group select, .payment-type-btn) {
   background: rgba(0,0,0,0.24) !important;
   color: #eefde6 !important;
   border-color: rgba(190, 235, 203, 0.24) !important;
 }
 
-.payment-type-btn.active {
+.page-container.admin-loans-page:not(.light-theme) .payment-type-btn.active {
   background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(34, 197, 94, 0.2)) !important;
   border-color: rgba(74, 222, 128, 0.38) !important;
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.page-container.admin-loans-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: #052e16;
+  border-radius: 18px;
+}
+
+.page-container.admin-loans-page.light-theme :is(.page-header, .card, .modal-content) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.pending {
+  border-left-color: #f59e0b !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.approved {
+  border-left-color: #10b981 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.active {
+  border-left-color: #8b5cf6 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.overdue {
+  border-left-color: #ef4444 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.paid {
+  border-left-color: #059669 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.rejected {
+  border-left-color: #ef4444 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.total {
+  border-left-color: #3b82f6 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-card.overdue :is(.stat-value, .stat-label) {
+  color: #052e16 !important;
+}
+
+.page-container.admin-loans-page.light-theme .page-title {
+  color: #052e16 !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.page-container.admin-loans-page.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-value {
+  color: #052e16 !important;
+}
+
+.page-container.admin-loans-page.light-theme .stat-label {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .barangay-filter-bar {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
+}
+
+.page-container.admin-loans-page.light-theme .barangay-filter-label {
+  color: #166534;
+}
+
+.page-container.admin-loans-page.light-theme .barangay-filter-select {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #052e16;
+}
+
+.page-container.admin-loans-page.light-theme .barangay-filter-hint {
+  color: #64748b;
+}
+
+.page-container.admin-loans-page.light-theme .filter-tabs {
+  border-bottom: 0 !important;
+  gap: 0.75rem !important;
+}
+
+.page-container.admin-loans-page.light-theme .tab {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+}
+
+.page-container.admin-loans-page.light-theme .tab.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+}
+
+.page-container.admin-loans-page.light-theme .tab.active::after {
+  display: none !important;
+}
+
+.page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  border-bottom: 1px solid #86efac !important;
+}
+
+.page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
+  color: #14532d !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+.page-container.admin-loans-page.light-theme :is(.td-purpose, .td-date, .td-term, .td-payer, .td-amount, .num-cell) {
+  color: #14532d !important;
+}
+
+.page-container.admin-loans-page.light-theme .loading-cell,
+.page-container.admin-loans-page.light-theme .empty-cell {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #052e16 !important;
+  font-size: 0.62rem;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.pending {
+  background: #fef9c3 !important;
+  border-color: #ca8a04 !important;
+  color: #92400e !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.overdue {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.approved {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.rejected {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.active {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+}
+
+.page-container.admin-loans-page.light-theme .status-badge.paid {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+.page-container.admin-loans-page.light-theme .loans-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loans-table tbody tr:hover td {
+  background: #ecfdf5 !important;
+}
+
+.page-container.admin-loans-page.light-theme .td-name {
+  color: #052e16 !important;
+  font-weight: 700;
+}
+
+.page-container.admin-loans-page.light-theme .amount {
+  color: #15803d !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-text {
+  color: inherit !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-reason,
+.page-container.admin-loans-page.light-theme .score-factors,
+.page-container.admin-loans-page.light-theme .payer-desc {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .btn-view {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #166534 !important;
+  border: 1px solid #16a34a !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-badge.low {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-badge.medium {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+  color: #a16207 !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-badge.high {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.page-container.admin-loans-page.light-theme .payer-badge.unknown {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+.page-container.admin-loans-page.light-theme .credit-score-compact {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme :is(.form-group input, .form-group textarea, .form-group select, .payment-type-btn) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item label {
+  color: #64748b !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item p {
+  color: #052e16 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-summary,
+.page-container.admin-loans-page.light-theme .payment-summary {
+  background: #f8fdf9 !important;
+  border: 1px solid #bbf7d0;
+}
+
+.page-container.admin-loans-page.light-theme .loan-summary p {
+  color: #166534 !important;
 }
 </style>

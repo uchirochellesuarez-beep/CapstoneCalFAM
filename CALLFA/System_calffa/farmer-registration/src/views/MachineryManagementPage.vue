@@ -1,5 +1,5 @@
 <template>
-  <div class="machinery-management-page">
+  <div class="machinery-management-page" :class="{ 'light-theme': isLight }">
     <!-- Page Header -->
     <div class="page-header">
       <div class="header-content">
@@ -795,12 +795,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 export default {
   name: 'MachineryManagementPage',
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
+    const { isDark } = useBackdropTheme()
+    const isLight = computed(() => !isDark.value)
 
     const showInventoryModal = ref(false)
     const showAddMachineryModal = ref(false)
@@ -1278,6 +1281,7 @@ export default {
     })
 
     return {
+      isLight,
       showInventoryModal, showAddMachineryModal, showEditMachineryModal,
       showViewBookingModal, showDeleteModal, machineryToDelete,
       successMessage, validationError, filters, adminFilters, machineryForm, inventory, bookings,
@@ -1308,24 +1312,25 @@ export default {
 
 <style scoped>
 .machinery-management-page {
-  --surface-1: #1d2b21;
-  --surface-2: #24372b;
-  --surface-3: #2a3f32;
-  --line-soft: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.18);
-  --text-main: #eefde6;
-  --text-muted: rgba(220, 238, 211, 0.76);
-  --text-soft: rgba(220, 238, 211, 0.62);
-  --success: #34d399;
-  --warning: #86efac;
+  --surface-1: #1e4234;
+  --surface-2: #255241;
+  --surface-3: #2d5c4a;
+  --line-soft: rgba(167, 211, 178, 0.22);
+  --line-strong: rgba(187, 227, 196, 0.35);
+  --text-main: #ecfdf5;
+  --text-muted: #b8dcc6;
+  --text-soft: #8fb89e;
+  --success: #6ee7a8;
+  --warning: #e8c468;
   --danger: #f87171;
-  --info: #60a5fa;
+  --info: #7dd3fc;
+  --panel-shadow: 0 10px 28px rgba(4, 18, 12, 0.32);
   min-height: 100vh;
   max-width: 1440px;
   margin: 0 auto;
   padding: 28px;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  background: linear-gradient(160deg, #0c2418 0%, #123222 42%, #1a3d2e 100%);
   position: relative;
   overflow-x: hidden;
 }
@@ -1341,14 +1346,14 @@ export default {
 
 .machinery-management-page::before {
   background:
-    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(234, 179, 8, 0.08) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 50% at 12% 88%, rgba(110, 231, 168, 0.06) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 50% at 88% 12%, rgba(232, 196, 104, 0.05) 0%, transparent 55%);
 }
 
 .machinery-management-page::after {
   background:
-    radial-gradient(circle at 92% 8%, rgba(250, 204, 21, 0.12) 0%, transparent 22%),
-    radial-gradient(circle at 8% 88%, rgba(74, 222, 128, 0.12) 0%, transparent 20%);
+    radial-gradient(circle at 90% 8%, rgba(232, 196, 104, 0.05) 0%, transparent 24%),
+    radial-gradient(circle at 10% 90%, rgba(61, 122, 92, 0.08) 0%, transparent 22%);
 }
 
 .machinery-management-page > * {
@@ -1361,11 +1366,7 @@ export default {
   background: var(--surface-1);
   border: 1px solid var(--line-soft);
   border-radius: 24px;
-  box-shadow:
-    16px 16px 30px rgba(8, 14, 10, 0.55),
-    -14px -14px 28px rgba(42, 61, 46, 0.5),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: var(--panel-shadow);
 }
 
 .page-header {
@@ -1414,13 +1415,9 @@ export default {
   gap: 16px;
   padding: 22px 22px 20px;
   border-radius: 18px;
-  background: #202f24;
+  background: var(--surface-2);
   border: 1px solid var(--line-soft);
-  box-shadow:
-    12px 12px 22px rgba(8, 13, 10, 0.5),
-    -10px -10px 20px rgba(44, 63, 48, 0.48),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.07),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: var(--panel-shadow);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
@@ -1435,13 +1432,9 @@ export default {
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   border-color: var(--line-strong);
-  box-shadow:
-    16px 16px 28px rgba(7, 12, 9, 0.58),
-    -12px -12px 22px rgba(45, 66, 50, 0.56),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.11),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 32px rgba(4, 18, 12, 0.38);
 }
 
 .stat-card:hover::after {
@@ -1508,9 +1501,7 @@ export default {
   background: var(--surface-2);
   border: 1px solid var(--line-soft);
   border-radius: 18px;
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.06),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: none;
 }
 
 .filter-group {
@@ -1534,25 +1525,25 @@ export default {
   min-height: 46px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: var(--surface-3);
+  border: 1px solid var(--line-soft);
+  background: rgba(20, 48, 38, 0.85);
   color: var(--text-main);
   font-size: 14px;
   font-weight: 600;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+  box-shadow: none;
 }
 
 .filter-select:focus,
 .form-input:focus {
-  border-color: rgba(255, 255, 255, 0.32);
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12), inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+  border-color: rgba(110, 231, 168, 0.45);
+  box-shadow: 0 0 0 3px rgba(110, 231, 168, 0.12);
 }
 
 .filter-select option,
 .form-input option {
-  background: #223428;
+  background: #1e4234;
   color: var(--text-main);
 }
 
@@ -1562,11 +1553,7 @@ export default {
   border-radius: 20px;
   background: var(--surface-2);
   border: 1px solid var(--line-soft);
-  box-shadow:
-    12px 12px 22px rgba(8, 13, 10, 0.48),
-    -10px -10px 20px rgba(43, 62, 47, 0.44),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.06),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.28);
+  box-shadow: var(--panel-shadow);
 }
 
 .inventory-actions {
@@ -1585,10 +1572,10 @@ export default {
   width: min(88vw, 1020px) !important;
   max-height: 88vh !important;
   margin-left: clamp(18px, 5vw, 96px);
-  background: rgba(18, 32, 22, 0.92) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  border: 1px solid rgba(100, 220, 130, 0.14) !important;
-  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  background: linear-gradient(165deg, #1e4234 0%, #255241 100%) !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(167, 211, 178, 0.24) !important;
+  box-shadow: 0 20px 48px rgba(4, 18, 12, 0.45) !important;
 }
 
 .inv2-header {
@@ -1611,23 +1598,23 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(34, 197, 94, 0.08));
-  border: 1px solid rgba(74, 222, 128, 0.28);
+  background: rgba(45, 92, 74, 0.45);
+  border: 1px solid rgba(167, 211, 178, 0.28);
   border-radius: 12px;
-  color: #4ade80;
+  color: #a7f3c8;
   flex-shrink: 0;
 }
 .inv2-title {
   margin: 0;
   font-size: 19px;
   font-weight: 800;
-  color: #f0fdf4;
+  color: #ecfdf5;
   line-height: 1.2;
 }
 .inv2-subtitle {
   margin: 2px 0 0;
   font-size: 11px;
-  color: rgba(200, 235, 210, 0.5);
+  color: #8fb89e;
 }
 .inv2-header-right {
   display: flex;
@@ -1656,8 +1643,8 @@ export default {
   transition: all 0.18s ease;
 }
 .inv2-view-btn.active {
-  background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
+  background: rgba(45, 92, 74, 0.55);
+  color: #ecfdf5;
 }
 .inv2-view-btn:hover:not(.active) {
   background: rgba(255, 255, 255, 0.07);
@@ -1710,17 +1697,17 @@ export default {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 9px;
-  color: #f0fdf4;
+  color: #ecfdf5;
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .inv2-search-input::placeholder {
-  color: rgba(200, 235, 210, 0.38);
+  color: #8fb89e;
 }
 .inv2-search-input:focus {
-  border-color: rgba(74, 222, 128, 0.45);
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+  border-color: rgba(110, 231, 168, 0.45);
+  box-shadow: 0 0 0 3px rgba(110, 231, 168, 0.1);
 }
 .inv2-clear-btn {
   position: absolute;
@@ -1757,21 +1744,21 @@ export default {
   align-items: center;
   gap: 7px;
   padding: 8px 18px;
-  background: linear-gradient(135deg, #16a34a, #15803d);
-  border: none;
+  background: linear-gradient(135deg, #3d7a5c, #2d5c4a);
+  border: 1px solid rgba(110, 231, 168, 0.3);
   border-radius: 9px;
-  color: #fff;
+  color: #ecfdf5;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(22, 163, 74, 0.32);
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.25);
   transition: all 0.2s ease;
 }
 .inv2-add-btn:hover {
-  background: linear-gradient(135deg, #15803d, #166534);
+  background: linear-gradient(135deg, #4a8f6c, #3d7a5c);
   transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.45);
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.3);
 }
 .inv2-add-btn:active {
   transform: translateY(0);
@@ -1794,14 +1781,14 @@ export default {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(74, 222, 128, 0.12);
-  border: 1px solid rgba(74, 222, 128, 0.24);
-  color: #86efac;
+  background: rgba(45, 92, 74, 0.4);
+  border: 1px solid rgba(167, 211, 178, 0.28);
+  color: #b8dcc6;
 }
 .inv2-chip-x {
   background: none;
   border: none;
-  color: #86efac;
+  color: #b8dcc6;
   cursor: pointer;
   display: flex;
   padding: 0;
@@ -1881,7 +1868,7 @@ export default {
   background: rgba(0, 0, 0, 0.06);
 }
 .inv2-row:hover td {
-  background: rgba(74, 222, 128, 0.06) !important;
+  background: rgba(110, 231, 168, 0.06) !important;
 }
 .inv2-name-wrap {
   display: flex;
@@ -1891,28 +1878,28 @@ export default {
 .inv2-machine-icon {
   width: 28px;
   height: 28px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.18);
+  background: rgba(45, 92, 74, 0.45);
+  border: 1px solid rgba(167, 211, 178, 0.28);
   border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4ade80;
+  color: #a7f3c8;
   flex-shrink: 0;
 }
 .inv2-name {
   font-weight: 600;
-  color: #f0fdf4;
+  color: #ecfdf5;
 }
 .inv2-price {
   font-weight: 800;
   white-space: nowrap;
 }
 .inv2-price-main {
-  color: #9af0b5;
+  color: #a7f3c8;
 }
 .inv2-price-member {
-  color: #4ade80;
+  color: #6ee7a8;
 }
 .inv2-price-nonmember {
   color: #fb923c;
@@ -2100,8 +2087,8 @@ export default {
   transition: all 0.15s ease;
 }
 .inv2-pg-btn:hover:not(:disabled) {
-  background: rgba(74, 222, 128, 0.15);
-  border-color: rgba(74, 222, 128, 0.28);
+  background: rgba(45, 92, 74, 0.5);
+  border-color: rgba(167, 211, 178, 0.32);
 }
 .inv2-pg-btn:disabled {
   opacity: 0.28;
@@ -2216,7 +2203,7 @@ export default {
 
 .bookings-table thead,
 .inventory-table thead {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%);
 }
 
 .bookings-table th,
@@ -2224,7 +2211,7 @@ export default {
   padding: 0.38rem 0.3rem;
   text-align: center;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(167, 211, 178, 0.22);
   font-size: 0.62rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -2240,8 +2227,8 @@ export default {
   padding: 0.35rem 0.28rem;
   vertical-align: middle;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-main);
+  border-bottom: 1px solid rgba(167, 211, 178, 0.12);
+  color: var(--text-muted);
   font-size: 0.68rem;
   line-height: 1.15;
   word-break: break-word;
@@ -2254,7 +2241,7 @@ export default {
 
 .bookings-table tbody tr:hover,
 .inventory-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(110, 231, 168, 0.06);
 }
 
 .farmer-info,
@@ -2315,7 +2302,7 @@ export default {
 
 .price-value {
   font-weight: 800;
-  color: #9af0b5;
+  color: #a7f3c8;
   word-break: break-word;
   font-size: 0.62rem;
 }
@@ -2353,9 +2340,9 @@ export default {
   border: 1px solid rgba(129, 140, 248, 0.24);
 }
 .badge-success {
-  background: rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
-  border: 1px solid rgba(74, 222, 128, 0.24);
+  background: rgba(45, 92, 74, 0.45);
+  color: #d1fae5;
+  border: 1px solid rgba(110, 231, 168, 0.3);
 }
 .badge-default {
   background: rgba(203, 213, 225, 0.14);
@@ -2364,9 +2351,9 @@ export default {
 }
 
 .status-success {
-  background: rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
-  border: 1px solid rgba(74, 222, 128, 0.24);
+  background: rgba(45, 92, 74, 0.5);
+  color: #d1fae5;
+  border: 1px solid rgba(110, 231, 168, 0.32);
 }
 .status-info {
   background: rgba(96, 165, 250, 0.18);
@@ -2492,9 +2479,10 @@ export default {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #4ade80, #16a34a);
-  color: #082111;
-  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.24);
+  background: linear-gradient(135deg, #3d7a5c, #2d5c4a);
+  color: #ecfdf5;
+  border-color: rgba(110, 231, 168, 0.3);
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.28);
 }
 
 .btn-secondary {
@@ -2546,8 +2534,8 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(7, 12, 9, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(12, 36, 24, 0.72);
+  backdrop-filter: blur(4px);
   z-index: 1000;
 }
 
@@ -2831,9 +2819,9 @@ export default {
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(74, 222, 128, 0.12);
-  border-left: 4px solid #22c55e;
-  color: #bbf7d0;
+  background: rgba(45, 92, 74, 0.4);
+  border-left: 4px solid #6ee7a8;
+  color: #d1fae5;
   font-weight: 700;
 }
 
@@ -2845,9 +2833,9 @@ export default {
   margin-top: 12px;
   padding: 14px;
   border-radius: 12px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.2);
-  color: #bbf7d0;
+  background: rgba(45, 92, 74, 0.35);
+  border: 1px solid rgba(167, 211, 178, 0.28);
+  color: #d1fae5;
 }
 
 .barangay-read-only .barangay-info {
@@ -3020,105 +3008,595 @@ export default {
   }
 }
 
-.machinery-management-page::before {
-  background:
-    radial-gradient(ellipse 80% 50% at 10% 90%, rgba(17, 94, 41, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(45, 212, 191, 0.1) 0%, transparent 60%) !important;
+/* ===== Dark-only — night farm dashboard (skip in light mode) ===== */
+.machinery-management-page:not(.light-theme)::before,
+.machinery-management-page:not(.light-theme)::after {
+  opacity: 0.85 !important;
 }
 
-.machinery-management-page::after {
-  background:
-    radial-gradient(circle at 92% 8%, rgba(45, 212, 191, 0.12) 0%, transparent 22%),
-    radial-gradient(circle at 8% 88%, rgba(74, 222, 128, 0.12) 0%, transparent 20%),
-    radial-gradient(circle at 76% 78%, rgba(163, 230, 53, 0.08) 0%, transparent 18%) !important;
-}
-
-.page-header,
-.section,
-.stat-card,
-.filters-section,
-.table-card,
-.modal-content {
-  border-color: rgba(190, 235, 203, 0.14) !important;
-}
-
-.btn-primary,
-.btn-secondary,
-.action-btn,
-.filter-select,
-.search-input,
-.form-input,
-.form-select {
-  border-color: rgba(190, 235, 203, 0.24) !important;
-}
-
-.machinery-management-page .page-header,
-.machinery-management-page .section,
-.machinery-management-page .stat-card,
-.machinery-management-page .filters-section,
-.machinery-management-page .table-container,
-.machinery-management-page .inventory-table-container,
-.machinery-management-page .modal-content,
-.machinery-management-page .detail-section,
-.machinery-management-page .empty-state,
-.machinery-management-page .picture-upload-section,
-.machinery-management-page .picture-preview,
-.machinery-management-page .notes-text,
-.machinery-management-page .inv2-card,
-.machinery-management-page .inv2-table-wrap {
-  background: linear-gradient(145deg, rgba(14, 25, 19, 0.97), rgba(10, 19, 15, 0.96)) !important;
-  border-color: rgba(122, 171, 140, 0.2) !important;
-  box-shadow: 16px 16px 28px rgba(4, 8, 6, 0.56), -10px -10px 18px rgba(27, 42, 33, 0.32) !important;
+.machinery-management-page:not(.light-theme) :is(
+  .page-header, .section, .stat-card, .filters-section, .table-container,
+  .inventory-table-container, .modal-content, .detail-section, .empty-state,
+  .picture-upload-section, .picture-preview, .notes-text, .inv2-card, .inv2-table-wrap
+) {
+  background: var(--surface-1) !important;
+  border-color: var(--line-soft) !important;
+  box-shadow: var(--panel-shadow) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-.machinery-management-page .inv2-modal {
-  background: linear-gradient(145deg, rgba(14, 25, 19, 0.97), rgba(10, 19, 15, 0.96)) !important;
+.machinery-management-page:not(.light-theme) .inv2-modal {
+  background: linear-gradient(165deg, #1e4234 0%, #255241 100%) !important;
 }
 
-.machinery-management-page .bookings-table thead,
-.machinery-management-page .inventory-table thead,
-.machinery-management-page .inv2-table thead,
-.machinery-management-page .inv2-toolbar,
-.machinery-management-page .inv2-chips {
-  background: rgba(12, 23, 17, 0.94) !important;
-  border-color: rgba(122, 171, 140, 0.16) !important;
+.machinery-management-page:not(.light-theme) :is(.bookings-table thead, .inventory-table thead, .inv2-table thead) {
+  background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
+  border-color: var(--line-soft) !important;
 }
 
-.machinery-management-page .bookings-table tbody tr:hover,
-.machinery-management-page .inventory-table tbody tr:hover,
-.machinery-management-page .inv2-row:hover td {
-  background: rgba(74, 222, 128, 0.04) !important;
+.machinery-management-page:not(.light-theme) :is(.inv2-toolbar, .inv2-chips) {
+  background: rgba(30, 66, 52, 0.65) !important;
+  border-color: var(--line-soft) !important;
 }
 
-.machinery-management-page .filter-select,
-.machinery-management-page .form-input,
-.machinery-management-page .inv2-search-input,
-.machinery-management-page .inv2-select,
-.machinery-management-page .modal-close,
-.machinery-management-page .btn-icon-small,
-.machinery-management-page .btn-sm {
-  background: rgba(11, 21, 16, 0.94) !important;
-  border-color: rgba(122, 171, 140, 0.2) !important;
+.machinery-management-page:not(.light-theme) :is(.bookings-table tbody tr:hover, .inventory-table tbody tr:hover, .inv2-row:hover td) {
+  background: rgba(110, 231, 168, 0.06) !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(
+  .filter-select, .form-input, .inv2-search-input, .inv2-select,
+  .modal-close, .btn-icon-small, .btn-sm
+) {
+  background: rgba(20, 48, 38, 0.9) !important;
+  border-color: var(--line-soft) !important;
+  color: var(--text-main) !important;
   box-shadow: none !important;
 }
 
-.machinery-management-page .stat-card::after {
+.machinery-management-page:not(.light-theme) .stat-card::after {
   background: transparent !important;
 }
 
-.machinery-management-page .machinery-inventory-btn {
+.machinery-management-page:not(.light-theme) .machinery-inventory-btn {
+  background: #f7fdf9 !important;
+  border: 2px solid rgba(110, 231, 168, 0.45) !important;
+  color: #0f2e1f !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.15) !important;
+}
+
+.machinery-management-page:not(.light-theme) .machinery-inventory-btn:hover {
+  background: #ecfdf5 !important;
+  border-color: rgba(110, 231, 168, 0.55) !important;
+  color: #0f2e1f !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.page-title, .section-title, .stat-value) {
+  color: #ecfdf5 !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.page-subtitle, .stat-label, .filter-label, .form-label) {
+  color: #b8dcc6 !important;
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+.machinery-management-page.light-theme {
+  --surface-1: #ffffff;
+  --surface-2: #f8fdf9;
+  --surface-3: #ffffff;
+  --line-soft: #bbf7d0;
+  --line-strong: #86efac;
+  --text-main: #052e16;
+  --text-muted: #166534;
+  --text-soft: #15803d;
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: #052e16;
+}
+
+.machinery-management-page.light-theme::before,
+.machinery-management-page.light-theme::after {
+  background: none !important;
+}
+
+.machinery-management-page.light-theme :is(.page-header, .section) {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #14532d !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.machinery-management-page.light-theme .page-title {
+  color: #052e16 !important;
+  text-shadow: none !important;
+}
+
+.machinery-management-page.light-theme .page-subtitle,
+.machinery-management-page.light-theme .section-title {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.machinery-management-page.light-theme .stat-card::after {
+  display: none;
+}
+
+.machinery-management-page.light-theme :is(.stat-value, .stat-label) {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .stat-label {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .filters-section {
+  background: #f0fdf4 !important;
+  border: 2px solid #bbf7d0 !important;
   box-shadow: none !important;
 }
 
-.machinery-management-page .machinery-inventory-btn:hover {
-  background: #f0fdf4 !important;
-  border-color: #166534 !important;
+.machinery-management-page.light-theme .filter-label,
+.machinery-management-page.light-theme .form-label {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme :is(.filter-select, .form-input, .form-select, .inv2-search-input, .inv2-select) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #052e16 !important;
+  box-shadow: none !important;
+}
+
+.machinery-management-page.light-theme :is(.filter-select option, .form-input option) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  border-bottom: 1px solid #86efac !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
   color: #14532d !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table tbody tr:nth-child(even), .inventory-table tbody tr:nth-child(even)) {
+  background: #f8fdf9 !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table tbody tr:hover, .inventory-table tbody tr:hover, .inv2-row:hover td) {
+  background: #ecfdf5 !important;
+}
+
+.machinery-management-page.light-theme :is(.loading-cell, .empty-cell) {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme :is(.price-cell, .price-value) {
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .price-label {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .badge-primary {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.machinery-management-page.light-theme .badge-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-color: #ca8a04 !important;
+}
+
+.machinery-management-page.light-theme .badge-info {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  border-color: #a5b4fc !important;
+}
+
+.machinery-management-page.light-theme .badge-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.machinery-management-page.light-theme .badge-default {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.machinery-management-page.light-theme .status-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.machinery-management-page.light-theme .status-info {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.machinery-management-page.light-theme .status-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-color: #ca8a04 !important;
+}
+
+.machinery-management-page.light-theme .status-danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #dc2626 !important;
+}
+
+.machinery-management-page.light-theme .status-default {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.machinery-management-page.light-theme .barangay-badge {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.machinery-management-page.light-theme :is(.btn-icon-small, .btn-sm) {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme :is(.btn-icon-small:hover, .btn-sm:hover) {
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+
+.machinery-management-page.light-theme :is(.btn-icon-small.btn-danger, .btn-sm.btn-danger) {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.machinery-management-page.light-theme .booking-view-btn {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+}
+
+.machinery-management-page.light-theme .btn-secondary {
+  background: #ffffff !important;
+  color: #166534 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.machinery-management-page.light-theme .modal-overlay {
+  background: rgba(5, 46, 22, 0.35) !important;
+}
+
+.machinery-management-page.light-theme :is(.modal-content, .inv2-modal) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  color: #052e16 !important;
+  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.15) !important;
+}
+
+.machinery-management-page.light-theme .modal-header {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.machinery-management-page.light-theme .modal-header h2,
+.machinery-management-page.light-theme .inv2-title {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .inv2-subtitle {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .modal-close {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme :is(.inv2-toolbar, .inv2-chips) {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .inv2-card {
+  background: #ffffff !important;
+  border: 2px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme :is(.inv2-price-main, .inv2-price-member, .inv2-price-nonmember, .price-highlight) {
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-card-price-label {
+  color: #166534 !important;
+}
+
+/* Machinery Inventory modal (inv2) — readable table & toolbar text */
+.machinery-management-page.light-theme :is(.inv2-name, .inv2-card-name) {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme :is(.inv2-cap, .inv2-card-cap) {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-na {
+  color: #64748b !important;
+}
+
+.machinery-management-page.light-theme .inv2-unit {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-price-nonmember {
+  color: #c2410c !important;
+}
+
+.machinery-management-page.light-theme .inv2-row-a td {
+  background: #ffffff !important;
+}
+
+.machinery-management-page.light-theme .inv2-row-b td {
+  background: #f8fdf9 !important;
+}
+
+.machinery-management-page.light-theme .inv2-table-wrap {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .inv2-header {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.machinery-management-page.light-theme .inv2-header-icon {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-search-ico {
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-search-input::placeholder {
+  color: #64748b !important;
+}
+
+.machinery-management-page.light-theme .inv2-select option {
+  background: #ffffff !important;
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .inv2-view-toggle {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .inv2-view-btn {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-view-btn.active {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-view-btn:hover:not(.active) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .inv2-close {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-close:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.machinery-management-page.light-theme .inv2-chip {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-clear-all {
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-clear-all:hover {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .inv2-empty {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-pg-btn {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-pg-info {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .inv2-machine-icon {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .inv2-btn-edit {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.machinery-management-page.light-theme .inv2-btn-del {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+.machinery-management-page.light-theme .inv2-card-img {
+  background: linear-gradient(135deg, #ecfdf5, #dcfce7) !important;
+}
+
+.machinery-management-page.light-theme .inv2-card-img-fallback {
+  color: #86efac !important;
+}
+
+.machinery-management-page.light-theme :is(.detail-section, .empty-state, .picture-upload-section, .picture-preview) {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+}
+
+.machinery-management-page.light-theme .machinery-inventory-btn {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+}
+
+.machinery-management-page.light-theme .machinery-inventory-btn:hover {
+  background: #f0fdf4 !important;
+}
+
+/* Modal form — high-contrast text for light mode */
+.machinery-management-page.light-theme .form-hint,
+.machinery-management-page.light-theme .barangay-hint,
+.machinery-management-page.light-theme .barangay-read-only .form-hint {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .barangay-assignment-group {
+  background: #fef9c3 !important;
+  border: 2px solid #ca8a04 !important;
+}
+
+.machinery-management-page.light-theme .barangay-warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-left: 4px solid #d97706 !important;
+}
+
+.machinery-management-page.light-theme .barangay-label {
+  color: #92400e !important;
+}
+
+.machinery-management-page.light-theme .barangay-selected {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-left-color: #16a34a !important;
+}
+
+.machinery-management-page.light-theme .barangay-read-only {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .barangay-read-only .barangay-info {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .barangay-select-emphasized {
+  border-color: #ca8a04 !important;
+  background: #ffffff !important;
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .barangay-select-emphasized:focus {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.25) !important;
+}
+
+.machinery-management-page.light-theme .warning-text {
+  color: #991b1b !important;
+}
+
+.machinery-management-page.light-theme .detail-item label {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .detail-section h3 {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .notes-text {
+  color: #14532d !important;
+  background: #f8fdf9 !important;
+}
+
+.machinery-management-page.light-theme textarea.form-input {
+  background: #ffffff !important;
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .picture-upload-section {
+  background: #f8fdf9 !important;
+  border: 2px dashed #86efac !important;
+}
+
+.machinery-management-page.light-theme .picture-preview {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .picture-placeholder {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .alert-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-left: 4px solid #ca8a04 !important;
+  box-shadow: 0 8px 24px rgba(146, 64, 14, 0.15) !important;
+}
+
+.machinery-management-page.light-theme .alert-error {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-left: 4px solid #dc2626 !important;
+  box-shadow: 0 8px 24px rgba(153, 27, 27, 0.15) !important;
+}
+
+.machinery-management-page.light-theme .alert-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-left: 4px solid #16a34a !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
 }
 
 .inv2-modal {
