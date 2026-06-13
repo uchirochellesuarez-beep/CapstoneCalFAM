@@ -502,18 +502,27 @@ export const useMachineryStore = defineStore('machinery', {
       }
     },
 
-    async completeBooking(id, statusAction = 'completed') {
+    async completeBooking(id, statusAction = 'completed', notes = null) {
       this.loading = true
       this.error = null
       
       try {
+        const authStore = useAuthStore()
+        const operatorId = authStore.currentUser?.id
+
+        if (!operatorId) {
+          throw new Error('You must be logged in as an operator to update booking status')
+        }
+
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/complete`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            status_action: statusAction
+            status_action: statusAction,
+            operator_id: operatorId,
+            operational_notes: notes || undefined
           })
         })
         

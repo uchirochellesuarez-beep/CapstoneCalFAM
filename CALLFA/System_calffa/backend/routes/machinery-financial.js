@@ -1163,7 +1163,7 @@ router.delete('/collections/:id', verifyFinancialAccess, async (req, res) => {
 // Reports - transactions summary (barangay-based)
 router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
   try {
-    const { type, start_date, end_date, barangay_id } = req.query;
+    const { type, start_date, end_date, barangay_id, machinery_id } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
     
@@ -1204,6 +1204,12 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
     // Build barangay filter clause
     const barangayFilter = effectiveBarangayId ? ' AND mi.barangay_id = ?' : '';
     const barangayFilterFarmer = effectiveBarangayId ? ' AND f.barangay_id = ?' : '';
+    const machineryId =
+      machinery_id && machinery_id !== '' && !Number.isNaN(parseInt(machinery_id, 10))
+        ? parseInt(machinery_id, 10)
+        : null;
+    const machineryFilterExpense = machineryId ? ' AND me.machinery_id = ?' : '';
+    const machineryFilterBooking = machineryId ? ' AND mb.machinery_id = ?' : '';
     
     // Fetch all expenses in date range (filtered by barangay)
     let expenseQuery = `
@@ -1228,16 +1234,52 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         NULL as booking_id
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-      WHERE me.date_of_expense BETWEEN ? AND ?${barangayFilter}
+      WHERE me.date_of_expense BETWEEN ? AND ?${barangayFilter}${machineryFilterExpense}
       ORDER BY me.date_of_expense DESC
     `;
     const expenseParams = [dateStart, dateEnd];
     if (effectiveBarangayId) expenseParams.push(effectiveBarangayId);
+    if (machineryId) expenseParams.push(machineryId);
     
     const [expenses] = await pool.execute(expenseQuery, expenseParams);
     
-    // Fetch all income in date range (filtered by barangay)
-    let incomeQuery = `
+    // Fetch all income in date range (filtered by barangay; dues excluded when machinery filter is set)
+    let incomeQuery;
+    const incomeParams = [];
+    if (machineryId) {
+      incomeQuery = `
+        SELECT 
+          CONCAT('INC-', minc.id) as id,
+          minc.date_of_income as date,
+          'Income' as transaction_type,
+          mi.machinery_name,
+          mi.machinery_type,
+          CONCAT('Booking #', minc.booking_id, ' - ', COALESCE(minc.remarks, 'Service Income')) as description,
+          NULL as reference_number,
+          NULL as fuel_and_oil,
+          NULL as labor_cost,
+          NULL as per_diem,
+          NULL as repair_and_maintenance,
+          NULL as office_supply,
+          NULL as communication_expense,
+          NULL as utilities_expense,
+          NULL as sundries,
+          minc.income_amount as amount,
+          f.full_name as farmer_name,
+          minc.booking_id,
+          mi.barangay_id
+        FROM machinery_income minc
+        LEFT JOIN machinery_inventory mi ON minc.machinery_id = mi.id
+        LEFT JOIN machinery_bookings mb ON minc.booking_id = mb.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE minc.date_of_income BETWEEN ? AND ?
+          AND minc.machinery_id = ?${effectiveBarangayId ? ' AND mi.barangay_id = ?' : ''}
+        ORDER BY date DESC
+      `;
+      incomeParams.push(dateStart, dateEnd, machineryId);
+      if (effectiveBarangayId) incomeParams.push(effectiveBarangayId);
+    } else {
+      incomeQuery = `
       SELECT * FROM (
         SELECT 
           CONCAT('INC-', minc.id) as id,
@@ -1299,8 +1341,9 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       WHERE 1=1${effectiveBarangayId ? ' AND barangay_id = ?' : ''}
       ORDER BY date DESC
     `;
-    const incomeParams = [dateStart, dateEnd, dateStart, dateEnd];
-    if (effectiveBarangayId) incomeParams.push(effectiveBarangayId);
+      incomeParams.push(dateStart, dateEnd, dateStart, dateEnd);
+      if (effectiveBarangayId) incomeParams.push(effectiveBarangayId);
+    }
     
     const [income] = await pool.execute(incomeQuery, incomeParams);
     
@@ -1329,16 +1372,18 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         mbp.payment_type,
         mbp.interest_amount,
         mbp.interest_applied,
-        mbp.interest_season
+        mbp.interest_season,
+        mb.total_price as booking_total_price
       FROM machinery_booking_payments mbp
       LEFT JOIN machinery_bookings mb ON mbp.booking_id = mb.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
-      WHERE mbp.payment_date BETWEEN ? AND ?${barangayFilterFarmer}
+      WHERE mbp.payment_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
       ORDER BY mbp.payment_date DESC
     `;
     const collectionParams = [dateStart, dateEnd];
     if (effectiveBarangayId) collectionParams.push(effectiveBarangayId);
+    if (machineryId) collectionParams.push(machineryId);
     
     const [collections] = await pool.execute(collectionsQuery, collectionParams);
     
@@ -1360,13 +1405,124 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       FROM machinery_bookings mb
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
-      WHERE mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}
+      WHERE mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
       ORDER BY mb.booking_date DESC
     `;
     const bookingParams = [dateStart, dateEnd];
     if (effectiveBarangayId) bookingParams.push(effectiveBarangayId);
+    if (machineryId) bookingParams.push(machineryId);
     
     const [bookings] = await pool.execute(bookingsQuery, bookingParams);
+
+    // Service ledger: one row per booking (collections + collectibles merged)
+    let serviceLedgerQuery = `
+      SELECT 
+        mb.id as booking_id,
+        f.full_name as client_name,
+        COALESCE(
+          NULLIF(TRIM(bsp.name), ''),
+          NULLIF(TRIM(mb.service_location), ''),
+          NULLIF(TRIM(f.farm_location), ''),
+          NULLIF(TRIM(f.address), ''),
+          '—'
+        ) as farm_location,
+        CASE WHEN COALESCE(f.membership_status, 'member') = 'non-member' THEN 'Non-Member' ELSE 'Member' END as client_category,
+        COALESCE(mb.approved_date, mb.booking_date) as approved_schedule,
+        mb.booking_date,
+        mb.booking_date as actual_service_date,
+        mb.completed_date,
+        mb.area_size,
+        mb.area_unit,
+        mb.total_price,
+        COALESCE(mb.total_paid, 0) as total_paid,
+        COALESCE(mb.pending_interest, 0) as pending_interest,
+        mb.payment_status,
+        mi.machinery_name,
+        mi.machinery_type,
+        mi.unit_type,
+        CASE 
+          WHEN mb.area_size > 0 THEN ROUND(mb.total_price / mb.area_size, 2)
+          ELSE mb.total_price
+        END as unit_service_fee,
+        (
+          SELECT COALESCE(SUM(
+            mbp.amount + CASE WHEN mbp.interest_applied = 1 OR mbp.interest_applied = TRUE 
+              THEN COALESCE(mbp.interest_amount, 0) ELSE 0 END
+          ), 0)
+          FROM machinery_booking_payments mbp
+          WHERE mbp.booking_id = mb.id
+        ) as cash_collection,
+        (
+          SELECT mbp.receipt_number
+          FROM machinery_booking_payments mbp
+          WHERE mbp.booking_id = mb.id
+            AND mbp.receipt_number IS NOT NULL
+            AND TRIM(mbp.receipt_number) != ''
+          ORDER BY mbp.payment_date DESC, mbp.id DESC
+          LIMIT 1
+        ) as last_receipt_number,
+        GREATEST(
+          0,
+          mb.total_price - COALESCE(mb.total_paid, 0) +
+          CASE WHEN mb.payment_status = 'Partial' THEN COALESCE(mb.pending_interest, 0) ELSE 0 END
+        ) as accounts_receivable
+      FROM machinery_bookings mb
+      LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+      LEFT JOIN farmers f ON mb.farmer_id = f.id
+      LEFT JOIN barangay_service_places bsp ON mb.barangay_place_id = bsp.id
+      WHERE mb.status IN ('Approved', 'In Use', 'Completed')
+        AND mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
+      ORDER BY mb.booking_date ASC, mb.id ASC
+    `;
+    const serviceLedgerParams = [dateStart, dateEnd];
+    if (effectiveBarangayId) serviceLedgerParams.push(effectiveBarangayId);
+    if (machineryId) serviceLedgerParams.push(machineryId);
+
+    const [serviceLedger] = await pool.execute(serviceLedgerQuery, serviceLedgerParams);
+
+    // List of Collectibles: completed bookings with A/R and collection details
+    let collectiblesListQuery = `
+      SELECT 
+        mb.id as booking_id,
+        f.full_name as client_name,
+        mb.total_price as accounts_receivable,
+        COALESCE(mb.total_paid, 0) as cash_collection,
+        COALESCE(
+          (
+            SELECT MAX(mbp.payment_date)
+            FROM machinery_booking_payments mbp
+            WHERE mbp.booking_id = mb.id
+              AND mbp.payment_date BETWEEN ? AND ?
+          ),
+          mb.last_payment_date,
+          mb.payment_date
+        ) as date_of_payment,
+        (
+          SELECT mbp.receipt_number
+          FROM machinery_booking_payments mbp
+          WHERE mbp.booking_id = mb.id
+            AND mbp.receipt_number IS NOT NULL
+            AND TRIM(mbp.receipt_number) != ''
+          ORDER BY mbp.payment_date DESC, mbp.id DESC
+          LIMIT 1
+        ) as receipt_number,
+        GREATEST(
+          0,
+          mb.total_price - COALESCE(mb.total_paid, 0) +
+          CASE WHEN mb.payment_status = 'Partial' THEN COALESCE(mb.pending_interest, 0) ELSE 0 END
+        ) as remaining_balance
+      FROM machinery_bookings mb
+      LEFT JOIN farmers f ON mb.farmer_id = f.id
+      LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+      WHERE mb.status = 'Completed'
+        AND mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
+      ORDER BY f.full_name ASC, mb.booking_date ASC, mb.id ASC
+    `;
+    const collectiblesListParams = [dateStart, dateEnd, dateStart, dateEnd];
+    if (effectiveBarangayId) collectiblesListParams.push(effectiveBarangayId);
+    if (machineryId) collectiblesListParams.push(machineryId);
+
+    const [collectiblesList] = await pool.execute(collectiblesListQuery, collectiblesListParams);
     
     // Calculate summaries
     const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
@@ -1408,6 +1564,9 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
           end: dateEnd
         },
         generated_at: new Date().toISOString(),
+        filters: {
+          machinery_id: machineryId
+        },
         summary: {
           total_expenses: totalExpenses,
           total_income: totalIncome,
@@ -1426,14 +1585,18 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
           expenses: expenses.length,
           income: income.length,
           collections: collections.length,
-          bookings: bookings.length
+          bookings: bookings.length,
+          service_ledger: serviceLedger.length,
+          collectibles_list: collectiblesList.length
         },
         transactions: {
           all: allTransactions,
           expenses: expenses,
           income: income,
           collections: collections,
-          bookings: bookings
+          bookings: bookings,
+          service_ledger: serviceLedger,
+          collectibles_list: collectiblesList
         }
       }
     });
