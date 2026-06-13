@@ -829,13 +829,13 @@ router.get('/bookings', async (req, res) => {
         mi.machinery_name,
         mi.machinery_type,
         a.full_name as approved_by_name,
-        pr.full_name as payment_recorded_by_name,
+        cb.full_name as completed_by_name,
         b.name as barangay_name
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN farmers a ON mb.approved_by = a.id
-      LEFT JOIN farmers pr ON mb.payment_recorded_by = pr.id
+      LEFT JOIN farmers cb ON mb.completed_by = cb.id
       LEFT JOIN barangays b ON mb.barangay_id = b.id
       WHERE 1=1
     `;
@@ -1679,11 +1679,7 @@ router.get('/bookings/:id/payments', async (req, res) => {
 router.put('/bookings/:id/deploy', async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      operator_id,
-      equipment_deployed_date = new Date().toISOString().slice(0, 19).replace('T', ' '),
-      equipment_deployed_notes = null
-    } = req.body;
+    const { operator_id, operational_notes = null } = req.body;
     
     if (!operator_id) {
       return res.status(400).json({ 
@@ -1735,10 +1731,9 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       `UPDATE machinery_bookings 
        SET status = 'In Use',
            machine_used = 1,
-           equipment_deployed_date = ?,
            operational_notes = ?
        WHERE id = ?`,
-      [equipment_deployed_date, equipment_deployed_notes, id]
+      [operational_notes, id]
     );
 
     console.log(`⚙️ Equipment deployed for Booking ${id} by ${operator[0].full_name} (Barangay: ${booking[0].barangay_id})`);
@@ -1754,7 +1749,6 @@ router.put('/bookings/:id/deploy', async (req, res) => {
       success: true, 
       message: `Equipment deployed to operator ${operator[0].full_name}`,
       status: 'In Use',
-      deployed_at: equipment_deployed_date,
       barangay_verified: true
     });
   } catch (error) {
@@ -1767,12 +1761,7 @@ router.put('/bookings/:id/deploy', async (req, res) => {
 router.put('/bookings/:id/return-equipment', async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      operator_id,
-      equipment_return_date = new Date().toISOString().slice(0, 19).replace('T', ' '),
-      equipment_hours_used = null,
-      operational_notes = null
-    } = req.body;
+    const { operator_id, operational_notes = null } = req.body;
     
     if (!operator_id) {
       return res.status(400).json({ 
@@ -1822,23 +1811,16 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
     
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
-       SET equipment_return_date = ?,
-           equipment_hours_used = ?,
-           operator_signoff = 1,
-           operator_signoff_date = NOW(),
-           operator_signoff_by = ?,
-           operational_notes = ?
+       SET operational_notes = ?
        WHERE id = ?`,
-      [equipment_return_date, equipment_hours_used, operator_id, operational_notes, id]
+      [operational_notes, id]
     );
 
-    console.log(`✔️ Equipment returned and signed off for Booking ${id} by ${operator[0].full_name} (Barangay: ${booking[0].barangay_id})`);
+    console.log(`✔️ Equipment return noted for Booking ${id} by ${operator[0].full_name} (Barangay: ${booking[0].barangay_id})`);
     
     res.json({ 
       success: true, 
-      message: `Equipment returned and signed off by ${operator[0].full_name}. Awaiting Admin to mark Booking as Completed.`,
-      operator_signoff: true,
-      signoff_time: new Date().toISOString(),
+      message: `Equipment return recorded by ${operator[0].full_name}.`,
       barangay_verified: true
     });
   } catch (error) {
@@ -1851,7 +1833,7 @@ router.put('/bookings/:id/return-equipment', async (req, res) => {
 router.put('/bookings/:id/complete', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status_action = 'completed', operator_id } = req.body;
+    const { status_action = 'completed', operator_id, operational_notes = null } = req.body;
     
     if (!['completed', 'incomplete'].includes(status_action)) {
       return res.status(400).json({ 
@@ -1859,19 +1841,24 @@ router.put('/bookings/:id/complete', async (req, res) => {
         message: 'Invalid status action. Must be "completed" or "incomplete"' 
       });
     }
-    
-    if (operator_id) {
-      const [operator] = await pool.execute(
-        'SELECT role, barangay_id FROM farmers WHERE id = ?',
-        [operator_id]
-      );
-      
-      if (operator.length === 0 || operator[0].role !== 'operator') {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Only operators can mark bookings as completed or incomplete' 
-        });
-      }
+
+    if (!operator_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'operator_id is required'
+      });
+    }
+
+    const [operator] = await pool.execute(
+      'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [operator_id]
+    );
+
+    if (operator.length === 0 || operator[0].role !== 'operator') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only operators can mark bookings as completed or incomplete' 
+      });
     }
     
     const [booking] = await pool.execute(
@@ -1883,17 +1870,11 @@ router.put('/bookings/:id/complete', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (operator_id) {
-      const [operator] = await pool.execute(
-        'SELECT barangay_id FROM farmers WHERE id = ?',
-        [operator_id]
-      );
-      if (operator.length > 0 && operator[0].barangay_id !== booking[0].barangay_id) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Operator can only complete bookings from their assigned barangay.' 
-        });
-      }
+    if (operator[0].barangay_id !== booking[0].barangay_id) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Operator can only complete bookings from their assigned barangay.' 
+      });
     }
     
     if (booking[0].status !== 'Approved') {
@@ -1909,14 +1890,32 @@ router.put('/bookings/:id/complete', async (req, res) => {
     } else if (status_action === 'incomplete') {
       newStatus = 'Incomplete';
     }
-    
-    const [result] = await pool.execute(
-      `UPDATE machinery_bookings 
-       SET status = ?,
-           machine_used = ?
-       WHERE id = ?`,
-      [newStatus, status_action === 'completed' ? 1 : 0, id]
-    );
+
+    let result;
+    if (status_action === 'completed') {
+      [result] = await pool.execute(
+        `UPDATE machinery_bookings 
+         SET status = 'Completed',
+             machine_used = 1,
+             completed_by = ?,
+             completed_date = NOW(),
+             operational_notes = COALESCE(?, operational_notes)
+         WHERE id = ?`,
+        [operator_id, operational_notes, id]
+      );
+      console.log(`✅ Booking ${id} completed by operator ${operator[0].full_name}`);
+    } else {
+      [result] = await pool.execute(
+        `UPDATE machinery_bookings 
+         SET status = 'Incomplete',
+             machine_used = 0,
+             completed_by = NULL,
+             completed_date = NULL,
+             operational_notes = COALESCE(?, operational_notes)
+         WHERE id = ?`,
+        [operational_notes, id]
+      );
+    }
     
     if (result.affectedRows === 0) {
       return res.status(400).json({ 
@@ -1966,10 +1965,10 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       });
     }
     
-    if (!['admin', 'president', 'treasurer'].includes(user[0].role)) {
+    if (user[0].role !== 'operator') {
       return res.status(403).json({ 
         success: false, 
-        message: 'Only Admin, President, or Treasurer can complete bookings' 
+        message: 'Only operators can complete bookings' 
       });
     }
     
@@ -1982,10 +1981,10 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (user[0].role !== 'admin' && user[0].barangay_id !== booking[0].barangay_id) {
+    if (user[0].barangay_id !== booking[0].barangay_id) {
       return res.status(403).json({ 
         success: false, 
-        message: 'You can only complete bookings from your assigned barangay.' 
+        message: 'Operator can only complete bookings from their assigned barangay.' 
       });
     }
     
@@ -1999,13 +1998,14 @@ router.put('/bookings/:id/mark-completed', async (req, res) => {
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
        SET status = 'Completed',
+           machine_used = 1,
            completed_by = ?,
            completed_date = NOW()
        WHERE id = ?`,
       [completed_by, id]
     );
 
-    console.log(`✅ Booking ${id} marked as Completed by ${user[0].full_name} (Barangay: ${booking[0].barangay_id})`);
+    console.log(`✅ Booking ${id} marked as Completed by operator ${user[0].full_name} (Barangay: ${booking[0].barangay_id})`);
     
     res.json({ 
       success: true, 

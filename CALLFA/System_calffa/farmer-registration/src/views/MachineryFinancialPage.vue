@@ -779,7 +779,7 @@
               <div class="filter-checkboxes">
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showSummary" />
-                  <span>Summary Cards</span>
+                  <span>Summary</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showDistribution" />
@@ -794,16 +794,16 @@
                   <span>Expense Details</span>
                 </label>
                 <label class="filter-checkbox">
-                  <input type="checkbox" v-model="reportFilters.showCollections" />
-                  <span>Collection Details</span>
+                  <input type="checkbox" v-model="reportFilters.showServiceLedger" />
+                  <span>Farmer Clients Transaction Record</span>
+                </label>
+                <label class="filter-checkbox">
+                  <input type="checkbox" v-model="reportFilters.showCollectiblesList" />
+                  <span>List of Collectibles</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showBookings" />
                   <span>Bookings Summary</span>
-                </label>
-                <label class="filter-checkbox">
-                  <input type="checkbox" v-model="reportFilters.showCollectiblesForm" />
-                  <span>List of Collectibles (Talaan ng mga Singilin)</span>
                 </label>
               </div>
             </div>
@@ -845,15 +845,38 @@
             </div>
           </div>
         </div>
+
+        <!-- Machinery filter (after report option cards) -->
+        <div class="filters-section reports-machinery-filter-bar">
+          <div class="filter-group">
+            <label class="filter-label">Machinery/Equipment:</label>
+            <select v-model="filters.machinery_id" class="filter-input">
+              <option value="">All Machinery/Equipment</option>
+              <option v-for="m in machinery" :key="m.id" :value="m.id">
+                {{ m.machinery_name }} ({{ m.machinery_type }})
+              </option>
+            </select>
+          </div>
+          <p class="filter-hint">Ang filter ay awtomatikong inia-apply sa report kapag nagbago ang makinarya.</p>
+        </div>
         
-        <!-- Loading State -->
-        <div v-if="reportLoading" class="report-loading">
+        <!-- Loading State (initial generate only) -->
+        <div v-if="reportLoading && !reportData" class="report-loading">
           <div class="loading-spinner"></div>
           <p>Generating report...</p>
         </div>
         
         <!-- Report Display -->
-        <div v-if="reportData && !reportLoading" class="report-display" id="printable-report">
+        <div
+          v-if="reportData"
+          class="report-display"
+          :class="{ 'report-display-refreshing': reportLoading }"
+          id="printable-report"
+        >
+          <div v-if="reportLoading" class="report-refresh-overlay" aria-live="polite">
+            <div class="loading-spinner"></div>
+            <p>Ina-update ang report...</p>
+          </div>
           <!-- Report Header (CFA = Barangay scope; period from filter/API; no contact/address) -->
           <div class="report-header">
             <div class="report-logo">
@@ -876,153 +899,503 @@
             </div>
           </div>
 
-          <!-- Official sheet: List of Collectibles / Talaan ng mga Singilin (no contact / address) -->
-          <div v-if="reportFilters.showCollectiblesForm" class="collectibles-form-sheet">
+          <!-- Farmer Clients Transaction Record (official collectibles-style sheet) -->
+          <div v-if="reportFilters.showServiceLedger" class="collectibles-form-sheet farmer-clients-record-sheet">
+            <div class="collectibles-form-title-block">
+              <h2 class="collectibles-main-title">Farmer Clients Transaction Record</h2>
+              <p class="collectibles-main-subtitle">Talaan ng Transaksyon ng mga Magsasakang Kliyente</p>
+            </div>
+
+            <div class="collectibles-meta-box collectibles-meta-box-compact">
+              <div class="collectibles-meta-split">
+                <div class="collectibles-meta-col collectibles-meta-col-left">
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Name ng CFA / Name of FCA:</span>
+                    <span class="collectibles-meta-fill">{{ reportBarangayNameForReport }}</span>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Uri ng makinarya / Type of Farm Machinery:</span>
+                    <span class="collectibles-meta-fill">{{ reportMachineryLabel }}</span>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Buwan saklaw ng talaan / Period covered:</span>
+                    <span class="collectibles-meta-fill">{{ formatReportPeriodCompact(reportData.period.start, reportData.period.end) }}</span>
+                  </div>
+                </div>
+                <div class="collectibles-meta-col collectibles-meta-col-right">
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Contact Person / Tauhan:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.contactPerson"
+                        type="text"
+                        data-sheet-field="contactPerson"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Cropping Period / Panahon ng Pagtatanim:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.croppingPeriod"
+                        type="text"
+                        data-sheet-field="croppingPeriod"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Address / Tirahan ng FCA:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.fcaAddress"
+                        type="text"
+                        data-sheet-field="fcaAddress"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Contact Number / Numero ng Telepono:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.contactNumber"
+                        type="text"
+                        data-sheet-field="contactNumber"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="collectibles-table-wrap fcr-responsive-wrap">
+              <!-- Desktop / tablet: full table -->
+              <div class="fcr-desktop-table">
+                <table class="collectibles-data-table farmer-clients-record-table">
+                  <thead>
+                    <tr>
+                      <th class="fcr-col-client">
+                        Name of Client<br />
+                        <span class="th-tl">(Pangalan ng Kliyente)</span>
+                      </th>
+                      <th class="fcr-col-loc">
+                        Farm Location<br />
+                        <span class="th-tl">(Lokasyon ng Bukid)</span>
+                      </th>
+                      <th class="fcr-col-cat">Category</th>
+                      <th class="fcr-col-date">
+                        Approved Schedule<br />
+                        <span class="th-tl">(Aprubadong Iskedyul)</span>
+                      </th>
+                      <th class="fcr-col-date">
+                        Actual Date<br />
+                        <span class="th-tl">(Aktwal na Petsa)</span>
+                      </th>
+                      <th class="fcr-col-fee">
+                        Service Fee<br />
+                        <span class="th-tl">(Bayad sa Serbisyo)</span>
+                      </th>
+                      <th class="fcr-col-area">
+                        Area Serviced<br />
+                        <span class="th-tl">(Saklaw ng Serbisyo)</span>
+                      </th>
+                      <th class="fcr-col-hrs">Op. Hours</th>
+                      <th class="fcr-col-amt text-right">
+                        Total Amount<br />
+                        <span class="th-tl">(Kabuuang Halaga)</span>
+                      </th>
+                      <th class="fcr-col-amt text-right">
+                        Cash Collection<br />
+                        <span class="th-tl">(Nakolektang Bayad)</span>
+                      </th>
+                      <th class="fcr-col-rcpt">Receipt No.</th>
+                      <th class="fcr-col-amt text-right">
+                        A/R<br />
+                        <span class="th-tl">(Singilin)</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in serviceLedgerRows" :key="'fcr-' + row.booking_id">
+                      <td class="fcr-col-client">{{ row.client_name || '—' }}</td>
+                      <td class="fcr-col-loc">{{ row.farm_location || '—' }}</td>
+                      <td class="fcr-col-cat">{{ row.client_category || '—' }}</td>
+                      <td class="fcr-col-date">{{ formatReportDateCompact(row.approved_schedule) }}</td>
+                      <td class="fcr-col-date">{{ formatReportDateCompact(row.actual_service_date || row.booking_date) }}</td>
+                      <td class="fcr-col-fee">{{ formatServiceFeeCompact(row) }}</td>
+                      <td class="fcr-col-area">{{ formatAreaServicedCompact(row) }}</td>
+                      <td class="fcr-col-hrs">N/A</td>
+                      <td class="fcr-col-amt text-right">{{ formatReportMoneyCompact(row.total_price) }}</td>
+                      <td class="fcr-col-amt text-right">{{ formatReportMoneyCompact(row.cash_collection) }}</td>
+                      <td class="fcr-col-rcpt">{{ (row.last_receipt_number && String(row.last_receipt_number).trim()) || '—' }}</td>
+                      <td class="fcr-col-amt text-right">{{ formatReportMoneyCompact(row.accounts_receivable) }}</td>
+                    </tr>
+                    <tr v-if="serviceLedgerRows.length === 0">
+                      <td colspan="12" class="collectibles-empty-note">Walang rekord sa piniling saklaw ng petsa / No records in this period.</td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="serviceLedgerRows.length > 0">
+                    <tr class="fcr-total-row">
+                      <td colspan="8" class="fcr-total-label"><strong>Totals / Kabuuan</strong></td>
+                      <td class="text-right fcr-col-amt"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.totalAmount) }}</strong></td>
+                      <td class="text-right fcr-col-amt"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.cashCollection) }}</strong></td>
+                      <td class="fcr-col-rcpt fcr-total-empty"></td>
+                      <td class="text-right fcr-col-amt"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.accountsReceivable) }}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Mobile: one card per client record -->
+              <div class="fcr-mobile-list">
+                <p v-if="serviceLedgerRows.length === 0" class="fcr-mobile-empty">
+                  Walang rekord sa piniling saklaw ng petsa / No records in this period.
+                </p>
+                <article
+                  v-for="row in serviceLedgerRows"
+                  :key="'fcr-m-' + row.booking_id"
+                  class="fcr-mobile-card"
+                >
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Name of Client</span>
+                    <span class="fcr-mobile-value">{{ row.client_name || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Farm Location</span>
+                    <span class="fcr-mobile-value">{{ row.farm_location || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Category</span>
+                    <span class="fcr-mobile-value">{{ row.client_category || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Approved Schedule</span>
+                    <span class="fcr-mobile-value">{{ formatReportDateCompact(row.approved_schedule) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Actual Date</span>
+                    <span class="fcr-mobile-value">{{ formatReportDateCompact(row.actual_service_date || row.booking_date) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Service Fee</span>
+                    <span class="fcr-mobile-value">{{ formatServiceFeeCompact(row) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Area Serviced</span>
+                    <span class="fcr-mobile-value">{{ formatAreaServicedCompact(row) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Op. Hours</span>
+                    <span class="fcr-mobile-value">N/A</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Total Amount</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.total_price) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Cash Collection</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.cash_collection) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Receipt No.</span>
+                    <span class="fcr-mobile-value">{{ (row.last_receipt_number && String(row.last_receipt_number).trim()) || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">A/R</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.accounts_receivable) }}</span>
+                  </div>
+                </article>
+
+                <div v-if="serviceLedgerRows.length > 0" class="fcr-mobile-totals">
+                  <h4 class="fcr-mobile-totals-title">Totals / Kabuuan</h4>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Total Amount</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.totalAmount) }}</strong></span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Cash Collection</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.cashCollection) }}</strong></span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">A/R</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(serviceLedgerTotals.accountsReceivable) }}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of Collectibles (official collectibles-style sheet) -->
+          <div v-if="reportFilters.showCollectiblesList" class="collectibles-form-sheet collectibles-list-sheet">
             <div class="collectibles-form-title-block">
               <h2 class="collectibles-main-title">List of Collectibles</h2>
               <p class="collectibles-main-subtitle">Talaan ng mga Singilin</p>
             </div>
 
-            <div class="collectibles-meta-box">
-              <div class="collectibles-meta-row">
-                <span class="collectibles-meta-label">Name ng CFA / Name of FCA:</span>
-                <span class="collectibles-meta-value">{{ reportBarangayNameForReport }}</span>
-              </div>
-              <div class="collectibles-meta-row">
-                <span class="collectibles-meta-label">Uri ng makinarya / Type of Farm Machinery:</span>
-                <span class="collectibles-meta-value">{{ collectiblesMachineryLine }}</span>
-              </div>
-              <div class="collectibles-meta-row collectibles-meta-row-full">
-                <span class="collectibles-meta-label">Buwan saklaw ng talaan / Period covered:</span>
-                <span class="collectibles-meta-value">{{ formatReportPeriodLong(reportData.period.start, reportData.period.end) }}</span>
+            <div class="collectibles-meta-box collectibles-meta-box-compact">
+              <div class="collectibles-meta-split">
+                <div class="collectibles-meta-col collectibles-meta-col-left">
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Name ng CFA / Name of FCA:</span>
+                    <span class="collectibles-meta-fill">{{ reportBarangayNameForReport }}</span>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Uri ng makinarya / Type of Farm Machinery:</span>
+                    <span class="collectibles-meta-fill">{{ reportMachineryLabel }}</span>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Buwan saklaw ng talaan / Period covered:</span>
+                    <span class="collectibles-meta-fill">{{ formatReportPeriodCompact(reportData.period.start, reportData.period.end) }}</span>
+                  </div>
+                </div>
+                <div class="collectibles-meta-col collectibles-meta-col-right">
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Contact Person / Tauhan:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.contactPerson"
+                        type="text"
+                        data-sheet-field="contactPerson"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Cropping Period / Panahon ng Pagtatanim:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.croppingPeriod"
+                        type="text"
+                        data-sheet-field="croppingPeriod"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Address / Tirahan ng FCA:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.fcaAddress"
+                        type="text"
+                        data-sheet-field="fcaAddress"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                  <div class="collectibles-meta-field-block">
+                    <span class="collectibles-meta-label-sm">Contact Number / Numero ng Telepono:</span>
+                    <div class="sheet-fill-line">
+                      <input
+                        v-model="reportSheetMeta.contactNumber"
+                        type="text"
+                        data-sheet-field="contactNumber"
+                        class="sheet-fill-input"
+                        spellcheck="false"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="collectibles-table-wrap">
-              <table class="collectibles-data-table">
+            <div class="collectibles-table-wrap fcr-responsive-wrap">
+              <div class="fcr-desktop-table">
+                <table class="collectibles-data-table collectibles-list-table">
+                  <thead>
+                    <tr>
+                      <th class="col-client">
+                        Name of Client<br />
+                        <span class="th-tl">(Pangalan ng Kliyente)</span>
+                      </th>
+                      <th class="col-ar text-right">
+                        Accounts Receivables<br />
+                        <span class="th-tl">(Sisingilin)</span>
+                      </th>
+                      <th class="col-cash text-right">
+                        Cash Collection of Fees<br />
+                        <span class="th-tl">(Nakolektang Bayad mula sa Singilin o Accounts Receivables)</span>
+                      </th>
+                      <th class="col-date">
+                        Date of Payment<br />
+                        <span class="th-tl">(Petsa kung Kailan Nagbayad)</span>
+                      </th>
+                      <th class="col-rcpt">Receipt No.</th>
+                      <th class="col-bal text-right">
+                        Remaining Balance<br />
+                        <span class="th-tl">(Natitirang Balanse)</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in collectiblesListRows" :key="'col-' + row.booking_id">
+                      <td class="col-client">{{ row.client_name || '—' }}</td>
+                      <td class="col-ar text-right">{{ formatReportMoneyCompact(row.accounts_receivable) }}</td>
+                      <td class="col-cash text-right">{{ formatReportMoneyCompact(row.cash_collection) }}</td>
+                      <td class="col-date">{{ formatReportDateCompact(row.date_of_payment) }}</td>
+                      <td class="col-rcpt">{{ (row.receipt_number && String(row.receipt_number).trim()) || '—' }}</td>
+                      <td class="col-bal text-right">{{ formatReportMoneyCompact(row.remaining_balance) }}</td>
+                    </tr>
+                    <tr v-if="collectiblesListRows.length === 0">
+                      <td colspan="6" class="collectibles-empty-note">Walang rekord sa piniling saklaw ng petsa / No records in this period.</td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="collectiblesListRows.length > 0">
+                    <tr class="fcr-total-row">
+                      <td class="col-client"><strong>Totals / Kabuuan</strong></td>
+                      <td class="col-ar text-right"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.accountsReceivable) }}</strong></td>
+                      <td class="col-cash text-right"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.cashCollection) }}</strong></td>
+                      <td class="col-date"></td>
+                      <td class="col-rcpt"></td>
+                      <td class="col-bal text-right"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.remainingBalance) }}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div class="fcr-mobile-list">
+                <p v-if="collectiblesListRows.length === 0" class="fcr-mobile-empty">
+                  Walang rekord sa piniling saklaw ng petsa / No records in this period.
+                </p>
+                <div
+                  v-for="row in collectiblesListRows"
+                  :key="'col-m-' + row.booking_id"
+                  class="fcr-mobile-card"
+                >
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Name of Client</span>
+                    <span class="fcr-mobile-value">{{ row.client_name || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Accounts Receivables</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.accounts_receivable) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Cash Collection</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.cash_collection) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Date of Payment</span>
+                    <span class="fcr-mobile-value">{{ formatReportDateCompact(row.date_of_payment) }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Receipt No.</span>
+                    <span class="fcr-mobile-value">{{ (row.receipt_number && String(row.receipt_number).trim()) || '—' }}</span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Remaining Balance</span>
+                    <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.remaining_balance) }}</span>
+                  </div>
+                </div>
+
+                <div v-if="collectiblesListRows.length > 0" class="fcr-mobile-totals">
+                  <h4 class="fcr-mobile-totals-title">Totals / Kabuuan</h4>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Accounts Receivables</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.accountsReceivable) }}</strong></span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Cash Collection</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.cashCollection) }}</strong></span>
+                  </div>
+                  <div class="fcr-mobile-row">
+                    <span class="fcr-mobile-label">Remaining Balance</span>
+                    <span class="fcr-mobile-value"><strong>{{ formatReportMoneyCompact(collectiblesListTotals.remainingBalance) }}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div v-if="reportFilters.showSummary" class="report-section report-section-card report-plain-section">
+            <div class="section-title">
+              <h4>Summary</h4>
+            </div>
+            <div class="table-container">
+              <table class="data-table report-plain-table">
                 <thead>
                   <tr>
-                    <th class="col-client">
-                      Name of Client<br />
-                      <span class="th-tl">(Pangalan ng Kliyente)</span>
-                    </th>
-                    <th class="col-ar text-right">
-                      Accounts Receivable<br />
-                      <span class="th-tl">(Singilin)</span>
-                    </th>
-                    <th class="col-cash text-right">
-                      Cash Collection of Fees (C2)<br />
-                      <span class="th-tl">(Nakolektang bayad)</span>
-                    </th>
-                    <th class="col-date">
-                      Date of Payment<br />
-                      <span class="th-tl">(Petsa ng pagbayad)</span>
-                    </th>
-                    <th class="col-rcpt">Receipt Number</th>
-                    <th class="col-bal text-right">
-                      Remaining balance<br />
-                      <span class="th-tl">(natirang balanse)</span>
-                    </th>
+                    <th>Item</th>
+                    <th class="text-right">Amount</th>
+                    <th>Records</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="row in collectiblesLedgerRows" :key="'cl-' + row.collectionId">
-                    <td>{{ row.farmer_name }}</td>
-                    <td class="text-right">{{ formatCollectiblesMoney(row.accounts_receivable) }}</td>
-                    <td class="text-right">{{ formatCollectiblesMoney(row.cash_collection) }}</td>
-                    <td>{{ formatReportDate(row.date) }}</td>
-                    <td>{{ row.receipt_number }}</td>
-                    <td class="text-right">{{ formatCollectiblesMoney(row.balance_after) }}</td>
+                  <tr>
+                    <td>Total Expenses</td>
+                    <td class="text-right">₱{{ reportData.summary.total_expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                    <td>{{ reportData.counts.expenses }} records</td>
                   </tr>
-                  <tr v-for="n in collectiblesEmptyRowCount" :key="'cl-empty-' + n" class="collectibles-empty-row">
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                  <tr>
+                    <td>Total Income</td>
+                    <td class="text-right">₱{{ reportData.summary.total_income.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                    <td>{{ reportData.counts.income }} records</td>
+                  </tr>
+                  <tr>
+                    <td>Total Collections</td>
+                    <td class="text-right">₱{{ reportData.summary.total_collections.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                    <td>{{ reportData.counts.collections }} payments</td>
+                  </tr>
+                  <tr>
+                    <td>Net Profit/Loss</td>
+                    <td class="text-right">₱{{ reportData.summary.net_profit.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                    <td>{{ reportData.summary.net_profit >= 0 ? 'Profit' : 'Loss' }}</td>
                   </tr>
                 </tbody>
               </table>
-              <p v-if="collectiblesLedgerRows.length === 0" class="collectibles-empty-note">
-                Walang koleksyon sa piniling saklaw ng petsa / No collections in this period.
-              </p>
             </div>
           </div>
           
-          <!-- Summary Cards -->
-          <div v-if="reportFilters.showSummary" class="report-summary-grid">
-            <div class="summary-card expense-card">
-              <div class="card-icon-wrapper expense">📤</div>
-              <div class="card-details">
-                <span class="summary-label">Total Expenses</span>
-                <span class="summary-value">₱{{ reportData.summary.total_expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                <span class="summary-count">{{ reportData.counts.expenses }} records</span>
-              </div>
+          <!-- Profit Distribution -->
+          <div v-if="reportFilters.showDistribution && reportData.summary.net_profit > 0" class="report-section report-section-card report-plain-section">
+            <div class="section-title">
+              <h4>Profit Distribution</h4>
             </div>
-            <div class="summary-card income-card">
-              <div class="card-icon-wrapper income">📥</div>
-              <div class="card-details">
-                <span class="summary-label">Total Income</span>
-                <span class="summary-value">₱{{ reportData.summary.total_income.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                <span class="summary-count">{{ reportData.counts.income }} records</span>
-              </div>
-            </div>
-            <div class="summary-card collection-card">
-              <div class="card-icon-wrapper collection">💵</div>
-              <div class="card-details">
-                <span class="summary-label">Total Collections</span>
-                <span class="summary-value">₱{{ reportData.summary.total_collections.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                <span class="summary-count">{{ reportData.counts.collections }} payments</span>
-              </div>
-            </div>
-            <div class="summary-card" :class="reportData.summary.net_profit >= 0 ? 'profit-card' : 'loss-card'">
-              <div class="card-icon-wrapper" :class="reportData.summary.net_profit >= 0 ? 'profit' : 'loss'">
-                {{ reportData.summary.net_profit >= 0 ? '📈' : '📉' }}
-              </div>
-              <div class="card-details">
-                <span class="summary-label">Net Profit/Loss</span>
-                <span class="summary-value">₱{{ reportData.summary.net_profit.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                <span class="summary-count">{{ reportData.summary.net_profit >= 0 ? '✓ Profit' : '✗ Loss' }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Distribution Summary (only if profit) -->
-          <div v-if="reportFilters.showDistribution && reportData.summary.net_profit > 0" class="distribution-summary">
-            <h4>💰 Profit Distribution Breakdown</h4>
-            <div class="distribution-grid">
-              <div class="dist-item org">
-                <div class="dist-icon">🏢</div>
-                <div class="dist-details">
-                  <span class="dist-label">Organization (30%)</span>
-                  <span class="dist-value">₱{{ reportData.summary.distribution.organization_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                </div>
-              </div>
-              <div class="dist-item training">
-                <div class="dist-icon">📚</div>
-                <div class="dist-details">
-                  <span class="dist-label">Training (20%)</span>
-                  <span class="dist-value">₱{{ reportData.summary.distribution.training_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                </div>
-              </div>
-              <div class="dist-item members">
-                <div class="dist-icon">👥</div>
-                <div class="dist-details">
-                  <span class="dist-label">Members (50%)</span>
-                  <span class="dist-value">₱{{ reportData.summary.distribution.members_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                </div>
-              </div>
-              <div class="dist-item per-member highlight">
-                <div class="dist-icon">👤</div>
-                <div class="dist-details">
-                  <span class="dist-label">Per Member ({{ reportData.summary.distribution.member_count }} members)</span>
-                  <span class="dist-value">₱{{ reportData.summary.distribution.per_member_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
-                </div>
-              </div>
+            <div class="table-container">
+              <table class="data-table report-plain-table">
+                <thead>
+                  <tr>
+                    <th>Allocation</th>
+                    <th>Share</th>
+                    <th class="text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Organization</td>
+                    <td>30%</td>
+                    <td class="text-right">₱{{ reportData.summary.distribution.organization_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  </tr>
+                  <tr>
+                    <td>Training</td>
+                    <td>20%</td>
+                    <td class="text-right">₱{{ reportData.summary.distribution.training_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  </tr>
+                  <tr>
+                    <td>Members</td>
+                    <td>50%</td>
+                    <td class="text-right">₱{{ reportData.summary.distribution.members_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  </tr>
+                  <tr>
+                    <td>Per Member ({{ reportData.summary.distribution.member_count }} members)</td>
+                    <td>—</td>
+                    <td class="text-right">₱{{ reportData.summary.distribution.per_member_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          
+
           <!-- All Transactions Table -->
           <div v-if="reportFilters.showAllTransactions" class="report-transactions report-section-card">
             <div class="section-title">
@@ -1106,55 +1479,6 @@
                   <tr class="total-row">
                     <td colspan="9"><strong>Total Expenses</strong></td>
                     <td class="text-right text-red"><strong>₱{{ reportData.summary.total_expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</strong></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-          
-          <!-- Collections Table -->
-          <div v-if="reportFilters.showCollections && reportData.transactions.collections.length > 0" class="report-section report-section-card">
-            <div class="section-title">
-              <span class="section-icon">💵</span>
-              <h4>Collection Details</h4>
-              <span class="section-count">{{ reportData.transactions.collections.length }} payments</span>
-            </div>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Booking #</th>
-                    <th>Farmer</th>
-                    <th>Type</th>
-                    <th>Receipt No.</th>
-                    <th class="text-right">Amount</th>
-                    <th class="text-right">Auto Interest (2% Partial)</th>
-                    <th>Rule</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="col in reportData.transactions.collections" :key="'col-' + col.id">
-                    <td>{{ formatReportDate(col.date) }}</td>
-                    <td>#{{ col.booking_id }}</td>
-                    <td>{{ col.farmer_name || '-' }}</td>
-                    <td>
-                      <span class="badge" :class="col.payment_type === 'full' ? 'badge-full' : 'badge-partial'">
-                        {{ col.payment_type === 'full' ? 'Full' : 'Partial' }}
-                      </span>
-                    </td>
-                    <td>{{ col.receipt_number || '-' }}</td>
-                    <td class="text-right text-green">₱{{ parseFloat(col.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td class="text-right">{{ col.interest_applied ? '₱' + parseFloat(col.interest_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) : '-' }}</td>
-                    <td>{{ col.interest_applied ? 'Auto 2% (Partial)' : '-' }}</td>
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr class="total-row">
-                    <td colspan="5"><strong>Total Collections</strong></td>
-                    <td class="text-right text-green"><strong>₱{{ reportData.summary.total_collections.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</strong></td>
-                    <td class="text-right"><strong>₱{{ reportData.summary.total_interest_collected.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</strong></td>
-                    <td></td>
                   </tr>
                 </tfoot>
               </table>
@@ -1734,85 +2058,77 @@ const bookingUsageLeaders = ref([]);
 // Report data
 const reportData = ref(null);
 const reportLoading = ref(false);
+const lastReportRequest = ref(null);
 const reportFilters = ref({
   showSummary: true,
   showDistribution: true,
   showAllTransactions: true,
   showExpenses: true,
-  showCollections: true,
+  showServiceLedger: true,
+  showCollectiblesList: true,
   showBookings: true,
-  showCollectiblesForm: true,
   customDateRange: false,
   startDate: '',
   endDate: ''
 });
 
-const COLLECTIBLES_MIN_PRINT_ROWS = 20;
+const reportSheetMeta = ref({
+  contactPerson: '',
+  croppingPeriod: '',
+  fcaAddress: '',
+  contactNumber: ''
+});
 
-/** Bilingual machinery line for collectibles sheet (from report collections). */
-const collectiblesMachineryLine = computed(() => {
-  const cols = reportData.value?.transactions?.collections;
-  if (!cols?.length) return '—';
-  const names = [...new Set(cols.map((c) => c.machinery_name).filter(Boolean))];
+const serviceLedgerRows = computed(() => {
+  return reportData.value?.transactions?.service_ledger || [];
+});
+
+const collectiblesListRows = computed(() => {
+  return reportData.value?.transactions?.collectibles_list || [];
+});
+
+const collectiblesListTotals = computed(() => {
+  const rows = collectiblesListRows.value;
+  return rows.reduce(
+    (acc, row) => {
+      acc.accountsReceivable += parseFloat(row.accounts_receivable || 0);
+      acc.cashCollection += parseFloat(row.cash_collection || 0);
+      acc.remainingBalance += parseFloat(row.remaining_balance || 0);
+      return acc;
+    },
+    { accountsReceivable: 0, cashCollection: 0, remainingBalance: 0 }
+  );
+});
+
+const farmerClientsMachineryLine = computed(() => {
+  const rows = serviceLedgerRows.value;
+  if (!rows?.length) return '—';
+  const names = [...new Set(rows.map((r) => r.machinery_name).filter(Boolean))];
   return names.length ? names.join(', ') : '—';
 });
 
-/** One row per collection payment; A/R & balance use booking total from API when available. */
-const collectiblesLedgerRows = computed(() => {
-  const cols = reportData.value?.transactions?.collections;
-  if (!cols?.length) return [];
-  const bookingMap = {};
-  for (const b of reportData.value?.transactions?.bookings || []) {
-    const bid = b.booking_id;
-    if (bid != null) bookingMap[bid] = b;
+const reportMachineryLabel = computed(() => {
+  if (filters.value.machinery_id) {
+    const m = machinery.value.find((item) => String(item.id) === String(filters.value.machinery_id));
+    if (m) return `${m.machinery_name} (${m.machinery_type})`;
   }
-  const sorted = [...cols].sort((a, b) => {
-    const ta = new Date(a.date).getTime();
-    const tb = new Date(b.date).getTime();
-    if (ta !== tb) return ta - tb;
-    return (Number(a.id) || 0) - (Number(b.id) || 0);
-  });
-  const paidByBooking = {};
-  const rows = [];
-  for (const c of sorted) {
-    const bid = c.booking_id;
-    let total =
-      c.booking_total_price != null && c.booking_total_price !== ''
-        ? parseFloat(c.booking_total_price)
-        : NaN;
-    if (Number.isNaN(total) && bid != null && bookingMap[bid]) {
-      total = parseFloat(bookingMap[bid].amount) || 0;
-    }
-    if (Number.isNaN(total)) total = 0;
-    const principal = parseFloat(c.amount || 0);
-    const interest = parseFloat(c.interest_amount || 0);
-    const interestApplied =
-      c.interest_applied === 1 ||
-      c.interest_applied === true ||
-      c.interest_applied === '1';
-    const cash = principal + (interestApplied ? interest : 0);
-    if (!paidByBooking[bid]) paidByBooking[bid] = 0;
-    paidByBooking[bid] += cash;
-    const balanceAfter = Math.max(0, total - paidByBooking[bid]);
-    rows.push({
-      collectionId: c.id,
-      farmer_name: c.farmer_name || '—',
-      accounts_receivable: total,
-      cash_collection: cash,
-      date: c.date,
-      receipt_number: (c.receipt_number && String(c.receipt_number).trim()) || '—',
-      balance_after: balanceAfter
-    });
-  }
-  return rows;
+  return farmerClientsMachineryLine.value;
 });
 
-const collectiblesEmptyRowCount = computed(() => {
-  const n = collectiblesLedgerRows.value.length;
-  return Math.max(0, COLLECTIBLES_MIN_PRINT_ROWS - n);
+const serviceLedgerTotals = computed(() => {
+  const rows = serviceLedgerRows.value;
+  return rows.reduce(
+    (acc, row) => {
+      acc.totalAmount += parseFloat(row.total_price || 0);
+      acc.cashCollection += parseFloat(row.cash_collection || 0);
+      acc.accountsReceivable += parseFloat(row.accounts_receivable || 0);
+      return acc;
+    },
+    { totalAmount: 0, cashCollection: 0, accountsReceivable: 0 }
+  );
 });
 
-const formatCollectiblesMoney = (num) => {
+const formatReportMoney = (num) => {
   const x = parseFloat(num);
   if (Number.isNaN(x)) return '—';
   return (
@@ -1822,6 +2138,60 @@ const formatCollectiblesMoney = (num) => {
       maximumFractionDigits: 2
     })
   );
+};
+
+const formatReportMoneyCompact = (num) => {
+  const x = parseFloat(num);
+  if (Number.isNaN(x)) return '—';
+  if (x === 0) return '₱0.00';
+  return (
+    '₱' +
+    x.toLocaleString('en-PH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  );
+};
+
+const compactUnitLabel = (unit) => {
+  if (!unit) return '';
+  if (unit === 'per hectare') return '/ha';
+  if (unit === 'per load') return '/load';
+  return unit.replace(/^per\s+/i, '/');
+};
+
+const formatServiceFeeRow = (row) => {
+  const fee = parseFloat(row.unit_service_fee);
+  const unit = row.unit_type || '';
+  if (Number.isNaN(fee) || fee <= 0) {
+    return unit ? `— ${unit}` : '—';
+  }
+  return `${formatReportMoney(fee)}${unit ? ` ${unit}` : ''}`;
+};
+
+const formatServiceFeeCompact = (row) => {
+  const fee = parseFloat(row.unit_service_fee);
+  const unit = compactUnitLabel(row.unit_type);
+  if (Number.isNaN(fee) || fee <= 0) return unit ? `—${unit}` : '—';
+  return `${formatReportMoneyCompact(fee)}${unit}`;
+};
+
+const formatAreaServiced = (row) => {
+  const size = parseFloat(row.area_size);
+  if (Number.isNaN(size) || size <= 0) return '—';
+  const unit = row.area_unit || (row.unit_type === 'per load' ? 'load(s)' : 'hectare(s)');
+  return `${size.toLocaleString('en-PH')} ${unit}`;
+};
+
+const formatAreaServicedCompact = (row) => {
+  const size = parseFloat(row.area_size);
+  if (Number.isNaN(size) || size <= 0) return '—';
+  if (row.unit_type === 'per load' || (row.area_unit && /load/i.test(row.area_unit))) {
+    return `${size} load${size !== 1 ? 's' : ''}`;
+  }
+  const unit = row.area_unit || 'ha';
+  const shortUnit = /hectare/i.test(unit) ? 'ha' : unit;
+  return `${size} ${shortUnit}`;
 };
 
 const printOrientation = ref('landscape');
@@ -2621,7 +2991,8 @@ const generateProfitDistributionRecord = async () => {
   }
 };
 
-const generateReport = async (type) => {
+const generateReport = async (type, options = {}) => {
+  const { silent = false } = options;
   if (!authStore.currentUser?.id) {
     showAlert('User not authenticated', 'error');
     return;
@@ -2629,16 +3000,15 @@ const generateReport = async (type) => {
   
   reportLoading.value = true;
   try {
-    let url = `${API_BASE_URL}/machinery-financial/reports/transactions?user_id=${authStore.currentUser.id}&type=${type}`;
-    if (isAdmin.value && selectedBarangayId.value) {
-      url += `&barangay_id=${selectedBarangayId.value}`;
-    }
-    const response = await fetch(url);
+    const response = await fetch(buildReportApiUrl({ type }));
     const data = await response.json();
     
     if (data.success) {
       reportData.value = data.report;
-      showAlert(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated successfully`, 'success');
+      lastReportRequest.value = { type };
+      if (!silent) {
+        showAlert(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated successfully`, 'success');
+      }
     } else {
       showAlert(data.message || 'Failed to generate report', 'error');
     }
@@ -2650,6 +3020,19 @@ const generateReport = async (type) => {
   }
 };
 
+const refreshCurrentReport = async (options = {}) => {
+  const { silent = true } = options;
+  if (!lastReportRequest.value || !authStore.currentUser?.id) return;
+
+  const { type, startDate, endDate } = lastReportRequest.value;
+  if (type === 'custom') {
+    if (!startDate || !endDate) return;
+    await generateReportCustom({ silent });
+    return;
+  }
+  await generateReport(type, { silent });
+};
+
 const formatReportDate = (dateStr) => {
   if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('en-PH', { 
@@ -2657,6 +3040,27 @@ const formatReportDate = (dateStr) => {
     month: 'short', 
     day: 'numeric' 
   });
+};
+
+const formatReportDateCompact = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '—';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${dd}/${yy}`;
+};
+
+/** Compact period line for the farmer clients record header */
+const formatReportPeriodCompact = (startStr, endStr) => {
+  if (!startStr || !endStr) return '—';
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—';
+  const fmt = (d) =>
+    d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `${fmt(start)} – ${fmt(end)}`;
 };
 
 /** e.g. Mula March 1 – September 30, Year: 2026 (from report / filter period) */
@@ -2675,6 +3079,22 @@ const formatReportPeriodLong = (startStr, endStr) => {
   return `Mula ${monthDay(start)}, Year: ${y1} – ${monthDay(end)}, Year: ${y2}`;
 };
 
+const buildReportApiUrl = ({ type, startDate, endDate }) => {
+  const params = new URLSearchParams({
+    user_id: String(authStore.currentUser.id),
+    type: type || 'custom'
+  });
+  if (startDate) params.set('start_date', startDate);
+  if (endDate) params.set('end_date', endDate);
+  if (isAdmin.value && selectedBarangayId.value) {
+    params.set('barangay_id', String(selectedBarangayId.value));
+  }
+  if (filters.value.machinery_id) {
+    params.set('machinery_id', String(filters.value.machinery_id));
+  }
+  return `${API_BASE_URL}/machinery-financial/reports/transactions?${params.toString()}`;
+};
+
 const getTransactionTypeClass = (type) => {
   switch (type) {
     case 'Expense': return 'badge-expense';
@@ -2690,9 +3110,9 @@ const selectAllFilters = () => {
   reportFilters.value.showDistribution = true;
   reportFilters.value.showAllTransactions = true;
   reportFilters.value.showExpenses = true;
-  reportFilters.value.showCollections = true;
+  reportFilters.value.showServiceLedger = true;
+  reportFilters.value.showCollectiblesList = true;
   reportFilters.value.showBookings = true;
-  reportFilters.value.showCollectiblesForm = true;
 };
 
 const clearAllFilters = () => {
@@ -2700,13 +3120,14 @@ const clearAllFilters = () => {
   reportFilters.value.showDistribution = false;
   reportFilters.value.showAllTransactions = false;
   reportFilters.value.showExpenses = false;
-  reportFilters.value.showCollections = false;
+  reportFilters.value.showServiceLedger = false;
+  reportFilters.value.showCollectiblesList = false;
   reportFilters.value.showBookings = false;
-  reportFilters.value.showCollectiblesForm = false;
 };
 
 // Generate report with custom date range
-const generateReportCustom = async () => {
+const generateReportCustom = async (options = {}) => {
+  const { silent = false } = options;
   if (!authStore.currentUser?.id) {
     showAlert('User not authenticated', 'error');
     return;
@@ -2719,16 +3140,25 @@ const generateReportCustom = async () => {
   
   reportLoading.value = true;
   try {
-    let url = `${API_BASE_URL}/machinery-financial/reports/transactions?user_id=${authStore.currentUser.id}&type=custom&start_date=${reportFilters.value.startDate}&end_date=${reportFilters.value.endDate}`;
-    if (isAdmin.value && selectedBarangayId.value) {
-      url += `&barangay_id=${selectedBarangayId.value}`;
-    }
-    const response = await fetch(url);
+    const response = await fetch(
+      buildReportApiUrl({
+        type: 'custom',
+        startDate: reportFilters.value.startDate,
+        endDate: reportFilters.value.endDate
+      })
+    );
     const data = await response.json();
     
     if (data.success) {
       reportData.value = data.report;
-      showAlert('Custom date range report generated successfully', 'success');
+      lastReportRequest.value = {
+        type: 'custom',
+        startDate: reportFilters.value.startDate,
+        endDate: reportFilters.value.endDate
+      };
+      if (!silent) {
+        showAlert('Custom date range report generated successfully', 'success');
+      }
     } else {
       showAlert(data.message || 'Failed to generate report', 'error');
     }
@@ -2750,6 +3180,304 @@ const removeReportPrintFrame = () => {
   }
 };
 
+/** Clone report DOM and replace fill-in inputs with printed underline text (inputs don't serialize in outerHTML). */
+const buildPrintableReportHtml = (root) => {
+  const clone = root.cloneNode(true);
+  const sheetFields = [
+    ['contactPerson', reportSheetMeta.value.contactPerson],
+    ['croppingPeriod', reportSheetMeta.value.croppingPeriod],
+    ['fcaAddress', reportSheetMeta.value.fcaAddress],
+    ['contactNumber', reportSheetMeta.value.contactNumber]
+  ];
+
+  for (const [field, value] of sheetFields) {
+    clone.querySelectorAll(`[data-sheet-field="${field}"]`).forEach((input) => {
+      const span = document.createElement('span');
+      span.className = 'collectibles-meta-fill collectibles-meta-fill-printed';
+      span.textContent = value || '';
+      if (!value) span.innerHTML = '&nbsp;';
+      const line = input.closest('.sheet-fill-line');
+      if (line) {
+        line.replaceWith(span);
+      } else {
+        input.replaceWith(span);
+      }
+    });
+  }
+
+  // Never print the mobile card layout — desktop table only
+  clone.querySelectorAll('.fcr-mobile-list').forEach((el) => el.remove());
+
+  return clone.outerHTML;
+};
+
+/** Self-contained print CSS — iframe cannot rely on Vue scoped styles or viewport media queries. */
+const getMachineryReportPrintStyles = (orientation) => {
+  const pageSize = orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait';
+  return `
+    @page { size: ${pageSize}; margin: 8mm; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    #printable-report {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      width: 100%;
+    }
+    #printable-report .report-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+      color: #fff;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    #printable-report .report-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #printable-report .report-logo-image {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+    }
+    #printable-report .report-meta { text-align: right; }
+    #printable-report .report-meta h3 { margin: 0 0 6px; font-size: 1.1rem; }
+    #printable-report .report-period-long,
+    #printable-report .report-generated { margin: 4px 0; font-size: 0.85rem; opacity: 0.92; }
+    #printable-report .report-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #64748b;
+      font-size: 11px;
+    }
+    #printable-report .collectibles-form-sheet {
+      margin: 16px 0 20px;
+      padding: 18px 20px 20px;
+      background: #fff;
+      border: 2px solid #0f172a;
+      border-radius: 12px;
+      box-shadow: none;
+      page-break-inside: avoid;
+    }
+    #printable-report .collectibles-form-title-block {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    #printable-report .collectibles-main-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    #printable-report .collectibles-main-subtitle {
+      margin: 5px 0 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #334155;
+    }
+    #printable-report .collectibles-meta-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+    }
+    #printable-report .collectibles-meta-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 24px;
+      align-items: start;
+    }
+    #printable-report .collectibles-meta-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    #printable-report .collectibles-meta-col-left {
+      padding-right: 12px;
+      border-right: 1px solid #cbd5e1;
+    }
+    #printable-report .collectibles-meta-col-right { padding-left: 4px; }
+    #printable-report .collectibles-meta-field-block {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100%;
+    }
+    #printable-report .collectibles-meta-label-sm {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.25;
+    }
+    #printable-report .collectibles-meta-fill,
+    #printable-report .collectibles-meta-fill-printed {
+      display: block;
+      width: 100%;
+      min-height: 22px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 2px 4px 4px;
+      line-height: 1.3;
+    }
+    #printable-report .sheet-fill-line,
+    #printable-report .sheet-fill-input { display: none !important; }
+    #printable-report .collectibles-table-wrap,
+    #printable-report .fcr-responsive-wrap {
+      overflow: visible !important;
+      width: 100%;
+    }
+    #printable-report .fcr-mobile-list { display: none !important; }
+    #printable-report .fcr-desktop-table {
+      display: block !important;
+      width: 100% !important;
+    }
+    #printable-report .collectibles-data-table,
+    #printable-report .farmer-clients-record-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      table-layout: fixed !important;
+      font-size: 0.62rem !important;
+      display: table !important;
+    }
+    #printable-report .farmer-clients-record-table thead { display: table-header-group !important; }
+    #printable-report .farmer-clients-record-table tbody { display: table-row-group !important; }
+    #printable-report .farmer-clients-record-table tfoot { display: table-footer-group !important; }
+    #printable-report .farmer-clients-record-table tr { display: table-row !important; }
+    #printable-report .collectibles-data-table th,
+    #printable-report .collectibles-data-table td,
+    #printable-report .farmer-clients-record-table th,
+    #printable-report .farmer-clients-record-table td {
+      display: table-cell !important;
+      border: 1px solid #1e293b !important;
+      padding: 4px 3px !important;
+      vertical-align: middle !important;
+      line-height: 1.25 !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+    #printable-report .collectibles-data-table th,
+    #printable-report .farmer-clients-record-table th {
+      background: #e2e8f0 !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+      text-align: center !important;
+      font-size: 0.58rem !important;
+    }
+    #printable-report .farmer-clients-record-table td {
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-size: 0.62rem !important;
+    }
+    #printable-report .farmer-clients-record-table .th-tl {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.85em;
+      font-weight: 600;
+      color: #475569;
+      line-height: 1.15;
+    }
+    #printable-report .farmer-clients-record-table .fcr-col-client { width: 11%; text-align: left !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-loc { width: 10%; text-align: left !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-cat { width: 6%; text-align: center !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-date { width: 7%; text-align: center !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-fee { width: 9%; text-align: right !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-area { width: 7%; text-align: center !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-hrs { width: 5%; text-align: center !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-amt { width: 9%; text-align: right !important; }
+    #printable-report .farmer-clients-record-table .fcr-col-rcpt { width: 7%; text-align: center !important; }
+    #printable-report .farmer-clients-record-table .text-right { text-align: right !important; }
+    #printable-report .farmer-clients-record-table .fcr-total-row td {
+      background: #f1f5f9 !important;
+      font-weight: 800 !important;
+      border-top: 2px solid #0f172a !important;
+    }
+    #printable-report .collectibles-list-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      table-layout: fixed !important;
+      font-size: 0.68rem !important;
+      display: table !important;
+    }
+    #printable-report .collectibles-list-table thead { display: table-header-group !important; }
+    #printable-report .collectibles-list-table tbody { display: table-row-group !important; }
+    #printable-report .collectibles-list-table tfoot { display: table-footer-group !important; }
+    #printable-report .collectibles-list-table tr { display: table-row !important; }
+    #printable-report .collectibles-list-table th,
+    #printable-report .collectibles-list-table td {
+      display: table-cell !important;
+      border: 1px solid #1e293b !important;
+      padding: 5px 4px !important;
+      vertical-align: middle !important;
+      line-height: 1.25 !important;
+      word-wrap: break-word !important;
+    }
+    #printable-report .collectibles-list-table th {
+      background: #e2e8f0 !important;
+      font-weight: 800 !important;
+      text-align: center !important;
+      font-size: 0.62rem !important;
+    }
+    #printable-report .collectibles-list-table td {
+      font-weight: 600 !important;
+      font-size: 0.68rem !important;
+    }
+    #printable-report .collectibles-list-table .col-client { width: 22%; text-align: left !important; }
+    #printable-report .collectibles-list-table .col-ar { width: 15%; text-align: right !important; }
+    #printable-report .collectibles-list-table .col-cash { width: 18%; text-align: right !important; }
+    #printable-report .collectibles-list-table .col-date { width: 14%; text-align: center !important; }
+    #printable-report .collectibles-list-table .col-rcpt { width: 14%; text-align: center !important; }
+    #printable-report .collectibles-list-table .col-bal { width: 17%; text-align: right !important; }
+    #printable-report .collectibles-list-table .text-right { text-align: right !important; }
+    #printable-report .collectibles-list-table .fcr-total-row td {
+      background: #f1f5f9 !important;
+      font-weight: 800 !important;
+      border-top: 2px solid #0f172a !important;
+    }
+    #printable-report .collectibles-empty-note {
+      text-align: center;
+      color: #64748b;
+      padding: 12px !important;
+    }
+    #printable-report .report-plain-section,
+    #printable-report .report-section {
+      page-break-inside: avoid;
+      margin-bottom: 16px;
+    }
+    #printable-report .report-plain-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    #printable-report .report-plain-table th,
+    #printable-report .report-plain-table td {
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+    }
+    #printable-report .text-right { text-align: right; }
+  `;
+};
+
 const printReport = async () => {
   if (!reportData.value) {
     showAlert('No report data to print', 'error');
@@ -2763,10 +3491,6 @@ const printReport = async () => {
   }
   await nextTick();
 
-  const headMarkup = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-    .map((node) => node.outerHTML)
-    .join('\n');
-
   removeReportPrintFrame();
 
   const iframe = document.createElement('iframe');
@@ -2774,11 +3498,12 @@ const printReport = async () => {
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
   iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
   iframe.style.border = '0';
   iframe.style.opacity = '0';
   iframe.style.pointerEvents = 'none';
+  // Match A4 width so table-layout: fixed computes the same as on desktop screen
+  iframe.style.width = printOrientation.value === 'landscape' ? '1123px' : '794px';
+  iframe.style.height = '1px';
 
   document.body.appendChild(iframe);
   reportPrintFrame = iframe;
@@ -2792,39 +3517,17 @@ const printReport = async () => {
     return;
   }
 
+  const printableHtml = buildPrintableReportHtml(printContents);
+
   const printMarkup = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
   <title>CALFFA Machinery Financial Report</title>
-  ${headMarkup}
-  <style>
-    @page { size: A4 ${printOrientation.value}; margin: 8mm; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-    }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #333;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    #printable-report {
-      margin: 0 !important;
-      padding: 0 !important;
-      border: none !important;
-      box-shadow: none !important;
-      background: #fff !important;
-    }
-    #printable-report .table-container {
-      overflow: visible !important;
-    }
-  </style>
+  <style>${getMachineryReportPrintStyles(printOrientation.value)}</style>
 </head>
 <body>
-  ${printContents.outerHTML}
+  ${printableHtml}
 </body>
 </html>`;
 
@@ -2835,7 +3538,7 @@ const printReport = async () => {
   window.setTimeout(() => {
     iframeWindow.focus();
     iframeWindow.print();
-  }, 250);
+  }, 350);
 
   iframeWindow.addEventListener('afterprint', removeReportPrintFrame, { once: true });
 
@@ -3003,10 +3706,29 @@ watch(selectedBarangayId, () => {
     loadProfitSummary();
     loadExpenseBreakdown();
     loadBookingUsageStats();
-    // Clear report data when filter changes
-    reportData.value = null;
+    if (activeTab.value === 'reports' && lastReportRequest.value) {
+      refreshCurrentReport();
+    } else {
+      reportData.value = null;
+      lastReportRequest.value = null;
+    }
   }
 });
+
+const applyMachineryFilterRefresh = () => {
+  if (activeTab.value === 'reports' && lastReportRequest.value) {
+    refreshCurrentReport();
+  }
+  if (activeTab.value === 'expenses') {
+    loadExpenses();
+  }
+  if (activeTab.value === 'ar') {
+    loadARData();
+    loadCollections();
+  }
+};
+
+watch(() => filters.value.machinery_id, applyMachineryFilterRefresh);
 
 const getDefaultTabForRole = () => (isAdmin.value ? 'profit' : 'expenses');
 
@@ -3541,6 +4263,14 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   border: 1px solid rgba(187, 247, 208, 0.22);
   background: linear-gradient(135deg, rgba(39, 58, 45, 0.72), rgba(26, 41, 32, 0.7));
+}
+
+.filter-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(240, 253, 244, 0.75);
+  line-height: 1.4;
 }
 
 .filter-input,
@@ -4781,6 +5511,63 @@ onBeforeUnmount(() => {
   color: #15803d;
 }
 
+#printable-report .report-plain-section .section-title h4 {
+  margin: 0;
+}
+
+#printable-report .report-plain-table th,
+#printable-report .report-plain-table td {
+  font-size: 13px;
+  padding: 10px 14px;
+}
+
+#printable-report .farmer-clients-record-table {
+  font-size: 6.5pt;
+}
+
+#printable-report .farmer-clients-record-table th {
+  font-size: 6pt;
+}
+
+#printable-report .farmer-clients-record-table td {
+  font-size: 6.5pt;
+}
+
+#printable-report .farmer-clients-record-table .th-tl {
+  font-size: 5.5pt;
+}
+
+#printable-report .farmer-clients-record-table th,
+#printable-report .farmer-clients-record-table td {
+  padding: 2px 1px;
+}
+
+#printable-report .collectibles-meta-box-compact {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+#printable-report .collectibles-meta-split {
+  gap: 8px 16px;
+}
+
+#printable-report .collectibles-meta-field-block {
+  gap: 2px;
+}
+
+#printable-report .collectibles-meta-label-sm,
+#printable-report .collectibles-meta-fill,
+#printable-report .collectibles-meta-fill-printed {
+  font-size: 7pt;
+}
+
+#printable-report .collectibles-meta-fill,
+#printable-report .collectibles-meta-fill-printed {
+  min-height: 16px;
+  border-bottom: 1px solid #334155;
+  color: #0f172a !important;
+}
+
 #printable-report .report-transactions,
 #printable-report .report-section {
   background: #ffffff;
@@ -5281,6 +6068,15 @@ onBeforeUnmount(() => {
   color: #6b7280;
 }
 
+.report-display {
+  position: relative;
+  background: linear-gradient(180deg, #f6fdf9 0%, #eefaf3 48%, #f2fbf6 100%);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(187, 247, 208, 0.65);
+}
+
 .loading-spinner {
   width: 40px;
   height: 40px;
@@ -5296,12 +6092,28 @@ onBeforeUnmount(() => {
 }
 
 /* Enhanced Report Display */
-.report-display {
-  background: linear-gradient(180deg, #f6fdf9 0%, #eefaf3 48%, #f2fbf6 100%);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(187, 247, 208, 0.65);
+.report-display-refreshing {
+  pointer-events: none;
+}
+
+.report-refresh-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: inherit;
+  color: #475569;
+  font-weight: 600;
+}
+
+.report-plain-section .report-plain-table th,
+.report-plain-section .report-plain-table td {
+  font-size: 13px;
 }
 
 .report-header {
@@ -5443,6 +6255,190 @@ onBeforeUnmount(() => {
   padding: 0 2px 4px;
 }
 
+.collectibles-meta-box-compact {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.collectibles-meta-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+  align-items: start;
+}
+
+.collectibles-meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.collectibles-meta-col-left {
+  padding-right: 12px;
+  border-right: 1px solid #cbd5e1;
+}
+
+.collectibles-meta-col-right {
+  padding-left: 4px;
+}
+
+@media (max-width: 720px) {
+  .collectibles-meta-split {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .collectibles-meta-col-left {
+    padding-right: 0;
+    border-right: none;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  .collectibles-meta-col-right {
+    padding-left: 0;
+  }
+}
+
+.collectibles-meta-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.collectibles-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px;
+}
+
+.collectibles-meta-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.collectibles-meta-field-wide {
+  grid-column: 1 / -1;
+}
+
+.collectibles-meta-label-sm {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.collectibles-meta-fill {
+  display: block;
+  width: 100%;
+  min-height: 22px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 1px solid #334155;
+  padding: 2px 4px 4px;
+  line-height: 1.3;
+  box-sizing: border-box;
+}
+
+/* Underline-only fill fields — no visible input box */
+.sheet-fill-line {
+  width: 100%;
+  border-bottom: 2px solid #334155;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 2px 4px 4px;
+  box-sizing: border-box;
+  background: transparent;
+  cursor: text;
+}
+
+.sheet-fill-line:focus-within {
+  border-bottom-color: #15803d;
+}
+
+.sheet-fill-input {
+  flex: 1;
+  width: 100%;
+  min-height: 22px;
+  border: 0 !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0;
+  margin: 0;
+  line-height: 1.35;
+  border-radius: 0;
+  font-family: inherit;
+}
+
+.sheet-fill-input::placeholder {
+  color: transparent;
+}
+
+.sheet-fill-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.collectibles-meta-col-right .sheet-fill-line {
+  margin-top: 1px;
+}
+
+.collectibles-fill-input {
+  display: block;
+  width: 100%;
+  min-height: 22px;
+  border: none;
+  border-bottom: 1px solid #334155;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 2px 4px 4px;
+  line-height: 1.3;
+  outline: none;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.collectibles-fill-input:focus {
+  border-bottom-color: #15803d;
+}
+
+.report-period-filters {
+  margin-bottom: 12px;
+}
+
+.reports-machinery-filter-bar {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.report-machinery-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label-sm {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+}
+
 .collectibles-table-wrap {
   overflow-x: auto;
 }
@@ -5490,6 +6486,63 @@ onBeforeUnmount(() => {
 .collectibles-data-table .col-rcpt { width: 14%; text-align: center; }
 .collectibles-data-table .col-bal { width: 17%; }
 
+/* List of Collectibles report table (6 columns) */
+.collectibles-list-sheet {
+  margin-top: 0;
+  max-width: 100%;
+}
+
+.collectibles-list-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: clamp(0.58rem, 0.5vw + 0.52rem, 0.75rem);
+}
+
+.collectibles-list-table th,
+.collectibles-list-table td {
+  padding: clamp(4px, 0.45vw, 8px) clamp(3px, 0.35vw, 6px);
+  line-height: 1.25;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.collectibles-list-table th {
+  font-weight: 800;
+  text-align: center;
+}
+
+.collectibles-list-table .th-tl {
+  font-size: 0.85em;
+  margin-top: 2px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #475569;
+}
+
+.collectibles-list-table td {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.collectibles-list-table .col-client { width: 22%; text-align: left; }
+.collectibles-list-table .col-ar { width: 15%; text-align: right; }
+.collectibles-list-table .col-cash { width: 18%; text-align: right; }
+.collectibles-list-table .col-date { width: 14%; text-align: center; }
+.collectibles-list-table .col-rcpt { width: 14%; text-align: center; }
+.collectibles-list-table .col-bal { width: 17%; text-align: right; }
+
+.collectibles-list-table .fcr-total-row td {
+  background: #f1f5f9;
+  font-weight: 800;
+  border-top: 2px solid #0f172a;
+}
+
+.collectibles-list-table .text-right {
+  text-align: right;
+}
+
 .collectibles-empty-row td {
   height: 28px;
   background: #fff;
@@ -5500,6 +6553,279 @@ onBeforeUnmount(() => {
   font-size: 0.88rem;
   color: #64748b;
   text-align: center;
+}
+
+/* Farmer Clients Transaction Record — fluid table + mobile cards */
+.farmer-clients-record-sheet {
+  margin-top: 0;
+  max-width: 100%;
+}
+
+.fcr-responsive-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+
+.fcr-desktop-table {
+  display: block;
+  width: 100%;
+}
+
+.fcr-mobile-list {
+  display: none;
+}
+
+.farmer-clients-record-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: clamp(0.52rem, 0.55vw + 0.48rem, 0.68rem);
+}
+
+.farmer-clients-record-table th,
+.farmer-clients-record-table td {
+  padding: clamp(3px, 0.4vw, 6px) clamp(2px, 0.3vw, 5px);
+  line-height: 1.25;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.farmer-clients-record-table th {
+  font-weight: 800;
+  text-align: center;
+}
+
+.farmer-clients-record-table .th-tl {
+  font-size: 0.85em;
+  margin-top: 2px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #475569;
+}
+
+.farmer-clients-record-table td {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.farmer-clients-record-table .fcr-col-client { width: 11%; text-align: left; }
+.farmer-clients-record-table .fcr-col-loc { width: 10%; text-align: left; }
+.farmer-clients-record-table .fcr-col-cat { width: 6%; text-align: center; }
+.farmer-clients-record-table .fcr-col-date { width: 7%; text-align: center; }
+.farmer-clients-record-table .fcr-col-fee { width: 9%; text-align: right; }
+.farmer-clients-record-table .fcr-col-area { width: 7%; text-align: center; }
+.farmer-clients-record-table .fcr-col-hrs { width: 5%; text-align: center; }
+.farmer-clients-record-table .fcr-col-amt { width: 9%; text-align: right; }
+.farmer-clients-record-table .fcr-col-rcpt { width: 7%; text-align: center; }
+
+.farmer-clients-record-table .fcr-total-row td {
+  background: #f1f5f9;
+  font-weight: 800;
+  border-top: 2px solid #0f172a;
+}
+
+.farmer-clients-record-table .text-right {
+  text-align: right;
+}
+
+/* Mobile card list */
+.fcr-mobile-card,
+.fcr-mobile-totals {
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.fcr-mobile-card {
+  margin-bottom: 12px;
+}
+
+.fcr-mobile-totals {
+  margin-top: 4px;
+}
+
+.fcr-mobile-totals-title {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+  background: #f1f5f9;
+  border-bottom: 2px solid #0f172a;
+  color: #0f172a;
+}
+
+.fcr-mobile-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fcr-mobile-row:last-child {
+  border-bottom: none;
+}
+
+.fcr-mobile-label {
+  flex: 0 0 46%;
+  max-width: 46%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #475569;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.fcr-mobile-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.fcr-mobile-empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  .fcr-desktop-table {
+    display: none;
+  }
+
+  .fcr-mobile-list {
+    display: block;
+  }
+}
+
+@media (max-width: 1100px) {
+  .farmer-clients-record-table .fcr-col-client,
+  .farmer-clients-record-table .fcr-col-loc {
+    font-size: 0.95em;
+  }
+}
+
+@media print {
+  .fcr-mobile-list {
+    display: none !important;
+  }
+
+  .fcr-desktop-table {
+    display: block !important;
+  }
+
+  .farmer-clients-record-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 6.5pt !important;
+  }
+
+  .collectibles-list-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 7pt !important;
+  }
+
+  .collectibles-list-table th {
+    font-size: 6.5pt !important;
+  }
+
+  .collectibles-list-table td {
+    font-size: 7pt !important;
+    display: table-cell !important;
+    padding: 3px 2px !important;
+    border: 1px solid #1e293b !important;
+  }
+
+  .farmer-clients-record-table th {
+    font-size: 6pt !important;
+  }
+
+  .farmer-clients-record-table td {
+    font-size: 6.5pt !important;
+    display: table-cell !important;
+    width: auto !important;
+    padding: 2px 1px !important;
+    border: 1px solid #1e293b !important;
+  }
+
+  .farmer-clients-record-table .th-tl {
+    font-size: 5.5pt !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .report-display {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .farmer-clients-record-sheet.collectibles-form-sheet {
+    padding: 14px 12px;
+  }
+
+  .collectibles-main-title {
+    font-size: 1.15rem;
+  }
+
+  .collectibles-main-subtitle {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .report-display {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .farmer-clients-record-sheet.collectibles-form-sheet {
+    padding: 10px 8px;
+    border-width: 1px;
+  }
+
+  .collectibles-form-title-block {
+    margin-bottom: 10px;
+  }
+
+  .collectibles-main-title {
+    font-size: 1rem;
+  }
+
+  .collectibles-main-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .collectibles-meta-box-compact {
+    padding: 8px;
+  }
+
+  .collectibles-meta-label-sm {
+    font-size: 0.65rem;
+  }
+
+  .collectibles-meta-fill,
+  .sheet-fill-input {
+    font-size: 0.68rem;
+  }
+
+  .sheet-fill-line {
+    min-height: 26px;
+  }
 }
 
 #printable-report .card-icon-wrapper {
