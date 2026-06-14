@@ -9,52 +9,56 @@
           class="btn-summary"
           @click="goToMembersSummary"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png"
-            class="btn-tab-icon"
-            alt=""
-          />
+          <svg class="btn-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
           Members Summary
         </button>
       </div>
 
       <!-- Tabs -->
-      <div class="tabs-container mb-6">
+      <div class="members-summary-tabs mb-6">
         <button
           type="button"
           :class="['tab-btn', { active: activeTab === 'pending' }]"
           @click="activeTab = 'pending'"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/13366/13366070.png"
-            class="tab-icon"
-            alt=""
-          />
-          Pending Approval ({{ pendingCount }})
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span class="tab-btn-label">Pending Approval</span>
+          <span class="tab-btn-count">{{ pendingCount }}</span>
         </button>
         <button
           type="button"
           :class="['tab-btn', { active: activeTab === 'registered' }]"
           @click="activeTab = 'registered'"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/7518/7518748.png"
-            class="tab-icon"
-            alt=""
-          />
-          Registered Members ({{ registeredCount }})
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span class="tab-btn-label">Registered Members</span>
+          <span class="tab-btn-count">{{ registeredCount }}</span>
         </button>
         <button
           type="button"
           :class="['tab-btn', { active: activeTab === 'rejected' }]"
           @click="activeTab = 'rejected'"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/6711/6711656.png"
-            class="tab-icon"
-            alt=""
-          />
-          Rejected Accounts ({{ rejectedCount }})
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <span class="tab-btn-label">Rejected Accounts</span>
+          <span class="tab-btn-count">{{ rejectedCount }}</span>
         </button>
       </div>
 
@@ -135,7 +139,7 @@
                     <th>DOB</th>
                     <th>Phone</th>
                     <th>Education</th>
-                    <th>Role</th>
+                    <th class="members-th-role">Role</th>
                     <th>Registered</th>
                     <th>Status</th>
                     <th class="members-th-actions">Actions</th>
@@ -163,8 +167,8 @@
                     <td class="members-cell">{{ formatMemberDate(farmer.date_of_birth) }}</td>
                     <td class="members-cell">{{ farmer.phone_number || farmer.contact_number || 'N/A' }}</td>
                     <td class="members-cell">{{ farmer.educational_status || 'N/A' }}</td>
-                    <td class="members-cell">
-                      <span class="role-badge" :class="farmer.role">{{ farmer.role }}</span>
+                    <td class="members-cell members-td-role">
+                      <span class="role-badge" :class="farmer.role">{{ formatMemberRole(farmer.role) }}</span>
                     </td>
                     <td class="members-cell">{{ formatMemberDate(farmer.registered_on) }}</td>
                     <td class="members-cell">
@@ -172,11 +176,18 @@
                     </td>
                     <td class="members-cell members-actions-cell">
                       <div class="members-action-row">
-                        <button type="button" class="action-btn action-btn-view" @click="handleApprove(farmer.id)">
-                          Approve
+                        <button type="button" class="table-action-btn table-action-approve" title="Approve" aria-label="Approve" @click="handleApprove(farmer.id)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
                         </button>
-                        <button type="button" class="action-btn action-btn-delete" @click="handleDelete(farmer.id)">
-                          Delete
+                        <button type="button" class="table-action-btn table-action-delete" title="Delete" aria-label="Delete" @click="handleDelete(farmer.id)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -207,6 +218,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import FarmerTable from '../components/FarmerTable.vue'
 import PendingFarmersTab from '../components/PendingFarmersTab.vue'
+import { formatMemberRole } from '../utils/roleLabels.js'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 
@@ -603,10 +615,10 @@ const goToMembersSummary = () => router.push('/members-summary')
 .filter-search-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  padding: 0.6rem 0.75rem 0.6rem 2.25rem;
   border: 1px solid rgba(74, 222, 128, 0.28);
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 1.0625rem;
   color: var(--text-main);
   background: rgba(0, 0, 0, 0.22);
 }
@@ -622,7 +634,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .filter-label {
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: #b6f7cb;
   white-space: nowrap;
@@ -630,10 +642,10 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .filter-select {
   min-width: 180px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.75rem;
   border: 1px solid rgba(74, 222, 128, 0.28);
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-main);
   background: rgba(0, 0, 0, 0.22);
@@ -646,7 +658,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .filter-hint {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted);
   flex: 1 1 100%;
@@ -697,9 +709,8 @@ const goToMembersSummary = () => router.push('/members-summary')
 .btn-tab-icon {
   width: 20px;
   height: 20px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35)) brightness(1.1);
   flex-shrink: 0;
+  color: currentColor;
   transition: transform 0.2s ease;
 }
 
@@ -708,62 +719,108 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 /* ============================================
-   TABS
+   MEMBERS SUMMARY TABS (top 3 boxes)
    ============================================ */
-.tabs-container {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.members-summary-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
   margin-bottom: 24px;
 }
 
-.mb-6 {
-  margin-bottom: 1.5rem;
+@media (max-width: 900px) {
+  .members-summary-tabs {
+    grid-template-columns: 1fr;
+  }
 }
 
 .tab-btn {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border: 1px solid var(--glass-line);
-  border-radius: 10px;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 16px 14px;
+  border: 1.5px solid rgba(134, 239, 172, 0.28);
+  border-radius: 14px;
   font-weight: 700;
-  font-size: 13.5px;
   cursor: pointer;
   transition: all 0.22s ease;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
+  background: rgba(18, 31, 24, 0.92);
+  color: #ecfdf5;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.22);
+}
+
+.tab-btn-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.tab-btn-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #86efac;
+  border: 1px solid rgba(134, 239, 172, 0.35);
 }
 
 .tab-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35)) brightness(1.05);
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  transition: transform 0.22s ease, filter 0.22s ease;
-}
-
-.tab-btn:hover .tab-icon {
-  transform: scale(1.15);
-  filter: drop-shadow(0 2px 6px rgba(74, 222, 128, 0.3)) brightness(1.15);
-}
-
-.tab-btn.active .tab-icon {
-  filter: drop-shadow(0 2px 8px rgba(74, 222, 128, 0.45)) brightness(1.2);
+  color: #86efac;
+  transition: transform 0.22s ease, color 0.22s ease;
 }
 
 .tab-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--text-main);
+  background: rgba(25, 42, 32, 0.96);
+  border-color: rgba(134, 239, 172, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(4, 18, 12, 0.28);
+}
+
+.tab-btn:hover .tab-icon {
+  transform: scale(1.08);
+  color: #bbf7d0;
+}
+
+.tab-btn:hover .tab-btn-count {
+  background: rgba(255, 255, 255, 0.14);
+  color: #bbf7d0;
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.15));
-  border-color: rgba(74, 222, 128, 0.38);
-  color: var(--green);
-  box-shadow: 0 2px 10px rgba(74, 222, 128, 0.18);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border-color: #86efac;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.32);
+  transform: translateY(-1px);
+}
+
+.tab-btn.active .tab-icon {
+  color: #ffffff;
+}
+
+.tab-btn.active .tab-btn-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.tab-btn.active .tab-btn-label {
+  color: #ffffff;
 }
 
 .state-center {
@@ -799,44 +856,48 @@ const goToMembersSummary = () => router.push('/members-summary')
   --glass-line: rgba(34, 197, 94, 0.28);
   --green: #15803d;
 
-  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
-  color: var(--text-main);
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--text-main) !important;
 }
 
 .farmer-table-page.light-theme::before {
-  opacity: 0.25;
+  opacity: 0.15;
 }
 
 .farmer-table-page.light-theme .page-title {
-  color: #052e16;
-  font-size: 30px;
+  color: #052e16 !important;
+  font-size: 1.875rem;
+  background: none !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .farmer-table-page.light-theme .filter-bar {
-  background: #ffffff;
-  border: 2px solid #86efac;
-  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1);
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme .filter-search-icon {
-  color: #15803d;
+  color: #15803d !important;
 }
 
 .farmer-table-page.light-theme .filter-search-input,
 .farmer-table-page.light-theme .filter-select {
-  background: #ffffff;
-  color: #052e16;
-  border: 1.5px solid #cbd5e1;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #94a3b8 !important;
+  font-size: 1.0625rem !important;
 }
 
 .farmer-table-page.light-theme .filter-search-input::placeholder {
-  color: #64748b;
+  color: #64748b !important;
 }
 
 .farmer-table-page.light-theme .filter-label,
 .farmer-table-page.light-theme .filter-hint,
 .farmer-table-page.light-theme .state-text {
-  color: #14532d;
+  color: #000000 !important;
+  font-size: 0.9375rem !important;
 }
 
 .farmer-table-page.light-theme .filter-select option {
@@ -844,29 +905,53 @@ const goToMembersSummary = () => router.push('/members-summary')
   color: #052e16;
 }
 
-.farmer-table-page.light-theme .tab-btn {
-  background: #ffffff;
-  color: #14532d;
-  border: 1.5px solid #bbf7d0;
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 2px solid #bbf7d0 !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.08) !important;
 }
 
-.farmer-table-page.light-theme .tab-btn:hover {
-  background: #f0fdf4;
-  color: #052e16;
-  border-color: #86efac;
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn-label {
+  color: #052e16 !important;
 }
 
-.farmer-table-page.light-theme .tab-btn.active {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  border-color: #15803d;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.2);
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn-count {
+  color: #15803d !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-icon {
+  color: #16a34a !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  border-color: #86efac !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.22) !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active :is(.tab-btn-label, .tab-btn-count, .tab-icon) {
+  color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active .tab-btn-count {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .farmer-table-page.light-theme .registered-members-card {
-  background: #ffffff;
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme .registered-members-title {
@@ -934,9 +1019,8 @@ const goToMembersSummary = () => router.push('/members-summary')
   color: #166534 !important;
 }
 
-.farmer-table-page.light-theme .tab-icon,
 .farmer-table-page.light-theme .btn-tab-icon {
-  filter: none;
+  color: #15803d !important;
 }
 
 /* Registered Members — role filter cards */
@@ -954,17 +1038,27 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-label) {
-  color: #052e16 !important;
-  font-size: 12px;
+  color: #000000 !important;
+  font-size: 0.9375rem !important;
+  font-weight: 700 !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-count) {
   color: #15803d !important;
-  font-weight: 700;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-icon) {
-  filter: none !important;
+  color: #166534 !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab:hover .role-tab-icon) {
+  color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme :deep(.role-tab.active .role-tab-icon) {
+  color: #ffffff !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab:hover) {

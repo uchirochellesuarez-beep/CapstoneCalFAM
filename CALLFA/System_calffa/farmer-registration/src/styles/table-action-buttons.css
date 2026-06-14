@@ -1,0 +1,177 @@
+/**
+ * Shared table row action buttons — orange edit pencil + white delete trash.
+ */
+
+.table-action-btn,
+.machinery-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 24, 18, 0.95);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.table-action-btn svg,
+.machinery-action-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.table-action-edit,
+.machinery-action-edit {
+  color: #fb923c;
+}
+
+.table-action-delete,
+.machinery-action-delete {
+  color: #ffffff;
+}
+
+.table-action-places {
+  color: #ffffff;
+}
+
+.table-action-view {
+  color: #38bdf8;
+}
+
+.table-action-approve {
+  color: #4ade80;
+}
+
+.table-action-reject {
+  color: #f87171;
+}
+
+.table-action-protected {
+  color: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.table-action-btn:hover,
+.machinery-action-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(16, 36, 28, 1);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.table-action-edit:hover,
+.machinery-action-edit:hover {
+  color: #fdba74;
+}
+
+.table-action-delete:hover,
+.machinery-action-delete:hover {
+  color: #ffffff;
+  background: rgba(40, 20, 20, 0.95);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.table-action-places:hover {
+  color: #5eead4;
+}
+
+.table-action-view:hover {
+  color: #7dd3fc;
+}
+
+.table-action-approve:hover {
+  color: #86efac;
+  background: rgba(16, 36, 28, 1);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.table-action-reject:hover {
+  color: #fca5a5;
+  background: rgba(40, 20, 20, 0.95);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.table-action-btn:disabled,
+.machinery-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.table-action-btn:active,
+.machinery-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Light theme pages */
+body.glass-light :is(.light-theme) .table-action-btn,
+body.glass-light :is(.light-theme) .machinery-action-btn {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.glass-light :is(.light-theme) :is(.table-action-edit, .machinery-action-edit) {
+  color: #ea580c !important;
+}
+
+body.glass-light :is(.light-theme) :is(.table-action-delete, .machinery-action-delete) {
+  color: #ffffff !important;
+}
+
+body.glass-light :is(.light-theme) :is(.table-action-edit, .machinery-action-edit):hover {
+  color: #f97316 !important;
+  background: #4b5563 !important;
+}
+
+body.glass-light :is(.light-theme) :is(.table-action-delete, .machinery-action-delete):hover {
+  color: #ffffff !important;
+  background: #7f1d1d !important;
+  border-color: #b91c1c !important;
+}
+
+body.glass-light :is(.light-theme) .table-action-view {
+  color: #0284c7 !important;
+}
+
+body.glass-light :is(.light-theme) .table-action-approve {
+  color: #16a34a !important;
+}
+
+body.glass-light :is(.light-theme) .table-action-reject {
+  color: #dc2626 !important;
+}
+
+/* Dark mode — preserve icon colors vs global white text */
+body.glass-dark :is(.table-action-edit, .machinery-action-edit) {
+  color: #fb923c !important;
+}
+
+body.glass-dark :is(.table-action-delete, .machinery-action-delete) {
+  color: #ffffff !important;
+}
+
+body.glass-dark :is(.table-action-btn, .machinery-action-btn) {
+  background: rgba(10, 24, 18, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.glass-dark :is(.table-action-view) {
+  color: #38bdf8 !important;
+}
+
+body.glass-dark :is(.table-action-approve) {
+  color: #4ade80 !important;
+}
+
+body.glass-dark :is(.table-action-reject) {
+  color: #f87171 !important;
+}

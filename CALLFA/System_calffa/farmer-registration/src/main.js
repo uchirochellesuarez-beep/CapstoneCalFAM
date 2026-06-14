@@ -8,6 +8,7 @@ import './assets/backdrop-theme.css'
 import './styles/glass-unified-theme.css'
 import './styles/light-mode-senior.css'
 import './styles/dark-mode-farm.css'
+import './styles/table-action-buttons.css'
 import 'leaflet/dist/leaflet.css'
 
 
