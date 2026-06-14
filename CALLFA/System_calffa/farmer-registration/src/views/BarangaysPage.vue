@@ -113,18 +113,30 @@
               </span>
             </td>
             <td class="td-actions">
-              <div class="action-buttons-row">
+              <div class="barangays-action-row">
               <button type="button" class="btn-view-area" @click="viewBarangayDetails(barangay)">
                 View
               </button>
-              <button type="button" @click="openPlacesModal(barangay)" class="icon-action icon-places" title="Manage Places">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M12 21s-8-5.5-8-11.8A8 8 0 0112 3a8 8 0 018 6.2c0 6.3-8 11.8-8 11.8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="2.75" /></svg>
+              <button type="button" @click="openPlacesModal(barangay)" class="barangays-icon-btn barangays-icon-places" title="Manage Places" aria-label="Manage Places">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 21s-8-5.5-8-11.8A8 8 0 0 1 12 3a8 8 0 0 1 8 6.2c0 6.3-8 11.8-8 11.8z"/>
+                  <circle cx="12" cy="10.5" r="2.75"/>
+                </svg>
               </button>
-              <button type="button" @click="openEditModal(barangay)" class="icon-action icon-edit" title="Edit">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2 2 0 000-2.83L17.83 7a2 2 0 00-2.83 0L4 16.5V20z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <button type="button" @click="openEditModal(barangay)" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
               </button>
-              <button type="button" @click="deleteBarangay(barangay)" class="icon-action icon-delete" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M10 11v8M14 11v8M8 7l1 13h6l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <button type="button" @click="deleteBarangay(barangay)" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
               </button>
               </div>
             </td>
@@ -144,7 +156,7 @@
         </div>
         <div class="modal-body">
           <p class="form-hint-area">
-            Total land area is computed automatically from registered members’ farm hectares (approved farmers and officers).
+            Land area is computed automatically from the farm hectares registered by approved farmers and officers.
           </p>
           <div class="compact-form-grid">
             <div class="form-group">
@@ -272,12 +284,21 @@
                       </span>
                     </td>
                     <td class="td-actions">
-                      <div class="action-buttons-row">
-                      <button type="button" class="icon-action icon-edit" title="Edit" @click="startEditPlace(place)">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2 2 0 000-2.83L17.83 7a2 2 0 00-2.83 0L4 16.5V20z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      <div class="barangays-action-row">
+                      <button type="button" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit" @click="startEditPlace(place)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
                       </button>
-                      <button type="button" class="icon-action icon-delete" title="Delete" @click="deletePlace(place)">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M10 11v8M14 11v8M8 7l1 13h6l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      <button type="button" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete" @click="deletePlace(place)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
                       </button>
                       </div>
                     </td>
@@ -803,13 +824,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.62rem 1.15rem;
-  border: 1px solid rgba(74, 222, 128, 0.45);
+  padding: 0.7rem 1.25rem;
+  border: 2px solid #15803d;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
-  color: #14532d;
+  color: #000000;
   background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
   transition: transform 0.15s ease, filter 0.15s ease;
@@ -887,17 +908,17 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #eefde6;
   line-height: 1.15;
 }
 
 .stat-label {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(229, 235, 231, 0.78);
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(229, 235, 231, 0.88);
 }
 
 .tools-card {
@@ -937,9 +958,9 @@ onMounted(() => {
 .toolbar-input,
 .toolbar-select {
   width: 100%;
-  padding: 0.62rem 0.85rem;
+  padding: 0.8rem 1rem;
   border-radius: 10px;
-  font-size: 0.875rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   background: rgba(0, 0, 0, 0.24);
   color: #eefde6;
@@ -994,25 +1015,25 @@ onMounted(() => {
 .barangays-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-  min-width: 0;
+  table-layout: auto;
+  min-width: 980px;
 }
 
-.barangays-table col.col-name { width: 22%; }
-.barangays-table col.col-area { width: 12%; }
-.barangays-table col.col-num { width: 8%; }
-.barangays-table col.col-status { width: 10%; }
-.barangays-table col.col-actions { width: 18%; }
+.barangays-table col.col-name { width: 24%; }
+.barangays-table col.col-area { width: 14%; }
+.barangays-table col.col-num { width: 10%; }
+.barangays-table col.col-status { width: 12%; }
+.barangays-table col.col-actions { width: 26%; }
 
 .barangays-table th:first-child,
 .barangays-table td:first-child {
   text-align: left;
-  padding-left: 0.4rem !important;
+  padding-left: 1rem !important;
 }
 
 .barangays-table th,
 .barangays-table td {
-  padding: 0.35rem 0.28rem;
+  padding: 0.9rem 0.75rem;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   vertical-align: middle;
@@ -1027,15 +1048,16 @@ onMounted(() => {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
   font-weight: 700;
   color: rgba(234, 241, 236, 0.94);
-  font-size: 0.62rem;
-  letter-spacing: 0.02em;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1.1;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .barangays-table td {
-  font-size: 0.68rem;
-  line-height: 1.15;
+  font-size: 1.0625rem;
+  line-height: 1.5;
   color: rgba(226, 234, 229, 0.92);
 }
 
@@ -1065,12 +1087,12 @@ onMounted(() => {
 }
 
 .btn-view-area {
-  padding: 0.2rem 0.45rem;
-  font-size: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: #14532d;
+  color: #000000;
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border: 1px solid rgba(74, 222, 128, 0.45);
+  border: 2px solid #16a34a;
   border-radius: 8px;
   cursor: pointer;
   transition: filter 0.12s ease;
@@ -1102,13 +1124,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 58px;
-  padding: 0.18rem 0.38rem;
-  border-radius: 8px;
-  font-size: 0.58rem;
+  min-width: 84px;
+  padding: 0.4rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
   font-weight: 700;
   text-transform: capitalize;
-  line-height: 1;
+  line-height: 1.3;
   border: 1px solid rgba(190, 235, 203, 0.35);
   background: transparent;
 }
@@ -1123,55 +1145,73 @@ onMounted(() => {
   border-color: rgba(248, 113, 113, 0.5);
 }
 
-.td-actions {
-  padding-left: 0.35rem !important;
-  padding-right: 0.35rem !important;
+.barangays-table tbody tr {
+  position: relative;
+  isolation: isolate;
 }
 
-.action-buttons-row {
-  display: flex;
+.td-actions {
+  padding-left: 0.65rem !important;
+  padding-right: 0.65rem !important;
+  min-width: 220px;
+  white-space: nowrap;
+  background: inherit;
+}
+
+.barangays-action-row {
+  display: inline-flex;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 0.22rem;
+  gap: 0.5rem;
+  position: relative;
+  isolation: isolate;
 }
 
-.icon-action {
+.barangays-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   padding: 0;
-  border-radius: 7px;
-  border: 1px solid rgba(190, 235, 203, 0.22);
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(226, 234, 229, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 24, 18, 0.95);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+  box-shadow: none !important;
+  transform: none !important;
+  -webkit-text-fill-color: currentColor;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.icon-action svg {
-  width: 0.78rem;
-  height: 0.78rem;
+.barangays-icon-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+  -webkit-text-fill-color: currentColor;
 }
 
-.icon-action:hover {
-  background: rgba(74, 222, 128, 0.12);
-  border-color: rgba(74, 222, 128, 0.35);
+.barangays-icon-places { color: #ffffff; }
+.barangays-icon-edit { color: #fb923c; }
+.barangays-icon-delete { color: #ffffff; }
+
+.barangays-icon-btn:hover {
+  transform: none;
+  box-shadow: none;
 }
 
-.icon-places:hover {
-  color: #5eead4;
-}
-
-.icon-edit:hover {
-  color: #93c5fd;
-}
-
-.icon-delete:hover {
-  color: #fca5a5;
-  border-color: rgba(248, 113, 113, 0.4);
+.barangays-icon-places:hover { color: #5eead4; }
+.barangays-icon-edit:hover { color: #fdba74; background: rgba(16, 36, 28, 1); }
+.barangays-icon-delete:hover {
+  color: #ffffff;
+  background: rgba(40, 20, 20, 0.95);
+  border-color: rgba(248, 113, 113, 0.35);
 }
 
 .font-semibold {
@@ -1326,14 +1366,15 @@ onMounted(() => {
 }
 
 .form-hint-area {
-  margin: 0 0 12px;
-  padding: 0.55rem 0.65rem;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: rgba(229, 235, 231, 0.78);
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.975rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: rgba(238, 253, 230, 0.92);
   background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
-  border: 1px solid rgba(190, 235, 203, 0.16);
+  border: 1px solid rgba(190, 235, 203, 0.2);
 }
 
 .modal-large {
@@ -1409,16 +1450,11 @@ onMounted(() => {
 .members-table td,
 .places-table th,
 .places-table td {
-  padding: 0.55rem 0.45rem;
-  font-size: 0.76rem;
+  padding: 0.75rem 0.65rem;
+  font-size: 1.0625rem;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: rgba(226, 234, 229, 0.92);
-}
-
-.places-table th,
-.places-table td {
-  font-size: 0.74rem;
 }
 
 .members-table th,
@@ -1426,9 +1462,10 @@ onMounted(() => {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
   font-weight: 700;
   color: rgba(234, 241, 236, 0.94);
-  font-size: 0.68rem;
+  font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .members-table tbody tr:hover,
@@ -1628,8 +1665,8 @@ onMounted(() => {
 
   .barangays-table th,
   .barangays-table td {
-    padding: 0.55rem 0.35rem;
-    font-size: 0.72rem;
+    padding: 0.75rem 0.55rem;
+    font-size: 0.9375rem;
   }
 
   .table-container {
@@ -1657,11 +1694,15 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .page-title {
-  color: #052e16;
+  color: #000000;
 }
 
 .page-container.barangays-page.light-theme .page-subtitle {
-  color: #166534;
+  color: #000000;
+}
+
+.page-container.barangays-page.light-theme .stat-label {
+  color: #000000;
 }
 
 .page-container.barangays-page.light-theme .stat-card {
@@ -1677,11 +1718,7 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .stat-value {
-  color: #052e16;
-}
-
-.page-container.barangays-page.light-theme .stat-label {
-  color: #166534;
+  color: #000000;
 }
 
 .page-container.barangays-page.light-theme .tools-card {
@@ -1697,8 +1734,14 @@ onMounted(() => {
 .page-container.barangays-page.light-theme .toolbar-input,
 .page-container.barangays-page.light-theme .toolbar-select {
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: #052e16;
+  border: 2px solid #94a3b8;
+  color: #000000;
+  font-size: 1rem;
+}
+
+.page-container.barangays-page.light-theme .toolbar-input::placeholder {
+  color: #475569;
+  opacity: 1;
 }
 
 .page-container.barangays-page.light-theme .toolbar-select option {
@@ -1714,13 +1757,14 @@ onMounted(() => {
 
 .page-container.barangays-page.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #052e16;
+  color: #000000;
   border-bottom: 1px solid #86efac;
 }
 
 .page-container.barangays-page.light-theme .barangays-table td {
-  color: #14532d;
+  color: #000000;
   border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
@@ -1734,37 +1778,44 @@ onMounted(() => {
 
 .page-container.barangays-page.light-theme .loading-cell,
 .page-container.barangays-page.light-theme .empty-cell {
-  color: #166534;
+  color: #000000;
 }
 
 .page-container.barangays-page.light-theme .area-value {
-  color: #15803d;
+  color: #000000;
+  font-weight: 700;
 }
 
 .page-container.barangays-page.light-theme .barangay-name-link {
-  color: #15803d;
+  color: #000000;
+  text-decoration: underline;
 }
 
 .page-container.barangays-page.light-theme .barangay-name-link:hover {
-  color: #052e16;
+  color: #15803d;
 }
 
 .page-container.barangays-page.light-theme .status-pill.active {
-  color: #15803d;
-  border-color: #86efac;
-  background: #f0fdf4;
+  color: #000000;
+  border: 2px solid #16a34a;
+  background: #ffffff;
 }
 
 .page-container.barangays-page.light-theme .status-pill.inactive {
-  color: #b91c1c;
-  border-color: #fca5a5;
-  background: #fef2f2;
+  color: #991b1b;
+  border: 2px solid #ef4444;
+  background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .icon-action {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #15803d;
+.page-container.barangays-page.light-theme .btn-view-area {
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #16a34a;
+}
+
+.page-container.barangays-page.light-theme .btn-header-add {
+  color: #000000;
+  border: 2px solid #15803d;
 }
 
 .page-container.barangays-page.light-theme .modal-content {
@@ -1792,25 +1843,31 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .form-group label {
-  color: #166534;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .page-container.barangays-page.light-theme .form-input {
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: #052e16;
+  border: 2px solid #94a3b8;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .page-container.barangays-page.light-theme .form-hint-area {
-  background: #f8fdf9;
-  border-color: #bbf7d0;
-  color: #166534;
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  color: #000000;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 .page-container.barangays-page.light-theme .btn-secondary {
   background: #ffffff;
-  border: 1.5px solid #86efac;
-  color: #14532d;
+  border: 2px solid #64748b;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .page-container.barangays-page.light-theme .btn-secondary:hover {
@@ -1820,13 +1877,14 @@ onMounted(() => {
 .page-container.barangays-page.light-theme .members-table th,
 .page-container.barangays-page.light-theme .places-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #052e16;
+  color: #000000;
 }
 
 .page-container.barangays-page.light-theme .members-table td,
 .page-container.barangays-page.light-theme .places-table td {
-  color: #14532d;
+  color: #000000;
   border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .page-container.barangays-page.light-theme .members-table tbody tr:hover,
@@ -1835,7 +1893,8 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .empty-state {
-  color: #166534;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .page-container.barangays-page.light-theme .area-summary-card {
@@ -1947,12 +2006,54 @@ onMounted(() => {
   border-color: #16a34a !important;
 }
 
+.page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td:not(.td-actions) {
+  background: #f8fdf9;
+}
+
+.page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td.td-actions {
+  background: #ffffff;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-btn {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-places {
+  color: #ffffff;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-edit {
+  color: #ea580c;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-delete {
+  color: #ffffff;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-edit:hover {
+  color: #f97316;
+  background: #4b5563;
+}
+
+.page-container.barangays-page.light-theme .barangays-icon-delete:hover {
+  color: #ffffff;
+  background: #7f1d1d;
+  border-color: #b91c1c;
+}
+
 .page-container.barangays-page.light-theme .members-table tbody tr:nth-child(even) td,
 .page-container.barangays-page.light-theme .places-table tbody tr:nth-child(even) td {
   background: #f8fdf9;
 }
 
 .page-container.barangays-page.light-theme .font-semibold {
-  color: #052e16;
+  color: #000000;
+}
+
+.page-container.barangays-page.light-theme .btn-submit {
+  color: #000000;
+  border: 2px solid #15803d;
+  font-size: 1rem;
 }
 </style>

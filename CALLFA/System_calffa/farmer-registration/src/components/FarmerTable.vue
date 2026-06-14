@@ -14,75 +14,84 @@
     <div v-else>
       <!-- Role Tabs -->
       <div class="role-tabs mb-6">
-        <button 
-          @click="activeRole = 'operation_manager'" 
+        <button
+          type="button"
+          @click="activeRole = 'operation_manager'"
           :class="['role-tab', { 'active': activeRole === 'operation_manager' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/1534/1534938.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M12 12v4M10 14h4"/></svg>
           <span class="role-tab-label">Operation<br>Managers</span>
           <span class="role-tab-count">({{ farmersByRole.operation_manager.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'business_manager'" 
+        <button
+          type="button"
+          @click="activeRole = 'business_manager'"
           :class="['role-tab', { 'active': activeRole === 'business_manager' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-6"/></svg>
           <span class="role-tab-label">Business<br>Managers</span>
           <span class="role-tab-count">({{ farmersByRole.business_manager.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'farmer'" 
+        <button
+          type="button"
+          @click="activeRole = 'farmer'"
           :class="['role-tab', { 'active': activeRole === 'farmer' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/7417/7417717.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span class="role-tab-label">Farmers</span>
           <span class="role-tab-count">({{ farmersByRole.farmer.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'admin'" 
+        <button
+          type="button"
+          @click="activeRole = 'admin'"
           :class="['role-tab', { 'active': activeRole === 'admin' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/6024/6024190.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span class="role-tab-label">Admins</span>
           <span class="role-tab-count">({{ farmersByRole.admin.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'president'" 
+        <button
+          type="button"
+          @click="activeRole = 'president'"
           :class="['role-tab', { 'active': activeRole === 'president' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/3048/3048127.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21.1 8 14 2 9.4h7.6L12 2z"/></svg>
           <span class="role-tab-label">Presidents</span>
           <span class="role-tab-count">({{ farmersByRole.president.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'treasurer'" 
+        <button
+          type="button"
+          @click="activeRole = 'treasurer'"
           :class="['role-tab', { 'active': activeRole === 'treasurer' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/2534/2534844.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
           <span class="role-tab-label">Treasurers</span>
           <span class="role-tab-count">({{ farmersByRole.treasurer.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'auditor'" 
+        <button
+          type="button"
+          @click="activeRole = 'auditor'"
           :class="['role-tab', { 'active': activeRole === 'auditor' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/2621/2621303.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           <span class="role-tab-label">Auditors</span>
           <span class="role-tab-count">({{ farmersByRole.auditor.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'operator'" 
+        <button
+          type="button"
+          @click="activeRole = 'operator'"
           :class="['role-tab', { 'active': activeRole === 'operator' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/4149/4149682.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           <span class="role-tab-label">Operators</span>
           <span class="role-tab-count">({{ farmersByRole.operator.length }})</span>
         </button>
-        <button 
-          @click="activeRole = 'agriculturist'" 
+        <button
+          type="button"
+          @click="activeRole = 'agriculturist'"
           :class="['role-tab', { 'active': activeRole === 'agriculturist' }]"
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/2810/2810051.png" class="role-tab-icon" alt="" />
+          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5-3 7-7 7-11a7 7 0 0 0-14 0c0 4 2 8 7 11z"/><path d="M12 11V7"/></svg>
           <span class="role-tab-label">Agriculturists</span>
           <span class="role-tab-count">({{ farmersByRole.agriculturist.length }})</span>
         </button>
@@ -115,7 +124,7 @@
               <th>Address</th>
               <th>Phone</th>
               <th>Education</th>
-              <th>Role</th>
+              <th class="members-th-role">Role</th>
               <th>Membership</th>
               <th>Registered</th>
               <th>Status</th>
@@ -162,8 +171,8 @@
               <td class="members-cell">
                 <span>{{ farmer.educational_status || 'N/A' }}</span>
               </td>
-              <td class="members-cell">
-                <span class="role-badge" :class="farmer.role">{{ farmer.role }}</span>
+              <td class="members-cell members-td-role">
+                <span class="role-badge" :class="farmer.role">{{ formatMemberRole(farmer.role) }}</span>
               </td>
               <td class="members-cell">
                 <span v-if="(farmer.membership_status || 'member') === 'member'" class="member-chip member-chip-member">
@@ -184,25 +193,43 @@
               </td>
               <td class="members-cell members-actions-cell">
                 <div class="members-action-row">
-                  <button @click="viewDetails(farmer)" class="action-btn action-btn-view">
-                    View
+                  <button type="button" @click="viewDetails(farmer)" class="table-action-btn table-action-view" title="View" aria-label="View">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
                   </button>
-                  <button @click="startEdit(farmer)" class="action-btn action-btn-edit">
-                    Edit
+                  <button type="button" @click="startEdit(farmer)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
                   </button>
-                  <button 
+                  <button
                     v-if="farmer.role !== 'admin'"
-                    @click="deleteFarmer(farmer)" 
-                    class="action-btn action-btn-delete"
+                    type="button"
+                    @click="deleteFarmer(farmer)"
+                    class="table-action-btn table-action-delete"
+                    title="Delete"
+                    aria-label="Delete"
                   >
-                    Delete
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
                   </button>
-                  <span 
+                  <span
                     v-else
-                    class="action-btn action-btn-protected"
+                    class="table-action-btn table-action-protected"
                     title="Admin accounts cannot be deleted"
+                    aria-label="Protected"
                   >
-                    Protected
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
                   </span>
                 </div>
               </td>
@@ -235,7 +262,7 @@
               </svg>
             </div>
             <h4 class="member-name">{{ selectedFarmer.full_name }}</h4>
-            <span class="role-badge mt-2" :class="selectedFarmer.role">{{ selectedFarmer.role }}</span>
+            <span class="role-badge mt-2" :class="selectedFarmer.role">{{ formatMemberRole(selectedFarmer.role) }}</span>
           </div>
           <div class="details-grid">
             <div class="detail-item">
@@ -508,6 +535,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, defineProps, defineEmits } from 'vue'
+import { formatMemberRole } from '../utils/roleLabels.js'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
 
@@ -981,7 +1009,7 @@ onMounted(async () => {
 }
 
 .registered-members-title {
-  font-size: 1.1rem;
+  font-size: var(--members-font-title, 1.25rem);
   font-weight: 800;
   color: #eefde6;
   margin: 0 0 0.85rem;
@@ -989,7 +1017,8 @@ onMounted(async () => {
 }
 
 .registered-members-muted {
-  color: rgba(229, 235, 231, 0.75);
+  color: rgba(229, 235, 231, 0.85);
+  font-size: var(--members-font-body, 0.875rem);
 }
 
 .registered-members-error {
@@ -1007,9 +1036,9 @@ onMounted(async () => {
 
 .role-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   background: linear-gradient(145deg, rgba(14,25,19,0.97), rgba(10,19,15,0.96));
-  padding: 6px;
+  padding: 8px;
   border-radius: 12px;
   border: 1px solid rgba(122,171,140,0.20);
   flex-wrap: wrap;
@@ -1017,8 +1046,8 @@ onMounted(async () => {
 
 .role-tab {
   flex: 1;
-  min-width: 68px;
-  padding: 6px 5px 5px;
+  min-width: 84px;
+  padding: 10px 8px 8px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(122,171,140,0.15);
   border-radius: 12px;
@@ -1026,34 +1055,34 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.22s ease;
   color: rgba(220,252,231,0.70);
-  font-size: 9px;
+  font-size: var(--members-font-tab, 1rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   line-height: 1.3;
   text-align: center;
 }
 
 .role-tab-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)) brightness(1.05);
-  transition: transform 0.22s ease, filter 0.22s ease;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: rgba(220, 252, 231, 0.88);
+  transition: transform 0.22s ease, color 0.22s ease;
 }
 
 .role-tab-label {
-  font-size: 11px;
+  font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: rgba(220,252,231,0.80);
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .role-tab-count {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 700;
   color: rgba(134,239,172,0.65);
 }
 
@@ -1067,7 +1096,7 @@ onMounted(async () => {
 
 .role-tab:hover .role-tab-icon {
   transform: scale(1.12);
-  filter: drop-shadow(0 2px 6px rgba(74,222,128,0.35)) brightness(1.1);
+  color: #ecfdf5;
 }
 
 .role-tab:hover .role-tab-label {
@@ -1083,7 +1112,7 @@ onMounted(async () => {
 }
 
 .role-tab.active .role-tab-icon {
-  filter: drop-shadow(0 2px 8px rgba(74,222,128,0.50)) brightness(1.15);
+  color: #ffffff;
   transform: scale(1.08);
 }
 
@@ -1125,11 +1154,6 @@ onMounted(async () => {
 
   .role-tab {
     width: 100%;
-  }
-
-  .members-action-row {
-    flex-wrap: wrap !important;
-    row-gap: 0.35rem !important;
   }
 }
 
@@ -1419,5 +1443,61 @@ onMounted(async () => {
   .edit-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Light mode — parent page sets .light-theme on .farmer-table-page */
+:global(.farmer-table-page.light-theme) .registered-members-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+:global(.farmer-table-page.light-theme) .registered-members-title {
+  color: #052e16 !important;
+  background: none !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+:global(.farmer-table-page.light-theme) .registered-members-muted {
+  color: #166534 !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tabs {
+  background: #f4faf6 !important;
+  border: 2px solid #86efac !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab {
+  background: #ffffff !important;
+  border: 1.5px solid #bbf7d0 !important;
+  color: #000000 !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab-label {
+  color: #000000 !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab-count {
+  color: #15803d !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab-icon {
+  color: #166534 !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+}
+
+:global(.farmer-table-page.light-theme) .role-tab.active :is(.role-tab-label, .role-tab-count, .role-tab-icon) {
+  color: #ffffff !important;
+}
+
+:global(.farmer-table-page.light-theme) .edit-input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-size: 0.875rem !important;
 }
 </style>

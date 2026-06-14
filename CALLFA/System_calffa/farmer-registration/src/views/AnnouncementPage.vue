@@ -13,7 +13,6 @@
         <div class="hero-text">
           <p class="hero-eyebrow">CALFFA Cooperative</p>
           <h1>Official Announcements</h1>
-          <p class="hero-desc">Important notices, updates, and advisories for all members and officers.</p>
         </div>
       </div>
       <div class="hero-right">
@@ -124,10 +123,17 @@
               v-if="canDeleteAnnouncement(item)"
               type="button"
               class="action-btn action-btn--danger"
-              title="Delete"
+              title="Delete announcement"
+              aria-label="Delete announcement"
               @click="openDeleteModal(item.id)"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h16M9 7V5h6v2M8 10v7M12 10v7M16 10v7M6.5 7l1 13h6l1-13" stroke-linecap="round"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
             </button>
             </div>
           </div>
@@ -163,7 +169,6 @@
                 loading="lazy"
                 @click="openImagePreview(resolveImageUrl(item.image), item.title)"
               />
-              <figcaption class="notice-figure-cap">Enlarge</figcaption>
             </figure>
           </div>
         </div>
@@ -797,9 +802,10 @@ onMounted(fetchAnnouncements)
   --text-muted: rgba(220, 238, 211, 0.72);
   --text-soft: rgba(220, 238, 211, 0.5);
 
-  max-width: 860px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: 1.75rem 1.75rem 3rem;
   min-height: 100vh;
   color: var(--text);
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -812,8 +818,8 @@ onMounted(fetchAnnouncements)
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1.5rem 1.6rem;
-  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  border-radius: 18px;
   background: linear-gradient(135deg, rgba(22, 101, 52, 0.35) 0%, rgba(28, 42, 33, 0.95) 55%);
   border: 1px solid var(--line);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
@@ -829,8 +835,8 @@ onMounted(fetchAnnouncements)
 }
 
 .hero-icon {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -842,13 +848,13 @@ onMounted(fetchAnnouncements)
 }
 
 .hero-icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .hero-eyebrow {
-  margin: 0 0 0.2rem;
-  font-size: 0.68rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -857,17 +863,9 @@ onMounted(fetchAnnouncements)
 
 .notice-hero h1 {
   margin: 0;
-  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
   font-weight: 800;
   line-height: 1.2;
-}
-
-.hero-desc {
-  margin: 0.4rem 0 0;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-  max-width: 36rem;
 }
 
 .hero-right {
@@ -881,22 +879,22 @@ onMounted(fetchAnnouncements)
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  padding: 0.65rem 1.25rem;
+  border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid var(--line);
-  min-width: 4.5rem;
+  min-width: 5.5rem;
 }
 
 .hero-stat-value {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--green);
   line-height: 1;
 }
 
 .hero-stat-label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -942,8 +940,12 @@ onMounted(fetchAnnouncements)
 /* Toolbar */
 .notice-toolbar {
   display: flex;
-  gap: 0.65rem;
-  margin-bottom: 1.25rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.15rem;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
 }
 
 .search-wrap {
@@ -966,17 +968,17 @@ onMounted(fetchAnnouncements)
 .search-input,
 .sort-select {
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.22);
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
   box-sizing: border-box;
 }
 
 .search-input {
-  padding-left: 2.25rem;
+  padding-left: 2.45rem;
 }
 
 .search-input::placeholder {
@@ -985,7 +987,7 @@ onMounted(fetchAnnouncements)
 
 .sort-select {
   width: auto;
-  min-width: 9rem;
+  min-width: 10.5rem;
   cursor: pointer;
 }
 
@@ -1050,16 +1052,16 @@ onMounted(fetchAnnouncements)
 .notice-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.35rem;
 }
 
 .notice-card {
   position: relative;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg-card);
   border: 1px solid var(--line);
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
@@ -1087,8 +1089,8 @@ onMounted(fetchAnnouncements)
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 1rem 1.1rem 0.75rem 1.25rem;
+  gap: 0.85rem 1.15rem;
+  padding: 1.15rem 1.35rem 0.9rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -1108,13 +1110,13 @@ onMounted(fetchAnnouncements)
 }
 
 .notice-date {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text);
 }
 
 .notice-time {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--text-soft);
 }
 
@@ -1127,8 +1129,8 @@ onMounted(fetchAnnouncements)
 }
 
 .author-avatar {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -1143,7 +1145,7 @@ onMounted(fetchAnnouncements)
 }
 
 .author-name {
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
@@ -1152,7 +1154,7 @@ onMounted(fetchAnnouncements)
 }
 
 .author-role {
-  font-size: 0.62rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1164,27 +1166,29 @@ onMounted(fetchAnnouncements)
 
 .notice-actions {
   display: flex;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .action-btn {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.2);
   color: #2dd4bf;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .action-btn svg {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .action-btn:hover {
@@ -1192,15 +1196,24 @@ onMounted(fetchAnnouncements)
 }
 
 .action-btn--danger {
-  color: #f87171;
+  color: #fca5a5;
+  background: rgba(127, 29, 29, 0.35);
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.action-btn--danger svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .action-btn--danger:hover {
-  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+  background: rgba(153, 27, 27, 0.55);
+  border-color: #f87171;
 }
 
 .notice-card-body {
-  padding: 1rem 1.1rem 0.85rem 1.25rem;
+  padding: 1.15rem 1.35rem 1rem 1.5rem;
 }
 
 .notice-badge-latest {
@@ -1218,8 +1231,8 @@ onMounted(fetchAnnouncements)
 }
 
 .notice-title {
-  margin: 0 0 0.45rem;
-  font-size: 1.15rem;
+  margin: 0 0 0.55rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.35;
   color: var(--text);
@@ -1232,7 +1245,7 @@ onMounted(fetchAnnouncements)
 .notice-body-layout--with-image {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .notice-body-layout--with-image .notice-main {
@@ -1247,15 +1260,15 @@ onMounted(fetchAnnouncements)
 .notice-figure {
   flex-shrink: 0;
   margin: 0;
-  width: 108px;
+  width: 148px;
   align-self: flex-start;
 }
 
 .notice-image {
-  width: 108px;
-  height: 82px;
+  width: 148px;
+  height: 112px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   cursor: zoom-in;
   display: block;
@@ -1269,8 +1282,8 @@ onMounted(fetchAnnouncements)
 }
 
 .notice-figure-cap {
-  margin-top: 0.25rem;
-  font-size: 0.58rem;
+  margin-top: 0.35rem;
+  font-size: 0.6875rem;
   color: var(--text-soft);
   text-align: center;
   line-height: 1.2;
@@ -1282,8 +1295,8 @@ onMounted(fetchAnnouncements)
 
 .notice-content {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: 0.975rem;
+  line-height: 1.65;
   color: var(--text-muted);
   white-space: pre-wrap;
   word-break: break-word;
@@ -1298,12 +1311,12 @@ onMounted(fetchAnnouncements)
 }
 
 .read-more-btn {
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
   padding: 0;
   border: none;
   background: none;
   color: var(--green);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
@@ -1317,10 +1330,11 @@ onMounted(fetchAnnouncements)
 .notice-card-footer {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 1.1rem 0.75rem 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1.35rem 0.9rem 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--text-soft);
 }
 
@@ -1392,9 +1406,13 @@ onMounted(fetchAnnouncements)
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.modal-form {
+  width: min(580px, 100%);
+}
+
 .modal-head h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
 }
 
@@ -1439,26 +1457,33 @@ onMounted(fetchAnnouncements)
 
 .form-field label {
   display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.8rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .req { color: #f87171; }
-.opt { font-weight: 500; color: var(--text-soft); }
+.opt { font-weight: 600; color: var(--text-muted); }
 
 .form-field input,
 .form-field textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.55rem 0.7rem;
-  border-radius: 9px;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.24);
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: 0.9375rem;
   font-family: inherit;
+  line-height: 1.5;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: rgba(220, 238, 211, 0.45);
+  opacity: 1;
 }
 
 .form-field textarea {
@@ -1511,13 +1536,14 @@ onMounted(fetchAnnouncements)
 }
 
 .upload-placeholder span {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: var(--text-muted);
 }
 
 .upload-placeholder small {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
+  color: var(--text-soft);
 }
 
 .upload-preview {
@@ -1551,13 +1577,13 @@ onMounted(fetchAnnouncements)
 }
 
 .btn-ghost {
-  padding: 0.55rem 1rem;
-  border-radius: 9px;
+  padding: 0.65rem 1.15rem;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
   cursor: pointer;
 }
 
@@ -1566,21 +1592,27 @@ onMounted(fetchAnnouncements)
 }
 
 .btn-danger {
-  padding: 0.55rem 1rem;
-  border-radius: 9px;
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.15);
-  color: #fca5a5;
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  border: 2px solid #dc2626;
+  background: #dc2626;
+  color: #ffffff;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .delete-warning {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.88rem;
-  line-height: 1.5;
+  font-size: 0.975rem;
+  line-height: 1.55;
 }
 
 /* Image preview */
@@ -1622,10 +1654,19 @@ onMounted(fetchAnnouncements)
 }
 
 .preview-caption {
-  margin: 0.65rem 0 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 1.35rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #000000;
   text-align: center;
+  background: #ffffff;
+  border: 2px solid #86efac;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  max-width: min(800px, 94vw);
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
@@ -1678,13 +1719,13 @@ onMounted(fetchAnnouncements)
   .notice-body-layout--with-image .notice-figure {
     width: 100%;
     align-self: flex-end;
-    max-width: 120px;
+    max-width: 148px;
     margin-left: auto;
   }
 
   .notice-image {
     width: 100%;
-    height: 72px;
+    height: 96px;
   }
 }
 
@@ -1709,6 +1750,12 @@ onMounted(fetchAnnouncements)
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
 }
 
+.announcement-page.light-theme .notice-toolbar {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
+}
+
 .announcement-page.light-theme .hero-icon {
   background: #dcfce7;
   border-color: #86efac;
@@ -1721,10 +1768,6 @@ onMounted(fetchAnnouncements)
 
 .announcement-page.light-theme .notice-hero h1 {
   color: #052e16;
-}
-
-.announcement-page.light-theme .hero-desc {
-  color: #166534;
 }
 
 .announcement-page.light-theme .hero-stat {
@@ -1838,9 +1881,15 @@ onMounted(fetchAnnouncements)
 }
 
 .announcement-page.light-theme .action-btn--danger {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+}
+
+.announcement-page.light-theme .action-btn--danger:hover {
   color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: #fecaca;
+  border-color: #dc2626;
 }
 
 .announcement-page.light-theme .notice-card-footer {
@@ -1863,12 +1912,14 @@ onMounted(fetchAnnouncements)
 }
 
 .announcement-page.light-theme .modal-head h3 {
-  color: #052e16;
+  color: #000000;
+  font-size: 1.25rem;
 }
 
 .announcement-page.light-theme .modal-close {
   background: #f0fdf4;
-  color: #64748b;
+  color: #000000;
+  border: 1.5px solid #cbd5e1;
 }
 
 .announcement-page.light-theme .modal-foot {
@@ -1876,46 +1927,85 @@ onMounted(fetchAnnouncements)
 }
 
 .announcement-page.light-theme .form-field label {
-  color: #166534;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .announcement-page.light-theme .form-field input,
 .announcement-page.light-theme .form-field textarea {
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: #052e16;
+  border: 2px solid #94a3b8;
+  color: #000000;
+  font-size: 1rem;
+}
+
+.announcement-page.light-theme .form-field input::placeholder,
+.announcement-page.light-theme .form-field textarea::placeholder {
+  color: #475569;
+  opacity: 1;
+}
+
+.announcement-page.light-theme .opt {
+  color: #334155;
 }
 
 .announcement-page.light-theme .upload-zone {
-  border-color: #bbf7d0;
+  border-color: #86efac;
   background: #f8fdf9;
 }
 
+.announcement-page.light-theme .upload-placeholder {
+  color: #334155;
+}
+
 .announcement-page.light-theme .upload-placeholder span {
-  color: #166534;
+  color: #000000;
+  font-size: 1rem;
+}
+
+.announcement-page.light-theme .upload-placeholder small {
+  color: #475569;
+  font-size: 0.875rem;
 }
 
 .announcement-page.light-theme .btn-ghost {
   background: #ffffff;
-  border: 1.5px solid #86efac;
-  color: #14532d;
+  border: 2px solid #64748b;
+  color: #000000;
+  font-size: 1rem;
 }
 
 .announcement-page.light-theme .btn-ghost:hover {
-  background: #f0fdf4;
+  background: #f1f5f9;
+  border-color: #475569;
 }
 
 .announcement-page.light-theme .delete-warning {
-  color: #166534;
+  color: #000000;
+  font-size: 1rem;
+}
+
+.announcement-page.light-theme .btn-danger {
+  background: #dc2626;
+  border: 2px solid #b91c1c;
+  color: #ffffff;
+}
+
+.announcement-page.light-theme .btn-danger:hover {
+  background: #b91c1c;
+  border-color: #991b1b;
+  color: #ffffff;
 }
 
 .announcement-page.light-theme .preview-close {
   background: #ffffff;
   border: 1.5px solid #86efac;
-  color: #052e16;
+  color: #000000;
 }
 
 .announcement-page.light-theme .preview-caption {
-  color: #166534;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #86efac;
 }
 </style>

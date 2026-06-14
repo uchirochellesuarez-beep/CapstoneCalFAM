@@ -200,10 +200,18 @@ body.glass-light .sidebar.light-theme .active .nav-link .icon-component {
 }
 
 /* Other pages — readable light panels */
+body.glass-light .farmer-table-page.light-theme :is(
+  .tabs-container,
+  .table-wrap,
+  .section-card
+) {
+  background: var(--senior-surface) !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: var(--senior-text-body) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
 body.glass-light :is(
-  .farmer-table-page .tabs-container,
-  .farmer-table-page .table-wrap,
-  .farmer-table-page .section-card,
   .page-container .page-header,
   .page-container .card,
   .blockchain-audit-page .page-header,
@@ -215,7 +223,7 @@ body.glass-light :is(
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
-body.glass-light .farmer-table-page :is(.section-title, .member-name, .members-table th, .members-table td) {
+body.glass-light .farmer-table-page.light-theme :is(.section-title, .member-name, .members-table th, .members-table td) {
   color: var(--senior-text-body) !important;
 }
 
@@ -303,9 +311,52 @@ body.glass-light .financial-container.light-theme .tab-content .data-table thead
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
 }
 
+body.glass-light .financial-container.light-theme :is(
+  .tab-content .data-table,
+  .usage-leaders-card .data-table,
+  .expenses-table,
+  .income-table,
+  .ar-table,
+  .collections-table
+) :is(th, td):not(:last-child) {
+  border-right: 1px solid #64748b !important;
+}
+
+body.glass-light .financial-container.light-theme :is(
+  .tab-content .data-table,
+  .usage-leaders-card .data-table,
+  .expenses-table,
+  .income-table,
+  .ar-table,
+  .collections-table
+) th:not(:last-child) {
+  border-right: 2px solid #15803d !important;
+}
+
 body.glass-light .financial-container.light-theme .section-subheader h3,
 body.glass-light .financial-container.light-theme .section-header h2 {
   color: var(--senior-text) !important;
+}
+
+body.glass-light .financial-container.light-theme .tabs-container .tab {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #86efac !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+}
+
+body.glass-light .financial-container.light-theme .tabs-container .tab .tab-icon {
+  color: #166534 !important;
+}
+
+body.glass-light .financial-container.light-theme .tabs-container .tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+}
+
+body.glass-light .financial-container.light-theme .tabs-container .tab.active .tab-icon {
+  color: #ffffff !important;
 }
 
 /* ===== Members Management — beat glass-unified dark !important rules ===== */
@@ -316,6 +367,60 @@ body.glass-light .farmer-table-page.light-theme {
 
 body.glass-light .farmer-table-page.light-theme .page-title {
   color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 1.875rem !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .filter-bar {
+  background: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .filter-search-input,
+body.glass-light .farmer-table-page.light-theme .filter-select {
+  font-size: 1rem !important;
+  color: #000000 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(
+  .members-table th,
+  .members-table td,
+  .filter-label,
+  .filter-hint,
+  .tab-btn,
+  .role-tab-label
+) {
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table th {
+  font-size: 0.8125rem !important;
+  text-transform: uppercase;
+  white-space: nowrap !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table td {
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .registered-members-title {
+  font-size: 1.25rem !important;
+  color: #000000 !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tabs {
+  background: #f4faf6 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .role-tab {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .tab-btn.active .tab-icon {
+  color: #ffffff !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .filter-bar {
@@ -338,6 +443,20 @@ body.glass-light .farmer-table-page.light-theme .edit-input {
 body.glass-light .farmer-table-page.light-theme .filter-search-input::placeholder,
 body.glass-light .farmer-table-page.light-theme .search-input::placeholder {
   color: #64748b !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-summary-tabs .tab-btn {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  color: #052e16 !important;
+  filter: none !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-summary-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .tab-btn,
@@ -371,10 +490,14 @@ body.glass-light .farmer-table-page.light-theme .role-tabs {
 
 body.glass-light .farmer-table-page.light-theme .role-tab-label {
   color: var(--senior-text) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .role-tab-count {
   color: var(--senior-accent) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .role-tab.active .role-tab-label,
@@ -430,13 +553,24 @@ body.glass-light .farmer-table-page.light-theme :is(
 
 body.glass-light .farmer-table-page.light-theme .members-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
+  color: #052e16 !important;
+  font-weight: 800 !important;
   border-bottom: 1px solid #86efac !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td {
-  color: var(--senior-text-body) !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
   background: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-table td :is(span, strong) {
+  color: #000000 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .members-td-name {
+  color: #000000 !important;
+  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table tbody tr:nth-child(even) td,
@@ -597,6 +731,12 @@ body.glass-light .news-page.light-theme .search-input::placeholder {
   color: #64748b !important;
 }
 
+body.glass-light .news-page.light-theme .notice-toolbar {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
 body.glass-light .news-page.light-theme :deep(.notice-card) {
   background: #ffffff !important;
   border: 2px solid var(--senior-border-soft) !important;
@@ -635,6 +775,90 @@ body.glass-light .announcement-page.light-theme :is(.search-input, .sort-select)
 
 body.glass-light .announcement-page.light-theme .search-input::placeholder {
   color: #64748b !important;
+}
+
+body.glass-light .announcement-page.light-theme .notice-toolbar {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .announcement-page.light-theme .action-btn--danger {
+  color: #dc2626 !important;
+  background: #fee2e2 !important;
+  border: 2px solid #ef4444 !important;
+}
+
+body.glass-light .announcement-page.light-theme .action-btn--danger:hover {
+  color: #991b1b !important;
+  background: #fecaca !important;
+  border-color: #dc2626 !important;
+}
+
+body.glass-light .announcement-page.light-theme .btn-danger {
+  background: #dc2626 !important;
+  border: 2px solid #b91c1c !important;
+  color: #ffffff !important;
+}
+
+body.glass-light .announcement-page.light-theme .btn-danger:hover {
+  background: #b91c1c !important;
+  border-color: #991b1b !important;
+  color: #ffffff !important;
+}
+
+body.glass-light .announcement-page.light-theme .delete-warning {
+  color: #000000 !important;
+}
+
+body.glass-light .announcement-page.light-theme .modal-head h3 {
+  color: #000000 !important;
+}
+
+body.glass-light .announcement-page.light-theme .form-field label {
+  color: #000000 !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .announcement-page.light-theme .form-field :is(input, textarea) {
+  color: #000000 !important;
+  border: 2px solid #94a3b8 !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .announcement-page.light-theme .form-field :is(input, textarea)::placeholder {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+body.glass-light .announcement-page.light-theme .upload-placeholder :is(span, small) {
+  color: #000000 !important;
+}
+
+body.glass-light .announcement-page.light-theme .upload-placeholder small {
+  color: #475569 !important;
+}
+
+body.glass-light .announcement-page.light-theme .btn-ghost {
+  color: #000000 !important;
+  border: 2px solid #64748b !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .announcement-page.light-theme .preview-caption {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+}
+
+body.glass-light .news-page.light-theme .preview-caption {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
 }
 
 body.glass-light .announcement-page.light-theme .notice-card {
@@ -686,15 +910,83 @@ body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
+  font-size: 1rem !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table td {
   color: var(--senior-text-body) !important;
   background: #ffffff !important;
+  font-size: 1.0625rem !important;
 }
 
-body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td {
+body.glass-light .page-container.barangays-page.light-theme .status-pill.active {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 2px solid #16a34a !important;
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-view-area {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 2px solid #16a34a !important;
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-header-add {
+  color: #000000 !important;
+  font-size: 1.0625rem !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input) {
+  font-size: 1.0625rem !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
+  font-size: 1rem !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td) {
+  font-size: 1.0625rem !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td:not(.td-actions) {
   background: #f8fdf9 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td.td-actions {
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-icon-btn {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-icon-edit {
+  color: #ea580c !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-icon-delete {
+  color: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .form-hint-area {
+  background: #f0fdf4 !important;
+  border: 2px solid #86efac !important;
+  color: #000000 !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-icon-btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table tbody tr:hover td {

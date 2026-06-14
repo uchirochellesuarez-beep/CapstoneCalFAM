@@ -148,8 +148,20 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  <button @click="editMachinery(machine)" class="btn-icon-small" title="Edit">✏️</button>
-                  <button @click="deleteMachineryConfirm(machine)" class="btn-icon-small btn-danger" title="Delete">🗑️</button>
+                  <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -216,12 +228,22 @@
                 </span>
               </td>
               <td class="actions-cell">
-                <button @click="editMachinery(machine)" class="btn-sm btn-info" title="Edit">
-                  ✏️
-                </button>
-                <button @click="deleteMachineryConfirm(machine)" class="btn-sm btn-danger" title="Delete">
-                  🗑️
-                </button>
+                <div class="action-buttons">
+                  <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -466,12 +488,20 @@
                     <span class="status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
                   </td>
                   <td>
-                    <div class="inv2-actions">
-                      <button type="button" @click="editMachinery(m)" class="inv2-action-btn inv2-btn-edit" title="Edit Machinery">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <div class="inv2-actions action-buttons">
+                      <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
                       </button>
-                      <button type="button" @click="deleteMachineryConfirm(m)" class="inv2-action-btn inv2-btn-del" title="Delete Entry">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -516,14 +546,20 @@
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                   {{ m.max_capacity }} {{ m.capacity_unit }}
                 </div>
-                <div class="inv2-card-actions">
-                  <button type="button" @click="editMachinery(m)" class="inv2-action-btn inv2-btn-edit" title="Edit Machinery">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
+                <div class="inv2-card-actions action-buttons">
+                  <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
                   </button>
-                  <button type="button" @click="deleteMachineryConfirm(m)" class="inv2-action-btn inv2-btn-del" title="Delete Entry">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                    Delete
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -2388,8 +2424,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.22rem;
+  gap: 0.35rem;
   flex-wrap: nowrap;
+}
+
+.inv2-card-actions.action-buttons {
+  justify-content: flex-start;
+  margin-top: 10px;
 }
 
 .btn-icon-small,

@@ -52,7 +52,6 @@
             loading="lazy"
             @click="$emit('preview-image', imageUrl, item.title)"
           />
-          <figcaption class="notice-figure-cap">Enlarge</figcaption>
         </figure>
       </div>
     </div>
@@ -167,11 +166,11 @@ const statusLabel = computed(() => {
 <style scoped>
 .notice-card {
   position: relative;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(28, 42, 33, 0.94);
   border: 1px solid rgba(190, 235, 203, 0.14);
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
 .notice-card--featured {
@@ -192,8 +191,8 @@ const statusLabel = computed(() => {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 1rem 1.1rem 0.75rem 1.25rem;
+  gap: 0.85rem 1.15rem;
+  padding: 1.15rem 1.35rem 0.9rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -214,8 +213,8 @@ const statusLabel = computed(() => {
   text-align: right;
 }
 
-.notice-date { font-size: 0.8rem; font-weight: 700; color: #eefde6; }
-.notice-time { font-size: 0.68rem; color: rgba(220, 238, 211, 0.5); }
+.notice-date { font-size: 0.875rem; font-weight: 700; color: #eefde6; }
+.notice-time { font-size: 0.75rem; color: rgba(220, 238, 211, 0.5); }
 
 .notice-author {
   display: flex;
@@ -226,8 +225,8 @@ const statusLabel = computed(() => {
 }
 
 .author-avatar {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -236,8 +235,8 @@ const statusLabel = computed(() => {
 }
 
 .author-info { display: flex; flex-direction: column; min-width: 0; }
-.author-name { font-size: 0.8rem; font-weight: 700; color: #eefde6; }
-.author-role { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.author-name { font-size: 0.9375rem; font-weight: 700; color: #eefde6; }
+.author-role { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .role-president { color: #a5b4fc; }
 .role-admin { color: #86efac; }
 .role-farmer { color: #fde68a; }
@@ -258,42 +257,42 @@ const statusLabel = computed(() => {
 
 .notice-actions { display: flex; gap: 0.35rem; }
 .action-btn {
-  width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center;
+  width: 2.25rem; height: 2.25rem; display: flex; align-items: center; justify-content: center;
   border-radius: 8px; border: 1px solid rgba(190, 235, 203, 0.14);
   background: rgba(0, 0, 0, 0.2); color: #2dd4bf; cursor: pointer; padding: 0;
 }
-.action-btn svg { width: 0.9rem; height: 0.9rem; }
+.action-btn svg { width: 1rem; height: 1rem; }
 .action-btn--danger { color: #f87171; }
 
-.notice-card-body { padding: 1rem 1.1rem 0.85rem 1.25rem; }
+.notice-card-body { padding: 1.15rem 1.35rem 1rem 1.5rem; }
 .notice-badge-latest {
   display: inline-block; margin-bottom: 0.5rem; padding: 0.15rem 0.5rem; border-radius: 6px;
   font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
   background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.35);
 }
-.notice-title { margin: 0 0 0.45rem; font-size: 1.15rem; font-weight: 800; line-height: 1.35; color: #eefde6; }
+.notice-title { margin: 0 0 0.55rem; font-size: 1.25rem; font-weight: 800; line-height: 1.35; color: #eefde6; }
 .notice-body-layout { width: 100%; }
-.notice-body-layout--with-image { display: flex; align-items: flex-start; gap: 0.75rem; }
+.notice-body-layout--with-image { display: flex; align-items: flex-start; gap: 1rem; }
 .notice-body-layout--with-image .notice-main { flex: 1; min-width: 0; }
 .notice-main { width: 100%; }
-.notice-content { margin: 0; font-size: 0.9rem; line-height: 1.6; color: rgba(220, 238, 211, 0.72); white-space: pre-wrap; word-break: break-word; }
+.notice-content { margin: 0; font-size: 0.975rem; line-height: 1.65; color: rgba(220, 238, 211, 0.72); white-space: pre-wrap; word-break: break-word; }
 .notice-content--clamped {
   display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
 }
 .read-more-btn {
-  margin-top: 0.5rem; padding: 0; border: none; background: none; color: #4ade80;
-  font-size: 0.8rem; font-weight: 700; cursor: pointer; text-decoration: underline;
+  margin-top: 0.55rem; padding: 0; border: none; background: none; color: #4ade80;
+  font-size: 0.875rem; font-weight: 700; cursor: pointer; text-decoration: underline;
 }
-.notice-figure { flex-shrink: 0; margin: 0; width: 108px; }
+.notice-figure { flex-shrink: 0; margin: 0; width: 148px; }
 .notice-image {
-  width: 108px; height: 82px; object-fit: cover; border-radius: 8px;
+  width: 148px; height: 112px; object-fit: cover; border-radius: 10px;
   border: 1px solid rgba(190, 235, 203, 0.14); cursor: zoom-in; display: block;
 }
-.notice-figure-cap { margin-top: 0.25rem; font-size: 0.58rem; color: rgba(220, 238, 211, 0.5); text-align: center; }
+.notice-figure-cap { margin-top: 0.35rem; font-size: 0.6875rem; color: rgba(220, 238, 211, 0.5); text-align: center; }
 .notice-card-footer {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem;
-  padding: 0.6rem 1.1rem 0.75rem 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.72rem; color: rgba(220, 238, 211, 0.5);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem;
+  padding: 0.75rem 1.35rem 0.9rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.8125rem; color: rgba(220, 238, 211, 0.5);
 }
 .edited-tag, .rejection-tag {
   padding: 0.1rem 0.4rem; border-radius: 4px; background: rgba(255, 255, 255, 0.06);

@@ -861,14 +861,14 @@ canvas {
 /* =============================================
    FARMERS TABLE — Remove white blend on boxes
    ============================================= */
-.farmer-table-page .tabs-container,
-.farmer-table-page .rejected-card,
-.farmer-table-page .table-wrap,
-.farmer-table-page .section-card,
-.farmer-table-page .role-tabs,
-.farmer-table-page .modal-content,
-.farmer-table-page .members-table,
-.farmer-table-page .table-container {
+.farmer-table-page:not(.light-theme) .tabs-container,
+.farmer-table-page:not(.light-theme) .rejected-card,
+.farmer-table-page:not(.light-theme) .table-wrap,
+.farmer-table-page:not(.light-theme) .section-card,
+.farmer-table-page:not(.light-theme) .role-tabs,
+.farmer-table-page:not(.light-theme) .modal-content,
+.farmer-table-page:not(.light-theme) .members-table,
+.farmer-table-page:not(.light-theme) .table-container {
   background: linear-gradient(145deg, rgba(23, 36, 28, 0.96), rgba(16, 27, 21, 0.95)) !important;
   border: 1px solid rgba(126, 184, 145, 0.24) !important;
   box-shadow: 0 10px 24px rgba(6, 12, 9, 0.42) !important;
@@ -876,65 +876,65 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.farmer-table-page .tab-btn,
-.farmer-table-page .role-tab,
-.farmer-table-page .refresh-btn,
-.farmer-table-page .search-input,
-.farmer-table-page .role-select,
-.farmer-table-page .edit-input {
+.farmer-table-page:not(.light-theme) .tab-btn,
+.farmer-table-page:not(.light-theme) .role-tab,
+.farmer-table-page:not(.light-theme) .refresh-btn,
+.farmer-table-page:not(.light-theme) .search-input,
+.farmer-table-page:not(.light-theme) .role-select,
+.farmer-table-page:not(.light-theme) .edit-input {
   background: rgba(18, 31, 24, 0.92) !important;
   border: 1px solid rgba(126, 184, 145, 0.28) !important;
   color: #dcfce7 !important;
   box-shadow: none !important;
 }
 
-.farmer-table-page .tab-btn:hover,
-.farmer-table-page .role-tab:hover,
-.farmer-table-page .refresh-btn:hover {
+.farmer-table-page:not(.light-theme) .tab-btn:hover,
+.farmer-table-page:not(.light-theme) .role-tab:hover,
+.farmer-table-page:not(.light-theme) .refresh-btn:hover {
   background: rgba(25, 42, 32, 0.96) !important;
   color: #ecfdf5 !important;
 }
 
-.farmer-table-page .tab-btn.active,
-.farmer-table-page .role-tab.active {
+.farmer-table-page:not(.light-theme) .tab-btn.active,
+.farmer-table-page:not(.light-theme) .role-tab.active {
   background: linear-gradient(135deg, rgba(16, 129, 67, 0.92), rgba(5, 150, 105, 0.88)) !important;
   border-color: rgba(134, 239, 172, 0.5) !important;
   color: #f0fdf4 !important;
 }
 
-.farmer-table-page .section-title,
-.farmer-table-page .rejected-title,
-.farmer-table-page .state-text,
-.farmer-table-page .td-muted,
-.farmer-table-page .detail-value,
-.farmer-table-page .member-name,
-.farmer-table-page .modal-title,
-.farmer-table-page .members-table th,
-.farmer-table-page .members-table td,
-.farmer-table-page .rej-table td {
+.farmer-table-page:not(.light-theme) .section-title,
+.farmer-table-page:not(.light-theme) .rejected-title,
+.farmer-table-page:not(.light-theme) .state-text,
+.farmer-table-page:not(.light-theme) .td-muted,
+.farmer-table-page:not(.light-theme) .detail-value,
+.farmer-table-page:not(.light-theme) .member-name,
+.farmer-table-page:not(.light-theme) .modal-title,
+.farmer-table-page:not(.light-theme) .members-table th,
+.farmer-table-page:not(.light-theme) .members-table td,
+.farmer-table-page:not(.light-theme) .rej-table td {
   color: #dcfce7 !important;
 }
 
-.farmer-table-page .rej-table tbody tr:nth-child(even) td,
-.farmer-table-page .members-table tbody tr:nth-child(even) td {
+.farmer-table-page:not(.light-theme) .rej-table tbody tr:nth-child(even) td,
+.farmer-table-page:not(.light-theme) .members-table tbody tr:nth-child(even) td {
   background: rgba(255, 255, 255, 0.02) !important;
 }
 
-.farmer-table-page .rej-table tbody tr:hover td,
-.farmer-table-page .members-table tbody tr:hover td {
+.farmer-table-page:not(.light-theme) .rej-table tbody tr:hover td,
+.farmer-table-page:not(.light-theme) .members-table tbody tr:hover td {
   background: rgba(74, 222, 128, 0.08) !important;
 }
 
-.farmer-table-page .avatar-placeholder,
-.farmer-table-page .role-badge {
+.farmer-table-page:not(.light-theme) .avatar-placeholder,
+.farmer-table-page:not(.light-theme) .role-badge {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(126, 184, 145, 0.26) !important;
   color: #dcfce7 !important;
 }
 
 /* Pending + registered roster titles — align with unified page headings */
-.farmer-table-page .registered-members-title,
-.farmer-table-page .pending-members-card > .section-header-with-actions .section-title {
+.farmer-table-page:not(.light-theme) .registered-members-title,
+.farmer-table-page:not(.light-theme) .pending-members-card > .section-header-with-actions .section-title {
   background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
@@ -1210,10 +1210,34 @@ canvas {
 .financial-container[class] .report-option-card h4,
 .financial-container[class] .orientation-label,
 .financial-container[class] .checkbox-inline span,
-.financial-container[class] .filter-checkbox span,
 .financial-container[class] .date-input-group label {
   color: #111827 !important;
   text-shadow: none !important;
+}
+
+.financial-container[class] .report-option-card h4 {
+  font-size: 1.375rem !important;
+  font-weight: 800 !important;
+}
+
+.financial-container[class] .orientation-label {
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+}
+
+.financial-container[class] .checkbox-inline span {
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+}
+
+.financial-container[class] .filter-checkbox span {
+  color: #111827 !important;
+  text-shadow: none !important;
+  overflow: visible !important;
+  -webkit-line-clamp: unset !important;
+  display: block !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
 }
 
 .financial-container[class] .report-type-btn,
@@ -1225,6 +1249,33 @@ canvas {
   border: 1px solid #166534 !important;
   box-shadow: 0 1px 6px rgba(15, 23, 42, 0.08) !important;
   filter: none !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+}
+
+.financial-container[class] .report-type-btn .btn-text {
+  font-size: 1.125rem !important;
+  font-weight: 800 !important;
+}
+
+.financial-container[class] .btn-action {
+  font-size: 1.125rem !important;
+  font-weight: 800 !important;
+}
+
+.financial-container[class] .btn-action.print {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  border-color: #14532d !important;
+  opacity: 1 !important;
+}
+
+.financial-container[class] .btn-action.print:disabled {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  border-color: #94a3b8 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }
 
 .financial-container[class] .report-type-btn:hover,
@@ -1234,6 +1285,12 @@ canvas {
   background: #f8fafc !important;
   color: #0f172a !important;
   border-color: #94a3b8 !important;
+}
+
+.financial-container[class] .btn-action.print:hover:not(:disabled) {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+  color: #ffffff !important;
+  border-color: #14532d !important;
 }
 
 .financial-container[class] .report-type-btn.active,

@@ -10,7 +10,6 @@
         <div class="hero-text">
           <p class="hero-eyebrow">CALFFA Cooperative</p>
           <h1>Community News</h1>
-          <p class="hero-desc">Share updates from farmers and officers. Farmer posts require president approval.</p>
         </div>
       </div>
       <div class="hero-right">
@@ -724,9 +723,10 @@ onMounted(fetchNews)
   --text-muted: rgba(220, 238, 211, 0.72);
   --text-soft: rgba(220, 238, 211, 0.5);
 
-  max-width: 860px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: 1.75rem 1.75rem 3rem;
   min-height: 100vh;
   color: var(--text);
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -738,8 +738,8 @@ onMounted(fetchNews)
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1.5rem 1.6rem;
-  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  border-radius: 18px;
   background: linear-gradient(135deg, rgba(22, 101, 52, 0.35) 0%, rgba(28, 42, 33, 0.95) 55%);
   border: 1px solid var(--line);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
@@ -755,8 +755,8 @@ onMounted(fetchNews)
 }
 
 .hero-icon {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -767,11 +767,11 @@ onMounted(fetchNews)
   color: var(--green);
 }
 
-.hero-icon svg { width: 1.5rem; height: 1.5rem; }
+.hero-icon svg { width: 1.75rem; height: 1.75rem; }
 
 .hero-eyebrow {
-  margin: 0 0 0.2rem;
-  font-size: 0.68rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -780,14 +780,14 @@ onMounted(fetchNews)
 
 .notice-hero h1 {
   margin: 0;
-  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
   font-weight: 800;
   line-height: 1.2;
 }
 
 .hero-desc {
-  margin: 0.4rem 0 0;
-  font-size: 0.88rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.975rem;
   color: var(--text-muted);
   line-height: 1.45;
   max-width: 36rem;
@@ -804,22 +804,22 @@ onMounted(fetchNews)
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  padding: 0.65rem 1.25rem;
+  border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid var(--line);
-  min-width: 4.5rem;
+  min-width: 5.5rem;
 }
 
 .hero-stat-value {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--green);
   line-height: 1;
 }
 
 .hero-stat-label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -863,8 +863,12 @@ onMounted(fetchNews)
 
 .notice-toolbar {
   display: flex;
-  gap: 0.65rem;
-  margin-bottom: 1.25rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.15rem;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
 }
 
 .search-wrap { flex: 1; position: relative; min-width: 0; }
@@ -883,18 +887,18 @@ onMounted(fetchNews)
 .search-input,
 .sort-select {
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.22);
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.9375rem;
   box-sizing: border-box;
 }
 
-.search-input { padding-left: 2.25rem; }
+.search-input { padding-left: 2.45rem; }
 .search-input::placeholder { color: var(--text-soft); }
-.sort-select { width: auto; min-width: 9rem; cursor: pointer; }
+.sort-select { width: auto; min-width: 10.5rem; cursor: pointer; }
 .sort-select option { background: #132119; color: var(--text); }
 
 .news-section { margin-top: 1.5rem; }
@@ -911,13 +915,13 @@ onMounted(fetchNews)
 
 .section-head h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 800;
   color: var(--text);
 }
 
 .section-head span {
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-soft);
 }
@@ -948,7 +952,7 @@ onMounted(fetchNews)
 .notice-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.35rem;
 }
 
 .toast {
@@ -1183,10 +1187,19 @@ onMounted(fetchNews)
 }
 
 .preview-caption {
-  margin: 0.65rem 0 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 1.35rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #000000;
   text-align: center;
+  background: #ffffff;
+  border: 2px solid #86efac;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  max-width: min(800px, 94vw);
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
@@ -1210,6 +1223,12 @@ onMounted(fetchNews)
 
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
   color: var(--text);
+}
+
+.news-page.light-theme .notice-toolbar {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
 }
 
 .news-page.light-theme .notice-hero {
@@ -1362,7 +1381,9 @@ onMounted(fetchNews)
 }
 
 .news-page.light-theme .preview-caption {
-  color: #166534;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #86efac;
 }
 
 /* News post cards (child component) */

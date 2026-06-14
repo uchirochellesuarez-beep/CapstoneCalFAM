@@ -28,12 +28,6 @@
     <!-- Empty State -->
     <div v-else-if="farmers.length === 0" class="empty-state">
       <p>No pending members found.</p>
-      <p class="empty-hint">If you expect pending accounts, verify that:</p>
-      <ul class="empty-checklist">
-        <li>- You are logged in as an admin account</li>
-        <li>- The backend server is running (http://localhost:5000)</li>
-        <li>- New users have status set to <code>pending</code> in the database</li>
-      </ul>
     </div>
 
     <!-- Pending Members Table -->
@@ -130,27 +124,43 @@
                 <div class="members-action-row">
                   <button
                     type="button"
-                    class="action-btn action-btn-view"
+                    class="table-action-btn table-action-approve"
                     :disabled="processingId === member.id || member.role === 'admin'"
+                    title="Approve"
+                    aria-label="Approve"
                     @click="approveMember(member.id)"
                   >
-                    {{ processingId === member.id ? '...' : 'Approve' }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                   </button>
                   <button
                     type="button"
-                    class="action-btn action-btn-edit"
+                    class="table-action-btn table-action-reject"
                     :disabled="processingId === member.id || member.role === 'admin'"
+                    title="Reject"
+                    aria-label="Reject"
                     @click="rejectMember(member.id)"
                   >
-                    Reject
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
                   </button>
                   <button
                     type="button"
-                    class="action-btn action-btn-delete"
+                    class="table-action-btn table-action-delete"
                     :disabled="processingId === member.id || member.role === 'admin'"
+                    title="Delete"
+                    aria-label="Delete"
                     @click="deleteMember(member.id)"
                   >
-                    Delete
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
                   </button>
                 </div>
               </td>
@@ -377,7 +387,7 @@ const approveAllPending = async () => {
 }
 
 .registered-members-title {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #eefde6;
   margin: 0;
@@ -444,7 +454,8 @@ const approveAllPending = async () => {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: rgba(229, 235, 231, 0.8);
+  color: rgba(229, 235, 231, 0.9);
+  font-size: 0.875rem;
 }
 
 .empty-state {
@@ -457,31 +468,6 @@ const approveAllPending = async () => {
   color: rgba(238, 253, 230, 0.95) !important;
   font-size: 16px;
   font-weight: 700;
-}
-
-.empty-hint {
-  margin-top: 10px;
-  font-size: 13px;
-  color: rgba(229, 235, 231, 0.75) !important;
-  font-weight: 600;
-}
-
-.empty-checklist {
-  margin-top: 8px;
-  padding-left: 0;
-  list-style: none;
-  font-size: 12px;
-  color: rgba(229, 235, 231, 0.7) !important;
-  line-height: 1.6;
-  font-weight: 500;
-}
-
-.empty-checklist code {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(238, 253, 230, 0.95) !important;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 11px;
 }
 
 .spinner {
@@ -606,5 +592,35 @@ const approveAllPending = async () => {
     left: 20px;
     right: 20px;
   }
+}
+
+:global(.farmer-table-page.light-theme) .registered-members-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+:global(.farmer-table-page.light-theme) .registered-members-title {
+  color: #052e16 !important;
+  background: none !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+:global(.farmer-table-page.light-theme) :is(.loading-state, .error-state, .empty-state) {
+  color: #14532d !important;
+  background: #f8fdf9 !important;
+  border: 1.5px solid #bbf7d0 !important;
+}
+
+:global(.farmer-table-page.light-theme) .empty-state > p:first-child {
+  color: #052e16 !important;
+  font-size: 1rem !important;
+}
+
+:global(.farmer-table-page.light-theme) .refresh-btn {
+  background: #ffffff !important;
+  color: #15803d !important;
+  border: 1.5px solid #86efac !important;
+  font-size: 0.9375rem !important;
 }
 </style>

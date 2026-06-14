@@ -56,13 +56,47 @@
 
       <!-- Tabs Navigation -->
       <div v-if="!isDuesOnlyView" class="tabs-container">
-        <button 
-          v-for="tab in tabs" 
+        <button
+          v-for="tab in tabs"
           :key="tab.id"
+          type="button"
           :class="['tab', { active: activeTab === tab.id }]"
           @click="activeTab = tab.id"
         >
-          {{ tab.label }}
+          <span class="tab-inner">
+            <svg v-if="tab.id === 'expenses'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <svg v-else-if="tab.id === 'income'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+            <svg v-else-if="tab.id === 'ar'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <svg v-else-if="tab.id === 'profit'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 3v18h18"/>
+              <path d="M7 16l4-4 4 4 5-6"/>
+            </svg>
+            <svg v-else-if="tab.id === 'reports'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <line x1="10" y1="9" x2="8" y2="9"/>
+            </svg>
+            <svg v-else-if="tab.id === 'dues'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="tab-label">{{ tab.label }}</span>
+          </span>
         </button>
       </div>
 
@@ -681,7 +715,14 @@
           
           <div class="distribution-grid">
             <div class="distribution-card org">
-              <div class="distribution-icon">🏛️</div>
+              <div class="distribution-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18"/>
+                  <path d="M5 21V7l7-4 7 4v14"/>
+                  <path d="M9 21v-4h6v4"/>
+                  <path d="M9 10h.01M15 10h.01"/>
+                </svg>
+              </div>
               <div class="distribution-content">
                 <h4>Organization</h4>
                 <p class="percentage">30%</p>
@@ -690,7 +731,14 @@
             </div>
 
             <div class="distribution-card training">
-              <div class="distribution-icon">📚</div>
+              <div class="distribution-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+                  <path d="M12 12l8-4.5"/>
+                  <path d="M12 12v9"/>
+                  <path d="M12 12L4 7.5"/>
+                </svg>
+              </div>
               <div class="distribution-content">
                 <h4>Training & Development</h4>
                 <p class="percentage">20%</p>
@@ -699,7 +747,14 @@
             </div>
 
             <div class="distribution-card members">
-              <div class="distribution-icon">👥</div>
+              <div class="distribution-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
               <div class="distribution-content">
                 <h4>Members Distribution</h4>
                 <p class="percentage">50%</p>
@@ -793,9 +848,9 @@
                   <input type="checkbox" v-model="reportFilters.showExpenses" />
                   <span>Expense Details</span>
                 </label>
-                <label class="filter-checkbox">
+                <label class="filter-checkbox" title="Farmer Clients Transaction Record">
                   <input type="checkbox" v-model="reportFilters.showServiceLedger" />
-                  <span>Farmer Clients Transaction Record</span>
+                  <span>Farmer Clients Record</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showCollectiblesList" />
@@ -857,7 +912,6 @@
               </option>
             </select>
           </div>
-          <p class="filter-hint">Ang filter ay awtomatikong inia-apply sa report kapag nagbago ang makinarya.</p>
         </div>
         
         <!-- Loading State (initial generate only) -->
@@ -2010,11 +2064,11 @@ if (!hasAccess.value) {
 // Others (Treasurer, President, Auditor): See all tabs
 const activeTab = ref('expenses');
 const allTabs = [
-  { id: 'expenses', label: '📝 Expenses' },
-  { id: 'income', label: '💹 Income' },
-  { id: 'ar', label: '📋 A/R & Collections' },
-  { id: 'profit', label: '📊 Profit Computation' },
-  { id: 'reports', label: '📋 Reports' }
+  { id: 'expenses', label: 'Expenses' },
+  { id: 'income', label: 'Income' },
+  { id: 'ar', label: 'A/R & Collections' },
+  { id: 'profit', label: 'Profit Computation' },
+  { id: 'reports', label: 'Reports' }
 ];
 
 const tabs = computed(() => {
@@ -4160,21 +4214,43 @@ onBeforeUnmount(() => {
 }
 
 .tab {
-  padding: 15px 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
   border: 1px solid rgba(134, 239, 172, 0.35);
   background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(220, 252, 231, 0.9));
   cursor: pointer;
-  font-size: 18px;
+  font-size: 1rem;
   font-weight: 800;
   color: #14532d;
-  border-radius: 16px;
+  border-radius: 14px;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
-  min-height: 54px;
+  min-height: 52px;
   flex: 1 1 0;
   text-align: center;
-  justify-content: center;
   box-shadow: 0 8px 16px rgba(3, 16, 10, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.tab-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tab-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.tab-label {
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -4187,8 +4263,12 @@ onBeforeUnmount(() => {
 .tab.active {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%);
   border-color: rgba(167, 243, 208, 0.65);
-  color: #f0fdf4;
+  color: #ffffff;
   box-shadow: 0 12px 22px rgba(6, 78, 35, 0.35), inset 0 1px 0 rgba(220, 252, 231, 0.22);
+}
+
+.tab.active .tab-icon {
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {
@@ -4197,10 +4277,15 @@ onBeforeUnmount(() => {
   }
 
   .tab {
-    padding: 13px 20px;
-    font-size: 16px;
+    padding: 12px 16px;
+    font-size: 0.9375rem;
     min-height: 48px;
     flex: 1 1 calc(50% - 10px);
+  }
+
+  .tab-label {
+    white-space: normal;
+    text-align: center;
   }
 }
 
@@ -4265,14 +4350,6 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, rgba(39, 58, 45, 0.72), rgba(26, 41, 32, 0.7));
 }
 
-.filter-hint {
-  flex: 1 1 100%;
-  margin: 0;
-  font-size: 0.82rem;
-  color: rgba(240, 253, 244, 0.75);
-  line-height: 1.4;
-}
-
 .filter-input,
 .filter-select-glass {
   padding: 11px 14px;
@@ -4331,7 +4408,18 @@ onBeforeUnmount(() => {
 .collections-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: 16px;
+}
+
+.expenses-table th:not(:last-child),
+.income-table th:not(:last-child),
+.ar-table th:not(:last-child),
+.collections-table th:not(:last-child),
+.expenses-table td:not(:last-child),
+.income-table td:not(:last-child),
+.ar-table td:not(:last-child),
+.collections-table td:not(:last-child) {
+  border-right: 1px solid rgba(167, 211, 178, 0.22);
 }
 
 .expenses-table thead,
@@ -4346,13 +4434,14 @@ onBeforeUnmount(() => {
 .ar-table th,
 .collections-table th {
   padding: 16px 18px;
-  text-align: left;
+  text-align: center;
+  vertical-align: middle;
   font-weight: 800;
   color: var(--text-main);
   border-bottom: 2px solid rgba(74, 222, 128, 0.2);
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   background: rgba(74, 222, 128, 0.08);
 }
 
@@ -4363,8 +4452,10 @@ onBeforeUnmount(() => {
   padding: 16px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .expenses-table tbody tr:nth-child(even),
@@ -4387,6 +4478,7 @@ onBeforeUnmount(() => {
   font-size: 15px;
   color: #b7f7c8;
   font-family: 'Courier New', monospace;
+  text-align: center;
 }
 
 .amount-cell.balance {
@@ -4413,7 +4505,7 @@ onBeforeUnmount(() => {
 }
 
 .section-subheader h3 {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   color: var(--text-main);
   margin: 0;
@@ -4621,6 +4713,8 @@ onBeforeUnmount(() => {
 .actions-cell {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
 .btn-edit,
@@ -4707,20 +4801,20 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .expense-item span:first-child {
-  color: rgba(220, 238, 211, 0.82);
+  color: rgba(220, 238, 211, 0.88);
   font-weight: 600;
 }
 
 .expense-item span:last-child {
   color: #86efac;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 15px;
   font-family: monospace;
 }
 
@@ -4821,10 +4915,40 @@ onBeforeUnmount(() => {
 .distribution-card.members::before { background: linear-gradient(90deg, #16a34a, #4ade80); }
 
 .distribution-icon {
-  font-size: 52px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
   margin-bottom: 14px;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.distribution-icon svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.distribution-card.org .distribution-icon {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.distribution-card.training .distribution-icon {
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.14);
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.distribution-card.members .distribution-icon {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
 .distribution-content {
@@ -5737,9 +5861,20 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
+  align-items: stretch;
+}
+
+@media (min-width: 960px) {
+  .report-options-grid {
+    grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.55fr) minmax(220px, 1fr);
+  }
 }
 
 .report-option-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
   background: linear-gradient(155deg,
     rgba(24, 49, 38, 0.88) 0%,
     rgba(21, 44, 35, 0.9) 58%,
@@ -5754,9 +5889,9 @@ onBeforeUnmount(() => {
 
 .report-option-card h4 {
   margin: 0 0 16px 0;
-  font-size: 1.08rem;
+  font-size: 1.375rem;
   color: #ecfdf5;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.01em;
   display: flex;
   align-items: center;
@@ -5814,8 +5949,9 @@ onBeforeUnmount(() => {
 }
 
 .report-type-btn .btn-text {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .custom-date-toggle {
@@ -5827,16 +5963,16 @@ onBeforeUnmount(() => {
 .checkbox-inline {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.125rem;
   color: #ecfdf5;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .checkbox-inline input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   accent-color: #16a34a;
 }
 
@@ -5903,22 +6039,31 @@ onBeforeUnmount(() => {
 
 .filter-checkboxes {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 10px;
+  align-items: stretch;
+}
+
+@media (min-width: 1180px) {
+  .filter-checkboxes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .filter-checkbox {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 14px;
   background: linear-gradient(140deg,
     rgba(18, 42, 31, 0.9) 0%,
     rgba(23, 51, 38, 0.92) 100%);
   border-radius: 10px;
   border: 1px solid rgba(136, 186, 153, 0.32);
   cursor: pointer;
-  font-size: 0.88rem;
   transition: all 0.2s;
   box-shadow: inset 0 1px 0 rgba(184, 230, 201, 0.08);
 }
@@ -5932,15 +6077,24 @@ onBeforeUnmount(() => {
 }
 
 .filter-checkbox span {
-  color: #f1fff7;
+  flex: 1;
+  min-width: 0;
+  color: #ffffff;
   font-weight: 700;
+  font-size: 1.0625rem;
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
 }
 
 .filter-checkbox input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  margin-top: 1px;
+  flex-shrink: 0;
   accent-color: #16a34a;
 }
 
@@ -5948,6 +6102,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: auto;
 }
 
 .orientation-setting {
@@ -5960,10 +6115,10 @@ onBeforeUnmount(() => {
 
 .orientation-label {
   display: block;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
   color: #d8f3e3;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .orientation-toggle {
@@ -5973,15 +6128,16 @@ onBeforeUnmount(() => {
 
 .orient-btn {
   flex: 1;
-  padding: 8px 10px;
+  padding: 12px 14px;
   border: 1px solid rgba(143, 194, 162, 0.4);
   border-radius: 8px;
   background: linear-gradient(135deg,
     rgba(173, 108, 40, 0.78),
     rgba(93, 168, 96, 0.78));
   cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  line-height: 1.25;
   transition: all 0.2s;
   text-align: center;
   color: #f6fff9;
@@ -6007,12 +6163,13 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   border: 1px solid rgba(152, 203, 171, 0.45);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.25;
   transition: all 0.2s;
   color: #f6fff9;
   box-shadow: 0 6px 16px rgba(7, 15, 11, 0.3);
@@ -6029,10 +6186,12 @@ onBeforeUnmount(() => {
 }
 
 .btn-action.print:disabled {
-  background: #9ca3af;
+  background: #64748b;
+  color: #f8fafc;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  opacity: 1;
 }
 
 .btn-action.select-all {
@@ -6999,7 +7158,7 @@ onBeforeUnmount(() => {
   #printable-report .distribution-summary .distribution-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .filter-checkboxes {
     grid-template-columns: 1fr;
   }
@@ -7384,7 +7543,12 @@ onBeforeUnmount(() => {
 .tab-content .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+.tab-content .data-table th:not(:last-child),
+.tab-content .data-table td:not(:last-child) {
+  border-right: 1px solid rgba(167, 211, 178, 0.22);
 }
 
 .tab-content .data-table thead {
@@ -7392,21 +7556,25 @@ onBeforeUnmount(() => {
 }
 
 .tab-content .data-table th {
-  padding: 12px 14px;
-  text-align: left;
+  padding: 14px 16px;
+  text-align: center;
+  vertical-align: middle;
   font-weight: 800;
   color: var(--text-main);
   border-bottom: 2px solid rgba(74, 222, 128, 0.2);
-  font-size: 12px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
 
 .tab-content .data-table td {
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
   font-weight: 600;
+  font-size: 15px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .tab-content .data-table tbody tr:nth-child(even) {
@@ -7425,6 +7593,7 @@ onBeforeUnmount(() => {
   margin: 0;
   text-shadow: none;
   line-height: 1.25;
+  text-align: center;
 }
 
 .empty-message {
@@ -7507,12 +7676,39 @@ onBeforeUnmount(() => {
   box-shadow: 12px 12px 22px rgba(8, 13, 10, 0.42);
 }
 
+.tab-content .data-table th.text-right,
+.expenses-table th.text-right,
+.income-table th.text-right,
+.ar-table th.text-right,
+.collections-table th.text-right,
+.collectibles-data-table th.text-right,
+.collectibles-list-table th.text-right,
+.farmer-clients-record-table th.text-right,
+.tab-content .data-table td.text-right,
+.expenses-table td.text-right,
+.income-table td.text-right,
+.ar-table td.text-right,
+.collections-table td.text-right,
+.collectibles-data-table td.text-right,
+.collectibles-list-table td.text-right,
+.farmer-clients-record-table td.text-right,
+.tab-content .data-table td.amount,
+.expenses-table td.amount-cell,
+.income-table td.amount-cell,
+.ar-table td.amount-cell,
+.collections-table td.amount-cell {
+  text-align: center !important;
+}
+
 .usage-table td small {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
+  margin-left: auto;
+  margin-right: auto;
   color: var(--text-soft);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 12px;
+  text-align: center;
 }
 
 .interest-already-applied {
@@ -7625,6 +7821,61 @@ tr.selected {
   font-size: 17px;
 }
 
+.financial-container.light-theme .tabs-container .tab {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #bbf7d0 !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+  filter: none !important;
+}
+
+.financial-container.light-theme .tabs-container .tab .tab-icon {
+  color: #166534 !important;
+}
+
+.financial-container.light-theme .tabs-container .tab:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  border-color: #86efac !important;
+}
+
+.financial-container.light-theme .tabs-container .tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.22) !important;
+}
+
+.financial-container.light-theme .tabs-container .tab.active .tab-icon {
+  color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab {
+  background: rgba(30, 66, 52, 0.92) !important;
+  color: #ecfdf5 !important;
+  border-color: rgba(167, 211, 178, 0.28) !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22) !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab .tab-icon {
+  color: #86efac !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab:hover {
+  background: rgba(37, 82, 65, 0.96) !important;
+  color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(232, 196, 104, 0.35) !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab.active .tab-icon {
+  color: #ffffff !important;
+}
+
 .financial-container.light-theme .denied-content {
   background: #fffef9;
   border: 2px solid #86efac;
@@ -7718,7 +7969,7 @@ tr.selected {
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) tbody tr:nth-child(even) {
@@ -7807,6 +8058,24 @@ tr.selected {
   background: #f0fdf4;
 }
 
+.financial-container.light-theme .distribution-card.org .distribution-icon {
+  color: #d97706;
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.financial-container.light-theme .distribution-card.training .distribution-icon {
+  color: #0d9488;
+  background: #f0fdfa;
+  border-color: #5eead4;
+}
+
+.financial-container.light-theme .distribution-card.members .distribution-icon {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
 .financial-container.light-theme .btn-secondary,
 .financial-container.light-theme .btn-secondary-outline {
   background: #ffffff;
@@ -7848,6 +8117,85 @@ tr.selected {
   background: #fffef9 !important;
   border: 2px solid #86efac !important;
   color: #14532d !important;
+}
+
+.financial-container.light-theme .filter-checkbox {
+  background: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.06) !important;
+}
+
+.financial-container.light-theme .filter-checkbox:hover {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+}
+
+.financial-container.light-theme .filter-checkbox span {
+  color: #000000 !important;
+  text-shadow: none !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+  overflow: visible !important;
+  -webkit-line-clamp: unset !important;
+}
+
+.financial-container.light-theme .report-option-card h4,
+.financial-container.light-theme .orientation-label,
+.financial-container.light-theme .checkbox-inline {
+  color: #052e16 !important;
+  font-weight: 800 !important;
+}
+
+.financial-container.light-theme .report-option-card h4 {
+  font-size: 1.375rem !important;
+}
+
+.financial-container.light-theme .orientation-label {
+  font-size: 1.0625rem !important;
+}
+
+.financial-container.light-theme .checkbox-inline span {
+  font-size: 1.125rem !important;
+}
+
+.financial-container.light-theme .report-type-btn .btn-text {
+  color: #052e16 !important;
+  font-size: 1.125rem !important;
+}
+
+.financial-container.light-theme .report-type-btn.active .btn-text {
+  color: #14532d !important;
+}
+
+.financial-container.light-theme .orient-btn,
+.financial-container.light-theme .btn-action.select-all,
+.financial-container.light-theme .btn-action.clear {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 2px solid #15803d !important;
+  opacity: 1 !important;
+  font-size: 1.0625rem !important;
+}
+
+.financial-container.light-theme .orient-btn.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  border-color: #15803d !important;
+}
+
+.financial-container.light-theme .btn-action.print {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #14532d !important;
+  opacity: 1 !important;
+  font-size: 1.125rem !important;
+}
+
+.financial-container.light-theme .btn-action.print:disabled {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  border: 2px solid #94a3b8 !important;
+  opacity: 1 !important;
 }
 
 .financial-container.light-theme .breakdown-card {
@@ -7971,16 +8319,43 @@ tr.selected {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
 }
 
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) th:not(:last-child),
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td:not(:last-child) {
+  border-right: 1px solid #64748b !important;
+}
+
+.financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) th:not(:last-child) {
+  border-right: 2px solid #15803d !important;
+}
+
+.financial-container.light-theme .tab-content .data-table th:not(:last-child),
+.financial-container.light-theme .tab-content .data-table td:not(:last-child) {
+  border-right: 1px solid #64748b !important;
+}
+
+.financial-container.light-theme .tab-content .data-table th:not(:last-child) {
+  border-right: 2px solid #15803d !important;
+}
+
+.financial-container.light-theme .usage-leaders-card .data-table th:not(:last-child),
+.financial-container.light-theme .usage-leaders-card .data-table td:not(:last-child) {
+  border-right: 1px solid #64748b !important;
+}
+
+.financial-container.light-theme .usage-leaders-card .data-table th:not(:last-child) {
+  border-right: 2px solid #15803d !important;
+}
+
 .financial-container.light-theme .tab-content .data-table th {
   color: #052e16;
   border-bottom-color: #86efac;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .financial-container.light-theme .tab-content .data-table td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .financial-container.light-theme .tab-content .data-table tbody tr:nth-child(even) {
@@ -7997,6 +8372,7 @@ tr.selected {
 
 .financial-container.light-theme .usage-table td small {
   color: #166534;
+  font-size: 13px;
 }
 
 .financial-container.light-theme .section-subheader h3 {
