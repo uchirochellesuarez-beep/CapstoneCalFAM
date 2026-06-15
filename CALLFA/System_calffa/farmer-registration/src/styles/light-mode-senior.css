@@ -934,8 +934,57 @@ body.glass-light .page-container.barangays-page.light-theme .btn-view-area {
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-header-add {
-  color: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border: 2px solid #14532d !important;
   font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-header-add:hover {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  filter: none !important;
+  transform: translateY(-1px);
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-submit {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border: 2px solid #14532d !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-submit:hover {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  filter: none !important;
+  transform: translateY(-1px);
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-secondary {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: #ffffff !important;
+  border: 2px solid #64748b !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-secondary:hover {
+  background: #f1f5f9 !important;
+  border-color: #475569 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  filter: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input) {
@@ -997,6 +1046,33 @@ body.glass-light .page-container.barangays-page.light-theme .modal-content {
   background: #fffef9 !important;
   border: 2px solid var(--senior-border-soft) !important;
   color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangay-details-modal .modal-title-text h2,
+body.glass-light .page-container.barangays-page.light-theme .barangay-details-modal .modal-subtitle {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .members-table-wrap {
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .places-table-wrap {
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .place-form-label {
+  color: #000000 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .modal-delete .btn-delete-confirm {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
@@ -1113,11 +1189,41 @@ body.glass-light .page-container.admin-loans-page.light-theme .barangay-filter-s
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
+  font-size: 1rem !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
   color: var(--senior-text-body) !important;
   background: #ffffff !important;
+  font-size: 1.0625rem !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .status-badge {
+  font-size: 0.875rem !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.btn, .btn-view, .btn-approve, .btn-reject, .btn-payment) {
+  font-size: 0.875rem !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.payer-badge, .credit-score-compact) {
+  font-size: 0.8125rem !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .btn-cancel {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #64748b !important;
+  filter: none !important;
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .modal-title-text h3,
+body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .detail-item p {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .loans-table tbody tr:nth-child(even) td {
@@ -1143,23 +1249,34 @@ body.glass-light .machinery-management-page.light-theme :is(.page-title, .sectio
   text-shadow: none !important;
 }
 
-body.glass-light .machinery-management-page.light-theme :is(.page-subtitle, .stat-label, .filter-label) {
+body.glass-light .machinery-management-page.light-theme :is(.page-subtitle, .stat-label) {
   color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .filter-label {
+  color: #000000 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  text-transform: none !important;
 }
 
 body.glass-light .machinery-management-page.light-theme :is(.filter-select, .form-input, .inv2-search-input, .inv2-select) {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
-  color: var(--senior-text) !important;
+  border: 1.5px solid #94a3b8 !important;
+  color: #000000 !important;
+  font-size: 16px !important;
 }
 
 body.glass-light .machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
+  color: #000000 !important;
+  font-size: 1rem !important;
+  text-transform: none !important;
 }
 
 body.glass-light .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
-  color: var(--senior-text-body) !important;
+  color: #000000 !important;
+  font-size: 1.125rem !important;
 }
 
 body.glass-light .machinery-management-page.light-theme .status-success {
@@ -1253,28 +1370,48 @@ body.glass-light .financial-overview-container.light-theme :is(.page-title, .sec
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-light .financial-overview-container.light-theme :is(.stat-label, .filter-label, .stat-value) {
-  color: var(--senior-text-body) !important;
+body.glass-light .financial-overview-container.light-theme :is(.stat-label, .filter-label) {
+  color: #374151 !important;
+  font-size: 14px !important;
 }
 
-body.glass-light .financial-overview-container.light-theme .stat-value.collected {
-  color: #15803d !important;
+body.glass-light .financial-overview-container.light-theme .stat-value {
+  color: #000000 !important;
+  font-size: 1.375rem !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .filter-input,
 body.glass-light .financial-overview-container.light-theme .filter-clear-btn {
   background: #ffffff !important;
-  color: var(--senior-text) !important;
-  border: 1.5px solid #cbd5e1 !important;
+  color: #000000 !important;
+  border: 1.5px solid #94a3b8 !important;
+  font-size: 16px !important;
+  min-height: 48px;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
+  color: #000000 !important;
+  font-size: 0.9375rem !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table td {
-  color: var(--senior-text-body) !important;
+  color: #000000 !important;
+  font-size: 1.0625rem !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .export-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534, #14532d) !important;
+  border-color: #14532d !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .export-btn-secondary {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: #ffffff !important;
+  border-color: #94a3b8 !important;
 }
 
 body.glass-light .financial-overview-container.light-theme :is(.inline-link, .view-all-link) {
@@ -1326,16 +1463,81 @@ body.glass-light .share-capital-page.light-theme :is(.stat-value, .empty-title) 
 body.glass-light .share-capital-page.light-theme .input {
   background: #ffffff !important;
   color: var(--senior-text) !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border: 1.5px solid #94a3b8 !important;
+  font-size: 16px !important;
+}
+
+body.glass-light .share-capital-page.light-theme .admin-filter-label {
+  color: #000000 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
 }
 
 body.glass-light .share-capital-page.light-theme .tab-content .data-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
+  color: #000000 !important;
+  font-size: 0.9375rem !important;
 }
 
 body.glass-light .share-capital-page.light-theme .tab-content .data-table td {
-  color: var(--senior-text-body) !important;
+  color: #000000 !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .share-capital-page.light-theme .input::placeholder {
+  color: #4b5563 !important;
+  opacity: 1 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .tab-content .card-title {
+  color: #000000 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn.btn-primary-action,
+body.glass-light .share-capital-page.light-theme .btn-primary-action {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  border: 2px solid #14532d !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.22) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn.btn-small,
+body.glass-light .share-capital-page.light-theme .btn:not(.btn-primary-action):not(.btn-success):not(.btn-danger) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn.btn-small:hover:not(:disabled),
+body.glass-light .share-capital-page.light-theme .btn:not(.btn-primary-action):not(.btn-success):not(.btn-danger):hover:not(:disabled) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: #f0fdf4 !important;
+  border-color: #15803d !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn-muted {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn-success {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  border: 2px solid #14532d !important;
+}
+
+body.glass-light .share-capital-page.light-theme .btn-danger {
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  background: #fee2e2 !important;
+  border: 2px solid #fca5a5 !important;
 }
 
 /* ============================================================
@@ -1462,4 +1664,154 @@ body.glass-light [class*="light-theme"] :is(
 
 body.glass-light .glass-legend :is(.legend-item, .legend-label, .legend-value, span) {
   color: #000000 !important;
+}
+
+/* ============================================================
+   AUTH PAGES — Login & Signup (light card + readable text)
+   ============================================================ */
+
+/* Hero tagline stays light on the background photo */
+body.glass-light .login-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption),
+body.glass-light .signup-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption) {
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .login-page.glass-auth-page .identity-badge,
+body.glass-light .signup-page.glass-auth-page .identity-badge {
+  color: #ffd966 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .identity-title,
+body.glass-light .signup-page.glass-auth-page .identity-title {
+  color: #fff8ef !important;
+}
+
+body.glass-light .login-page.glass-auth-page .identity-caption,
+body.glass-light .signup-page.glass-auth-page .identity-caption {
+  color: rgba(255, 252, 245, 0.96) !important;
+}
+
+/* Swap dark glass card for a bright senior-friendly surface */
+body.glass-light .login-page.glass-auth-page .login-card,
+body.glass-light .signup-page.glass-auth-page .signup-card {
+  background: linear-gradient(155deg, #ffffff 0%, #f0fdf4 48%, #ecfdf5 100%) !important;
+  border: 2px solid #86efac !important;
+  box-shadow:
+    0 20px 48px rgba(22, 101, 52, 0.16),
+    0 4px 14px rgba(22, 101, 52, 0.08) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .login-card::before,
+body.glass-light .signup-page.glass-auth-page .signup-card::before {
+  background: linear-gradient(
+    135deg,
+    rgba(220, 252, 231, 0.55) 0%,
+    rgba(187, 247, 208, 0.35) 45%,
+    rgba(254, 243, 199, 0.2) 100%
+  ) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .login-card::after,
+body.glass-light .signup-page.glass-auth-page .signup-card::after {
+  border-color: rgba(134, 239, 172, 0.45) !important;
+}
+
+body.glass-light .login-page.glass-auth-page :is(.form-title, .form-label),
+body.glass-light .signup-page.glass-auth-page :is(.form-title, .form-label) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+}
+
+body.glass-light .login-page.glass-auth-page .form-subtitle,
+body.glass-light .signup-page.glass-auth-page .form-subtitle {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-light .login-page.glass-auth-page :is(.auth-divider, .auth-divider-text),
+body.glass-light .signup-page.glass-auth-page :is(.auth-divider, .auth-divider-text) {
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .auth-divider-line,
+body.glass-light .signup-page.glass-auth-page .auth-divider-line {
+  background: linear-gradient(
+    90deg,
+    rgba(134, 239, 172, 0.25),
+    rgba(34, 197, 94, 0.55),
+    rgba(134, 239, 172, 0.25)
+  ) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .form-footer,
+body.glass-light .signup-page.glass-auth-page .form-footer {
+  background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
+  border-top: 2px solid #86efac !important;
+}
+
+body.glass-light .login-page.glass-auth-page .form-footer :is(.footer-text, p),
+body.glass-light .signup-page.glass-auth-page .form-footer :is(.footer-text, p) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .link-btn,
+body.glass-light .signup-page.glass-auth-page .link-btn {
+  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
+  border: 2px solid #16a34a !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .link-btn:hover,
+body.glass-light .signup-page.glass-auth-page .link-btn:hover {
+  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 45%, #22c55e 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-light .login-page.glass-auth-page .success-message,
+body.glass-light .signup-page.glass-auth-page .success-message {
+  background: #dcfce7 !important;
+  border: 2px solid #86efac !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+body.glass-light .login-page.glass-auth-page .error-message,
+body.glass-light .signup-page.glass-auth-page .error-message {
+  background: #fef2f2 !important;
+  border: 2px solid #fca5a5 !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+body.glass-light .login-page.glass-auth-page .page-language-toggle,
+body.glass-light .signup-page.glass-auth-page .page-language-toggle {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn,
+body.glass-light .signup-page.glass-auth-page .lang-btn {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn:hover,
+body.glass-light .signup-page.glass-auth-page .lang-btn:hover {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn.active,
+body.glass-light .signup-page.glass-auth-page .lang-btn.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  border-color: #16a34a !important;
 }

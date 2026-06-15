@@ -108,7 +108,7 @@
         :class="['tab', { active: activeTab === 'overdue' }]"
         @click="activeTab = 'overdue'"
       >
-        ⚠️ Overdue ({{ stats.overdue }})
+        Overdue ({{ stats.overdue }})
       </button>
       <button
         :class="['tab', { active: activeTab === 'paid' }]"
@@ -327,11 +327,25 @@
     </div>
 
     <!-- Details Modal -->
-    <div v-if="showDetailsModal" class="modal-overlay" @click="closeModals">
-      <div class="modal-content modal-large" @click.stop>
+    <div v-if="showDetailsModal" class="modal-overlay modal-overlay-spaced" @click="closeModals">
+      <div class="modal-content modal-large loan-details-modal" @click.stop>
         <div class="modal-header">
-          <h3>📋 Loan Details</h3>
-          <button @click="closeModals" class="close-btn">&times;</button>
+          <div class="modal-title-row">
+            <span class="loan-details-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="8" y1="13" x2="16" y2="13" />
+                <line x1="8" y1="17" x2="13" y2="17" />
+                <path d="M8 9h2" />
+              </svg>
+            </span>
+            <div class="modal-title-text">
+              <h3>Loan Details</h3>
+              <p v-if="selectedLoan?.full_name" class="modal-subtitle">{{ selectedLoan.full_name }}</p>
+            </div>
+          </div>
+          <button type="button" @click="closeModals" class="close-btn" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="details-grid">
@@ -403,20 +417,21 @@
               <label>Remaining Balance</label>
               <p class="amount">₱{{ selectedLoan.remaining_balance.toLocaleString() }}</p>
             </div>
-            <div class="detail-item" v-if="selectedLoan.status === 'overdue' && selectedLoan.penalty_amount > 0" style="background-color: #fff3cd; padding: 10px; border-radius: 4px;">
-              <label style="color: #856404;">⚠️ Overdue Penalty</label>
-              <p style="color: #856404;">
+            <div
+              v-if="selectedLoan.status === 'overdue' && selectedLoan.penalty_amount > 0"
+              class="detail-item detail-item-penalty full-width"
+            >
+              <label>Overdue Penalty</label>
+              <p>
                 <strong>Penalty Amount:</strong> ₱{{ parseFloat(selectedLoan.penalty_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
               </p>
-              <p style="color: #856404;">
+              <p>
                 <strong>Days Overdue:</strong> {{ selectedLoan.days_overdue }} days ({{ selectedLoan.penalty_periods }} penalty periods)
               </p>
-              <p style="color: #856404;">
+              <p>
                 <strong>Total with Penalty:</strong> ₱{{ parseFloat(selectedLoan.total_with_penalty).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
               </p>
-              <p style="color: #856404; font-size: 0.85em; margin-top: 5px;">
-                <em>2% penalty per 6-month period overdue</em>
-              </p>
+              <p class="penalty-note">2% penalty per 6-month period overdue</p>
             </div>
             <div class="detail-item" v-if="selectedLoan.total_paid">
               <label>Total Paid</label>
@@ -434,7 +449,17 @@
 
           <!-- Payment History Section -->
           <div v-if="loanPayments.length > 0" class="payment-history-section">
-            <h4>💳 Payment History</h4>
+            <div class="section-title-row">
+              <span class="section-title-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                  <line x1="6" y1="15" x2="10" y2="15" />
+                </svg>
+              </span>
+              <h4>Payment History</h4>
+            </div>
+            <div class="payment-history-table-wrap">
             <table class="payment-history-table">
               <thead>
                 <tr>
@@ -455,7 +480,11 @@
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" @click="closeModals">Close</button>
         </div>
       </div>
     </div>
@@ -1340,7 +1369,18 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
+
+.stat-card.pending .stat-icon { background: rgba(251, 191, 36, 0.14); }
+.stat-card.approved .stat-icon { background: rgba(16, 185, 129, 0.14); }
+.stat-card.active .stat-icon { background: rgba(139, 92, 246, 0.14); }
+.stat-card.overdue .stat-icon { background: rgba(239, 68, 68, 0.14); }
+.stat-card.paid .stat-icon { background: rgba(5, 150, 105, 0.14); }
+.stat-card.rejected .stat-icon { background: rgba(239, 68, 68, 0.12); }
+.stat-card.total .stat-icon { background: rgba(59, 130, 246, 0.14); }
 
 .stat-icon-image {
   width: 100%;
@@ -1444,19 +1484,20 @@ onUnmounted(() => {
 /* Table */
 .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .loans-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-  min-width: 0;
+  min-width: 1480px;
 }
 
 .loans-table th,
 .loans-table td {
-  padding: 0.38rem 0.28rem;
+  padding: 0.85rem 0.75rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -1464,48 +1505,52 @@ onUnmounted(() => {
 
 .loans-table th:not(:last-child),
 .loans-table td:not(:last-child) {
-  border-right: 1px solid rgba(203, 213, 225, 0.22);
+  border-right: 1px solid rgba(203, 213, 225, 0.35);
 }
 
 .loans-table th {
   background: #f8fafc;
   font-weight: 700;
   color: #475569;
-  font-size: 0.6rem;
-  letter-spacing: 0.01em;
+  font-size: 0.9375rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1.1;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .loans-table td {
-  font-size: 0.68rem;
-  line-height: 1.15;
+  font-size: 1.0625rem;
+  line-height: 1.45;
 }
 
-.loans-table col.col-name { width: 12%; }
-.loans-table col.col-amount { width: 8%; }
-.loans-table col.col-purpose { width: 8%; }
-.loans-table col.col-payer { width: 11%; }
-.loans-table col.col-date { width: 7%; }
-.loans-table col.col-term { width: 5%; }
-.loans-table col.col-status { width: 8%; }
-.loans-table col.col-actions { width: 14%; }
+.loans-table col.col-name { width: 168px; }
+.loans-table col.col-amount { width: 120px; }
+.loans-table col.col-purpose { width: 132px; }
+.loans-table col.col-payer { width: 152px; }
+.loans-table col.col-date { width: 108px; }
+.loans-table col.col-term { width: 84px; }
+.loans-table col.col-status { width: 124px; }
+.loans-table col.col-actions { width: 240px; }
 
 .th-name,
 .td-name {
   text-align: left;
-  padding-left: 0.4rem !important;
+  padding-left: 0.85rem !important;
+  min-width: 168px;
 }
 
 .td-name {
   font-weight: 600;
-  word-break: break-word;
-  white-space: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .td-purpose {
   text-align: center;
-  word-break: break-word;
+  min-width: 132px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1514,8 +1559,12 @@ onUnmounted(() => {
 .td-payer,
 .th-actions,
 .td-actions {
-  padding-left: 0.45rem;
-  padding-right: 0.45rem;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
+.td-actions {
+  min-width: 240px;
 }
 
 .th-date,
@@ -1529,18 +1578,18 @@ onUnmounted(() => {
 
 .th-date,
 .th-term {
-  white-space: normal;
-  line-height: 1.1;
-  font-size: 0.58rem;
+  white-space: nowrap;
+  line-height: 1.25;
+  font-size: 0.9375rem;
 }
 
 .td-date,
-.td-term,
+.td-term {
+  white-space: nowrap;
+}
+
 .td-status {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  word-break: break-word;
+  white-space: nowrap;
 }
 
 .loans-table tbody tr:hover {
@@ -1550,7 +1599,7 @@ onUnmounted(() => {
 .amount {
   font-weight: 800;
   color: #059669;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .status-badge {
@@ -1558,12 +1607,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  padding: 0.18rem 0.32rem;
-  border-radius: 6px;
-  font-size: 0.6rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: capitalize;
-  line-height: 1;
+  line-height: 1.2;
   white-space: nowrap;
   background: transparent !important;
   border: 1px solid rgba(190, 235, 203, 0.35);
@@ -1609,22 +1658,22 @@ onUnmounted(() => {
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 0.15rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .btn {
-  padding: 0.22rem 0.3rem;
+  padding: 0.45rem 0.7rem;
   border: none;
-  border-radius: 4px;
-  font-size: 0.58rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .btn-approve {
@@ -1668,12 +1717,16 @@ onUnmounted(() => {
 }
 
 .btn-cancel {
-  background: #e2e8f0;
-  color: #475569;
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #64748b;
+  padding: 0.55rem 1.15rem;
+  font-size: 1rem;
 }
 
 .btn-cancel:hover {
-  background: #cbd5e1;
+  background: #f1f5f9;
+  border-color: #475569;
 }
 
 .btn-submit {
@@ -1702,28 +1755,102 @@ onUnmounted(() => {
 .modal-overlay {
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: var(--app-sidebar-width, 260px);
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 1200;
+  padding: 1.25rem;
+}
+
+.modal-overlay-spaced {
+  align-items: flex-start;
+  padding-top: calc(var(--app-header-height, 70px) + 1.25rem);
+  padding-bottom: 1.5rem;
+  overflow-y: auto;
 }
 
 .modal-content {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   max-width: 500px;
   width: 100%;
-  max-height: 90vh;
+  max-height: calc(100dvh - 2.5rem);
   overflow-y: auto;
+  margin: 0 auto;
+  flex-shrink: 0;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  border: 1px solid #e2e8f0;
 }
 
 .modal-content.modal-large {
-  max-width: 800px;
+  width: min(920px, calc(100vw - var(--app-sidebar-width, 260px) - 2.5rem));
+  max-width: min(920px, calc(100vw - var(--app-sidebar-width, 260px) - 2.5rem));
+}
+
+.modal-overlay-spaced .modal-content.modal-large {
+  max-height: calc(100dvh - var(--app-header-height, 70px) - 2.5rem);
+}
+
+.loan-details-modal .modal-header {
+  padding: 1.35rem 1.5rem;
+  gap: 1rem;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.loan-details-icon,
+.section-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 2px solid #86efac;
+  color: #15803d;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12);
+}
+
+.loan-details-icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loan-details-icon svg {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.modal-title-text {
+  min-width: 0;
+}
+
+.modal-title-text h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #1e293b;
+}
+
+.modal-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modal-header {
@@ -1732,6 +1859,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
 }
 
 .modal-header h3 {
@@ -1741,22 +1869,41 @@ onUnmounted(() => {
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #64748b;
+  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #475569;
   cursor: pointer;
   padding: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .close-btn:hover {
-  color: #1e293b;
+  color: #0f172a;
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 .modal-body {
   padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem 1.35rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px;
 }
 
 .loan-summary {
@@ -1887,14 +2034,18 @@ onUnmounted(() => {
 /* Details Grid */
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  padding: 1rem 1.05rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
 }
 
 .detail-item.full-width {
@@ -1904,13 +2055,34 @@ onUnmounted(() => {
 .detail-item label {
   font-size: 0.875rem;
   color: #64748b;
-  font-weight: 500;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .detail-item p {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: #1e293b;
   margin: 0;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.detail-item-penalty {
+  background: #fef9c3;
+  border-color: #fde047;
+}
+
+.detail-item-penalty label,
+.detail-item-penalty p {
+  color: #92400e;
+}
+
+.penalty-note {
+  margin-top: 0.35rem !important;
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+  font-style: italic;
 }
 
 .rejection-reason {
@@ -1920,39 +2092,83 @@ onUnmounted(() => {
 
 /* Payment History Section */
 .payment-history-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 1.75rem;
+  padding-top: 1.35rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.section-title-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 10px;
+}
+
+.section-title-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .payment-history-section h4 {
-  margin-bottom: 1rem;
+  margin: 0;
   color: #1e293b;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.payment-history-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
 }
 
 .payment-history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  min-width: 640px;
 }
 
 .payment-history-table th,
 .payment-history-table td {
-  padding: 0.75rem;
+  padding: 0.85rem 0.9rem;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .payment-history-table th {
   background: #f8fafc;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.9375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .payment-history-table td.amount {
   color: #059669;
-  font-weight: 600;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .modal-overlay,
+  .modal-overlay-spaced {
+    left: 0;
+  }
+
+  .modal-content.modal-large {
+    width: min(920px, calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1986,7 +2202,15 @@ onUnmounted(() => {
 
   .loans-table th,
   .loans-table td {
-    padding: 0.35rem 0.25rem;
+    padding: 0.7rem 0.55rem;
+  }
+
+  .loans-table th {
+    font-size: 0.875rem;
+  }
+
+  .loans-table td {
+    font-size: 1rem;
   }
 
   .action-buttons {
@@ -2003,20 +2227,20 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  padding: 0.14rem 0.32rem;
-  border-radius: 6px;
+  gap: 0.25rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.58rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .credit-score-compact {
-  font-size: 0.56rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #64748b;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .payer-badge.low {
@@ -2060,7 +2284,7 @@ onUnmounted(() => {
 .payer-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: 0.25rem;
   min-width: 0;
   align-items: center;
   text-align: center;
@@ -2416,7 +2640,7 @@ onUnmounted(() => {
   background: #f0fdf4 !important;
   border: 1px solid #86efac !important;
   color: #052e16 !important;
-  font-size: 0.62rem;
+  font-size: 0.875rem;
 }
 
 .page-container.admin-loans-page.light-theme .status-badge.pending {
@@ -2538,5 +2762,73 @@ onUnmounted(() => {
 
 .page-container.admin-loans-page.light-theme .loan-summary p {
   color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal {
+  background: #fffef9 !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .modal-title-text h3,
+.page-container.admin-loans-page.light-theme .payment-history-section h4 {
+  color: #000000 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .modal-subtitle {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-icon,
+.page-container.admin-loans-page.light-theme .section-title-icon {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item {
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item label {
+  color: #166534 !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item p {
+  color: #000000 !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item-penalty {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+}
+
+.page-container.admin-loans-page.light-theme .detail-item-penalty label,
+.page-container.admin-loans-page.light-theme .detail-item-penalty p {
+  color: #92400e !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .modal-footer {
+  background: #f0fdf4 !important;
+  border-top: 2px solid #86efac !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .btn-cancel {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #64748b !important;
+  font-size: 1rem !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .btn-cancel:hover {
+  background: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+.page-container.admin-loans-page.light-theme .loan-details-modal .close-btn {
+  background: #ffffff !important;
+  border: 2px solid #cbd5e1 !important;
+  color: #000000 !important;
 }
 </style>

@@ -33,6 +33,8 @@ const onSidebarToggle = ({ isCollapsed }) => {
 
 <style scoped>
 .authenticated-layout {
+  --app-sidebar-width: 260px;
+  --app-header-height: 70px;
   display: flex;
   min-height: 100vh;
   height: 100vh;
@@ -99,6 +101,10 @@ const onSidebarToggle = ({ isCollapsed }) => {
     margin-left: 80px;
     width: calc(100% - 80px);
   }
+
+  .authenticated-layout.sidebar-collapsed {
+    --app-sidebar-width: 80px;
+  }
 }
 
 .main-content::-webkit-scrollbar {
@@ -109,6 +115,10 @@ const onSidebarToggle = ({ isCollapsed }) => {
 
 /* Responsive: Tablet and below */
 @media (max-width: 1024px) {
+  .authenticated-layout {
+    --app-sidebar-width: 0px;
+  }
+
   .main-content-wrapper {
     margin-left: 0;
     width: 100%;

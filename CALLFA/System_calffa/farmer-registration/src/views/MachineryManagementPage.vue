@@ -80,8 +80,11 @@
       <!-- Admin Inventory Table -->
       <div class="inventory-table-container">
         <div class="inventory-actions">
-          <button @click="showAddMachineryModal = true" class="btn-success">
-            ➕ Add New Machinery
+          <button @click="showAddMachineryModal = true" class="btn-success btn-inventory-add">
+            <svg class="btn-add-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add New Machinery
           </button>
         </div>
         <table class="inventory-table inventory-table-admin">
@@ -125,20 +128,26 @@
               <td>
                 <span class="barangay-badge">{{ getBarangayName(machine.barangay_id) }}</span>
               </td>
-              <td>
-                <div class="price-display">
-                  <div class="price-row">
-                    <span class="price-label">Member:</span>
-                    <span class="price-value">₱{{ formatNumber(machine.member_price || machine.price_per_unit) }} {{ machine.unit_type }}</span>
+              <td class="pricing-cell">
+                <div class="price-stack">
+                  <div class="price-block price-block-member">
+                    <span class="price-block-label">Member</span>
+                    <span class="price-block-value">
+                      ₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}
+                      <small>{{ formatUnitLabel(machine.unit_type) }}</small>
+                    </span>
                   </div>
-                  <div class="price-row">
-                    <span class="price-label">Non-Member:</span>
-                    <span class="price-value">₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }} {{ machine.unit_type }}</span>
+                  <div class="price-block price-block-nonmember">
+                    <span class="price-block-label">Non-Member</span>
+                    <span class="price-block-value">
+                      ₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}
+                      <small>{{ formatUnitLabel(machine.unit_type) }}</small>
+                    </span>
                   </div>
                 </div>
               </td>
-              <td>
-                <span v-if="machine.max_capacity">{{ machine.max_capacity }} {{ machine.capacity_unit }}</span>
+              <td class="capacity-cell">
+                <span v-if="machine.max_capacity">{{ formatCapacity(machine) }}</span>
                 <span v-else>-</span>
               </td>
               <td>
@@ -149,13 +158,13 @@
               <td>
                 <div class="action-buttons">
                   <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
                   <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                       <path d="M10 11v6M14 11v6"/>
@@ -175,8 +184,11 @@
       <h2 class="section-title">Machinery Inventory ({{ barangays.find(b => b.id === userBarangayId)?.name || 'Your Barangay' }})</h2>
       
       <div class="inventory-actions standalone-actions">
-        <button @click="showAddMachineryModal = true" class="btn-success">
-          ➕ Add Machinery
+        <button @click="showAddMachineryModal = true" class="btn-success btn-inventory-add">
+          <svg class="btn-add-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Machinery
         </button>
       </div>
 
@@ -210,15 +222,21 @@
                   {{ machine.machinery_type }}
                 </span>
               </td>
-              <td>
-                <div class="price-display">
-                  <div class="price-row">
-                    <span class="price-label">Member:</span>
-                    <span class="price-value">₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}</span>
+              <td class="pricing-cell">
+                <div class="price-stack">
+                  <div class="price-block price-block-member">
+                    <span class="price-block-label">Member</span>
+                    <span class="price-block-value">
+                      ₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}
+                      <small v-if="machine.unit_type">{{ formatUnitLabel(machine.unit_type) }}</small>
+                    </span>
                   </div>
-                  <div class="price-row">
-                    <span class="price-label">Non-Member:</span>
-                    <span class="price-value">₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}</span>
+                  <div class="price-block price-block-nonmember">
+                    <span class="price-block-label">Non-Member</span>
+                    <span class="price-block-value">
+                      ₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}
+                      <small v-if="machine.unit_type">{{ formatUnitLabel(machine.unit_type) }}</small>
+                    </span>
                   </div>
                 </div>
               </td>
@@ -230,13 +248,13 @@
               <td class="actions-cell">
                 <div class="action-buttons">
                   <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
                   <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                       <path d="M10 11v6M14 11v6"/>
@@ -388,7 +406,7 @@
         <!-- ── Toolbar ── -->
         <div class="inv2-toolbar">
           <div class="inv2-search">
-            <svg class="inv2-search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg class="inv2-search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input v-model="invQ" type="text" class="inv2-search-input" placeholder="Search name or type…" />
             <button v-if="invQ" type="button" @click="invQ = ''" class="inv2-clear-btn">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -490,13 +508,13 @@
                   <td>
                     <div class="inv2-actions action-buttons">
                       <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
                       <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                           <path d="M10 11v6M14 11v6"/>
@@ -548,13 +566,13 @@
                 </div>
                 <div class="inv2-card-actions action-buttons">
                   <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
                   <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                       <path d="M10 11v6M14 11v6"/>
@@ -569,11 +587,11 @@
           <!-- Pagination -->
           <div v-if="invTotalPg > 1" class="inv2-pagination">
             <button type="button" class="inv2-pg-btn" :disabled="invPg === 1" @click="invPg--">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
             <span class="inv2-pg-info">{{ invPg }} / {{ invTotalPg }}</span>
             <button type="button" class="inv2-pg-btn" :disabled="invPg === invTotalPg" @click="invPg++">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </button>
           </div>
         </div>
@@ -792,21 +810,46 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content modal-small">
-        <div class="modal-header">
-          <h2>⚠️ Confirm Delete</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-          <p>Delete <strong>{{ machineryToDelete?.machinery_name }}</strong>?</p>
-          <p class="warning-text">This action cannot be undone.</p>
-          <div class="modal-actions">
-            <button @click="closeModals" class="btn-secondary">Cancel</button>
-            <button @click="deleteMachinery" class="btn-danger" :disabled="loading">
-              {{ loading ? 'Deleting...' : 'Delete' }}
-            </button>
+    <div
+      v-if="showDeleteModal"
+      class="modal-overlay modal-delete-overlay"
+      @click="closeDeleteModal"
+    >
+      <div
+        class="modal-content modal-delete"
+        role="alertdialog"
+        aria-labelledby="machinery-delete-title"
+        aria-describedby="machinery-delete-desc"
+        @click.stop
+      >
+        <div class="modal-header delete-modal-header">
+          <div class="modal-title-row">
+            <span class="delete-warning-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
+            </span>
+            <div class="modal-title-text">
+              <h2 id="machinery-delete-title">Delete Machinery</h2>
+              <p id="machinery-delete-desc" class="modal-subtitle delete-confirm-message">
+                Remove <strong>{{ machineryToDelete?.machinery_name }}</strong> from the inventory?
+              </p>
+            </div>
           </div>
+          <button type="button" @click="closeDeleteModal" class="close-btn" aria-label="Close" :disabled="deleteInProgress">×</button>
+        </div>
+        <div class="modal-body delete-modal-body">
+          <p class="delete-warning-text">This action cannot be undone. All booking records linked to this machinery may be affected.</p>
+        </div>
+        <div class="modal-footer delete-modal-footer">
+          <button type="button" class="btn-secondary" @click="closeDeleteModal" :disabled="deleteInProgress">Cancel</button>
+          <button type="button" class="btn-delete-confirm" @click="deleteMachinery" :disabled="deleteInProgress || loading">
+            {{ deleteInProgress || loading ? 'Deleting...' : 'Delete' }}
+          </button>
         </div>
       </div>
     </div>
@@ -847,6 +890,7 @@ export default {
     const showViewBookingModal = ref(false)
     const showDeleteModal = ref(false)
     const machineryToDelete = ref(null)
+    const deleteInProgress = ref(false)
     const successMessage = ref('')
     const validationError = ref('')
     const filters = ref({ status: '', machinery_type: '' })
@@ -1121,15 +1165,25 @@ export default {
       showInventoryModal.value = false
     }
 
+    const closeDeleteModal = () => {
+      if (deleteInProgress.value) return
+      showDeleteModal.value = false
+      machineryToDelete.value = null
+    }
+
     const deleteMachinery = async () => {
+      if (!machineryToDelete.value || deleteInProgress.value) return
+      deleteInProgress.value = true
       try {
         await machineryStore.deleteMachinery(machineryToDelete.value.id)
         successMessage.value = 'Machinery deleted successfully!'
+        closeDeleteModal()
         closeModals()
         await loadData()
       } catch (error) {
         console.error('Error deleting machinery:', error)
-        // Error is already set in store
+      } finally {
+        deleteInProgress.value = false
       }
     }
 
@@ -1298,6 +1352,18 @@ export default {
     }[status] || 'default')
 
     const formatNumber = (num) => new Intl.NumberFormat('en-PH').format(num)
+    const formatUnitLabel = (unit) => {
+      if (!unit) return ''
+      const trimmed = String(unit).trim()
+      if (!trimmed) return ''
+      return /^per\s/i.test(trimmed) ? trimmed : `per ${trimmed}`
+    }
+    const formatCapacity = (machine) => {
+      const cap = machine?.max_capacity
+      const unit = String(machine?.capacity_unit || '').trim()
+      if (cap == null || cap === '') return '-'
+      return unit ? `${cap} ${unit}` : String(cap)
+    }
     const formatDate = (date) => new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     const formatDateTime = (dt) => new Date(dt).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     
@@ -1326,9 +1392,9 @@ export default {
       pendingBookingsCount, totalRevenue, applyFilters, applyAdminFilters,
       filteredInventory, handleBarangayChange, isPresidentRole, userBarangayId,
       addMachinery, editMachinery, updateMachinery, deleteMachineryConfirm,
-      deleteMachinery, viewBooking, closeModals, clearError, loadData,
+      deleteMachinery, viewBooking, closeModals, closeDeleteModal, deleteInProgress, clearError, loadData,
       getMachineryTypeClass, getStatusClass, getBookingStatusClass,
-      getBarangayName, formatNumber, formatDate, formatDateTime,
+      getBarangayName, formatNumber, formatUnitLabel, formatCapacity, formatDate, formatDateTime,
       handleMachineryPictureChange, removeMachineryPicture, uploadMachineryPicture,
       handleImageError, handleImageLoad, machineryPictureInput, currentPictureFile, resetForm,
       getImageUrl,
@@ -1530,14 +1596,20 @@ export default {
 
 .filters-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-  padding: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 20px 22px;
   background: var(--surface-2);
   border: 1px solid var(--line-soft);
   border-radius: 18px;
   box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .filters-section {
+    grid-template-columns: 1fr;
+  }
 }
 
 .filter-group {
@@ -1547,24 +1619,24 @@ export default {
 .filter-label,
 .form-label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-main);
 }
 
 .filter-select,
 .form-input {
   width: 100%;
-  min-height: 46px;
-  padding: 12px 14px;
+  min-height: 50px;
+  padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid var(--line-soft);
   background: rgba(20, 48, 38, 0.85);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -1585,11 +1657,12 @@ export default {
 
 .table-container,
 .inventory-table-container {
-  overflow: hidden;
+  overflow-x: auto;
   border-radius: 20px;
   background: var(--surface-2);
   border: 1px solid var(--line-soft);
   box-shadow: var(--panel-shadow);
+  -webkit-overflow-scrolling: touch;
 }
 
 .inventory-actions {
@@ -1598,6 +1671,16 @@ export default {
   gap: 12px;
   padding: 16px 20px 0;
   margin-bottom: 12px;
+}
+
+.btn-inventory-add {
+  font-size: 15px;
+  min-height: 48px;
+  padding: 12px 20px;
+}
+
+.btn-add-icon {
+  flex-shrink: 0;
 }
 
 .inv2-modal {
@@ -2206,12 +2289,18 @@ export default {
   padding: 0 0 18px;
 }
 
-.bookings-table,
-.inventory-table {
+.bookings-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   min-width: 0;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  min-width: 100%;
 }
 
 .bookings-table col.col-farmer { width: 13%; }
@@ -2223,19 +2312,34 @@ export default {
 .bookings-table col.col-status { width: 9%; }
 .bookings-table col.col-actions { width: 6%; }
 
-.inventory-table-admin col.col-name { width: 13%; }
-.inventory-table-admin col.col-type { width: 9%; }
-.inventory-table-admin col.col-barangay { width: 10%; }
-.inventory-table-admin col.col-pricing { width: 22%; }
-.inventory-table-admin col.col-capacity { width: 9%; }
-.inventory-table-admin col.col-status { width: 9%; }
-.inventory-table-admin col.col-actions { width: 7%; }
+.inventory-table-admin col.col-name { width: auto; }
+.inventory-table-admin col.col-type { width: auto; }
+.inventory-table-admin col.col-barangay { width: auto; }
+.inventory-table-admin col.col-pricing { width: auto; }
+.inventory-table-admin col.col-capacity { width: auto; }
+.inventory-table-admin col.col-status { width: auto; }
+.inventory-table-admin col.col-actions { width: auto; }
 
-.inventory-table-president col.col-name { width: 18%; }
-.inventory-table-president col.col-type { width: 12%; }
-.inventory-table-president col.col-pricing { width: 28%; }
-.inventory-table-president col.col-status { width: 12%; }
-.inventory-table-president col.col-actions { width: 10%; }
+.inventory-table-president col.col-name { width: auto; }
+.inventory-table-president col.col-type { width: auto; }
+.inventory-table-president col.col-pricing { width: auto; }
+.inventory-table-president col.col-status { width: auto; }
+.inventory-table-president col.col-actions { width: auto; }
+
+.inventory-table-admin th:nth-child(1),
+.inventory-table-admin td:nth-child(1) { min-width: 7.5rem; }
+.inventory-table-admin th:nth-child(2),
+.inventory-table-admin td:nth-child(2) { min-width: 6.5rem; }
+.inventory-table-admin th:nth-child(3),
+.inventory-table-admin td:nth-child(3) { min-width: 7rem; }
+.inventory-table-admin th:nth-child(4),
+.inventory-table-admin td:nth-child(4) { min-width: 15rem; }
+.inventory-table-admin th:nth-child(5),
+.inventory-table-admin td:nth-child(5) { min-width: 8.5rem; }
+.inventory-table-admin th:nth-child(6),
+.inventory-table-admin td:nth-child(6) { min-width: 7.5rem; }
+.inventory-table-admin th:nth-child(7),
+.inventory-table-admin td:nth-child(7) { min-width: 6.5rem; }
 
 .bookings-table thead,
 .inventory-table thead {
@@ -2244,30 +2348,46 @@ export default {
 
 .bookings-table th,
 .inventory-table th {
-  padding: 0.38rem 0.3rem;
+  padding: 0.85rem 0.75rem;
   text-align: center;
   vertical-align: middle;
   border-bottom: 1px solid rgba(167, 211, 178, 0.22);
-  font-size: 0.62rem;
+  font-size: 1rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-muted);
-  line-height: 1.1;
-  white-space: normal;
-  word-break: break-word;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: var(--text-main);
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .bookings-table td,
 .inventory-table td {
-  padding: 0.35rem 0.28rem;
+  padding: 0.85rem 0.75rem;
   vertical-align: middle;
   text-align: center;
   border-bottom: 1px solid rgba(167, 211, 178, 0.12);
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  line-height: 1.15;
-  word-break: break-word;
+  color: var(--text-main);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.inventory-table td:first-child {
+  font-weight: 700;
+  text-align: left;
+}
+
+.inventory-table .pricing-cell {
+  text-align: left;
+  vertical-align: top;
+}
+
+.inventory-table .capacity-cell {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 1.0625rem;
 }
 
 .bookings-table tbody tr,
@@ -2315,32 +2435,84 @@ export default {
 .price-display {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.35rem;
   min-width: 0;
-  align-items: center;
+  align-items: flex-start;
+  text-align: left;
+  padding: 0.15rem 0.25rem;
+}
+
+.price-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 13.5rem;
+}
+
+.price-block {
+  display: grid;
+  grid-template-columns: 5.75rem 1fr;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(167, 211, 178, 0.14);
+}
+
+.price-block-label {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--text-soft);
+  line-height: 1.3;
+}
+
+.price-block-value {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #a7f3c8;
+  line-height: 1.35;
+}
+
+.price-block-value small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.price-block-member {
+  border-left: 3px solid rgba(110, 231, 168, 0.55);
+}
+
+.price-block-nonmember {
+  border-left: 3px solid rgba(96, 165, 250, 0.45);
 }
 
 .price-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: center;
-  gap: 0.2rem;
-  font-size: 0.62rem;
-  line-height: 1.15;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
 }
 
 .price-label {
   font-weight: 700;
   color: var(--text-soft);
-  font-size: 0.58rem;
+  font-size: 0.8125rem;
+  min-width: 5.5rem;
+  text-align: right;
 }
 
 .price-value {
   font-weight: 800;
   color: #a7f3c8;
   word-break: break-word;
-  font-size: 0.62rem;
+  font-size: 0.9375rem;
 }
 
 .badge,
@@ -2349,15 +2521,14 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.15rem 0.38rem;
+  gap: 0.2rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 999px;
-  font-size: 0.58rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  line-height: 1.1;
-  white-space: normal;
+  line-height: 1.25;
+  white-space: nowrap;
   text-align: center;
-  max-width: 100%;
 }
 
 .badge-primary {
@@ -2424,8 +2595,25 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   flex-wrap: nowrap;
+}
+
+.machinery-management-page .inventory-table .machinery-action-btn,
+.machinery-management-page .inv2-table .machinery-action-btn,
+.machinery-management-page .inv2-card .machinery-action-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.machinery-management-page .inventory-table .machinery-action-btn svg,
+.machinery-management-page .inv2-table .machinery-action-btn svg,
+.machinery-management-page .inv2-card .machinery-action-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .inv2-card-actions.action-buttons {
@@ -2661,6 +2849,141 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+
+.modal-delete-overlay {
+  z-index: 1300;
+}
+
+.modal-content.modal-delete {
+  max-width: 520px;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.modal-title-text {
+  min-width: 0;
+}
+
+.modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.delete-modal-header {
+  padding: 1.25rem 1.35rem;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.delete-warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #fca5a5;
+  color: #b91c1c;
+}
+
+.delete-warning-icon svg {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.delete-modal-body {
+  padding: 0 1.35rem 1.1rem;
+}
+
+.delete-confirm-message {
+  color: rgba(229, 235, 231, 0.82) !important;
+}
+
+.delete-warning-text {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(254, 226, 226, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.delete-modal-footer,
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding: 1rem 1.35rem 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-delete-confirm {
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border: 2px solid #b91c1c;
+  color: #ffffff;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.btn-delete-confirm:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.inventory-table-admin td:nth-child(4) .price-stack,
+.inventory-table-president td:nth-child(3) .price-stack {
+  margin: 0;
 }
 
 .booking-details {
@@ -3044,8 +3367,13 @@ export default {
   .inventory-table th,
   .bookings-table td,
   .inventory-table td {
-    padding-top: 0.32rem;
-    padding-bottom: 0.32rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    font-size: 1rem;
+  }
+
+  .inventory-table .price-block-value {
+    font-size: 1rem;
   }
 }
 
@@ -3181,13 +3509,16 @@ export default {
 
 .machinery-management-page.light-theme .filter-label,
 .machinery-management-page.light-theme .form-label {
-  color: #166534 !important;
+  color: #052e16 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
 }
 
 .machinery-management-page.light-theme :is(.filter-select, .form-input, .form-select, .inv2-search-input, .inv2-select) {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
-  color: #052e16 !important;
+  border: 1.5px solid #94a3b8 !important;
+  color: #000000 !important;
+  font-size: 16px !important;
   box-shadow: none !important;
 }
 
@@ -3209,7 +3540,7 @@ export default {
 }
 
 .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
-  color: #14532d !important;
+  color: #000000 !important;
   border-bottom: 1px solid #e2e8f0 !important;
 }
 
@@ -3532,6 +3863,89 @@ export default {
 
 .machinery-management-page.light-theme .machinery-inventory-btn:hover {
   background: #f0fdf4 !important;
+}
+
+.machinery-management-page.light-theme .btn-inventory-add {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  border: 2px solid #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.22) !important;
+}
+
+.machinery-management-page.light-theme .btn-inventory-add:hover {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+  filter: none !important;
+}
+
+.machinery-management-page.light-theme .modal-delete .delete-confirm-message {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .modal-delete .delete-warning-text {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.machinery-management-page.light-theme .modal-delete .delete-modal-footer {
+  background: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+.machinery-management-page.light-theme .modal-delete .btn-secondary {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: #ffffff !important;
+  border: 2px solid #cbd5e1 !important;
+}
+
+.machinery-management-page.light-theme .modal-delete .btn-delete-confirm {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  border-color: #b91c1c !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
+  color: #000000 !important;
+  font-size: 1rem !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
+  color: #000000 !important;
+  font-size: 1.125rem !important;
+}
+
+.machinery-management-page.light-theme .inventory-table td:first-child,
+.machinery-management-page.light-theme .inventory-table .capacity-cell {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.machinery-management-page.light-theme .price-block {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .price-block-label {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .price-block-value {
+  color: #15803d !important;
+}
+
+.machinery-management-page.light-theme .price-block-value small {
+  color: #374151 !important;
+}
+
+.machinery-management-page.light-theme .price-block-member {
+  border-left-color: #16a34a !important;
+}
+
+.machinery-management-page.light-theme .price-block-nonmember {
+  border-left-color: #2563eb !important;
 }
 
 /* Modal form — high-contrast text for light mode */
