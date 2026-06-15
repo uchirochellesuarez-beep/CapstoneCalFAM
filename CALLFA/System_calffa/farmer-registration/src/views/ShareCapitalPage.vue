@@ -1396,11 +1396,15 @@ select.input {
 }
 
 .financial-container.share-capital-page.light-theme .admin-filter-label {
-  color: #166534 !important;
+  color: #000000 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  text-transform: none;
 }
 
 .financial-container.share-capital-page.light-theme .admin-filter-hint {
-  color: #15803d !important;
+  color: #166534 !important;
+  font-size: 14px !important;
 }
 
 .financial-container.share-capital-page.light-theme .empty-state {
@@ -1446,7 +1450,7 @@ select.input {
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .card-title {
-  color: #052e16 !important;
+  color: #000000 !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table thead {
@@ -1454,13 +1458,15 @@ select.input {
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table th {
-  color: #052e16 !important;
+  color: #000000 !important;
   border-bottom-color: #86efac !important;
+  font-size: 0.9375rem !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table td {
-  color: #14532d !important;
+  color: #000000 !important;
   border-bottom-color: #e2e8f0 !important;
+  font-size: 1rem !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table tbody tr:nth-child(even) {
@@ -1477,8 +1483,15 @@ select.input {
 
 .financial-container.share-capital-page.light-theme .input {
   background: #ffffff !important;
-  color: #052e16 !important;
-  border: 1.5px solid #cbd5e1 !important;
+  color: #000000 !important;
+  border: 1.5px solid #94a3b8 !important;
+  font-size: 16px !important;
+  min-height: 48px;
+}
+
+.financial-container.share-capital-page.light-theme .input::placeholder {
+  color: #4b5563 !important;
+  opacity: 1 !important;
 }
 
 .financial-container.share-capital-page.light-theme .input:focus {
@@ -1533,33 +1546,58 @@ select.input {
   border-color: #cbd5e1 !important;
 }
 
-.financial-container.share-capital-page.light-theme .btn-primary-action {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-  color: #ffffff !important;
+.financial-container.share-capital-page.light-theme .btn.btn-small,
+.financial-container.share-capital-page.light-theme .btn:not(.btn-primary-action):not(.btn-success):not(.btn-danger) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #166534 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn.btn-small:hover:not(:disabled),
+.financial-container.share-capital-page.light-theme .btn:not(.btn-primary-action):not(.btn-success):not(.btn-danger):hover:not(:disabled) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
   border-color: #15803d !important;
 }
 
-.financial-container.share-capital-page.light-theme .btn {
-  background: #f0fdf4 !important;
-  color: #166534 !important;
-  border-color: #86efac !important;
+.financial-container.share-capital-page.light-theme .btn.btn-primary-action,
+.financial-container.share-capital-page.light-theme .btn-primary-action {
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #14532d !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.22) !important;
+}
+
+.financial-container.share-capital-page.light-theme .btn.btn-primary-action:hover:not(:disabled),
+.financial-container.share-capital-page.light-theme .btn-primary-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container.share-capital-page.light-theme .btn-muted {
   background: #ffffff !important;
-  color: #166534 !important;
-  border-color: #cbd5e1 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #94a3b8 !important;
 }
 
 .financial-container.share-capital-page.light-theme .btn-success {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #14532d !important;
 }
 
 .financial-container.share-capital-page.light-theme .btn-danger {
   background: #fee2e2 !important;
   color: #991b1b !important;
-  border-color: #fca5a5 !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border: 2px solid #fca5a5 !important;
 }
 
 .financial-container.share-capital-page.light-theme .info-banner {

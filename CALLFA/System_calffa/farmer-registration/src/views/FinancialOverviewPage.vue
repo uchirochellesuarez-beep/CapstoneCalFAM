@@ -3,30 +3,41 @@
     <div class="page-header no-print">
       <div class="page-header-left">
         <h1 class="page-title">Financial Overview</h1>
+        <p class="page-subtitle">Buod ng koleksyon, pautang, machinery, at share capital — lahat sa Philippine Peso (₱).</p>
       </div>
       <div class="header-actions">
-        <button class="export-btn" @click="printReport">🖨️ Print Report</button>
-        <button class="export-btn" @click="exportCSV">📥 Download CSV</button>
+        <button type="button" class="export-btn" @click="printReport">
+          <svg class="export-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print Report
+        </button>
+        <button type="button" class="export-btn export-btn-secondary" @click="exportCSV">
+          <svg class="export-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download CSV
+        </button>
       </div>
     </div>
 
     <div class="filters-bar no-print">
       <div v-if="isAdmin" class="filter-group">
-        <label class="filter-label">Barangay</label>
-        <select v-model="filterBarangay" class="filter-input">
+        <label class="filter-label" for="fin-barangay-filter">Barangay</label>
+        <select id="fin-barangay-filter" v-model="filterBarangay" class="filter-input">
           <option value="">All Barangays</option>
           <option v-for="b in barangayOptions" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
         </select>
       </div>
       <div class="filter-group">
-        <label class="filter-label">From</label>
-        <input v-model="filterDateFrom" type="date" class="filter-input" />
+        <label class="filter-label" for="fin-date-from">From</label>
+        <input id="fin-date-from" v-model="filterDateFrom" type="date" class="filter-input" />
       </div>
       <div class="filter-group">
-        <label class="filter-label">To</label>
-        <input v-model="filterDateTo" type="date" class="filter-input" />
+        <label class="filter-label" for="fin-date-to">To</label>
+        <input id="fin-date-to" v-model="filterDateTo" type="date" class="filter-input" />
       </div>
-      <button class="filter-clear-btn" @click="clearFilters">Clear</button>
+      <button type="button" class="filter-clear-btn" @click="clearFilters">Clear Filters</button>
     </div>
 
     <div id="printable-report" class="printable-report">
@@ -38,43 +49,64 @@
 
       <!-- System-wide KPIs -->
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card stat-card-loan-collected">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <span class="stat-icon-peso">₱</span>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Loan Collections</div>
             <div class="stat-value collected">₱{{ totalCollected.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-loan-outstanding">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Loan Outstanding</div>
             <div class="stat-value outstanding">₱{{ outstandingBalance.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-machinery-income">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M8 6h8l-1 14H9L8 6z"/><path d="M9 14h6"/></svg>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Income</div>
             <div class="stat-value collected">₱{{ machineryIncome.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-machinery-expense">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Expenses</div>
             <div class="stat-value expense">₱{{ machineryExpenses.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-machinery-net">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Net</div>
             <div class="stat-value" :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-share-balance">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Share Capital Balance</div>
             <div class="stat-value">₱{{ shareCapitalBalance.toLocaleString() }}</div>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-share-contributed">
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <span class="stat-icon-peso">₱</span>
+          </div>
           <div class="stat-info">
             <div class="stat-label">Share Capital Contributed</div>
             <div class="stat-value collected">₱{{ shareCapitalContributed.toLocaleString() }}</div>
@@ -103,7 +135,8 @@
         <div class="table-header">
           <h3 class="section-title">Consolidated Financial Summary</h3>
         </div>
-        <table class="financial-table">
+        <div class="financial-table-wrap">
+        <table class="financial-table financial-table-main">
           <thead>
             <tr>
               <th>Module</th>
@@ -124,19 +157,20 @@
                 <td class="expense">₱{{ row.outflow.toLocaleString() }}</td>
                 <td :class="row.net >= 0 ? 'collected' : 'overdue'">₱{{ row.net.toLocaleString() }}</td>
                 <td class="module-link-cell no-print">
-                  <router-link :to="row.route" class="inline-link">{{ row.linkLabel }} →</router-link>
+                  <router-link :to="row.route" class="detail-link-btn">{{ row.linkLabel }}</router-link>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
+        </div>
       </div>
 
       <!-- Loans summary -->
       <div class="financial-table-section module-section">
         <div class="table-header">
           <h3 class="section-title">Loans — Summary</h3>
-          <router-link to="/admin-loans" class="view-all-link no-print">Loan Management →</router-link>
+          <router-link to="/admin-loans" class="view-all-link no-print detail-link-btn">Loan Management</router-link>
         </div>
         <table class="financial-table">
           <thead>
@@ -177,7 +211,7 @@
       <div class="financial-table-section module-section">
         <div class="table-header">
           <h3 class="section-title">Machinery — Summary</h3>
-          <router-link to="/machinery-financial" class="view-all-link no-print">Machinery Financial →</router-link>
+          <router-link to="/machinery-financial" class="view-all-link no-print detail-link-btn">Machinery Financial</router-link>
         </div>
         <table class="financial-table">
           <thead>
@@ -198,7 +232,7 @@
       <div class="financial-table-section module-section">
         <div class="table-header">
           <h3 class="section-title">Share Capital — Summary</h3>
-          <router-link to="/share-capital" class="view-all-link no-print">Share Capital →</router-link>
+          <router-link to="/share-capital" class="view-all-link no-print detail-link-btn">Share Capital</router-link>
         </div>
         <table class="financial-table">
           <thead>
@@ -721,33 +755,35 @@ onMounted(async () => {
 .page-header {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 16px;
+  gap: 20px;
   align-items: start;
-  margin-bottom: 16px;
-  padding: 18px 20px;
+  margin-bottom: 20px;
+  padding: 22px 24px;
   background: white;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid #e5e7eb;
 }
 
 .page-title {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 800;
   color: #111827;
   margin: 0;
   font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
 }
 
 .page-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 6px 0 0;
+  font-size: 15px;
+  color: #374151;
+  margin: 8px 0 0;
   line-height: 1.5;
+  max-width: 42rem;
 }
 
 .page-note {
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: 13px;
+  color: #6b7280;
   margin: 8px 0 0;
   line-height: 1.45;
 }
@@ -756,52 +792,98 @@ onMounted(async () => {
   font-weight: 700;
   color: #059669;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .inline-link:hover, .view-all-link:hover { text-decoration: underline; }
 
-.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
 .export-btn {
-  padding: 9px 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  min-height: 48px;
+  background: linear-gradient(135deg, #166534, #14532d);
+  color: #ffffff;
+  border: 2px solid #14532d;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.export-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.export-btn-secondary {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #94a3b8;
+}
+
+.export-btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .filters-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-end;
-  margin-bottom: 16px;
-  padding: 14px 16px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid #e5e7eb;
 }
 
-.filter-group { display: flex; flex-direction: column; gap: 4px; }
-.filter-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
-.filter-input {
-  padding: 7px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 13px;
-  min-width: 130px;
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #052e16;
+  text-transform: none;
+}
+
+.filter-input {
+  padding: 12px 14px;
+  border: 1.5px solid #94a3b8;
+  border-radius: 10px;
+  font-size: 16px;
+  min-width: 160px;
+  min-height: 48px;
+  color: #000000;
+  background: #ffffff;
+}
+
 .filter-clear-btn {
-  padding: 8px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #f9fafb;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 12px 18px;
+  min-height: 48px;
+  border: 2px solid #86efac;
+  border-radius: 10px;
+  background: #f0fdf4;
+  font-size: 14px;
+  font-weight: 700;
+  color: #166534;
   cursor: pointer;
 }
 
@@ -814,50 +896,123 @@ onMounted(async () => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: white;
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 16px 18px;
   border: 1px solid #e5e7eb;
+  border-left-width: 4px;
 }
 
-.stat-info { text-align: center; }
-.stat-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
-.stat-value { font-size: 18px; font-weight: 800; color: #111827; margin-top: 4px; font-family: 'Poppins', sans-serif; }
-.stat-value.collected { color: #059669; }
-.stat-value.outstanding { color: #d97706; }
+.stat-card-loan-collected { border-left-color: #16a34a; }
+.stat-card-loan-outstanding { border-left-color: #d97706; }
+.stat-card-machinery-income { border-left-color: #2563eb; }
+.stat-card-machinery-expense { border-left-color: #dc2626; }
+.stat-card-machinery-net { border-left-color: #0891b2; }
+.stat-card-share-balance { border-left-color: #7c3aed; }
+.stat-card-share-contributed { border-left-color: #059669; }
+
+.stat-icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.stat-icon-wrap svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.stat-card-loan-collected .stat-icon-wrap { background: rgba(22, 163, 74, 0.12); color: #15803d; }
+.stat-card-loan-outstanding .stat-icon-wrap { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+.stat-card-machinery-income .stat-icon-wrap { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
+.stat-card-machinery-expense .stat-icon-wrap { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+.stat-card-machinery-net .stat-icon-wrap { background: rgba(8, 145, 178, 0.12); color: #0e7490; }
+.stat-card-share-balance .stat-icon-wrap { background: rgba(124, 58, 237, 0.12); color: #6d28d9; }
+.stat-card-share-contributed .stat-icon-wrap { background: rgba(5, 150, 105, 0.12); color: #047857; }
+
+.stat-icon-peso {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-info {
+  text-align: left;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+
+.stat-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #000000;
+  margin-top: 6px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.stat-value.collected { color: #15803d; }
+.stat-value.outstanding { color: #b45309; }
 .stat-value.overdue { color: #dc2626; }
 .stat-value.expense { color: #dc2626; }
 .stat-value.rate { color: #2563eb; }
-.stat-meta { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+.stat-meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
 
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .chart-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 20px;
 }
 
-.chart-title { font-size: 14px; font-weight: 800; color: #111827; margin: 0 0 10px; text-align: center; }
-.chart-canvas-wrap { height: 220px; position: relative; }
+.chart-title {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #052e16;
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.chart-canvas-wrap {
+  height: 260px;
+  position: relative;
+}
 
 .financial-table-section {
   background: white;
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
   border: 1px solid #e5e7eb;
 }
 
@@ -869,44 +1024,87 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-.section-title { font-size: 16px; font-weight: 800; color: #111827; margin: 0; }
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #052e16;
+  margin: 0;
+}
+
+.financial-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
 
 .financial-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 12px;
+  min-width: 680px;
+}
+
+.financial-table-wrap .financial-table {
+  margin-bottom: 0;
+  border: none;
 }
 
 .financial-table:last-child { margin-bottom: 0; }
 
 .financial-table th,
 .financial-table td {
-  padding: 10px 12px;
+  padding: 0.85rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 13px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 1.0625rem;
+  line-height: 1.35;
 }
 
 .financial-table th {
-  background: #f9fafb;
-  font-weight: 700;
-  color: #6b7280;
-  font-size: 11px;
-  text-transform: uppercase;
+  background: #f0fdf4;
+  font-weight: 800;
+  color: #052e16;
+  font-size: 0.9375rem;
+  text-transform: none;
+  white-space: nowrap;
 }
 
-.sub-table { margin-top: 8px; }
+.financial-table tbody tr:hover {
+  background: #f8fdf9;
+}
+
+.sub-table { margin-top: 12px; }
+
+.detail-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #166534, #14532d);
+  border: 1px solid #14532d;
+  white-space: nowrap;
+}
+
+.detail-link-btn:hover {
+  filter: brightness(1.06);
+}
 
 .financial-table .amount { font-weight: 700; }
-.financial-table .collected { color: #059669; font-weight: 700; }
-.financial-table .outstanding { color: #d97706; font-weight: 700; }
+.financial-table .collected { color: #15803d; font-weight: 700; }
+.financial-table .outstanding { color: #b45309; font-weight: 700; }
 .financial-table .overdue { color: #dc2626; font-weight: 700; }
 .financial-table .expense { color: #dc2626; font-weight: 700; }
 .financial-table .rate { color: #2563eb; font-weight: 700; }
-.financial-table .loading-cell { text-align: center; color: #9ca3af; font-style: italic; }
+.financial-table .loading-cell { text-align: center; color: #6b7280; font-style: italic; padding: 2rem; }
 
 @media print {
   .no-print { display: none !important; }
@@ -915,9 +1113,17 @@ onMounted(async () => {
   .stat-card, .chart-card, .financial-table-section { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .page-header { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .header-actions { width: 100%; }
+  .export-btn { flex: 1; min-width: 10rem; }
+}
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .filter-input { width: 100%; min-width: 0; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .filter-clear-btn { width: 100%; }
 }
 
 /* Glass theme — dark mode only */
@@ -1051,9 +1257,50 @@ onMounted(async () => {
 }
 
 .financial-overview-container.light-theme .export-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  background: linear-gradient(135deg, #166534, #14532d) !important;
   color: #ffffff !important;
-  border: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #14532d !important;
+}
+
+.financial-overview-container.light-theme .export-btn-secondary {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+.financial-overview-container.light-theme .filter-label {
+  color: #000000 !important;
+  font-size: 14px !important;
+}
+
+.financial-overview-container.light-theme .filter-input {
+  font-size: 16px !important;
+  color: #000000 !important;
+  border-color: #94a3b8 !important;
+}
+
+.financial-overview-container.light-theme .stat-label {
+  color: #374151 !important;
+}
+
+.financial-overview-container.light-theme .stat-value {
+  color: #000000 !important;
+}
+
+.financial-overview-container.light-theme .detail-link-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-overview-container.light-theme .financial-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #000000 !important;
+}
+
+.financial-overview-container.light-theme .financial-table td {
+  color: #000000 !important;
 }
 
 .financial-overview-container.light-theme .financial-table th {
