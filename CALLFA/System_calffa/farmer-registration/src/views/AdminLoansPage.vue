@@ -1486,7 +1486,7 @@ onUnmounted(() => {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #94a3b8;
 }
 
 .loans-table {
@@ -1499,13 +1499,13 @@ onUnmounted(() => {
 .loans-table td {
   padding: 0.85rem 0.75rem;
   text-align: center;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1.5px solid #94a3b8;
   vertical-align: middle;
 }
 
 .loans-table th:not(:last-child),
 .loans-table td:not(:last-child) {
-  border-right: 1px solid rgba(203, 213, 225, 0.35);
+  border-right: 1.5px solid #94a3b8;
 }
 
 .loans-table th {
@@ -2125,7 +2125,7 @@ onUnmounted(() => {
 .payment-history-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #94a3b8;
   border-radius: 12px;
 }
 
@@ -2140,7 +2140,12 @@ onUnmounted(() => {
 .payment-history-table td {
   padding: 0.85rem 0.9rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1.5px solid #94a3b8;
+}
+
+.payment-history-table th:not(:last-child),
+.payment-history-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
 }
 
 .payment-history-table th {
@@ -2371,12 +2376,101 @@ onUnmounted(() => {
   }
 }
 
-.page-container.admin-loans-page:not(.light-theme) :is(.page-title, .stat-value, .detail-item p, .payment-history-section h4) {
+.page-container.admin-loans-page:not(.light-theme) :is(.page-title, .stat-value, .payment-history-section h4) {
   color: #ffffff !important;
 }
 
-.page-container.admin-loans-page:not(.light-theme) :is(.page-subtitle, .stat-label, .detail-item label, .form-group small, .score-factors, .payer-desc, .barangay-filter-label, .barangay-filter-hint) {
+.page-container.admin-loans-page:not(.light-theme) :is(.page-subtitle, .stat-label, .form-group small, .score-factors, .payer-desc, .barangay-filter-label, .barangay-filter-hint) {
   color: #ffffff !important;
+}
+
+/* Loan Details modal — light cards, dark readable text */
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-title-text h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-subtitle {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item {
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item label {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item p,
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item p.amount {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item-penalty {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item-penalty :is(label, p) {
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .rejection-reason {
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-footer {
+  background: rgba(20, 48, 38, 0.95) !important;
+  border-top: 2px solid #94a3b8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-section {
+  border-top-color: #94a3b8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table td {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.pending {
+  color: #a16207 !important;
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.approved,
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.active {
+  color: #15803d !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.paid {
+  color: #047857 !important;
+  background: #ecfdf5 !important;
+  border-color: #6ee7b8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.rejected,
+.page-container.admin-loans-page:not(.light-theme) .loan-details-modal .status-badge.overdue {
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
 }
 
 .page-container.admin-loans-page:not(.light-theme) .barangay-filter-bar {
@@ -2478,9 +2572,23 @@ onUnmounted(() => {
   border-bottom-color: rgba(167, 211, 178, 0.22) !important;
 }
 
+.page-container.admin-loans-page:not(.light-theme) :is(.loans-table th, .payment-history-table th):not(:last-child),
+.page-container.admin-loans-page:not(.light-theme) :is(.loans-table td, .payment-history-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
 .page-container.admin-loans-page:not(.light-theme) :is(.loans-table td, .payment-history-table td) {
   color: #ffffff !important;
-  border-bottom-color: rgba(255,255,255,0.06) !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) :is(.loans-table th, .payment-history-table th) {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+.page-container.admin-loans-page:not(.light-theme) .table-container,
+.page-container.admin-loans-page:not(.light-theme) .payment-history-table-wrap {
+  border: 2px solid #94a3b8 !important;
 }
 
 .page-container.admin-loans-page:not(.light-theme) .empty-state {
@@ -2615,15 +2723,25 @@ onUnmounted(() => {
   display: none !important;
 }
 
+.page-container.admin-loans-page.light-theme .table-container {
+  border: 2px solid #94a3b8;
+  background: #ffffff;
+}
+
 .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: #052e16 !important;
-  border-bottom: 1px solid #86efac !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+.page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th):not(:last-child),
+.page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
-  color: #14532d !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  color: #000000 !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
   background: #ffffff !important;
 }
 
@@ -2633,7 +2751,15 @@ onUnmounted(() => {
 
 .page-container.admin-loans-page.light-theme .loading-cell,
 .page-container.admin-loans-page.light-theme .empty-cell {
-  color: #166534 !important;
+  color: #000000 !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-bottom: none !important;
+}
+
+.page-container.admin-loans-page.light-theme .payment-history-table-wrap {
+  border: 2px solid #94a3b8;
+  background: #ffffff;
 }
 
 .page-container.admin-loans-page.light-theme .status-badge {

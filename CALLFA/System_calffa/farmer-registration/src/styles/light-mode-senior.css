@@ -907,16 +907,29 @@ body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, 
   color: var(--senior-text) !important;
 }
 
+body.glass-light .page-container.barangays-page.light-theme .members-table-wrap,
+body.glass-light .page-container.barangays-page.light-theme .places-table-wrap {
+  border: 2px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
 body.glass-light .page-container.barangays-page.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
   font-size: 1rem !important;
+  border-bottom: 2px solid #16a34a !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table td {
   color: var(--senior-text-body) !important;
   background: #ffffff !important;
   font-size: 1.0625rem !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
+body.glass-light .page-container.barangays-page.light-theme .barangays-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .status-pill.active {
@@ -1055,12 +1068,12 @@ body.glass-light .page-container.barangays-page.light-theme .barangay-details-mo
 }
 
 body.glass-light .page-container.barangays-page.light-theme .members-table-wrap {
-  border-color: #cbd5e1 !important;
+  border: 2px solid #94a3b8 !important;
   background: #ffffff !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .places-table-wrap {
-  border-color: #cbd5e1 !important;
+  border: 2px solid #94a3b8 !important;
   background: #ffffff !important;
 }
 
@@ -1078,10 +1091,18 @@ body.glass-light .page-container.barangays-page.light-theme .modal-delete .btn-d
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th):not(:last-child),
+body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td) {
   color: var(--senior-text-body) !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .role-badge {
@@ -1119,6 +1140,33 @@ body.glass-light .page-container.barangays-page.light-theme .role-badge.business
   background: #dcfce7 !important;
   color: #15803d !important;
   border-color: #bbf7d0 !important;
+}
+
+/* Barangays toast — teleported to body, must beat global button/theme overrides */
+body.glass-light .barangays-toast {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 3px solid #16a34a !important;
+  border-left-width: 6px !important;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3) !important;
+}
+
+body.glass-light .barangays-toast.error {
+  border-color: #dc2626 !important;
+  border-left-color: #b91c1c !important;
+}
+
+body.glass-light .barangays-toast :is(.barangays-toast-text, .barangays-toast-close) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .barangays-toast-close {
+  background: #f1f5f9 !important;
+  border: 2px solid #64748b !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 /* ===== Admin Loan Management page ===== */
@@ -1186,16 +1234,29 @@ body.glass-light .page-container.admin-loans-page.light-theme .barangay-filter-s
   color: var(--senior-text) !important;
 }
 
+body.glass-light .page-container.admin-loans-page.light-theme .table-container,
+body.glass-light .page-container.admin-loans-page.light-theme .payment-history-table-wrap {
+  border: 2px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
+  color: #000000 !important;
   font-size: 1rem !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th):not(:last-child),
+body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
-  color: var(--senior-text-body) !important;
+  color: #000000 !important;
   background: #ffffff !important;
   font-size: 1.0625rem !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .status-badge {
@@ -1253,6 +1314,24 @@ body.glass-light .machinery-management-page.light-theme :is(.page-subtitle, .sta
   color: var(--senior-text-body) !important;
 }
 
+body.glass-light .machinery-management-page.light-theme .machinery-inventory-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  border: 2px solid #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .machinery-inventory-btn:hover {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: none !important;
+  transform: translateY(-1px) !important;
+}
+
 body.glass-light .machinery-management-page.light-theme .filter-label {
   color: #000000 !important;
   font-size: 14px !important;
@@ -1267,16 +1346,53 @@ body.glass-light .machinery-management-page.light-theme :is(.filter-select, .for
   font-size: 16px !important;
 }
 
+body.glass-light .machinery-management-page.light-theme :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
+  border: 2px solid #94a3b8 !important;
+}
+
 body.glass-light .machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #000000 !important;
   font-size: 1rem !important;
   text-transform: none !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th):not(:last-child),
+body.glass-light .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
   color: #000000 !important;
   font-size: 1.125rem !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .machinery-management-page.light-theme :is(.bookings-table tbody tr:nth-child(even) td, .inventory-table tbody tr:nth-child(even) td) {
+  background: #f8fdf9 !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .inv2-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .inv2-table th:not(:last-child),
+body.glass-light .machinery-management-page.light-theme .inv2-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .inv2-table td {
+  color: #000000 !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .machinery-management-page.light-theme .inv2-row-b td {
+  background: #f8fdf9 !important;
 }
 
 body.glass-light .machinery-management-page.light-theme .status-success {
@@ -1393,11 +1509,27 @@ body.glass-light .financial-overview-container.light-theme .financial-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #000000 !important;
   font-size: 0.9375rem !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .financial-table th:not(:last-child),
+body.glass-light .financial-overview-container.light-theme .financial-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table td {
   color: #000000 !important;
   font-size: 1.0625rem !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .financial-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+body.glass-light .financial-overview-container.light-theme :is(.financial-table-wrap, .financial-table-section > .financial-table) {
+  border: 2px solid #94a3b8 !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .export-btn {

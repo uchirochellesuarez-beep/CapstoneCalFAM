@@ -1079,15 +1079,20 @@ onMounted(async () => {
   text-align: left;
   font-weight: 800;
   color: var(--text-main);
-  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  border-bottom: 2px solid #6ee7a8;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
 
+.tab-content .data-table th:not(:last-child),
+.tab-content .data-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
+}
+
 .tab-content .data-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid #94a3b8;
   color: var(--text-main);
   font-weight: 600;
 }

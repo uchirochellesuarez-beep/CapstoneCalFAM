@@ -10,8 +10,10 @@ body.glass-dark {
   --farm-night-surface: #1e4234;
   --farm-night-surface-raised: #255241;
   --farm-night-surface-soft: #2d5c4a;
-  --farm-night-border: rgba(167, 211, 178, 0.22);
-  --farm-night-border-strong: rgba(187, 227, 196, 0.32);
+  --farm-night-border: rgba(167, 211, 178, 0.35);
+  --farm-night-border-strong: rgba(187, 227, 196, 0.48);
+  --dark-table-grid: #94a3b8;
+  --dark-table-header-line: #6ee7a8;
   --farm-night-text: #ffffff;
   --farm-night-text-soft: #ffffff;
   --farm-night-text-muted: #ffffff;
@@ -32,6 +34,20 @@ body.glass-dark {
   --glass-shadow-soft: 0 6px 18px rgba(4, 18, 12, 0.28);
   --glass-approved: #6ee7a8;
   --glass-cta-b: #3d7a5c;
+
+  /* Readable light-surface buttons in dark mode */
+  --dark-btn-surface: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  --dark-btn-surface-hover: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%);
+  --dark-btn-text: #052e16;
+  --dark-btn-border: #16a34a;
+  --dark-btn-primary-surface: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  --dark-btn-primary-border: #15803d;
+  --dark-btn-danger-surface: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  --dark-btn-danger-text: #7f1d1d;
+  --dark-btn-danger-border: #dc2626;
+  --dark-btn-warning-surface: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  --dark-btn-warning-text: #78350f;
+  --dark-btn-warning-border: #d97706;
 }
 
 /* Ambient — moonlit field, not neon glow */
@@ -83,15 +99,40 @@ body.glass-dark .top-header {
 }
 
 body.glass-dark .top-header :is(.icon-btn, .user-profile, .theme-toggle-btn) {
-  background: rgba(37, 82, 65, 0.65) !important;
-  border-color: var(--farm-night-border) !important;
-  color: var(--farm-night-text) !important;
-  box-shadow: 0 2px 8px rgba(4, 18, 12, 0.2) !important;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  border: 2px solid #16a34a !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+}
+
+body.glass-dark .top-header :is(.icon-btn, .theme-toggle-btn) :is(svg, .notification-icon, .logout-icon, .theme-icon) {
+  color: #052e16 !important;
+}
+
+body.glass-dark .top-header :is(.icon-btn, .theme-toggle-btn):hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  filter: brightness(1.04) !important;
+}
+
+body.glass-dark .top-header .notification-btn.has-unread {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #d97706 !important;
+  color: #78350f !important;
 }
 
 body.glass-dark .top-header .profile-name,
 body.glass-dark .top-header .profile-id {
   color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .top-header .profile-id {
+  color: #052e16 !important;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  border: 1.5px solid #16a34a !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 body.glass-dark .top-header .profile-status {
@@ -256,25 +297,19 @@ body.glass-dark :is(
 }
 
 body.glass-dark .financial-overview-container:not(.light-theme) :is(
-  .page-subtitle, .stat-label, .filter-label, .chart-subtitle
+  .page-subtitle, .stat-label, .filter-label, .chart-subtitle,
+  .page-title, .section-title, .chart-title, .page-note,
+  .stat-value, .stat-icon-wrap, .stat-icon-peso,
+  .financial-table th, .financial-table td,
+  .collected, .outstanding, .overdue, .expense, .rate, .amount,
+  .inline-link, .view-all-link, .filter-input
 ) {
-  color: var(--farm-night-text-soft) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark .financial-overview-container:not(.light-theme) .stat-value.collected {
-  color: #6ee7a8 !important;
-}
-
-body.glass-dark .financial-overview-container:not(.light-theme) :is(.inline-link, .view-all-link) {
-  color: #a7f3c8 !important;
-}
-
-body.glass-dark .financial-overview-container:not(.light-theme) .chart-title {
-  color: var(--farm-night-text) !important;
-}
-
-body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td {
-  color: var(--farm-night-text-soft) !important;
+body.glass-dark .financial-overview-container:not(.light-theme) .filter-input::placeholder {
+  color: rgba(255, 255, 255, 0.72) !important;
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) :is(
@@ -291,26 +326,85 @@ body.glass-dark :is(.members-table th, .data-table th, .loans-table th, .baranga
   border-bottom-color: var(--farm-night-border-strong) !important;
 }
 
-body.glass-dark :is(.members-table td, .data-table td, .loans-table td) {
+body.glass-dark :is(.members-table td, .data-table td, .loans-table td, .financial-table td, .barangays-table td, .inv2-table td, .places-table td) {
   color: var(--farm-night-text-soft) !important;
-  border-color: rgba(167, 211, 178, 0.12) !important;
+  border-bottom: 1.5px solid var(--dark-table-grid) !important;
+}
+
+body.glass-dark :is(
+  .barangays-table th:not(:last-child),
+  .barangays-table td:not(:last-child),
+  .members-table th:not(:last-child),
+  .members-table td:not(:last-child),
+  .places-table th:not(:last-child),
+  .places-table td:not(:last-child),
+  .loans-table th:not(:last-child),
+  .loans-table td:not(:last-child),
+  .payment-history-table th:not(:last-child),
+  .payment-history-table td:not(:last-child),
+  .financial-table th:not(:last-child),
+  .financial-table td:not(:last-child),
+  .bookings-table th:not(:last-child),
+  .bookings-table td:not(:last-child),
+  .inventory-table th:not(:last-child),
+  .inventory-table td:not(:last-child),
+  .inv2-table th:not(:last-child),
+  .inv2-table td:not(:last-child),
+  .expenses-table th:not(:last-child),
+  .expenses-table td:not(:last-child),
+  .income-table th:not(:last-child),
+  .income-table td:not(:last-child),
+  .ar-table th:not(:last-child),
+  .ar-table td:not(:last-child),
+  .collections-table th:not(:last-child),
+  .collections-table td:not(:last-child),
+  .tab-content .data-table th:not(:last-child),
+  .tab-content .data-table td:not(:last-child),
+  .rej-table th:not(:last-child),
+  .rej-table td:not(:last-child)
+) {
+  border-right: 1.5px solid var(--dark-table-grid) !important;
+}
+
+body.glass-dark :is(
+  .barangays-table th,
+  .members-table th,
+  .places-table th,
+  .loans-table th,
+  .payment-history-table th,
+  .financial-table th,
+  .bookings-table th,
+  .inventory-table th,
+  .inv2-table th,
+  .expenses-table th,
+  .income-table th,
+  .ar-table th,
+  .collections-table th,
+  .tab-content .data-table th,
+  .data-table th
+) {
+  border-bottom: 2px solid var(--dark-table-header-line) !important;
+}
+
+body.glass-dark :is(
+  .table-container,
+  .table-wrap,
+  .financial-table-wrap,
+  .financial-overview-container:not(.light-theme) .financial-table-section > .financial-table,
+  .inv2-table-wrap,
+  .inventory-table-container,
+  .payment-history-table-wrap,
+  .members-table-wrap,
+  .places-table-wrap,
+  .barangays-page:not(.light-theme) .card .table-wrap,
+  .financial-container:not(.light-theme) .table-container,
+  .share-capital-page:not(.light-theme) .table-container
+) {
+  border: 2px solid var(--dark-table-grid) !important;
 }
 
 body.glass-dark :is(.members-table tbody tr:hover td, .data-table tbody tr:hover td) {
   background: rgba(110, 231, 168, 0.06) !important;
-}
-
-/* Buttons — earthy CTA, not neon */
-body.glass-dark :is(.btn-primary, .btn-success, .export-btn, .btn-submit) {
-  background: linear-gradient(135deg, #3d7a5c 0%, #2d5c4a 100%) !important;
-  border-color: rgba(110, 231, 168, 0.35) !important;
-  color: #ecfdf5 !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.25) !important;
-}
-
-body.glass-dark :is(.btn-primary, .btn-success, .export-btn):hover {
-  background: linear-gradient(135deg, #4a8f6c 0%, #3d7a5c 100%) !important;
-  filter: none !important;
 }
 
 /* Softer active nav glow globally */
@@ -461,55 +555,28 @@ body.glass-dark .farmer-table-page:not(.light-theme) {
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) :is(
-  .page-title, .tab-btn, .filter-label, .filter-hint, .state-text,
+  .page-title, .filter-label, .filter-hint, .state-text,
   .registered-members-title, .registered-members-muted
 ) {
   color: #ffffff !important;
 }
 
-body.glass-dark .farmer-table-page:not(.light-theme) .tab-btn {
-  background: rgba(30, 66, 52, 0.92) !important;
-  border-color: var(--farm-night-border) !important;
-}
-
-body.glass-dark .farmer-table-page:not(.light-theme) .tab-btn:hover {
-  background: rgba(37, 82, 65, 0.96) !important;
-}
-
-body.glass-dark .farmer-table-page:not(.light-theme) .tab-btn.active {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  border-color: rgba(134, 239, 172, 0.55) !important;
-  color: #ffffff !important;
-  filter: none !important;
-}
-
-body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn {
-  background: rgba(30, 66, 52, 0.94) !important;
-  border: 1.5px solid rgba(134, 239, 172, 0.35) !important;
-  color: #ffffff !important;
-  filter: none !important;
-  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.24) !important;
-}
-
-body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn-label {
-  color: #ecfdf5 !important;
-}
-
 body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn-count {
-  color: #86efac !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(134, 239, 172, 0.35) !important;
+  color: var(--dark-btn-text) !important;
+  background: rgba(5, 46, 22, 0.08) !important;
+  border-color: var(--dark-btn-border) !important;
 }
 
-body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active :is(.tab-btn-label, .tab-btn-count, .tab-icon) {
-  color: #ffffff !important;
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active .tab-btn-count {
+  color: var(--dark-btn-text) !important;
+  background: rgba(5, 46, 22, 0.12) !important;
 }
 
 /* Members table — dark text on light rows for readability */
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table-container,
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table-scroll-main {
   background: #ffffff !important;
-  border-color: #86efac !important;
+  border: 2px solid #94a3b8 !important;
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table {
@@ -521,19 +588,19 @@ body.glass-dark .farmer-table-page:not(.light-theme) .members-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
   font-weight: 800 !important;
-  border-bottom: 1px solid #86efac !important;
+  border-bottom: 2px solid #6ee7a8 !important;
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table th:not(:last-child),
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table td:not(:last-child) {
-  border-right: 1px solid #e2e8f0 !important;
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table td {
   color: #000000 !important;
   font-weight: 600 !important;
   background: #ffffff !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table td :is(span, strong) {
@@ -604,4 +671,532 @@ body.glass-dark .farmer-table-page:not(.light-theme) .registered-members-title {
 
 body.glass-dark .farmer-table-page:not(.light-theme) .members-table-scroll-hint {
   color: #ecfdf5 !important;
+}
+
+/* ===== Dark mode table grid — same visible lines as light mode (#94a3b8) ===== */
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th:not(:last-child),
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.members-table-wrap, .places-table-wrap, .table-wrap) {
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th:not(:last-child),
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.table-container, .payment-history-table-wrap) {
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th:not(:last-child),
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th:not(:last-child),
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(.financial-table-wrap, .financial-table-section > .financial-table) {
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th:not(:last-child),
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) .table-container {
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table th:not(:last-child),
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table td {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table th {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+/* ===== Dark mode — white text on dark-surface pages ===== */
+body.glass-dark :is(
+  .machinery-management-page:not(.light-theme),
+  .page-container.admin-loans-page:not(.light-theme),
+  .page-container.barangays-page:not(.light-theme),
+  .financial-container:not(.light-theme)
+) :is(
+  .page-title, .page-subtitle, .section-title, .chart-title,
+  .stat-label, .stat-value, .filter-label, .filter-input,
+  .collected, .outstanding, .overdue, .expense, .rate, .amount,
+  .amount-cell, .inline-link, .view-all-link,
+  th, td, label, p, h1, h2, h3, h4
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-dark .dashboard-container :is(.glass-chart-title, .glass-chart-subtitle, .glass-legend-item, .analytics-section-title) {
+  color: #ffffff !important;
+}
+
+/* Machinery Financial — Reports tab readable in dark mode */
+body.glass-dark .financial-container:not(.light-theme) .report-generator-panel {
+  background: linear-gradient(140deg, rgba(14, 36, 27, 0.96) 0%, rgba(17, 48, 33, 0.94) 52%, rgba(12, 32, 25, 0.98) 100%) !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(
+  .report-option-card, .actions-card, .custom-date-inputs, .orientation-setting, .filter-checkbox
+) {
+  background: linear-gradient(155deg, rgba(24, 49, 38, 0.95) 0%, rgba(17, 34, 28, 0.98) 100%) !important;
+  border: 1.5px solid #94a3b8 !important;
+  color: #ffffff !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(
+  .report-option-card h4, .orientation-label, .checkbox-inline, .checkbox-inline span,
+  .filter-checkbox span, .date-input-group label, .tab-content h2, .filter-label
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) .btn-action.print:disabled {
+  background: rgba(30, 66, 52, 0.85) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  border-color: rgba(148, 163, 184, 0.45) !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.filters-section, .reports-machinery-filter-bar) {
+  background: rgba(28, 42, 33, 0.92) !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.filter-input, .form-input-sm) {
+  background: rgba(20, 48, 38, 0.92) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) select option {
+  color: #052e16 !important;
+  background: #ffffff !important;
+}
+
+/* Machinery Financial — summary KPI amounts white in dark mode */
+body.glass-dark .financial-container:not(.light-theme) :is(
+  .summary-cards > .summary-card .card-amount,
+  .summary-container > .summary-card .card-amount,
+  .card-amount,
+  .income-card .card-amount,
+  .expense-card .card-amount,
+  .profit-card .card-amount,
+  .profit-card.negative .card-amount,
+  .ar-card .card-amount,
+  .collected-card .card-amount,
+  .balance-card .card-amount,
+  .collection-card .card-amount,
+  .balance-card .card-amount
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+/* ===== Dark mode — readable light-surface buttons (global, after white-text rules) ===== */
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn, .btn-primary, .btn-secondary, .btn-secondary-outline, .btn-success, .btn-danger,
+  .btn-warning, .btn-muted, .btn-submit, .submit-btn, .submit-button, .save-btn, .export-btn,
+  .print-btn, .report-type-btn, .btn-action, .btn-summary, .link-btn, .btn-view, .btn-approve,
+  .btn-reject, .btn-book, .btn-post, .btn-ghost, .btn-ghost-header, .btn-reset, .btn-close-modal,
+  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn, .inv2-clear-all,
+  .btn-view-area, .btn-header-add, .btn-delete-confirm, .btn-inventory-add, .btn-upload-picture,
+  .btn-remove-picture, .btn-place-save, .btn-place-cancel, .machinery-inventory-btn, .close-btn,
+  .tab, .tab-btn, .export-btn-secondary, .detail-link-btn, .bulk-approve-btn, .refresh-btn, .retry-btn,
+  button[type='submit']
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small, .theme-toggle-btn, .icon-btn)
+) {
+  background: var(--dark-btn-surface) !important;
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  border: 2px solid var(--dark-btn-border) !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+  filter: none !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn, .btn-primary, .btn-secondary, .btn-secondary-outline, .btn-success, .btn-danger,
+  .btn-warning, .btn-muted, .btn-submit, .submit-btn, .submit-button, .save-btn, .export-btn,
+  .print-btn, .report-type-btn, .btn-action, .btn-summary, .link-btn, .btn-view, .btn-approve,
+  .btn-reject, .btn-book, .btn-post, .btn-ghost, .btn-ghost-header, .btn-reset, .btn-close-modal,
+  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn, .inv2-clear-all,
+  .btn-view-area, .btn-header-add, .btn-delete-confirm, .btn-inventory-add, .btn-upload-picture,
+  .btn-remove-picture, .btn-place-save, .btn-place-cancel, .machinery-inventory-btn, .close-btn,
+  .tab, .tab-btn, .export-btn-secondary, .detail-link-btn, .bulk-approve-btn, .refresh-btn, .retry-btn,
+  button[type='submit']
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small, .theme-toggle-btn, .icon-btn)
+):hover:not(:disabled) {
+  background: var(--dark-btn-surface-hover) !important;
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  transform: translateY(-1px) !important;
+  filter: brightness(1.04) !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn-primary, .btn-success, .btn-submit, .submit-btn, .submit-button, .save-btn, .export-btn,
+  .btn-generate, .btn-inventory-add, .machinery-inventory-btn, .btn-place-save, .btn-post,
+  .btn-primary-action, .btn-book, .btn-approve, .btn-action.print, button[type='submit']
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small, .theme-toggle-btn, .icon-btn)
+) {
+  background: var(--dark-btn-primary-surface) !important;
+  border-color: var(--dark-btn-primary-border) !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn-danger, .btn-delete-confirm, .btn-reject
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small)
+) {
+  background: var(--dark-btn-danger-surface) !important;
+  color: var(--dark-btn-danger-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-danger-text) !important;
+  border-color: var(--dark-btn-danger-border) !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn-warning
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small)
+) {
+  background: var(--dark-btn-warning-surface) !important;
+  color: var(--dark-btn-warning-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-warning-text) !important;
+  border-color: var(--dark-btn-warning-border) !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .tab.active, .tab-btn.active, .report-type-btn.active, .orient-btn.active
+):not(
+  :is(.table-action-btn, .machinery-action-btn, .barangays-icon-btn, .btn-icon-small, .theme-toggle-btn, .icon-btn)
+) {
+  background: var(--dark-btn-primary-surface) !important;
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  border-color: var(--dark-btn-primary-border) !important;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn, .btn-action, .report-type-btn, .tab, .tab-btn, button[type='submit']
+) :is(span, .btn-text, .btn-icon, .tab-btn-label, .tab-btn-count) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+body.glass-dark :is(
+  .page-container:not(.light-theme),
+  .financial-container:not(.light-theme),
+  .dashboard-container,
+  .machinery-management-page:not(.light-theme),
+  .farmer-table-page:not(.light-theme),
+  .financial-overview-container:not(.light-theme),
+  .members-summary-page:not(.light-theme),
+  .modal-overlay
+) :is(
+  .btn, .btn-action, .report-type-btn, .tab, .tab-btn, button[type='submit']
+):disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Machinery Financial — main nav tabs (icons + labels) */
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab,
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active {
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab :is(.tab-icon, .tab-label, svg) {
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  stroke: currentColor !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active :is(.tab-icon, .tab-label, svg) {
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .btn-action) :is(.btn-icon, .btn-text, svg) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  stroke: currentColor !important;
+}
+
+/* Members Management — tabs, filters, empty states */
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn,
+body.glass-dark .farmer-table-page:not(.light-theme) .btn-summary {
+  background: var(--dark-btn-surface) !important;
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  border: 2px solid var(--dark-btn-border) !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count, svg),
+body.glass-dark .farmer-table-page:not(.light-theme) .btn-summary :is(.btn-tab-icon, svg) {
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  stroke: currentColor !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active {
+  background: var(--dark-btn-primary-surface) !important;
+  border-color: var(--dark-btn-primary-border) !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.filter-search-input, .filter-select) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-icon,
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-icon svg {
+  color: #15803d !important;
+  stroke: currentColor !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) .registered-members-title {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) {
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) p {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.bulk-approve-btn, .refresh-btn, .retry-btn) {
+  background: var(--dark-btn-primary-surface) !important;
+  color: var(--dark-btn-text) !important;
+  -webkit-text-fill-color: var(--dark-btn-text) !important;
+  border: 2px solid var(--dark-btn-primary-border) !important;
+}
+
+/* Loan Management — Loan Details modal readable fields */
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item {
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item label {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item :is(p, .amount) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item-penalty :is(label, p) {
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-title-text h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-subtitle {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table :is(th, td) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table td {
+  background: #ffffff !important;
+}
+
+/* Edit Profile page */
+body.glass-dark .edit-profile-page.glass-module-page .profile-page-title {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page .profile-page-subtitle {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page .save-btn {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #15803d !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page .avatar-upload-btn {
+  background: #ffffff !important;
+  border: 2px solid #16a34a !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page .avatar-upload-btn svg {
+  color: #15803d !important;
+  stroke: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
 }

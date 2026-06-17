@@ -849,6 +849,107 @@ const goToMembersSummary = () => router.push('/members-summary')
   }
 }
 
+/* ===== DARK MODE — readable light-surface controls ===== */
+.farmer-table-page:not(.light-theme) .btn-summary,
+.farmer-table-page:not(.light-theme) .btn-summary .btn-tab-icon {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #16a34a !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn:hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  border-color: #15803d !important;
+  color: #052e16 !important;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active :is(.tab-icon, .tab-btn-label, .tab-btn-count) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn-count {
+  background: rgba(5, 46, 22, 0.08) !important;
+  border-color: #16a34a !important;
+}
+
+.farmer-table-page:not(.light-theme) .filter-search-input,
+.farmer-table-page:not(.light-theme) .filter-select {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+.farmer-table-page:not(.light-theme) .filter-search-input::placeholder {
+  color: #64748b !important;
+}
+
+.farmer-table-page:not(.light-theme) .filter-search-icon {
+  color: #15803d !important;
+}
+
+.farmer-table-page:not(.light-theme) .filter-label,
+.farmer-table-page:not(.light-theme) .filter-hint {
+  color: #ecfdf5 !important;
+}
+
+.farmer-table-page:not(.light-theme) .registered-members-title {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.farmer-table-page:not(.light-theme) :deep(.empty-state),
+.farmer-table-page:not(.light-theme) :deep(.loading-state),
+.farmer-table-page:not(.light-theme) :deep(.error-state) {
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+  color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) :deep(.empty-state > p:first-child),
+.farmer-table-page:not(.light-theme) :deep(.loading-state p),
+.farmer-table-page:not(.light-theme) :deep(.error-state p) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) :deep(.bulk-approve-btn),
+.farmer-table-page:not(.light-theme) :deep(.refresh-btn),
+.farmer-table-page:not(.light-theme) :deep(.retry-btn) {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #15803d !important;
+}
+
+.farmer-table-page:not(.light-theme) .state-text {
+  color: #ecfdf5 !important;
+}
+
 /* ===== LIGHT MODE — Senior-friendly bright sage theme ===== */
 .farmer-table-page.light-theme {
   --text-main: #052e16;
