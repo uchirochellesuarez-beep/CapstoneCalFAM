@@ -197,12 +197,12 @@ img.member-avatar {
   word-break: normal;
   overflow-wrap: break-word;
   vertical-align: middle !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
 }
 
 .members-table th:not(:last-child),
 .members-table td:not(:last-child) {
-  border-right: 1px solid rgba(148, 163, 184, 0.17) !important;
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 .members-table th {
@@ -214,7 +214,7 @@ img.member-avatar {
   color: rgba(248, 250, 248, 0.96) !important;
   white-space: nowrap !important;
   background: rgba(32, 86, 58, 0.98) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.38) !important;
+  border-bottom: 2px solid #6ee7a8 !important;
 }
 
 .members-table td {

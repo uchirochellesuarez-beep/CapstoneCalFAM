@@ -243,7 +243,18 @@
             </button>
           </div>
 
-          <div class="places-card" v-if="selectedBarangay && activeTab === 'places'">
+          <div
+            class="places-card"
+            :class="{ 'places-card--busy': placesLoading || placeSaving }"
+            v-if="selectedBarangay && activeTab === 'places'"
+          >
+            <div v-if="placesLoading || placeSaving" class="places-loading-overlay" role="status" aria-live="polite">
+              <span class="places-loading-spinner" aria-hidden="true"></span>
+              <span class="places-loading-text">
+                {{ placeSaving ? (editingPlaceId ? 'Updating place...' : 'Adding place...') : 'Loading places...' }}
+              </span>
+            </div>
+
             <div class="places-header">
               <div class="places-section-title">
                 <span class="places-section-icon" aria-hidden="true">
@@ -270,6 +281,7 @@
                     type="text"
                     class="form-input"
                     placeholder="e.g. Sitio Proper"
+                    :disabled="placeSaving || placesLoading"
                   />
                 </div>
                 <div class="place-form-field">
@@ -279,24 +291,35 @@
                     type="text"
                     class="form-input"
                     placeholder="Optional"
+                    :disabled="placeSaving || placesLoading"
                   />
                 </div>
                 <div class="place-form-field place-form-field-status">
                   <label class="place-form-label">Status</label>
-                  <select v-model="placeForm.is_active" class="form-input place-status">
+                  <select v-model="placeForm.is_active" class="form-input place-status" :disabled="placeSaving || placesLoading">
                     <option :value="true">Active</option>
                     <option :value="false">Inactive</option>
                   </select>
                 </div>
                 <div class="place-form-actions">
-                  <button type="button" class="btn-submit btn-place-save" @click="savePlace">
-                    {{ editingPlaceId ? 'Update' : 'Add Place' }}
+                  <button
+                    type="button"
+                    class="btn-submit btn-place-save"
+                    @click="savePlace"
+                    :disabled="placeSaving || placesLoading"
+                  >
+                    {{
+                      placeSaving
+                        ? (editingPlaceId ? 'Updating...' : 'Adding...')
+                        : (editingPlaceId ? 'Update' : 'Add Place')
+                    }}
                   </button>
                   <button
                     v-if="editingPlaceId"
                     type="button"
                     class="btn-secondary btn-place-cancel"
                     @click="resetPlaceForm"
+                    :disabled="placeSaving || placesLoading"
                   >
                     Cancel
                   </button>
@@ -331,13 +354,13 @@
                     </td>
                     <td class="td-actions">
                       <div class="barangays-action-row">
-                      <button type="button" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit" @click="startEditPlace(place)">
+                      <button type="button" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit" :disabled="placesLoading || placeSaving" @click="startEditPlace(place)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button type="button" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete" @click="openDeletePlaceConfirm(place)">
+                      <button type="button" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete" :disabled="placesLoading || placeSaving" @click="openDeletePlaceConfirm(place)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18" />
                           <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -507,11 +530,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast notification (replaces browser alert) -->
+    <Teleport to="body">
+      <Transition name="toast-fade">
+        <div
+          v-if="toastMessage"
+          class="barangays-toast"
+          :class="toastType"
+          role="alert"
+          aria-live="assertive"
+        >
+          <span class="barangays-toast-icon" aria-hidden="true">
+            <svg v-if="toastType === 'success'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="barangays-toast-text">{{ toastMessage }}</span>
+          <button type="button" class="barangays-toast-close" @click="clearToast" aria-label="Dismiss">×</button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
@@ -551,6 +598,8 @@ const officers = ref([])
 const memberSearchQuery = ref('')
 const places = ref([])
 const editingPlaceId = ref(null)
+const placesLoading = ref(false)
+const placeSaving = ref(false)
 
 const showDeleteConfirm = ref(false)
 const deleteInProgress = ref(false)
@@ -574,6 +623,27 @@ const placeForm = ref({
   description: '',
   is_active: true
 })
+
+const toastMessage = ref('')
+const toastType = ref('success')
+let toastTimer = null
+
+const clearToast = () => {
+  toastMessage.value = ''
+  if (toastTimer) {
+    clearTimeout(toastTimer)
+    toastTimer = null
+  }
+}
+
+const showToast = (message, type = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(clearToast, type === 'error' ? 4000 : 2800)
+}
+
+onUnmounted(clearToast)
 
 const totalBarangays = computed(() => barangays.value.length)
 const activeBarangays = computed(() => barangays.value.filter(b => b.status === 'active').length)
@@ -642,7 +712,7 @@ const fetchBarangays = async () => {
     }
   } catch (error) {
     console.error('Error fetching barangays:', error)
-    alert('Failed to load barangays')
+    showToast('Failed to load barangays', 'error')
   } finally {
     loading.value = false
   }
@@ -677,7 +747,7 @@ const closeModal = () => {
 
 const saveBarangay = async () => {
   if (!formData.value.name || !String(formData.value.name).trim()) {
-    alert('Barangay name is required')
+    showToast('Barangay name is required', 'error')
     return
   }
 
@@ -700,15 +770,15 @@ const saveBarangay = async () => {
     const data = await response.json()
     
     if (data.success) {
-      alert(editingBarangay.value ? 'Barangay updated successfully!' : 'Barangay added successfully!')
+      showToast(editingBarangay.value ? 'Barangay updated successfully!' : 'Barangay added successfully!')
       closeModal()
       fetchBarangays()
     } else {
-      alert(data.message || 'Operation failed')
+      showToast(data.message || 'Operation failed', 'error')
     }
   } catch (error) {
     console.error('Error saving barangay:', error)
-    alert('Failed to save barangay')
+    showToast('Failed to save barangay', 'error')
   }
 }
 
@@ -722,14 +792,14 @@ const deleteBarangay = async (barangay) => {
     const data = await response.json()
     
     if (data.success) {
-      alert('Barangay deleted successfully!')
+      showToast('Barangay deleted successfully!')
       fetchBarangays()
     } else {
-      alert(data.message || 'Failed to delete barangay')
+      showToast(data.message || 'Failed to delete barangay', 'error')
     }
   } catch (error) {
     console.error('Error deleting barangay:', error)
-    alert('Failed to delete barangay')
+    showToast('Failed to delete barangay', 'error')
   }
 }
 
@@ -766,11 +836,13 @@ const confirmDelete = async () => {
   }
 }
 
-const viewBarangayDetails = async (barangay) => {
+const viewBarangayDetails = async (barangay, { tab = 'officers' } = {}) => {
   selectedBarangay.value = barangay
-  activeTab.value = 'officers'
+  activeTab.value = tab
   showDetailsModal.value = true
-  
+
+  if (tab === 'places') placesLoading.value = true
+
   try {
     const [detailsRes, placesRes] = await Promise.all([
       fetch(`http://localhost:3000/api/barangays/${barangay.id}`),
@@ -786,13 +858,36 @@ const viewBarangayDetails = async (barangay) => {
     places.value = placesData.success ? (placesData.places || []) : []
   } catch (error) {
     console.error('Error fetching barangay details:', error)
-    alert('Failed to load barangay details')
+    showToast('Failed to load barangay details', 'error')
+  } finally {
+    if (tab === 'places') placesLoading.value = false
+  }
+}
+
+const fetchPlacesForBarangay = async (barangayId) => {
+  if (!barangayId) return false
+
+  placesLoading.value = true
+  try {
+    const res = await fetch(`http://localhost:3000/api/barangays/${barangayId}/places?active_only=0`)
+    const data = await res.json()
+    if (!data.success) {
+      showToast(data.message || 'Failed to refresh places', 'error')
+      return false
+    }
+    places.value = data.places || []
+    return true
+  } catch (error) {
+    console.error('Error fetching places:', error)
+    showToast('Failed to refresh places', 'error')
+    return false
+  } finally {
+    placesLoading.value = false
   }
 }
 
 const openPlacesModal = async (barangay) => {
-  await viewBarangayDetails(barangay)
-  activeTab.value = 'places'
+  await viewBarangayDetails(barangay, { tab: 'places' })
 }
 
 const closeDetailsModal = () => {
@@ -801,6 +896,8 @@ const closeDetailsModal = () => {
   farmers.value = []
   officers.value = []
   places.value = []
+  placesLoading.value = false
+  placeSaving.value = false
   resetPlaceForm()
   memberSearchQuery.value = ''
 }
@@ -826,12 +923,15 @@ const startEditPlace = (place) => {
 const savePlace = async () => {
   if (!selectedBarangay.value?.id) return
   if (!String(placeForm.value.name || '').trim()) {
-    alert('Place name is required')
+    showToast('Place name is required', 'error')
     return
   }
+  if (placeSaving.value || placesLoading.value) return
+
+  const isEdit = !!editingPlaceId.value
+  placeSaving.value = true
 
   try {
-    const isEdit = !!editingPlaceId.value
     const endpoint = isEdit
       ? `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places/${editingPlaceId.value}`
       : `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places`
@@ -847,15 +947,20 @@ const savePlace = async () => {
     })
     const data = await res.json()
     if (!data.success) {
-      alert(data.message || 'Failed to save place')
+      showToast(data.message || 'Failed to save place', 'error')
       return
     }
 
-    await viewBarangayDetails(selectedBarangay.value)
-    resetPlaceForm()
+    const refreshed = await fetchPlacesForBarangay(selectedBarangay.value.id)
+    if (refreshed) {
+      resetPlaceForm()
+      showToast(isEdit ? 'Place updated successfully!' : 'Place added successfully!')
+    }
   } catch (error) {
     console.error('Error saving place:', error)
-    alert('Failed to save place')
+    showToast('Failed to save place', 'error')
+  } finally {
+    placeSaving.value = false
   }
 }
 
@@ -869,14 +974,18 @@ const deletePlace = async (place) => {
     )
     const data = await res.json()
     if (!data.success) {
-      alert(data.message || 'Failed to delete place')
+      showToast(data.message || 'Failed to delete place', 'error')
       return
     }
-    await viewBarangayDetails(selectedBarangay.value)
-    if (editingPlaceId.value === place.id) resetPlaceForm()
+
+    const refreshed = await fetchPlacesForBarangay(selectedBarangay.value.id)
+    if (refreshed) {
+      if (editingPlaceId.value === place.id) resetPlaceForm()
+      showToast('Place deleted successfully!')
+    }
   } catch (error) {
     console.error('Error deleting place:', error)
-    alert('Failed to delete place')
+    showToast('Failed to delete place', 'error')
   }
 }
 
@@ -1190,13 +1299,13 @@ onMounted(() => {
 .barangays-table td {
   padding: 0.9rem 0.75rem;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1.5px solid #94a3b8;
   vertical-align: middle;
 }
 
 .barangays-table th:not(:last-child),
 .barangays-table td:not(:last-child) {
-  border-right: 1px solid rgba(203, 213, 225, 0.12);
+  border-right: 1.5px solid #94a3b8;
 }
 
 .barangays-table th {
@@ -1819,9 +1928,16 @@ onMounted(() => {
   padding: 0.85rem 0.85rem;
   font-size: 1.0625rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1.5px solid #94a3b8;
   color: rgba(226, 234, 229, 0.92);
   vertical-align: middle;
+}
+
+.members-table th:not(:last-child),
+.members-table td:not(:last-child),
+.places-table th:not(:last-child),
+.places-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
 }
 
 .members-table th,
@@ -1944,11 +2060,52 @@ onMounted(() => {
 }
 
 .places-card {
+  position: relative;
   border: 1px solid rgba(190, 235, 203, 0.2);
   border-radius: 14px;
   padding: 1.25rem 1.35rem;
   margin-bottom: 0.5rem;
   background: rgba(0, 0, 0, 0.12);
+}
+
+.places-card--busy .place-form-card,
+.places-card--busy .places-table-wrap,
+.places-card--busy .empty-state.compact {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.places-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(2px);
+}
+
+.places-loading-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid #bbf7d0;
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: places-spin 0.75s linear infinite;
+}
+
+.places-loading-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #052e16;
+}
+
+@keyframes places-spin {
+  to { transform: rotate(360deg); }
 }
 
 .places-header {
@@ -2293,18 +2450,18 @@ onMounted(() => {
 .page-container.barangays-page.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #000000;
-  border-bottom: 1px solid #86efac;
+  border-bottom: 2px solid #16a34a;
 }
 
 .page-container.barangays-page.light-theme .barangays-table td {
   color: #000000;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1.5px solid #94a3b8;
   background: #ffffff;
 }
 
 .page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
 .page-container.barangays-page.light-theme .barangays-table td:not(:last-child) {
-  border-right: 1px solid #e2e8f0;
+  border-right: 1.5px solid #94a3b8;
 }
 
 .page-container.barangays-page.light-theme .barangays-table tbody tr:hover {
@@ -2401,7 +2558,12 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .members-table-wrap {
-  border-color: #cbd5e1;
+  border: 2px solid #94a3b8;
+  background: #ffffff;
+}
+
+.page-container.barangays-page.light-theme .places-table-wrap {
+  border: 2px solid #94a3b8;
   background: #ffffff;
 }
 
@@ -2460,12 +2622,20 @@ onMounted(() => {
 .page-container.barangays-page.light-theme .places-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #000000;
+  border-bottom: 2px solid #16a34a;
+}
+
+.page-container.barangays-page.light-theme .members-table th:not(:last-child),
+.page-container.barangays-page.light-theme .members-table td:not(:last-child),
+.page-container.barangays-page.light-theme .places-table th:not(:last-child),
+.page-container.barangays-page.light-theme .places-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
 }
 
 .page-container.barangays-page.light-theme .members-table td,
 .page-container.barangays-page.light-theme .places-table td {
   color: #000000;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1.5px solid #94a3b8;
   background: #ffffff;
 }
 
@@ -2502,6 +2672,14 @@ onMounted(() => {
   border: 2px solid #bbf7d0;
 }
 
+.page-container.barangays-page.light-theme .places-loading-overlay {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.page-container.barangays-page.light-theme .places-loading-text {
+  color: #000000;
+}
+
 .page-container.barangays-page.light-theme .places-section-icon {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border-color: #86efac;
@@ -2530,7 +2708,7 @@ onMounted(() => {
 }
 
 .page-container.barangays-page.light-theme .places-table-wrap {
-  border-color: #cbd5e1;
+  border: 2px solid #94a3b8;
   background: #ffffff;
 }
 
@@ -2717,5 +2895,109 @@ onMounted(() => {
 .page-container.barangays-page.light-theme .btn-submit:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   filter: none;
+}
+</style>
+
+<!-- Toast is teleported to body — needs unscoped styles -->
+<style>
+.barangays-toast {
+  position: fixed;
+  top: 5.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: min(420px, calc(100vw - 2rem));
+  max-width: min(520px, calc(100vw - 2rem));
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.45;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+  border: 3px solid #16a34a;
+  border-left-width: 6px;
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.barangays-toast.success {
+  border-color: #16a34a !important;
+  border-left-color: #15803d !important;
+}
+
+.barangays-toast.error {
+  border-color: #dc2626 !important;
+  border-left-color: #b91c1c !important;
+}
+
+.barangays-toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.barangays-toast.success .barangays-toast-icon {
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+.barangays-toast.error .barangays-toast-icon {
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+}
+
+.barangays-toast-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.barangays-toast-text {
+  flex: 1;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+}
+
+.barangays-toast-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 2px solid #64748b !important;
+  border-radius: 8px;
+  background: #f1f5f9 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.barangays-toast-close:hover {
+  background: #e2e8f0 !important;
+  border-color: #334155 !important;
+  transform: none !important;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px);
 }
 </style>

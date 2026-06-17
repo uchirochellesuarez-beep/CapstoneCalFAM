@@ -1,6 +1,5 @@
 <template>
   <div class="members-summary-page min-h-screen p-4 lg:p-6" :class="{ 'light-theme': isLight }">
-    <DashboardHeader :user="authStore.currentUser" />
     <div class="max-w-6xl mx-auto">
       <div class="flex items-center justify-between gap-3 mb-6">
         <div>
@@ -403,7 +402,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import DashboardHeader from '../components/DashboardHeader.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 
@@ -1307,32 +1305,6 @@ onMounted(async () => {
   background: linear-gradient(135deg, rgba(22, 163, 74, 0.45), rgba(16, 120, 54, 0.55));
   border-color: rgba(74, 222, 128, 0.65);
   color: #ecfdf5;
-}
-
-.members-summary-page.light-theme :deep(.dashboard-banner) {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
-  border: 2px solid #86efac !important;
-  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1) !important;
-  color: #052e16 !important;
-}
-
-.members-summary-page.light-theme :deep(.banner-title) {
-  color: #052e16 !important;
-}
-
-.members-summary-page.light-theme :deep(.banner-subtitle) {
-  color: #166534 !important;
-}
-
-.members-summary-page.light-theme :deep(.farm-info) {
-  background: #f0fdf4 !important;
-  border: 1px solid #bbf7d0 !important;
-}
-
-.members-summary-page.light-theme :deep(.farm-label),
-.members-summary-page.light-theme :deep(.farm-name),
-.members-summary-page.light-theme :deep(.farm-size) {
-  color: #14532d !important;
 }
 
 .members-summary-page.light-theme .search-results-table thead th {

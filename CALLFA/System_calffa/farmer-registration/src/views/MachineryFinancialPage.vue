@@ -4396,7 +4396,7 @@ onBeforeUnmount(() => {
 .table-container {
   overflow-x: auto;
   border-radius: 16px;
-  border: 1px solid var(--glass-line);
+  border: 2px solid #94a3b8;
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -4419,7 +4419,7 @@ onBeforeUnmount(() => {
 .income-table td:not(:last-child),
 .ar-table td:not(:last-child),
 .collections-table td:not(:last-child) {
-  border-right: 1px solid rgba(167, 211, 178, 0.22);
+  border-right: 1.5px solid #94a3b8;
 }
 
 .expenses-table thead,
@@ -4438,7 +4438,7 @@ onBeforeUnmount(() => {
   vertical-align: middle;
   font-weight: 800;
   color: var(--text-main);
-  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  border-bottom: 2px solid #6ee7a8;
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -4450,7 +4450,7 @@ onBeforeUnmount(() => {
 .ar-table td,
 .collections-table td {
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid #94a3b8;
   color: var(--text-main);
   font-size: 15px;
   font-weight: 600;
@@ -7548,7 +7548,7 @@ onBeforeUnmount(() => {
 
 .tab-content .data-table th:not(:last-child),
 .tab-content .data-table td:not(:last-child) {
-  border-right: 1px solid rgba(167, 211, 178, 0.22);
+  border-right: 1.5px solid #94a3b8;
 }
 
 .tab-content .data-table thead {
@@ -7561,7 +7561,7 @@ onBeforeUnmount(() => {
   vertical-align: middle;
   font-weight: 800;
   color: var(--text-main);
-  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  border-bottom: 2px solid #6ee7a8;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -7569,7 +7569,7 @@ onBeforeUnmount(() => {
 
 .tab-content .data-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid #94a3b8;
   color: var(--text-main);
   font-weight: 600;
   font-size: 15px;
@@ -7851,29 +7851,91 @@ tr.selected {
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab {
-  background: rgba(30, 66, 52, 0.92) !important;
-  color: #ecfdf5 !important;
-  border-color: rgba(167, 211, 178, 0.28) !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22) !important;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab .tab-icon {
-  color: #86efac !important;
+.financial-container:not(.light-theme) .tabs-container .tab .tab-icon,
+.financial-container:not(.light-theme) .tabs-container .tab .tab-label {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab:hover {
-  background: rgba(37, 82, 65, 0.96) !important;
-  color: #ffffff !important;
+  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab.active {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-  color: #ffffff !important;
-  border-color: rgba(232, 196, 104, 0.35) !important;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab.active .tab-icon {
+.financial-container:not(.light-theme) .tabs-container .tab.active .tab-icon,
+.financial-container:not(.light-theme) .tabs-container .tab.active .tab-label {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.financial-container:not(.light-theme) .tab-content h2 {
   color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .report-generator-panel,
+.financial-container:not(.light-theme) .report-option-card,
+.financial-container:not(.light-theme) .actions-card {
+  background: linear-gradient(155deg, rgba(24, 49, 38, 0.95) 0%, rgba(17, 34, 28, 0.98) 100%) !important;
+  border-color: #94a3b8 !important;
+}
+
+.financial-container:not(.light-theme) :is(
+  .report-option-card h4, .orientation-label, .checkbox-inline, .checkbox-inline span,
+  .filter-checkbox span, .date-input-group label, .filter-label, .report-type-btn .btn-text
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .filter-checkbox {
+  background: linear-gradient(140deg, rgba(18, 42, 31, 0.95) 0%, rgba(23, 51, 38, 0.98) 100%) !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+.financial-container:not(.light-theme) .filters-section,
+.financial-container:not(.light-theme) .reports-machinery-filter-bar {
+  background: rgba(28, 42, 33, 0.92) !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+.financial-container:not(.light-theme) .filter-input,
+.financial-container:not(.light-theme) .form-input-sm {
+  background: rgba(20, 48, 38, 0.92) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #94a3b8 !important;
+}
+
+.financial-container:not(.light-theme) :is(
+  .summary-cards > .summary-card .card-amount,
+  .summary-container > .summary-card .card-amount,
+  .card-amount,
+  .income-card .card-amount,
+  .expense-card .card-amount,
+  .profit-card .card-amount,
+  .profit-card.negative .card-amount,
+  .ar-card .card-amount,
+  .collected-card .card-amount,
+  .balance-card .card-amount
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
 }
 
 .financial-container.light-theme .denied-content {

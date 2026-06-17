@@ -8,7 +8,6 @@
         <p class="page-subtitle" v-else-if="!isAdminOnly">Monitor machinery bookings</p>
       </div>
       <button v-if="isAdminRole" @click="showInventoryModal = true" class="btn-primary machinery-inventory-btn">
-        <span class="btn-icon">📦</span>
         Machinery Inventory
       </button>
     </div>
@@ -460,15 +459,24 @@
           <!-- TABLE VIEW -->
           <div v-if="invView === 'table'" class="inv2-table-wrap">
             <table class="inv2-table">
+              <colgroup>
+                <col class="inv2-col-name" />
+                <col class="inv2-col-type" />
+                <col class="inv2-col-member" />
+                <col class="inv2-col-nonmember" />
+                <col class="inv2-col-capacity" />
+                <col class="inv2-col-status" />
+                <col class="inv2-col-actions" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th class="inv2-th-name">Name</th>
                   <th>Type</th>
-                  <th>Member Rate</th>
-                  <th>Non-Member Rate</th>
+                  <th class="inv2-th-rate">Member Rate</th>
+                  <th class="inv2-th-rate">Non-Member Rate</th>
                   <th>Capacity</th>
                   <th>Status</th>
-                  <th style="width:132px">Actions</th>
+                  <th class="inv2-th-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -479,13 +487,8 @@
                   </td>
                 </tr>
                 <tr v-else v-for="(m, i) in invPaged" :key="m.id" class="inv2-row" :class="i % 2 === 0 ? 'inv2-row-a' : 'inv2-row-b'">
-                  <td>
-                    <div class="inv2-name-wrap">
-                      <div class="inv2-machine-icon">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                      </div>
-                      <span class="inv2-name">{{ m.machinery_name }}</span>
-                    </div>
+                  <td class="inv2-td-name">
+                    <span class="inv2-name">{{ m.machinery_name }}</span>
                   </td>
                   <td>
                     <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
@@ -505,7 +508,7 @@
                   <td style="text-align:center">
                     <span class="status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
                   </td>
-                  <td>
+                  <td class="inv2-td-actions">
                     <div class="inv2-actions action-buttons">
                       <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -608,56 +611,64 @@
       <div class="modal-content modal-form-content">
         <div class="modal-header">
           <h2>{{ showEditMachineryModal ? 'Edit Machinery' : 'Add New Machinery' }}</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="showEditMachineryModal ? updateMachinery() : addMachinery()">
-            <div class="form-group barangay-assignment-group">
-              <div class="barangay-warning">
-                <span class="warning-icon">⚠️</span>
-                <span v-if="isPresidentRole">Machinery assigned to your barangay only</span>
-                <span v-else>Barangay Assignment is Required</span>
-              </div>
-              
+            <section class="machinery-form-section barangay-assignment-group">
+              <h3 class="machinery-form-section-title">Barangay Assignment</h3>
+              <p class="machinery-form-section-desc" v-if="isPresidentRole">
+                Machinery will be assigned to your barangay only.
+              </p>
+              <p class="machinery-form-section-desc" v-else>
+                Select which barangay will own and manage this machinery.
+              </p>
+
               <!-- For Admin: Show dropdown for selection -->
               <template v-if="!isPresidentRole">
-                <label class="form-label barangay-label">📍 Assign to Barangay *</label>
-                
-                <div v-if="barangays.length === 0" class="barangay-loading">
-                  <div class="spinner-small"></div>
-                  Loading barangays...
+                <div class="form-group">
+                  <label class="form-label">Assign to Barangay *</label>
+
+                  <div v-if="barangays.length === 0" class="barangay-loading">
+                    <div class="spinner-small"></div>
+                    Loading barangays...
+                  </div>
+
+                  <select
+                    v-else
+                    v-model="machineryForm.barangay_id"
+                    class="form-input barangay-select-emphasized"
+                    required
+                    @change="handleBarangayChange"
+                  >
+                    <option value="">Select a barangay</option>
+                    <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
+                      {{ barangay.name }}
+                    </option>
+                  </select>
+
+                  <p v-if="machineryForm.barangay_id" class="barangay-selected">
+                    Selected: {{ getBarangayName(machineryForm.barangay_id) }}
+                  </p>
+
+                  <small class="form-hint barangay-hint">This machinery will belong to and be managed by the selected barangay only.</small>
                 </div>
-                
-                <select 
-                  v-else
-                  v-model="machineryForm.barangay_id" 
-                  class="form-input barangay-select-emphasized" 
-                  required
-                  @change="handleBarangayChange">
-                  <option value="">-- SELECT A BARANGAY --</option>
-                  <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
-                    {{ barangay.name }}
-                  </option>
-                </select>
-                
-                <div v-if="machineryForm.barangay_id" class="barangay-selected">
-                  ✅ Barangay assigned: {{ getBarangayName(machineryForm.barangay_id) }}
-                </div>
-                
-                <small class="form-hint barangay-hint">This machinery will belong to and be managed by the selected barangay only</small>
               </template>
 
               <!-- For President: Show read-only barangay info -->
               <template v-else>
-                <label class="form-label barangay-label">📍 Your Barangay</label>
-                <div class="barangay-read-only">
-                  <div class="barangay-info">
-                    {{ getBarangayName(userBarangayId) }}
+                <div class="form-group">
+                  <label class="form-label">Your Barangay</label>
+                  <div class="barangay-read-only">
+                    <div class="barangay-info">{{ getBarangayName(userBarangayId) }}</div>
+                    <small class="form-hint">All machinery will be assigned to your barangay only.</small>
                   </div>
-                  <small class="form-hint">All machinery will be assigned to your barangay only</small>
                 </div>
               </template>
-            </div>
+            </section>
+
+            <section class="machinery-form-section">
+              <h3 class="machinery-form-section-title">Machinery Details</h3>
 
             <div class="form-group">
               <label class="form-label">Machinery Name *</label>
@@ -666,34 +677,40 @@
 
             <div class="form-group">
               <label class="form-label">Machinery Type *</label>
-              <input v-model="machineryForm.machinery_type" type="text" class="form-input" required placeholder="e.g., Harvester, Dryer, Tractor, etc." />
-              <small class="form-hint">Enter any machinery type - not limited to predefined options</small>
+              <input v-model="machineryForm.machinery_type" type="text" class="form-input" required placeholder="e.g., Harvester, Dryer, Tractor" />
+              <small class="form-hint">Enter any machinery type — not limited to predefined options.</small>
             </div>
 
             <div class="form-group">
               <label class="form-label">Description</label>
-              <textarea v-model="machineryForm.description" class="form-input" rows="3"></textarea>
+              <textarea v-model="machineryForm.description" class="form-input" rows="3" placeholder="Optional notes about this machinery"></textarea>
             </div>
+            </section>
+
+            <section class="machinery-form-section">
+              <h3 class="machinery-form-section-title">Pricing</h3>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">💰 Member Price *</label>
+                <label class="form-label">Member Price (₱) *</label>
                 <input v-model.number="machineryForm.member_price" type="number" step="0.01" min="0.01" class="form-input" required placeholder="e.g., 5000" />
-                <small class="form-hint">Price for barangay/association members</small>
+                <small class="form-hint">Price for barangay/association members.</small>
               </div>
               <div class="form-group">
-                <label class="form-label">💰 Non-Member Price *</label>
+                <label class="form-label">Non-Member Price (₱) *</label>
                 <input v-model.number="machineryForm.non_member_price" type="number" step="0.01" min="0.01" class="form-input" required placeholder="e.g., 6250" />
-                <small class="form-hint">Price for non-members (typically 20-30% higher)</small>
+                <small class="form-hint">Price for non-members (typically 20–30% higher).</small>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Unit Type *</label>
-                <input v-model="machineryForm.unit_type" type="text" class="form-input" required placeholder="e.g., per hectare, per load" />
-              </div>
+            <div class="form-group">
+              <label class="form-label">Unit Type *</label>
+              <input v-model="machineryForm.unit_type" type="text" class="form-input" required placeholder="e.g., per hectare, per load" />
             </div>
+            </section>
+
+            <section class="machinery-form-section">
+              <h3 class="machinery-form-section-title">Capacity &amp; Status</h3>
 
             <div class="form-row">
               <div class="form-group">
@@ -715,10 +732,12 @@
                 <option value="Unavailable">Unavailable</option>
               </select>
             </div>
+            </section>
 
             <!-- Machinery Picture Upload -->
+            <section class="machinery-form-section">
+              <h3 class="machinery-form-section-title">Machinery Picture</h3>
             <div class="form-group">
-              <label class="form-label">📷 Machinery Picture</label>
               <div class="picture-upload-section">
                 <div v-if="machineryForm.machinery_picture && machineryForm.machinery_picture.trim() !== ''" class="picture-preview">
                   <img 
@@ -729,11 +748,10 @@
                     @load="handleImageLoad"
                   />
                   <button type="button" @click.prevent="removeMachineryPicture()" class="btn-remove-picture">
-                    🗑️ Remove
+                    Remove Picture
                   </button>
                 </div>
                 <div v-else class="picture-placeholder">
-                  <div class="placeholder-icon">🖼️</div>
                   <p>No image uploaded</p>
                 </div>
                 <input 
@@ -744,11 +762,12 @@
                   class="file-input-hidden"
                 />
                 <button type="button" @click.prevent="$refs.machineryPictureInput.click()" class="btn-upload-picture">
-                  ⬆️ Upload Picture
+                  Upload Picture
                 </button>
               </div>
-              <small class="form-hint">JPG, PNG, GIF or WebP (Max 10MB)</small>
+              <small class="form-hint">JPG, PNG, GIF or WebP (max 10MB).</small>
             </div>
+            </section>
 
             <div class="modal-actions">
               <button type="button" @click="closeModals" class="btn-secondary">Cancel</button>
@@ -765,8 +784,8 @@
     <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay" @click.self="closeModals">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>📋 Booking Details #{{ selectedBooking.id }}</h2>
-          <button @click="closeModals" class="modal-close">✕</button>
+          <h2>Booking Details #{{ selectedBooking.id }}</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <div class="booking-details">
@@ -1040,7 +1059,7 @@ export default {
         } else {
           // For admins, validate barangay is selected
           if (!machineryForm.value.barangay_id || machineryForm.value.barangay_id === '') {
-            validationError.value = '⚠️ Please select a Barangay for this machinery'
+            validationError.value = 'Please select a barangay for this machinery'
             setTimeout(() => validationError.value = '', 5000)
             return
           }
@@ -1109,7 +1128,7 @@ export default {
         } else {
           // For admins, validate barangay is selected
           if (!machineryForm.value.barangay_id || machineryForm.value.barangay_id === '') {
-            validationError.value = '⚠️ Please select a Barangay for this machinery'
+            validationError.value = 'Please select a barangay for this machinery'
             setTimeout(() => validationError.value = '', 5000)
             return
           }
@@ -1228,7 +1247,7 @@ export default {
         
         // Validate file size (10MB max)
         if (file.size > 10 * 1024 * 1024) {
-          validationError.value = '⚠️ File size must be less than 10MB'
+          validationError.value = 'File size must be less than 10MB'
           setTimeout(() => validationError.value = '', 5000)
           return
         }
@@ -1236,7 +1255,7 @@ export default {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         if (!allowedTypes.includes(file.type)) {
-          validationError.value = '⚠️ Only JPEG, PNG, GIF, or WebP images are allowed'
+          validationError.value = 'Only JPEG, PNG, GIF, or WebP images are allowed'
           setTimeout(() => validationError.value = '', 5000)
           return
         }
@@ -1249,7 +1268,7 @@ export default {
         }
         reader.onerror = (e) => {
           console.error('❌ Error reading file:', e);
-          validationError.value = '⚠️ Error reading image file'
+          validationError.value = 'Error reading image file'
           setTimeout(() => validationError.value = '', 5000)
         }
         reader.readAsDataURL(file)
@@ -1323,12 +1342,12 @@ export default {
         console.log('✅ Upload successful:', uploadResult);
         
         currentPictureFile.value = null;
-        successMessage.value = '✅ Picture uploaded successfully!';
+        successMessage.value = 'Picture uploaded successfully!'
         setTimeout(() => successMessage.value = '', 3000);
         return true;
       } catch (error) {
         console.error('❌ Error uploading picture:', error);
-        validationError.value = `⚠️ Picture upload failed: ${error.message}`;
+        validationError.value = `Picture upload failed: ${error.message}`
         setTimeout(() => validationError.value = '', 5000);
         return false;
       }
@@ -1458,7 +1477,7 @@ export default {
     radial-gradient(circle at 10% 90%, rgba(61, 122, 92, 0.08) 0%, transparent 22%);
 }
 
-.machinery-management-page > * {
+.machinery-management-page > *:not(.modal-overlay):not(.alert) {
   position: relative;
   z-index: 1;
 }
@@ -1688,9 +1707,10 @@ export default {
   overflow: hidden;
   display: flex !important;
   flex-direction: column;
-  width: min(88vw, 1020px) !important;
+  width: min(calc(100vw - var(--app-sidebar-width, 260px) - 48px), 1020px) !important;
+  max-width: min(calc(100vw - var(--app-sidebar-width, 260px) - 48px), 1020px) !important;
   max-height: 88vh !important;
-  margin-left: clamp(18px, 5vw, 96px);
+  margin: 0 auto !important;
   background: linear-gradient(165deg, #1e4234 0%, #255241 100%) !important;
   backdrop-filter: none !important;
   border: 1px solid rgba(167, 211, 178, 0.24) !important;
@@ -1932,6 +1952,7 @@ export default {
 
 .inv2-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 18px 24px 24px;
@@ -1942,39 +1963,89 @@ export default {
 
 .inv2-table-wrap {
   border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  border: 2px solid #94a3b8;
   background: rgba(255, 255, 255, 0.025);
-  backdrop-filter: blur(8px);
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
+
+.inv2-table-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+
+.inv2-table-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 0 0 14px 14px;
+}
+
+.inv2-table-wrap::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+}
+
 .inv2-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.inv2-col-name { width: auto; }
+.inv2-col-type { width: auto; }
+.inv2-col-member { width: auto; }
+.inv2-col-nonmember { width: auto; }
+.inv2-col-capacity { width: auto; }
+.inv2-col-status { width: auto; }
+.inv2-col-actions { width: 1%; white-space: nowrap; }
+
+.inv2-th-name,
+.inv2-td-name {
+  text-align: left !important;
+  min-width: 6.5rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.inv2-th-rate,
+.inv2-table td[style*="text-align:right"] {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.inv2-th-actions,
+.inv2-td-actions {
+  text-align: center !important;
+  white-space: nowrap;
+  min-width: 5.75rem;
 }
 .inv2-table thead {
   background: rgba(255, 255, 255, 0.04);
 }
 .inv2-table th {
-  padding: 13px 14px;
-  font-size: 10px;
+  padding: 11px 10px;
+  font-size: 0.8125rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   color: rgba(200, 235, 210, 0.5);
   white-space: nowrap;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1.5px solid #94a3b8;
 }
+
+.inv2-table th:not(:last-child),
+.inv2-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
+}
+
 .inv2-table td {
-  padding: 13px 14px;
-  font-size: 13px;
+  padding: 11px 10px;
+  font-size: 0.9375rem;
   color: #e8f5ee;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-.inv2-table tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: 1.5px solid #94a3b8;
 }
 .inv2-row {
   transition: background 0.15s ease;
@@ -2042,8 +2113,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-width: 120px;
+  gap: 8px;
+  min-width: 88px;
+  flex-wrap: nowrap;
 }
 .inv2-action-btn {
   display: inline-flex;
@@ -2263,8 +2335,9 @@ export default {
   }
   .inv2-modal {
     max-height: 95vh !important;
-    width: min(96vw, 96vw) !important;
-    margin-left: 0;
+    width: min(calc(100vw - 28px), calc(100vw - 28px)) !important;
+    max-width: calc(100vw - 28px) !important;
+    margin: 0 auto !important;
   }
   .inv2-toolbar {
     grid-template-columns: 1fr;
@@ -2351,7 +2424,7 @@ export default {
   padding: 0.85rem 0.75rem;
   text-align: center;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(167, 211, 178, 0.22);
+  border-bottom: 1.5px solid #94a3b8;
   font-size: 1rem;
   font-weight: 800;
   text-transform: none;
@@ -2361,12 +2434,19 @@ export default {
   white-space: nowrap;
 }
 
+.bookings-table th:not(:last-child),
+.inventory-table th:not(:last-child),
+.bookings-table td:not(:last-child),
+.inventory-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
+}
+
 .bookings-table td,
 .inventory-table td {
   padding: 0.85rem 0.75rem;
   vertical-align: middle;
   text-align: center;
-  border-bottom: 1px solid rgba(167, 211, 178, 0.12);
+  border-bottom: 1.5px solid #94a3b8;
   color: var(--text-main);
   font-size: 1.125rem;
   line-height: 1.4;
@@ -2757,15 +2837,16 @@ export default {
 }
 
 .modal-overlay {
-  position: fixed;
+  position: fixed !important;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
+  padding-left: calc(var(--app-sidebar-width, 260px) + 20px);
   background: rgba(12, 36, 24, 0.72);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 1200;
 }
 
 .modal-content {
@@ -3134,32 +3215,35 @@ export default {
 }
 
 .barangay-assignment-group {
-  padding: 20px;
-  margin-bottom: 24px;
-  border-radius: 18px;
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  padding: 0;
+  margin-bottom: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
 }
 
-.barangay-warning {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(251, 191, 36, 0.12);
-  color: #fde68a;
-  border-left: 4px solid #f59e0b;
-  font-weight: 700;
+.machinery-form-section {
+  margin-bottom: 1.35rem;
+  padding: 1.15rem 1.2rem 0.25rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(190, 235, 203, 0.18);
 }
 
-.warning-icon {
-  font-size: 18px;
+.machinery-form-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
 }
 
-.barangay-label {
-  color: #fde68a;
+.machinery-form-section-desc {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-soft);
 }
 
 .barangay-loading {
@@ -3171,30 +3255,31 @@ export default {
 }
 
 .barangay-select-emphasized {
-  border-color: rgba(251, 191, 36, 0.35);
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
 .barangay-select-emphasized:focus {
-  border-color: rgba(251, 191, 36, 0.5);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12), inset 2px 2px 4px rgba(0, 0, 0, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.04);
+  border-color: rgba(74, 222, 128, 0.55);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
 }
 
 .barangay-selected {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(45, 92, 74, 0.4);
-  border-left: 4px solid #6ee7a8;
-  color: #d1fae5;
+  margin-top: 10px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border-left: none;
+  color: #86efac;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 
 .barangay-hint {
-  color: rgba(254, 230, 138, 0.86);
+  color: var(--text-soft);
 }
 
 .barangay-read-only {
-  margin-top: 12px;
+  margin-top: 0;
   padding: 14px;
   border-radius: 12px;
   background: rgba(45, 92, 74, 0.35);
@@ -3203,26 +3288,9 @@ export default {
 }
 
 .barangay-read-only .barangay-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 8px;
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 700;
-}
-
-.barangay-read-only .barangay-info::before {
-  content: '✓';
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: #22c55e;
-  color: #082111;
-  font-size: 12px;
-  font-weight: 900;
 }
 
 .picture-upload-section {
@@ -3325,6 +3393,7 @@ export default {
 
   .modal-overlay {
     padding: 14px;
+    padding-left: 14px;
   }
 
   .modal-header,
@@ -3402,6 +3471,23 @@ export default {
 .machinery-management-page:not(.light-theme) :is(.bookings-table thead, .inventory-table thead, .inv2-table thead) {
   background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
   border-color: var(--line-soft) !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.bookings-table th, .inventory-table th, .inv2-table th) {
+  border-bottom: 2px solid #6ee7a8 !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.bookings-table th, .inventory-table th, .inv2-table th):not(:last-child),
+.machinery-management-page:not(.light-theme) :is(.bookings-table td, .inventory-table td, .inv2-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.bookings-table td, .inventory-table td, .inv2-table td) {
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
+  border: 2px solid #94a3b8 !important;
 }
 
 .machinery-management-page:not(.light-theme) :is(.inv2-toolbar, .inv2-chips) {
@@ -3529,22 +3615,28 @@ export default {
 
 .machinery-management-page.light-theme :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border: 2px solid #94a3b8 !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
 .machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: #052e16 !important;
-  border-bottom: 1px solid #86efac !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+.machinery-management-page.light-theme :is(.bookings-table th, .inventory-table th, .inv2-table th):not(:last-child),
+.machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td):not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
 }
 
 .machinery-management-page.light-theme :is(.bookings-table td, .inventory-table td, .inv2-table td) {
   color: #000000 !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
 }
 
-.machinery-management-page.light-theme :is(.bookings-table tbody tr:nth-child(even), .inventory-table tbody tr:nth-child(even)) {
+.machinery-management-page.light-theme :is(.bookings-table tbody tr:nth-child(even) td, .inventory-table tbody tr:nth-child(even) td) {
   background: #f8fdf9 !important;
 }
 
@@ -3732,13 +3824,31 @@ export default {
   background: #ffffff !important;
 }
 
-.machinery-management-page.light-theme .inv2-row-b td {
-  background: #f8fdf9 !important;
-}
-
 .machinery-management-page.light-theme .inv2-table-wrap {
   background: #ffffff !important;
-  border: 1px solid #bbf7d0 !important;
+  border: 2px solid #94a3b8 !important;
+  scrollbar-color: #64748b #f1f5f9;
+}
+
+.machinery-management-page.light-theme .inv2-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #16a34a !important;
+}
+
+.machinery-management-page.light-theme .inv2-table th:not(:last-child),
+.machinery-management-page.light-theme .inv2-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8 !important;
+}
+
+.machinery-management-page.light-theme .inv2-table td {
+  color: #000000 !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
+  background: #ffffff !important;
+}
+
+.machinery-management-page.light-theme .inv2-row-b td {
+  background: #f8fdf9 !important;
 }
 
 .machinery-management-page.light-theme .inv2-header {
@@ -3856,13 +3966,21 @@ export default {
 }
 
 .machinery-management-page.light-theme .machinery-inventory-btn {
-  background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #14532d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  border: 2px solid #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+  filter: none !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
 }
 
 .machinery-management-page.light-theme .machinery-inventory-btn:hover {
-  background: #f0fdf4 !important;
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: none !important;
 }
 
 .machinery-management-page.light-theme .btn-inventory-add {
@@ -3949,31 +4067,28 @@ export default {
 }
 
 /* Modal form — high-contrast text for light mode */
+.machinery-management-page.light-theme .barangay-assignment-group,
+.machinery-management-page.light-theme .machinery-form-section {
+  background: #f8fdf9 !important;
+  border: 2px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .machinery-form-section-title {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .machinery-form-section-desc {
+  color: #166534 !important;
+}
+
 .machinery-management-page.light-theme .form-hint,
 .machinery-management-page.light-theme .barangay-hint,
 .machinery-management-page.light-theme .barangay-read-only .form-hint {
   color: #166534 !important;
 }
 
-.machinery-management-page.light-theme .barangay-assignment-group {
-  background: #fef9c3 !important;
-  border: 2px solid #ca8a04 !important;
-}
-
-.machinery-management-page.light-theme .barangay-warning {
-  background: #fef3c7 !important;
-  color: #92400e !important;
-  border-left: 4px solid #d97706 !important;
-}
-
-.machinery-management-page.light-theme .barangay-label {
-  color: #92400e !important;
-}
-
 .machinery-management-page.light-theme .barangay-selected {
-  background: #f0fdf4 !important;
   color: #15803d !important;
-  border-left-color: #16a34a !important;
 }
 
 .machinery-management-page.light-theme .barangay-read-only {
@@ -3987,14 +4102,14 @@ export default {
 }
 
 .machinery-management-page.light-theme .barangay-select-emphasized {
-  border-color: #ca8a04 !important;
+  border-color: #94a3b8 !important;
   background: #ffffff !important;
   color: #052e16 !important;
 }
 
 .machinery-management-page.light-theme .barangay-select-emphasized:focus {
-  border-color: #d97706 !important;
-  box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.25) !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2) !important;
 }
 
 .machinery-management-page.light-theme .warning-text {

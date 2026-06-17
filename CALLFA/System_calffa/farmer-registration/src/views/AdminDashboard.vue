@@ -581,14 +581,17 @@ const getChartAxisStyle = () => {
       gridColor: 'rgba(0, 0, 0, 0.12)',
       borderColor: 'rgba(0, 0, 0, 0.2)',
       doughnutBorder: '#ffffff',
-      legendColor: '#000000'
+      legendColor: '#000000',
+      gridLineWidth: 1
     }
   }
   return {
-    tickColor: '#b8dcc6',
-    gridColor: 'rgba(167, 211, 178, 0.14)',
-    borderColor: 'rgba(167, 211, 178, 0.22)',
-    doughnutBorder: 'rgba(236, 253, 245, 0.12)'
+    tickColor: '#ffffff',
+    gridColor: 'rgba(167, 211, 178, 0.42)',
+    borderColor: 'rgba(167, 211, 178, 0.5)',
+    doughnutBorder: 'rgba(236, 253, 245, 0.12)',
+    legendColor: '#ffffff',
+    gridLineWidth: 1.5
   }
 }
 
@@ -737,13 +740,13 @@ const renderBarangayChart = () => {
         },
         y: {
           beginAtZero: true,
-          grid: { color: axis.gridColor, lineWidth: 1 },
+          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth || 1.5 },
           ticks: {
             stepSize: 1,
             color: axis.tickColor,
             font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' }
           },
-          border: { color: axis.borderColor }
+          border: { color: axis.borderColor, width: 1.5 }
         }
       }
     }
@@ -852,13 +855,13 @@ const renderFinancialChart = () => {
         },
         y: {
           beginAtZero: true,
-          grid: { color: axis.gridColor, lineWidth: 1 },
+          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth || 1.5 },
           ticks: {
             color: axis.tickColor,
             font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' },
             callback: (value) => '₱' + Number(value).toLocaleString()
           },
-          border: { color: axis.borderColor }
+          border: { color: axis.borderColor, width: 1.5 }
         }
       }
     }

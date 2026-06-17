@@ -1,39 +1,49 @@
 <template>
   <div class="edit-profile-page glass-module-page">
-    <div class="profile-card">
-      <!-- Profile Header -->
-      <div class="profile-header">
-        <div class="profile-avatar-section">
-          <div class="avatar-wrapper">
-            <img 
-              v-if="profilePictureUrl" 
-              :src="profilePictureUrl" 
-              alt="Profile" 
-              class="avatar-img"
-            />
-            <span v-else class="avatar-placeholder">{{ userInitials }}</span>
-            <label class="avatar-upload-btn" title="Change Photo">
-              📷
-              <input 
-                type="file" 
-                ref="profilePictureInput"
-                @change="handleProfilePictureChange" 
-                accept="image/jpeg,image/png,image/gif"
-                class="hidden"
-              />
-            </label>
-          </div>
-          <p v-if="uploadMessage" class="upload-msg" :class="uploadMessageType">{{ uploadMessage }}</p>
-        </div>
-        <div class="profile-header-info">
-          <h1 class="profile-name">{{ profile.full_name || 'Your Name' }}</h1>
-          <p class="profile-ref">{{ profile.reference_number }}</p>
-          <p class="profile-barangay">📍 {{ profile.barangay_name || profile.address || 'No barangay assigned' }}</p>
-        </div>
-      </div>
+    <div class="profile-page-inner">
+      <header class="profile-page-header">
+        <h1 class="profile-page-title">Edit Profile</h1>
+        <p class="profile-page-subtitle">Update your personal information below.</p>
+      </header>
 
-      <!-- Edit Form -->
-      <form @submit.prevent="saveProfile" class="profile-form">
+      <div class="profile-card">
+        <div class="profile-identity">
+          <div class="profile-avatar-section">
+            <div class="avatar-wrapper">
+              <img
+                v-if="profilePictureUrl"
+                :src="profilePictureUrl"
+                alt="Profile"
+                class="avatar-img"
+              />
+              <span v-else class="avatar-placeholder">{{ userInitials }}</span>
+              <label class="avatar-upload-btn" title="Change Photo" aria-label="Change profile photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <input
+                  type="file"
+                  ref="profilePictureInput"
+                  @change="handleProfilePictureChange"
+                  accept="image/jpeg,image/png,image/gif"
+                  class="hidden"
+                />
+              </label>
+            </div>
+            <p v-if="uploadMessage" class="upload-msg" :class="uploadMessageType">{{ uploadMessage }}</p>
+          </div>
+          <div class="profile-identity-text">
+            <h2 class="profile-name">{{ profile.full_name || 'Your Name' }}</h2>
+            <p class="profile-ref">{{ profile.reference_number || 'No reference number' }}</p>
+            <p class="profile-barangay">
+              <span class="profile-barangay-icon" aria-hidden="true">📍</span>
+              {{ profile.barangay_name || profile.address || 'No barangay assigned' }}
+            </p>
+          </div>
+        </div>
+
+        <form @submit.prevent="saveProfile" class="profile-form">
         <div class="form-grid">
           <div class="form-group">
             <label>Full Name</label>
@@ -84,7 +94,6 @@
               maxlength="19"
               @input="onReferenceInput"
             />
-            <p class="field-hint">Format: 2-2-2-3-6 digits (halimbawa: 12-34-56-789-123456)</p>
           </div>
         </div>
 
@@ -103,6 +112,7 @@
         </div>
         <p v-if="message" class="form-message" :class="messageType">{{ message }}</p>
       </form>
+      </div>
     </div>
   </div>
 </template>
@@ -374,90 +384,117 @@ onMounted(async () => {
 
 <style scoped>
 .edit-profile-page {
-  padding: 0.85rem 1.1rem;
-  max-width: 760px;
+  padding: 1.25rem 1.1rem 2rem;
+  max-width: 720px;
   margin: 0 auto;
   min-height: calc(100vh - 72px);
-  height: calc(100vh - 72px);
-  overflow: hidden;
+}
+
+.profile-page-inner {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-page-header {
+  padding: 0 0.15rem;
+}
+
+.profile-page-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ecfdf5;
+  line-height: 1.25;
+}
+
+.profile-page-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(220, 252, 231, 0.88);
 }
 
 .profile-card {
-  background: linear-gradient(180deg, #f7fffb 0%, #effaf5 100%);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(6, 24, 17, 0.2);
-  border: 1px solid rgba(110, 231, 183, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fdf9 100%);
+  border-radius: 20px;
+  box-shadow: 0 16px 36px rgba(4, 18, 12, 0.22);
+  border: 2px solid #94a3b8;
   overflow: hidden;
   width: 100%;
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Header */
-.profile-header {
-  background: linear-gradient(132deg, #0f5132 0%, #15803d 55%, #1d7b46 100%);
-  padding: 2.1rem 2rem 1.6rem;
+.profile-identity {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  color: #fff;
-  border-bottom: 1px solid rgba(209, 250, 229, 0.35);
+  gap: 1.15rem;
+  padding: 1.35rem 1.5rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-bottom: 2px solid #86efac;
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   flex-shrink: 0;
 }
 
 .avatar-img {
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.75);
-  box-shadow: 0 10px 18px rgba(4, 12, 8, 0.25);
+  border: 3px solid #16a34a;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.18);
 }
 
 .avatar-placeholder {
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  border: 3px solid rgba(255, 255, 255, 0.75);
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  border: 3px solid #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.95rem;
+  font-size: 1.65rem;
   font-weight: 800;
-  color: #fff;
-  box-shadow: 0 10px 18px rgba(4, 12, 8, 0.25);
+  color: #052e16;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.18);
 }
 
 .avatar-upload-btn {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff !important;
+  border: 2px solid #16a34a !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 14px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.22);
-  transition: transform 0.18s, box-shadow 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.18s, box-shadow 0.2s, background 0.2s;
+}
+
+.avatar-upload-btn svg {
+  width: 17px;
+  height: 17px;
+  color: #15803d !important;
+  stroke: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
 }
 
 .avatar-upload-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+  transform: scale(1.08);
+  background: #f0fdf4;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
 }
 
 .avatar-upload-btn input {
@@ -470,43 +507,48 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.profile-header-info {
+.profile-identity-text {
   flex: 1;
   min-width: 0;
 }
 
-.profile-header-info .profile-name {
-  font-size: 2rem;
+.profile-identity-text .profile-name {
+  font-size: 1.45rem;
   font-weight: 800;
   margin: 0;
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  color: #052e16;
 }
 
-.profile-header-info .profile-ref {
-  font-size: 1.02rem;
-  opacity: 0.92;
-  margin: 0.22rem 0 0;
+.profile-identity-text .profile-ref {
+  font-size: 0.95rem;
+  margin: 0.2rem 0 0;
   font-weight: 700;
+  color: #166534;
 }
 
-.profile-header-info .profile-barangay {
-  font-size: 1rem;
-  opacity: 0.95;
-  margin: 0.35rem 0 0;
+.profile-identity-text .profile-barangay {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  margin: 0.3rem 0 0;
   font-weight: 600;
+  color: #14532d;
 }
 
-/* Form */
+.profile-barangay-icon {
+  flex-shrink: 0;
+}
+
 .profile-form {
-  padding: 1.25rem 1.5rem 1.35rem;
-  overflow-y: auto;
+  padding: 1.35rem 1.5rem 1.5rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.95rem 1rem;
+  gap: 1rem 1.1rem;
 }
 
 .form-group--full {
@@ -515,10 +557,9 @@ onMounted(async () => {
 
 .field-hint {
   margin: 0.38rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #166534;
-  opacity: 0.82;
   line-height: 1.35;
 }
 
@@ -533,53 +574,50 @@ onMounted(async () => {
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 0.88rem 0.95rem;
-  border: 1px solid #b7dfc9;
-  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  border: 1.5px solid #94a3b8;
+  border-radius: 12px;
   font-size: 1rem;
-  color: #0f172a;
-  background: #fdfefe;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  font-weight: 600;
+  color: #052e16;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
-  transform: translateY(-1px);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
 }
 
-/* Read-only section */
 .readonly-section {
   margin-top: 1rem;
-  padding-top: 0.95rem;
-  border-top: 1px solid #d7eee1;
-  display: flex;
-  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1.5px solid #cbd5e1;
 }
 
 .readonly-field {
   flex: 1;
-  background: #f5fffa;
-  border: 1px solid #d2f3de;
+  background: #f0fdf4;
+  border: 2px solid #86efac;
   border-radius: 12px;
-  padding: 0.85rem 0.95rem;
+  padding: 0.9rem 1rem;
 }
 
 .readonly-field label {
   display: block;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #166534;
-  margin-bottom: 0.28rem;
+  margin-bottom: 0.3rem;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.04em;
 }
 
 .readonly-field span {
-  font-size: 1.1rem;
-  color: #14532d;
+  font-size: 1.05rem;
+  color: #052e16;
   font-weight: 800;
 }
 
@@ -587,33 +625,32 @@ onMounted(async () => {
   flex: 1 1 100%;
 }
 
-/* Actions */
 .form-actions {
-  margin-top: 1rem;
+  margin-top: 1.15rem;
 }
 
 .save-btn {
   width: 100%;
-  padding: 0.95rem;
-  background: linear-gradient(135deg, #d08a4d 0%, #90b266 46%, #4bb676 100%);
-  color: #fff;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  color: #052e16;
   font-weight: 800;
-  font-size: 1.15rem;
-  border: none;
-  border-radius: 16px;
+  font-size: 1.05rem;
+  border: 2px solid #15803d;
+  border-radius: 12px;
   cursor: pointer;
   transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
-  box-shadow: 0 14px 22px rgba(14, 116, 68, 0.22);
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.16);
 }
 
 .save-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.03);
-  box-shadow: 0 18px 26px rgba(14, 116, 68, 0.28);
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 8px 20px rgba(4, 18, 12, 0.2);
 }
 
 .save-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -625,15 +662,15 @@ onMounted(async () => {
 }
 
 .text-green-600 {
-  color: #16a34a;
+  color: #15803d;
 }
 
 .text-red-600 {
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .text-blue-600 {
-  color: #2563eb;
+  color: #1d4ed8;
 }
 
 .hidden {
@@ -642,34 +679,31 @@ onMounted(async () => {
 
 @media (max-width: 640px) {
   .edit-profile-page {
-    padding: 0.9rem;
+    padding: 1rem 0.85rem 1.5rem;
     min-height: auto;
-    height: auto;
-    overflow: visible;
   }
 
-  .profile-header {
+  .profile-page-title {
+    font-size: 1.45rem;
+  }
+
+  .profile-identity {
     flex-direction: column;
     text-align: center;
-    padding: 1.5rem 1.5rem 1.25rem;
+    padding: 1.25rem 1.15rem;
   }
 
-  .profile-header-info .profile-name {
-    font-size: 1.55rem;
+  .profile-identity-text .profile-barangay {
+    justify-content: center;
   }
 
   .profile-form {
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1.15rem 1.15rem 1.35rem;
   }
 
   .form-grid {
     grid-template-columns: 1fr;
     gap: 0.9rem;
-  }
-
-  .readonly-section {
-    flex-direction: column;
-    gap: 0.75rem;
   }
 }
 </style>
