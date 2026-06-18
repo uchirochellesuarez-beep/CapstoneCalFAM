@@ -6,18 +6,13 @@ const {
   createBookingStatusNotification
 } = require('./notification-service');
 
-const EXPIRABLE_BOOKING_STATUSES = ['Pending', 'Unapproved'];
-const BOOKING_STATUS_ENUM_VALUES = [
-  'Pending',
-  'Unapproved',
-  'Approved',
-  'Rejected',
-  'Expired',
-  'Completed',
-  'Cancelled',
-  'In Use',
-  'Incomplete'
-];
+const {
+  EXPIRABLE_DOWN_PAYMENT_STATUSES,
+  BOOKING_STATUS_ENUM_VALUES,
+  calendarBlockingStatusesSql
+} = require('./booking-workflow');
+
+const EXPIRABLE_BOOKING_STATUSES = EXPIRABLE_DOWN_PAYMENT_STATUSES;
 
 let bookingSchemaPromise = null;
 
@@ -30,7 +25,7 @@ async function ensureBookingSchema() {
         statusColumn.length > 0 &&
         typeof statusColumn[0].Type === 'string' &&
         statusColumn[0].Type.startsWith('enum(') &&
-        !statusColumn[0].Type.includes("'Expired'")
+        !BOOKING_STATUS_ENUM_VALUES.every((value) => statusColumn[0].Type.includes(`'${value}'`))
       ) {
         const enumValuesSql = BOOKING_STATUS_ENUM_VALUES.map((value) => `'${value}'`).join(', ');
         await pool.query(

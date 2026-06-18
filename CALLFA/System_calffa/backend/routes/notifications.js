@@ -10,17 +10,29 @@ const {
   ANNOUNCEMENT_NOTIFICATION_TYPES,
   ASSISTANCE_NOTIFICATION_TYPES,
   STATUS_NOTIFICATION_TYPES,
+  OPERATOR_NOTIFICATION_TYPES,
+  TREASURER_NOTIFICATION_TYPES,
   formatLocalDate,
-  upsertNotification
+  upsertNotification,
+  purgeOrphanedNotifications
 } = require('../services/notification-service');
 const { syncExpiredMachineryBookings } = require('../services/booking-status-sync');
+const {
+  getManilaTodayString,
+  addDays,
+  normalizeDateString,
+  daysBetween
+} = require('../utils/philippinesTime');
 
 const FARMER_NOTIFICATION_TYPES = ['1_day', 'overdue_penalty', ...STATUS_NOTIFICATION_TYPES, ...ASSISTANCE_NOTIFICATION_TYPES];
-const VISIBLE_NOTIFICATION_TYPES = [...FARMER_NOTIFICATION_TYPES, ...ANNOUNCEMENT_NOTIFICATION_TYPES];
+const VISIBLE_NOTIFICATION_TYPES = [...FARMER_NOTIFICATION_TYPES, ...ANNOUNCEMENT_NOTIFICATION_TYPES, ...OPERATOR_NOTIFICATION_TYPES];
 const VISIBLE_NOTIFICATION_TYPES_SQL = VISIBLE_NOTIFICATION_TYPES.map((value) => `'${value}'`).join(', ');
 const normalizeRole = (role) => (role || '').toLowerCase();
 
 const isFarmerRole = (role) => normalizeRole(role) === 'farmer';
+const isOperatorRole = (role) => normalizeRole(role) === 'operator';
+const isTreasurerRole = (role) => normalizeRole(role) === 'treasurer';
+const isManagerRole = (role) => ['operation_manager', 'business_manager'].includes(normalizeRole(role));
 
 const buildNotificationVisibilityClause = (role) => {
   if (isFarmerRole(role)) {
@@ -30,25 +42,33 @@ const buildNotificationVisibilityClause = (role) => {
     };
   }
 
+  if (isOperatorRole(role)) {
+    const operatorTypesSql = OPERATOR_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
+    return {
+      clause: `(n.notification_type IN (${operatorTypesSql}) OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      params: []
+    };
+  }
+
+  if (isTreasurerRole(role)) {
+    const treasurerTypesSql = TREASURER_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
+    return {
+      clause: `(n.notification_type IN (${treasurerTypesSql}) OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      params: []
+    };
+  }
+
+  if (isManagerRole(role)) {
+    return {
+      clause: `(n.reference_type = 'machinery_booking' OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      params: []
+    };
+  }
+
   return {
     clause: `n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')`,
     params: []
   };
-};
-
-const parseBookingDate = (value) => {
-  if (!value) return null;
-  if (value instanceof Date) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
-  if (typeof value === 'string') {
-    const normalized = value.split('T')[0].trim();
-    const date = new Date(`${normalized}T00:00:00`);
-    return Number.isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 };
 
 // Penalty calculation helper
@@ -75,6 +95,8 @@ router.get('/', verifyToken, async (req, res) => {
       await syncExpiredMachineryBookings();
       await generateDueDateNotifications();
     }
+
+    await purgeOrphanedNotifications();
 
     const todayStr = formatLocalDate(new Date());
     const visibility = buildNotificationVisibilityClause(userRole);
@@ -109,6 +131,8 @@ router.get('/unread-count', verifyToken, async (req, res) => {
       await syncExpiredMachineryBookings();
       await generateDueDateNotifications();
     }
+
+    await purgeOrphanedNotifications();
 
     const todayStr = formatLocalDate(new Date());
     const visibility = buildNotificationVisibilityClause(userRole);
@@ -195,17 +219,9 @@ router.post('/generate', verifyToken, async (req, res) => {
 async function generateDueDateNotifications(testDate = null) {
   let totalGenerated = 0;
 
-  // Calculate today's date - use testDate if provided, otherwise use system date
-  let today;
-  if (testDate) {
-    // Parse testDate properly to avoid timezone shifts
-    const [year, month, day] = testDate.split('-').map(Number);
-    today = new Date(year, month - 1, day, 0, 0, 0, 0);
-  } else {
-    today = new Date();
-  }
-  today.setHours(0, 0, 0, 0); // Set to start of day
-  const todayStr = formatLocalDate(today);
+  const todayStr = testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)
+    ? testDate
+    : getManilaTodayString();
 
   // ─── LOANS: Trigger notification 1 day before due date ───
   try {
@@ -225,39 +241,15 @@ async function generateDueDateNotifications(testDate = null) {
     console.log(`📋 Found ${loans.length} loans with status in ('active', 'approved', 'overdue')\n`);
 
     for (const loan of loans) {
-      if (!loan.due_date) continue; // Skip if no due date
-      
-      // Calculate the trigger date (1 day before due date)
-      // Handle both string and Date formats from database
-      let dueDateStr;
-      if (typeof loan.due_date === 'string') {
-        dueDateStr = loan.due_date.split('T')[0]; // Extract YYYY-MM-DD
-      } else if (loan.due_date instanceof Date) {
-        const year = loan.due_date.getFullYear();
-        const month = String(loan.due_date.getMonth() + 1).padStart(2, '0');
-        const day = String(loan.due_date.getDate()).padStart(2, '0');
-        dueDateStr = `${year}-${month}-${day}`;
-      } else {
-        dueDateStr = loan.due_date;
-      }
-      
-      const parts = dueDateStr.split('-');
-      const dueDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      dueDate.setHours(0, 0, 0, 0);
-      
-      if (isNaN(dueDate.getTime())) continue; // Skip invalid dates
-      
-      const triggerDate = new Date(dueDate);
-      triggerDate.setDate(triggerDate.getDate() - 1);
-      triggerDate.setHours(0, 0, 0, 0); // Ensure start of day for consistency
-      const triggerDateStr = formatLocalDate(triggerDate);
+      if (!loan.due_date) continue;
 
-      // Generate if today IS the trigger date OR if today is after trigger date but notification doesn't exist yet
-      // This handles cases where the date has changed or the function didn't run at the right time
+      const dueDateStr = normalizeDateString(loan.due_date);
+      if (!dueDateStr) continue;
+
+      const triggerDateStr = addDays(dueDateStr, -1);
       const isOnOrAfterTriggerDate = todayStr >= triggerDateStr;
-      
-      const dueDateStrDisplay = formatLocalDate(dueDate);
-      console.log(`  └─ Loan ${loan.id}: Due=${dueDateStrDisplay}, Trigger=${triggerDateStr}, Today=${todayStr}, Match=${isOnOrAfterTriggerDate ? '✓' : '✗'}`);
+
+      console.log(`  └─ Loan ${loan.id}: Due=${dueDateStr}, Trigger=${triggerDateStr}, Today=${todayStr}, Match=${isOnOrAfterTriggerDate ? '✓' : '✗'}`);
       
       if (!isOnOrAfterTriggerDate) continue;
 
@@ -301,23 +293,10 @@ async function generateDueDateNotifications(testDate = null) {
     for (const loan of overdueLoans) {
       if (!loan.due_date) continue;
 
-      // Handle both string and Date formats from database
-      let dueDateStr;
-      if (typeof loan.due_date === 'string') {
-        dueDateStr = loan.due_date.split('T')[0]; // Extract YYYY-MM-DD
-      } else if (loan.due_date instanceof Date) {
-        const year = loan.due_date.getFullYear();
-        const month = String(loan.due_date.getMonth() + 1).padStart(2, '0');
-        const day = String(loan.due_date.getDate()).padStart(2, '0');
-        dueDateStr = `${year}-${month}-${day}`;
-      } else {
-        dueDateStr = loan.due_date;
-      }
-      
-      const parts = dueDateStr.split('-');
-      const dueDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      dueDate.setHours(0, 0, 0, 0);
-      const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+      const dueDateStr = normalizeDateString(loan.due_date);
+      if (!dueDateStr) continue;
+
+      const daysOverdue = daysBetween(dueDateStr, todayStr);
       
       // Generate penalty notification if overdue by 1+ days
       if (daysOverdue < 1) continue;
@@ -380,23 +359,14 @@ async function generateDueDateNotifications(testDate = null) {
         continue;
       }
 
-      const bookingDateObj = parseBookingDate(booking.booking_date);
-      if (!bookingDateObj) {
+      const bookingDateStr = normalizeDateString(booking.booking_date);
+      if (!bookingDateStr) {
         console.error(`❌ [generateDueDateNotifications] Invalid booking_date for booking ${booking.id}:`, booking.booking_date);
         continue;
       }
 
-      // Calculate due date: 30 days after booking
-      const dueDate = new Date(bookingDateObj);
-      dueDate.setDate(dueDate.getDate() + 30);
-      dueDate.setHours(0, 0, 0, 0); // Ensure start of day
-      const dueDateStr = formatLocalDate(dueDate);
-
-      // Calculate trigger date (1 day before due date)
-      const triggerDate = new Date(dueDate);
-      triggerDate.setDate(triggerDate.getDate() - 1);
-      triggerDate.setHours(0, 0, 0, 0);
-      const triggerDateStr = formatLocalDate(triggerDate);
+      const dueDateStr = addDays(bookingDateStr, 30);
+      const triggerDateStr = addDays(dueDateStr, -1);
 
       // Generate if today is on or after the trigger date
       const isOnOrAfterTriggerDate = todayStr >= triggerDateStr;
@@ -451,18 +421,14 @@ async function generateDueDateNotifications(testDate = null) {
         continue;
       }
 
-      const bookingDateObj = parseBookingDate(booking.booking_date);
-      if (!bookingDateObj) {
+      const bookingDateStr = normalizeDateString(booking.booking_date);
+      if (!bookingDateStr) {
         console.error(`❌ [generateDueDateNotifications] Invalid booking_date for overdue booking ${booking.id}:`, booking.booking_date);
         continue;
       }
 
-      const dueDate = new Date(bookingDateObj);
-      dueDate.setDate(dueDate.getDate() + 30);
-      dueDate.setHours(0, 0, 0, 0);
-      const dueDateStr = formatLocalDate(dueDate);
-
-      const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+      const dueDateStr = addDays(bookingDateStr, 30);
+      const daysOverdue = daysBetween(dueDateStr, todayStr);
       if (daysOverdue < 1) continue;
 
       const monthsOverdue = Math.floor(daysOverdue / 30.44);

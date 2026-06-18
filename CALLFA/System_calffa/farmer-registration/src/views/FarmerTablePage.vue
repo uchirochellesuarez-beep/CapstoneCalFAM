@@ -87,6 +87,9 @@
             </option>
           </select>
         </template>
+        <span v-else-if="userBarangayName" class="filter-barangay-badge">
+          Barangay: {{ userBarangayName }}
+        </span>
         <span v-if="hasActiveFilters" class="filter-hint">
           {{ filterSummary }}
         </span>
@@ -257,8 +260,11 @@ const isAuthorized = computed(() => {
 })
 
 const userBarangayId = computed(() => {
-  return authStore.currentUser?.barangay_id
+  const id = authStore.currentUser?.barangay_id
+  return id != null && id !== '' ? Number(id) : null
 })
+
+const userBarangayName = computed(() => authStore.currentUser?.barangay_name || '')
 
 const isAdmin = computed(() => {
   return authStore.currentUser?.role === 'admin'
@@ -277,10 +283,17 @@ const canViewMemberSummary = computed(() => {
   return ['admin', 'president', 'treasurer'].includes(role)
 })
 
+const matchesUserBarangay = (farmer) => {
+  if (userBarangayId.value == null) return false
+  return Number(farmer.barangay_id) === Number(userBarangayId.value)
+}
+
 const applyBarangayFilter = (farmers) => {
-  if (!isAdmin.value || !selectedBarangayId.value) return farmers
-  const barangayId = Number(selectedBarangayId.value)
-  return farmers.filter((f) => Number(f.barangay_id) === barangayId)
+  if (isAdmin.value) {
+    if (!selectedBarangayId.value) return farmers
+    return farmers.filter((f) => Number(f.barangay_id) === Number(selectedBarangayId.value))
+  }
+  return farmers.filter(matchesUserBarangay)
 }
 
 const applySearchFilter = (farmers) => {
@@ -303,13 +316,17 @@ const selectedBarangayName = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return Boolean(searchQuery.value.trim()) || (isAdmin.value && selectedBarangayId.value)
+  return Boolean(searchQuery.value.trim()) || (isAdmin.value && selectedBarangayId.value) || (!isAdmin.value && userBarangayName.value)
 })
 
 const filterSummary = computed(() => {
   const parts = []
   if (searchQuery.value.trim()) parts.push(`matching "${searchQuery.value.trim()}"`)
-  if (isAdmin.value && selectedBarangayId.value) parts.push(`in ${selectedBarangayName.value}`)
+  if (isAdmin.value && selectedBarangayId.value) {
+    parts.push(`in ${selectedBarangayName.value}`)
+  } else if (!isAdmin.value && userBarangayName.value) {
+    parts.push(`in ${userBarangayName.value} only`)
+  }
   return parts.length ? `Showing members ${parts.join(' ')}` : ''
 })
 
@@ -365,17 +382,11 @@ const loadFarmers = async () => {
     })
     if (response.ok) {
       const data = await response.json()
+      const farmers = data.farmers || data || []
       if (isAdmin.value) {
-        // Admin can see all farmers from all barangays
-        allFarmers.value = data.farmers || data || []
+        allFarmers.value = farmers
       } else if (isPresident.value || isTreasurer.value) {
-        // President/Treasurer sees only farmers from their own barangay
-        const farmers = data.farmers || data || []
-        if (userBarangayId.value) {
-          allFarmers.value = farmers.filter((f) => f.barangay_id === userBarangayId.value)
-        } else {
-          allFarmers.value = farmers
-        }
+        allFarmers.value = farmers.filter(matchesUserBarangay)
       } else {
         error.value = 'Insufficient permissions to view members'
         allFarmers.value = []
@@ -662,6 +673,19 @@ const goToMembersSummary = () => router.push('/members-summary')
   font-weight: 600;
   color: var(--text-muted);
   flex: 1 1 100%;
+}
+
+.filter-barangay-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  white-space: nowrap;
 }
 
 /* ============================================
@@ -1001,6 +1025,12 @@ const goToMembersSummary = () => router.push('/members-summary')
   font-size: 0.9375rem !important;
 }
 
+.farmer-table-page.light-theme .filter-barangay-badge {
+  color: #14532d !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
 .farmer-table-page.light-theme .filter-select option {
   background: #ffffff;
   color: #052e16;
@@ -1252,5 +1282,55 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme :deep(.btn-secondary:hover) {
   background: #f0fdf4 !important;
+}
+
+/* Compact tables in child tabs (Pending / Registered Members) */
+.farmer-table-page :deep(.members-table-container) {
+  --members-font-table-head: 0.58rem;
+  --members-font-table-cell: 0.625rem;
+  --members-font-chip: 0.55rem;
+}
+
+.farmer-table-page :deep(.members-table) {
+  min-width: 960px;
+  table-layout: fixed;
+}
+
+.farmer-table-page :deep(.members-table th),
+.farmer-table-page :deep(.members-table td) {
+  padding: 0.26rem 0.28rem !important;
+  font-size: var(--members-font-table-cell) !important;
+  line-height: 1.12;
+}
+
+.farmer-table-page :deep(.members-table th) {
+  font-size: var(--members-font-table-head) !important;
+}
+
+.farmer-table-page :deep(.member-avatar),
+.farmer-table-page :deep(.member-avatar-wrap) {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.farmer-table-page :deep(.members-action-row .table-action-btn),
+.farmer-table-page :deep(.members-action-row .table-action-protected) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+}
+
+.farmer-table-page :deep(.members-action-row .table-action-btn svg) {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+.farmer-table-page :deep(.members-table .table-select) {
+  font-size: 0.58rem !important;
+  padding: 0.12rem 0.2rem !important;
+  min-height: 1.45rem;
 }
 </style>

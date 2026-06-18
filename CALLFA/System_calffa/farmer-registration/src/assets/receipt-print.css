@@ -1,0 +1,90 @@
+/* Hidden on screen; only used as the print source clone */
+.receipt-print-clone-root {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body.receipt-print-active > :not(#receipt-print-clone-root) {
+    display: none !important;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .receipt-print-root {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .payment-receipt,
+  body.receipt-print-active #receipt-print-clone-root .expense-receipt {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+    color: #111 !important;
+    border: 2px solid #111 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Payment receipt layout fallback */
+  body.receipt-print-active #receipt-print-clone-root .receipt-top {
+    display: flex !important;
+    justify-content: space-between;
+    padding: 16px 20px 10px;
+    border-bottom: 2px solid #111;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .receipt-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #111 !important;
+    margin: 0;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .field-line,
+  body.receipt-print-active #receipt-print-clone-root .info-value,
+  body.receipt-print-active #receipt-print-clone-root .meta-value,
+  body.receipt-print-active #receipt-print-clone-root td,
+  body.receipt-print-active #receipt-print-clone-root th {
+    color: #111 !important;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .receipt-footer-bar,
+  body.receipt-print-active #receipt-print-clone-root .footer-bar,
+  body.receipt-print-active #receipt-print-clone-root .panel-head,
+  body.receipt-print-active #receipt-print-clone-root .expense-table thead th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .no-print {
+    display: none !important;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}

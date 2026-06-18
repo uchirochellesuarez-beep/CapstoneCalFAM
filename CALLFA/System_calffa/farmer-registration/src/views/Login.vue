@@ -232,11 +232,8 @@ const submitLogin = async () => {
 
   if (result.success) {
     const userRole = authStore.currentUser?.role
-    const userBarangayId = authStore.currentUser?.barangay_id
 
-    if (userBarangayId === 2) {
-      router.push('/barangay-notice')
-    } else if (userRole === 'admin') {
+    if (userRole === 'admin') {
       router.push('/admin')
     } else {
       router.push('/welcome')

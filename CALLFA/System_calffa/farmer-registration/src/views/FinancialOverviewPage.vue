@@ -262,6 +262,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { Chart, registerables } from 'chart.js'
+import { getManilaReferenceDateString } from '../utils/philippineTime'
 
 Chart.register(...registerables)
 
@@ -462,10 +463,7 @@ const reportScope = computed(() => {
   return parts.length ? parts.join(' · ') : 'All financial modules'
 })
 
-const getDeviceDate = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+const getDeviceDate = () => getManilaReferenceDateString()
 
 const getAuthHeaders = () => {
   const headers = { 'Content-Type': 'application/json' }

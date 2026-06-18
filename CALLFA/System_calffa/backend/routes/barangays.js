@@ -3,13 +3,15 @@ const router = express.Router();
 const pool = require('../db');
 const barangayConstants = require('../constants/barangays');
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const { getBarangayStats } = require('../utils/barangayHelpers');
+const { canAccessBarangay } = require('../utils/requestUser');
 
 function enrich(row) {
   return barangayConstants.enrichDbBarangay(row);
 }
 
 // --- Stats (must be before /:id) ---
-router.get('/stats/summary', async (req, res) => {
+router.get('/stats/summary', verifyToken, isAdmin, async (req, res) => {
   try {
     const [stats] = await pool.query(`
       SELECT 
@@ -95,6 +97,29 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching barangays:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch barangays' });
+  }
+});
+
+// --- Per-barangay dashboard stats (admin or assigned officers) ---
+router.get('/:id/stats', verifyToken, async (req, res) => {
+  try {
+    const barangayId = parseInt(req.params.id, 10);
+    if (Number.isNaN(barangayId)) {
+      return res.status(400).json({ success: false, message: 'Invalid barangay id' });
+    }
+
+    if (!canAccessBarangay(req.user, barangayId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only view statistics for your assigned barangay.'
+      });
+    }
+
+    const stats = await getBarangayStats(barangayId);
+    res.json({ success: true, barangay_id: barangayId, stats });
+  } catch (error) {
+    console.error('Error fetching barangay stats:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch barangay statistics' });
   }
 });
 

@@ -95,7 +95,7 @@
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <span class="tab-label">{{ tab.label }}</span>
+            <span class="tab-label">{{ tab.label }}<span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span></span>
           </span>
         </button>
       </div>
@@ -104,20 +104,19 @@
       <div v-if="activeTab === 'expenses'" class="tab-content">
         <div class="section-header">
           <h2>Expense Management</h2>
-          <button v-if="canManage" @click="showExpenseForm = true" class="btn-primary">+ Record Expense</button>
+          <button v-if="canManage" @click="openManualExpenseForm" class="btn-primary">+ Record Manual Expense</button>
           <span v-else class="view-only-badge">👁️ View Only</span>
         </div>
 
-        <!-- Expense Filters -->
+        <div v-if="expenseSummary.pending_count > 0" class="pending-expense-alert">
+          <strong>{{ expenseSummary.pending_count }}</strong> completed rental(s) awaiting expense entry.
+        </div>
+
+        <div v-if="isPaymentVerifier && pendingPaymentsCount > 0" class="pending-expense-alert payment-alert">
+          <strong>{{ pendingPaymentsCount }}</strong> down payment or refund item(s) awaiting action on the Booking Payments tab.
+        </div>
+
         <div class="filters-section">
-          <div class="filter-group">
-            <label class="filter-label">Income Source:</label>
-            <select v-model="filters.income_source" class="filter-input">
-              <option value="all">All Sources</option>
-              <option value="machinery">Machinery Collections</option>
-              <option value="dues">Monthly Dues</option>
-            </select>
-          </div>
           <div class="filter-group">
             <label class="filter-label">Machinery/Equipment:</label>
             <select v-model="filters.machinery_id" class="filter-input">
@@ -125,6 +124,21 @@
               <option v-for="m in machinery" :key="m.id" :value="m.id">
                 {{ m.machinery_name }} ({{ m.machinery_type }})
               </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Operator:</label>
+            <select v-model="filters.operator_id" class="filter-input">
+              <option value="">All Operators</option>
+              <option v-for="op in expenseOperators" :key="op.id" :value="op.id">{{ op.name }}</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Expense Status:</label>
+            <select v-model="filters.expense_status" class="filter-input">
+              <option value="">All Status</option>
+              <option value="Pending">Pending Entry</option>
+              <option value="Recorded">Recorded</option>
             </select>
           </div>
           <div class="filter-group">
@@ -137,55 +151,242 @@
           </div>
           <div class="filter-actions">
             <button @click="loadExpenses" class="btn-secondary">Filter</button>
-            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+            <button @click="clearExpenseFilters" class="btn-secondary-outline">Clear</button>
           </div>
         </div>
 
-        <!-- Expenses Table -->
-        <div class="table-container">
-          <table class="expenses-table">
-            <thead>
-              <tr>
-                <th>Machinery/Equipment</th>
-                <th>Date</th>
-                <th>Particulars</th>
-                <th>Ref. No.</th>
-                <th>Fuel & Oil</th>
-                <th>Labor</th>
-                <th>Per Diem</th>
-                <th>Repair & Maint.</th>
-                <th>Office Supply</th>
-                <th>Communication</th>
-                <th>Utilities</th>
-                <th>Sundries</th>
-                <th>Total</th>
-                <th v-if="canManage">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="expense in filteredExpenses" :key="expense.id">
-                <td><strong>{{ expense.machinery_name }}</strong></td>
-                <td>{{ formatDate(expense.date_of_expense) }}</td>
-                <td>{{ expense.particulars }}</td>
-                <td>{{ expense.reference_number || '-' }}</td>
-                <td>₱{{ formatNumber(expense.fuel_and_oil) }}</td>
-                <td>₱{{ formatNumber(expense.labor_cost) }}</td>
-                <td>₱{{ formatNumber(expense.per_diem) }}</td>
-                <td>₱{{ formatNumber(expense.repair_and_maintenance) }}</td>
-                <td>₱{{ formatNumber(expense.office_supply) }}</td>
-                <td>₱{{ formatNumber(expense.communication_expense) }}</td>
-                <td>₱{{ formatNumber(expense.utilities_expense) }}</td>
-                <td>₱{{ formatNumber(expense.sundries) }}</td>
-                <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
-                <td v-if="canManage" class="actions-cell">
-                  <button @click="editExpense(expense)" class="btn-edit" title="Edit">✏️</button>
-                  <button @click="deleteExpense(expense.id)" class="btn-delete" title="Delete">🗑️</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-if="filteredExpenses.length === 0" class="empty-state">
-            <p>{{ filters.machinery_id ? 'No expenses for selected machinery' : 'No expenses recorded yet' }}</p>
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">Pending Expense Entries <span class="section-count">{{ pendingExpenses.length }}</span></h3>
+          <p class="section-hint">Generated automatically from completed rental transactions.</p>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Booking</th><th>Machinery</th><th>Operator</th><th>Farmer</th>
+                  <th>Service Date</th><th>Location</th><th>Status</th>
+                  <th v-if="canManage">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="expense in pendingExpenses" :key="'p-' + expense.id">
+                  <td>#{{ expense.booking_id }}</td>
+                  <td>{{ expense.machinery_name }}</td>
+                  <td>{{ expense.operator_name || '—' }}</td>
+                  <td>{{ expense.farmer_name || '—' }}</td>
+                  <td>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</td>
+                  <td>{{ expense.service_location || '—' }}</td>
+                  <td><span class="badge badge-pending">Pending Entry</span></td>
+                  <td v-if="canManage"><button @click="completePendingExpense(expense)" class="btn-primary btn-sm">Record Expenses &amp; Print Receipt</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="pendingExpenses.length === 0" class="empty-state"><p>No pending expense entries.</p></div>
+          </div>
+        </div>
+
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">Completed Expense Records <span class="section-count">{{ recordedBookingExpenses.length }}</span></h3>
+          <p class="section-hint">Expenses recorded from completed rental transactions.</p>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Booking</th><th>Machinery</th><th>Date</th><th>Operator</th>
+                  <th>Labor</th><th>Total</th><th>Receipt No.</th><th>Status</th><th v-if="canManage">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="expense in recordedBookingExpenses" :key="'rb-' + expense.id">
+                  <td>#{{ expense.booking_id }}</td>
+                  <td>{{ expense.machinery_name }}</td>
+                  <td>{{ formatDate(expense.date_of_expense) }}</td>
+                  <td>{{ expense.operator_name || '—' }}</td>
+                  <td>₱{{ formatNumber(expense.labor_cost) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
+                  <td>{{ expense.reference_number || '—' }}</td>
+                  <td><span class="badge badge-recorded">Recorded</span></td>
+                  <td v-if="canManage" class="actions-cell members-action-row">
+                    <button v-if="expense.reference_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(expense.reference_number)">Print</button>
+                    <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="recordedBookingExpenses.length === 0" class="empty-state"><p>No recorded transaction expenses yet.</p></div>
+          </div>
+        </div>
+
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">Manual Expense Entries <span class="section-count">{{ manualExpenses.length }}</span></h3>
+          <p class="section-hint">Expenses manually added by the Treasurer.</p>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Machinery</th><th>Date</th><th>Particulars</th><th>Receipt No.</th>
+                  <th>Fuel</th><th>Labor</th><th>Total</th><th v-if="canManage">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="expense in manualExpenses" :key="'m-' + expense.id">
+                  <td>{{ expense.machinery_name }}</td>
+                  <td>{{ formatDate(expense.date_of_expense) }}</td>
+                  <td>{{ expense.particulars }}</td>
+                  <td>{{ expense.reference_number || '—' }}</td>
+                  <td>₱{{ formatNumber(expense.fuel_and_oil) }}</td>
+                  <td>₱{{ formatNumber(expense.labor_cost) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
+                  <td v-if="canManage" class="actions-cell members-action-row">
+                    <button v-if="expense.reference_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(expense.reference_number)">Print</button>
+                    <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button type="button" @click="deleteExpense(expense.id)" class="table-action-btn table-action-delete" title="Delete" aria-label="Delete">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="manualExpenses.length === 0" class="empty-state"><p>No manual expenses recorded yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: BOOKING PAYMENTS (Treasurer) -->
+      <div v-if="activeTab === 'payments'" class="tab-content">
+        <div class="section-header">
+          <h2>Down Payment &amp; Refund Verification</h2>
+          <span class="view-only-badge">Treasurer / President — verify down payments and refund requests</span>
+        </div>
+
+        <p class="info-text">
+          Verify <strong>20% down payments</strong> before they count as income and the manager can confirm the booking.
+          Remaining balance collections are recorded under <strong>A/R &amp; Collections</strong>; completed rentals appear as <strong>pending expense entries</strong> on the Expenses tab.
+        </p>
+
+        <div class="expense-section-block booking-payments-block">
+          <h3 class="expense-section-title">
+            Down Payment (20%) — Awaiting Verification
+            <span class="section-count">{{ pendingDownPayments.length }}</span>
+          </h3>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Booking</th>
+                  <th>Farmer</th>
+                  <th>Machinery</th>
+                  <th>Service Date</th>
+                  <th>Total Rental</th>
+                  <th>Down Payment (20%)</th>
+                  <th>Method</th>
+                  <th>Submitted</th>
+                  <th>Proof</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="b in pendingDownPayments" :key="'dp-' + b.id">
+                  <td>#{{ b.id }}</td>
+                  <td>{{ b.farmer_name }}</td>
+                  <td>{{ b.machinery_name }}</td>
+                  <td>{{ formatDate(b.booking_date) }}</td>
+                  <td>₱{{ formatNumber(b.total_price) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(b.down_payment_amount) }}</td>
+                  <td>{{ b.down_payment_method || '—' }}</td>
+                  <td>{{ formatDate(b.down_payment_submitted_at) }}</td>
+                  <td>
+                    <button
+                      v-if="b.down_payment_proof"
+                      type="button"
+                      class="proof-link btn-link-inline"
+                      @click="openProofPreview(paymentProofUrl(b.down_payment_proof))"
+                    >
+                      View proof
+                    </button>
+                    <span v-else-if="b.down_payment_method === 'Cash'">Cash (in person)</span>
+                    <span v-else>—</span>
+                  </td>
+                  <td class="payment-actions">
+                    <template v-if="canVerifyBookingPayment(b)">
+                      <button type="button" class="btn-primary btn-sm" @click="openVerifyDownPaymentModal(b)">Verify &amp; Record Income</button>
+                      <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectDownPaymentModal(b)">Reject</button>
+                    </template>
+                    <span v-else class="text-muted">Awaiting {{ b.booker_role === 'treasurer' ? 'President' : 'Treasurer' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="pendingDownPayments.length === 0" class="empty-state">
+              <p>No down payments awaiting verification.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="expense-section-block booking-payments-block">
+          <h3 class="expense-section-title">
+            Down Payment Refunds — Review Queue
+            <span class="section-count">{{ pendingRefundRequests.length }}</span>
+          </h3>
+          <p class="section-hint">Farmers may request a refund of their 20% down payment when the rental was not completed and service was not rendered. Approve before processing payment.</p>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Refund #</th>
+                  <th>Booking</th>
+                  <th>Farmer</th>
+                  <th>Machinery</th>
+                  <th>Down Payment</th>
+                  <th>Refund Amount</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Requested</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in pendingRefundRequests" :key="'rf-' + r.id">
+                  <td>{{ r.refund_number || '—' }}</td>
+                  <td>#{{ r.booking_id }}</td>
+                  <td>{{ r.farmer_name }}</td>
+                  <td>{{ r.machinery_name }}</td>
+                  <td>₱{{ formatNumber(r.original_down_payment || r.refund_amount) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(r.refund_amount) }}</td>
+                  <td class="reason-cell">{{ r.refund_reason || r.reason || '—' }}</td>
+                  <td><span class="status-badge">{{ r.refund_status }}</span></td>
+                  <td>{{ formatDate(r.requested_at || r.created_at) }}</td>
+                  <td class="payment-actions">
+                    <template v-if="canVerifyBookingPayment(r)">
+                      <template v-if="['Refund Requested', 'Under Review', 'Pending'].includes(r.refund_status)">
+                        <button type="button" class="btn-primary btn-sm" @click="approveRefundRequest(r)">Approve</button>
+                        <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectRefundModal(r)">Reject</button>
+                      </template>
+                      <button v-else-if="r.refund_status === 'Approved'" type="button" class="btn-primary btn-sm" @click="openProcessRefundModal(r)">Process Refund</button>
+                      <span v-else>—</span>
+                    </template>
+                    <span v-else class="view-only-hint">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="pendingRefundRequests.length === 0" class="empty-state">
+              <p>No refund requests awaiting action.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -220,7 +421,7 @@
           </div>
         </div>
 
-        <p class="info-text">💡 Income is automatically generated from machinery collections and association dues.</p>
+        <p class="info-text">💡 Income includes verified down payments (20%), final payments, machinery collections, and association dues.</p>
 
         <div class="card" style="margin-bottom: 12px;">
           <div class="card-header">
@@ -257,7 +458,6 @@
                 <th>Source</th>
                 <th>Farmer Name</th>
                 <th>Machinery/Equipment</th>
-                <th>Reference</th>
                 <th>Coverage / Notes</th>
                 <th>Total Amount</th>
                 <th>Amount Paid</th>
@@ -272,9 +472,8 @@
                     {{ inc.income_type || 'Income' }}
                   </span>
                 </td>
-                <td><strong>{{ inc.farmer_name || '-' }}</strong></td>
+                <td>{{ inc.farmer_name || '-' }}</td>
                 <td>{{ inc.machinery_name ? `${inc.machinery_name}${inc.machinery_type ? ` (${inc.machinery_type})` : ''}` : 'Association Dues' }}</td>
-                <td>{{ inc.booking_id ? `Booking #${inc.booking_id}` : 'Dues Transaction' }}</td>
                 <td>{{ isDuesIncome(inc) ? formatDuesCoverage(inc.period_start, inc.period_end) : (inc.remarks || '-') }}</td>
                 <td class="amount-cell">₱{{ formatNumber(inc.original_amount) }}</td>
                 <td class="amount-cell">₱{{ formatNumber(inc.income_amount) }}</td>
@@ -427,11 +626,9 @@
                   <select class="input" v-model="duesForm.payment_method">
                     <option value="Cash">Cash</option>
                     <option value="GCash">GCash</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Check">Check</option>
                   </select>
-                  <button class="btn btn-success" @click="collectMonthlyDues" :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid)">
-                    Record Dues
+                  <button class="btn btn-success" @click="collectMonthlyDues" :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid) || duesCollecting">
+                    {{ duesCollecting ? 'Recording...' : 'Collect Dues & Print Receipt' }}
                   </button>
                 </div>
                 <div class="stat-card">
@@ -443,6 +640,12 @@
               <div v-if="canCollectDues" class="form-group dues-remarks-group">
                 <label class="inline-label">Remarks</label>
                 <textarea v-model="duesForm.remarks" class="input dues-remarks-input" placeholder="Optional notes about this dues transaction..."></textarea>
+              </div>
+
+              <div v-if="canCollectDues && !Number(selectedFarmer?.dues_paid)" class="form-group auto-receipt-note">
+                <label>Official Receipt</label>
+                <input type="text" class="input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+                <small class="info-text">Receipt prints automatically after collection.</small>
               </div>
 
               <div v-if="Number(selectedFarmer?.dues_paid)" class="info-text">
@@ -459,19 +662,30 @@
                       <th>Amount</th>
                       <th>Period</th>
                       <th>Payment Method</th>
+                      <th>Receipt No.</th>
                       <th>Collected By</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-if="selectedFarmerPayments.length === 0">
-                      <td colspan="5" class="empty-message">No dues transactions recorded yet</td>
+                      <td colspan="7" class="empty-message">No dues transactions recorded yet</td>
                     </tr>
                     <tr v-else v-for="payment in selectedFarmerPayments" :key="payment.id">
                       <td>{{ formatDate(payment.collection_date) }}</td>
                       <td class="amount">₱{{ formatNumber(payment.amount) }}</td>
                       <td>{{ formatDuesCoverage(payment.period_start, payment.period_end) }}</td>
                       <td>{{ payment.payment_method }}</td>
+                      <td>{{ payment.receipt_number || '—' }}</td>
                       <td>{{ payment.collected_by_name }}</td>
+                      <td class="actions">
+                        <button
+                          v-if="payment.receipt_number"
+                          type="button"
+                          class="btn-link-inline"
+                          @click="showReceiptAfterVerify(payment.receipt_number)"
+                        >Print</button>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -532,6 +746,66 @@
           </div>
         </div>
 
+        <div v-if="isPaymentVerifier" class="expense-section-block">
+          <h3 class="expense-section-title">
+            Farmer Balance Payments — Awaiting Verification
+            <span class="section-count">{{ pendingBalanceSubmissions.length }}</span>
+          </h3>
+          <p class="section-hint">
+            Farmer-submitted remaining balance (Cash/GCash). Verify here or record collections directly from the collectibles list below.
+          </p>
+          <div class="table-container">
+            <table class="expenses-table">
+              <thead>
+                <tr>
+                  <th>Booking</th>
+                  <th>Farmer</th>
+                  <th>Machinery</th>
+                  <th>Amount Submitted</th>
+                  <th>Balance Due</th>
+                  <th>Method</th>
+                  <th>Submitted</th>
+                  <th>Proof</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="s in pendingBalanceSubmissions" :key="'bs-' + s.id">
+                  <td>#{{ s.booking_id }}</td>
+                  <td>{{ s.farmer_name }}</td>
+                  <td>{{ s.machinery_name }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(s.amount) }}</td>
+                  <td>₱{{ formatNumber(s.remaining_balance) }}</td>
+                  <td>{{ s.payment_method }}</td>
+                  <td>{{ formatDate(s.submitted_at) }}</td>
+                  <td>
+                    <button
+                      v-if="s.proof_path"
+                      type="button"
+                      class="proof-link btn-link-inline"
+                      @click="openProofPreview(paymentProofUrl(s.proof_path))"
+                    >
+                      View proof
+                    </button>
+                    <span v-else-if="s.payment_method === 'Cash'">Cash</span>
+                    <span v-else>—</span>
+                  </td>
+                  <td class="payment-actions">
+                    <template v-if="canVerifyBookingPayment(s)">
+                      <button type="button" class="btn-primary btn-sm" @click="openVerifyBalanceSubmissionModal(s)">Verify &amp; Print Receipt</button>
+                      <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectBalanceSubmissionModal(s)">Reject</button>
+                    </template>
+                    <span v-else class="text-muted">Awaiting {{ s.booker_role === 'treasurer' ? 'President' : 'Treasurer' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="pendingBalanceSubmissions.length === 0" class="empty-state">
+              <p>No farmer balance payments awaiting verification.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- A/R List -->
         <div class="ar-section">
           <div class="section-subheader">
@@ -542,24 +816,24 @@
             <table class="ar-table">
               <thead>
                 <tr>
-                  <th>Farmer Name</th>
-                  <th>Machinery</th>
-                  <th>Booking Date</th>
-                  <th>Accounts Receivable</th>
-                  <th>Cash Collected</th>
-                  <th>Remaining Balance</th>
+                  <th>Pangalan ng Kliyente</th>
+                  <th>Sisingilin (A/R)</th>
+                  <th>Nakolektang Bayad</th>
+                  <th>Petsa ng Bayad</th>
+                  <th>Receipt No.</th>
+                  <th>Natitirang Balanse</th>
                   <th v-if="canManage">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="ar in arList" :key="ar.id" :data-booking-id="ar.id" :class="{ 'notification-highlight-row': highlightedBookingId == ar.id }">
                   <td>{{ ar.farmer_name }}</td>
-                  <td>{{ ar.machinery_name }}</td>
-                  <td>{{ formatDate(ar.booking_date) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(ar.total_price) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(ar.accounts_receivable || ar.total_price) }}</td>
                   <td class="amount-cell">₱{{ formatNumber(ar.amount_collected || 0) }}</td>
+                  <td>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</td>
+                  <td>{{ ar.last_receipt_number || '—' }}</td>
                   <td class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">
-                    ₱{{ formatNumber(ar.total_price - (ar.amount_collected || 0)) }}
+                    ₱{{ formatNumber(ar.remaining_balance) }}
                   </td>
                   <td v-if="canManage" class="actions-cell">
                     <button @click="recordCollection(ar)" class="btn-primary-small" title="Record Payment">💳</button>
@@ -589,6 +863,7 @@
                   <th>Collection Amount</th>
                   <th>Receipt Number</th>
                   <th>Remarks</th>
+                  <th>Receipt</th>
                 </tr>
               </thead>
               <tbody>
@@ -597,8 +872,11 @@
                   <td>{{ col.farmer_name }}</td>
                   <td>{{ col.machinery_name }}</td>
                   <td class="amount-cell">₱{{ formatNumber(col.collection_amount) }}</td>
-                  <td>{{ col.receipt_number || '-' }}</td>
+                  <td>{{ col.receipt_number || '—' }}</td>
                   <td>{{ col.remarks || '-' }}</td>
+                  <td>
+                    <button v-if="col.receipt_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(col.receipt_number)">Print</button>
+                  </td>
                   <!-- Delete button removed to prevent income data inconsistencies -->
                 </tr>
               </tbody>
@@ -1593,17 +1871,197 @@
       </div>
     </div>
 
-    <!-- EXPENSE FORM MODAL -->
-    <div v-if="showExpenseForm" class="modal-overlay" @click.self="showExpenseForm = false">
-      <div class="modal-content modal-large">
+    <!-- DOWN PAYMENT VERIFY MODAL -->
+    <div v-if="showVerifyDpModal && paymentActionBooking" class="modal-overlay" @click.self="closePaymentModals">
+      <div class="modal-content">
         <div class="modal-header">
-          <h2>{{ editingExpense ? 'Edit Expense' : 'Record New Expense' }}</h2>
-          <button @click="showExpenseForm = false" class="btn-close">×</button>
+          <h2>Verify Down Payment (20%)</h2>
+          <button type="button" class="btn-close" @click="closePaymentModals">×</button>
         </div>
         <div class="modal-body">
+          <p>Confirming will record <strong>₱{{ formatNumber(paymentActionBooking.down_payment_amount) }}</strong> as machinery income.</p>
+          <div class="context-grid payment-verify-grid">
+            <div><span class="ctx-label">Booking</span><strong>#{{ paymentActionBooking.id }}</strong></div>
+            <div><span class="ctx-label">Farmer</span><strong>{{ paymentActionBooking.farmer_name }}</strong></div>
+            <div><span class="ctx-label">Machinery</span><strong>{{ paymentActionBooking.machinery_name }}</strong></div>
+            <div><span class="ctx-label">Method</span><strong>{{ paymentActionBooking.down_payment_method }}</strong></div>
+          </div>
+          <div v-if="paymentActionBooking.down_payment_proof" class="proof-preview">
+            <img :src="paymentProofUrl(paymentActionBooking.down_payment_proof)" alt="Payment proof" />
+          </div>
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Receipt prints automatically after verification.</small>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
+            <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmVerifyDownPayment">
+              {{ paymentActionLoading ? 'Verifying...' : 'Verify, Record Income & Print Receipt' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOWN PAYMENT REJECT MODAL -->
+    <div v-if="showRejectDpModal && paymentActionBooking" class="modal-overlay" @click.self="closePaymentModals">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Reject Down Payment</h2>
+          <button type="button" class="btn-close" @click="closePaymentModals">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Booking #{{ paymentActionBooking.id }} — {{ paymentActionBooking.farmer_name }}</p>
+          <div class="form-group">
+            <label>Rejection Reason *</label>
+            <textarea v-model="rejectPaymentReason" class="filter-input" rows="3" placeholder="Explain why payment was rejected"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
+            <button type="button" class="btn-primary" :disabled="paymentActionLoading || !rejectPaymentReason.trim()" @click="confirmRejectDownPayment">
+              {{ paymentActionLoading ? 'Rejecting...' : 'Reject Payment' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BALANCE PAYMENT VERIFY MODAL -->
+    <div v-if="showVerifyFinalModal && paymentActionBooking" class="modal-overlay" @click.self="closePaymentModals">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Verify Balance Payment</h2>
+          <button type="button" class="btn-close" @click="closePaymentModals">×</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Confirm farmer-submitted payment of
+            <strong>₱{{ formatNumber(paymentSubmissionTarget?.amount || paymentActionBooking.amount) }}</strong>
+            against balance due of <strong>₱{{ formatNumber(paymentActionBooking.remaining_balance) }}</strong>.
+          </p>
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Receipt prints automatically after verification.</small>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
+            <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmVerifyFinalPayment">
+              {{ paymentActionLoading ? 'Verifying...' : 'Verify Payment & Print Receipt' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFUND REJECT MODAL -->
+    <div v-if="showRejectRefundModal && refundActionTarget" class="modal-overlay" @click.self="closeRefundModals">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Reject Refund Request</h2>
+          <button type="button" class="btn-close" @click="closeRefundModals">×</button>
+        </div>
+        <div class="modal-body">
+          <p>{{ refundActionTarget.refund_number }} — Booking #{{ refundActionTarget.booking_id }} ({{ refundActionTarget.farmer_name }})</p>
+          <div class="form-group">
+            <label>Rejection Reason *</label>
+            <textarea v-model="rejectRefundReason" class="filter-input" rows="3" placeholder="Explain why the refund was rejected"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="closeRefundModals">Cancel</button>
+            <button type="button" class="btn-primary" :disabled="paymentActionLoading || !rejectRefundReason.trim()" @click="confirmRejectRefund">
+              {{ paymentActionLoading ? 'Rejecting...' : 'Reject Refund' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFUND PROCESS MODAL -->
+    <div v-if="showProcessRefundModal && refundActionTarget" class="modal-overlay" @click.self="closeRefundModals">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Process Refund Payment</h2>
+          <button type="button" class="btn-close" @click="closeRefundModals">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Release <strong>₱{{ formatNumber(refundActionTarget.refund_amount) }}</strong> to {{ refundActionTarget.farmer_name }}.</p>
+          <div class="form-group">
+            <label>Refund Date</label>
+            <input v-model="refundProcessDate" type="date" class="filter-input" />
+          </div>
+          <div class="form-group">
+            <label>Remarks</label>
+            <textarea v-model="refundProcessRemarks" class="filter-input" rows="2" placeholder="Optional notes for audit log"></textarea>
+          </div>
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Refund receipt prints automatically after processing.</small>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" @click="closeRefundModals">Cancel</button>
+            <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmProcessRefund">
+              {{ paymentActionLoading ? 'Processing...' : 'Process Refund & Print Receipt' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIPT PRINT MODAL -->
+    <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
+      <div class="modal-content receipt-modal-content" :class="{ 'receipt-modal-expense': isExpenseReceipt }">
+        <ExpenseReceiptPrint
+          v-if="isExpenseReceipt"
+          :receipt="lastReceipt"
+          :auto-print="receiptAutoPrint"
+          @close="closeReceiptModal"
+        />
+        <PaymentReceiptPrint
+          v-else
+          :receipt="lastReceipt"
+          :auto-print="receiptAutoPrint"
+          :kind="lastReceipt?.module === 'machinery_refund' ? 'refund' : 'payment'"
+          @close="closeReceiptModal"
+        />
+      </div>
+    </div>
+
+    <ProofPreviewModal
+      :show="showProofPreview"
+      :src="proofPreviewSrc"
+      title="GCash Payment Proof"
+      @close="closeProofPreview"
+    />
+
+    <!-- EXPENSE FORM MODAL -->
+    <div v-if="showExpenseForm" class="modal-overlay" @click.self="closeExpenseForm">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2>{{ completingPendingExpense ? 'Record Transaction Expenses' : (editingExpense ? 'Edit Expense' : 'Record Manual Expense') }}</h2>
+          <button @click="closeExpenseForm" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="completingPendingExpense && pendingExpenseContext" class="transaction-context-panel">
+            <h3>Transaction Details</h3>
+            <div class="context-grid">
+              <div><span class="ctx-label">Booking ID</span><strong>#{{ pendingExpenseContext.booking_id }}</strong></div>
+              <div><span class="ctx-label">Machinery</span><strong>{{ pendingExpenseContext.machinery_name }}</strong></div>
+              <div><span class="ctx-label">Operator</span><strong>{{ pendingExpenseContext.operator_name || '—' }}</strong></div>
+              <div><span class="ctx-label">Farmer</span><strong>{{ pendingExpenseContext.farmer_name || '—' }}</strong></div>
+              <div><span class="ctx-label">Service Date</span><strong>{{ formatDate(pendingExpenseContext.booking_date) }}</strong></div>
+              <div><span class="ctx-label">Location</span><strong>{{ pendingExpenseContext.service_location || '—' }}</strong></div>
+              <div><span class="ctx-label">Area / Qty</span><strong>{{ pendingExpenseContext.area_size }} {{ pendingExpenseContext.area_unit }}</strong></div>
+              <div><span class="ctx-label">Booking Total</span><strong>₱{{ formatNumber(pendingExpenseContext.booking_total) }}</strong></div>
+            </div>
+            <p class="context-hint">Fill in the actual expense amounts below. Labor cost will credit the assigned operator upon save.</p>
+          </div>
+
           <div class="form-group">
             <label>Machinery / Equipment *</label>
-            <select v-model="expenseForm.machinery_id" class="form-input">
+            <select v-model="expenseForm.machinery_id" class="form-input" :disabled="completingPendingExpense">
               <option value="">-- Select Machinery/Equipment --</option>
               <option v-for="m in machinery" :key="m.id" :value="m.id">
                 {{ m.machinery_name }} ({{ m.machinery_type }})
@@ -1616,61 +2074,68 @@
             <input v-model="expenseForm.date_of_expense" type="date" class="form-input" />
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Particulars (Details) *</label>
-              <input v-model="expenseForm.particulars" type="text" class="form-input" placeholder="e.g., Fuel for machinery maintenance" />
-            </div>
-            <div class="form-group">
-              <label>Receipt/Reference Number *</label>
-              <input v-model="expenseForm.reference_number" type="text" class="form-input" placeholder="Enter receipt/reference number" required />
-            </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select v-model="expenseForm.payment_method" class="form-input">
+              <option value="Cash">Cash</option>
+              <option value="GCash">GCash</option>
+            </select>
           </div>
+
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Receipt prints automatically after saving.</small>
+          </div>
+
+          <input v-if="completingPendingExpense" type="hidden" v-model="expenseForm.booking_id" />
 
           <div class="expense-items-grid">
             <div class="form-group">
               <label>Fuel & Oil</label>
-              <input v-model.number="expenseForm.fuel_and_oil" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.fuel_and_oil" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Labor Cost (Operator & Helper)</label>
-              <input v-model.number="expenseForm.labor_cost" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.labor_cost" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Per Diem (Incentive/hectare or hour)</label>
-              <input v-model.number="expenseForm.per_diem" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.per_diem" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Repair & Maintenance</label>
-              <input v-model.number="expenseForm.repair_and_maintenance" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.repair_and_maintenance" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Office Supply (Ballpen, etc.)</label>
-              <input v-model.number="expenseForm.office_supply" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.office_supply" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Communication (Load, Internet)</label>
-              <input v-model.number="expenseForm.communication_expense" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.communication_expense" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Utilities (Water & Electricity)</label>
-              <input v-model.number="expenseForm.utilities_expense" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.utilities_expense" @input="updateTotal" />
             </div>
             <div class="form-group">
               <label>Sundries (Other Expenses)</label>
-              <input v-model.number="expenseForm.sundries" type="number" step="0.01" class="form-input" @input="updateTotal" />
+              <TypedNumberInput v-model="expenseForm.sundries" @input="updateTotal" />
             </div>
           </div>
 
           <div class="form-group">
             <label>Total Amount (Auto-Calculated) *</label>
-            <input v-model.number="expenseForm.total_amount" type="number" step="0.01" class="form-input total-input" readonly />
+            <TypedNumberInput v-model="expenseForm.total_amount" readonly input-class="form-input total-input" />
             <small class="calculated">₱{{ formatNumber(expenseForm.total_amount) }}</small>
           </div>
 
           <div class="modal-actions">
-            <button @click="showExpenseForm = false" class="btn-secondary">Cancel</button>
-            <button @click="saveExpense" class="btn-success">{{ editingExpense ? 'Update' : 'Record' }} Expense</button>
+            <button @click="closeExpenseForm" class="btn-secondary">Cancel</button>
+            <button @click="saveExpense" class="btn-success">
+              {{ completingPendingExpense ? 'Save & Print Receipt' : (editingExpense ? 'Update Expense' : 'Record Expense & Print Receipt') }}
+            </button>
           </div>
         </div>
       </div>
@@ -1692,17 +2157,17 @@
           <div class="form-row">
             <div class="form-group">
               <label>Machinery ID *</label>
-              <input v-model.number="incomeForm.machinery_id" type="number" class="form-input" />
+              <TypedNumberInput v-model="incomeForm.machinery_id" :decimal="false" :min="1" />
             </div>
             <div class="form-group">
               <label>Booking ID *</label>
-              <input v-model.number="incomeForm.booking_id" type="number" class="form-input" />
+              <TypedNumberInput v-model="incomeForm.booking_id" :decimal="false" :min="1" />
             </div>
           </div>
 
           <div class="form-group">
             <label>Income Amount *</label>
-            <input v-model.number="incomeForm.income_amount" type="number" step="0.01" class="form-input" />
+            <TypedNumberInput v-model="incomeForm.income_amount" :min="0.01" />
           </div>
 
           <div class="form-group">
@@ -1736,7 +2201,7 @@
               <div v-if="editingCollection.pending_interest > 0"><strong>Includes Interest:</strong> ₱{{ formatNumber(editingCollection.pending_interest) }}</div>
               <div><strong>Already Collected:</strong> ₱{{ formatNumber(editingCollection.amount_collected || 0) }}</div>
               <div><strong>Current Balance:</strong> ₱{{ formatNumber(editingCollection.total_price - (editingCollection.amount_collected || 0)) }}</div>
-              <div><strong>Due Date:</strong> {{ formatDate(getDueDate(editingCollection.booking_date)) }} <span v-if="isOverdue" style="color: #ef4444; font-weight: bold;">⚠️ OVERDUE</span></div>
+              <div><strong>Due Date:</strong> {{ formatManilaDateLabel(getDueDate(editingCollection.booking_date)) }} <span v-if="isOverdue" style="color: #ef4444; font-weight: bold;">⚠️ OVERDUE</span></div>
             </div>
           </div>
 
@@ -1761,14 +2226,11 @@
           <div class="form-row">
             <div class="form-group">
               <label>Payment Amount *</label>
-              <input 
-                v-model.number="collectionForm.paymentAmount" 
-                type="number" 
-                step="0.01" 
-                class="form-input"
+              <TypedNumberInput
+                v-model="collectionForm.paymentAmount"
+                :readonly="collectionForm.paymentType === 'full'"
                 :placeholder="collectionForm.paymentType === 'full' ? 'Full balance ' + formatNumber(remainingBalance) : 'Enter partial amount'"
                 @input="validatePaymentAmount"
-                :readonly="collectionForm.paymentType === 'full'"
               />
               <small v-if="collectionForm.paymentType === 'full'" class="info-text" style="color: #059669; font-weight: 600;">
                 ✓ Auto-filled with full balance: ₱{{ formatNumber(remainingBalance) }}
@@ -1783,6 +2245,16 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label>Payment Method *</label>
+              <select v-model="collectionForm.payment_method" class="form-input">
+                <option value="Cash">Cash</option>
+                <option value="GCash">GCash</option>
+              </select>
+            </div>
+          </div>
+
           <div v-if="collectionForm.paymentType === 'partial'" class="form-group payment-interest-box">
             <div class="interest-already-applied">
               <small style="color: #1d4ed8;">
@@ -1791,13 +2263,12 @@
             </div>
           </div>
 
-          <!-- Receipt Number -->
-          <div class="form-group">
-            <label>Receipt Number *</label>
-            <input v-model="collectionForm.receiptNumber" type="text" class="form-input" placeholder="Enter receipt/reference number" required />
+          <div class="form-group auto-receipt-note">
+            <label>Receipt Number</label>
+            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Receipt will print automatically after you save this collection.</small>
           </div>
 
-          <!-- Remarks -->
           <div class="form-group">
             <label>Remarks</label>
             <textarea v-model="collectionForm.remarks" class="form-input" placeholder="Additional notes or details..."></textarea>
@@ -1827,7 +2298,7 @@
 
           <div class="modal-actions">
             <button @click="showCollectionForm = false" class="btn-secondary">Cancel</button>
-            <button @click="saveCollection" class="btn-success">Record Collection</button>
+            <button @click="saveCollection" class="btn-success">Record Collection &amp; Print Receipt</button>
           </div>
         </div>
       </div>
@@ -1887,9 +2358,7 @@
               <label>Payment Method</label>
               <select v-model="duesForm.payment_method" class="form-input">
                 <option value="Cash">Cash</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Check">Check</option>
-                <option value="Digital Payment">Digital Payment</option>
+                <option value="GCash">GCash</option>
               </select>
             </div>
           </div>
@@ -1909,9 +2378,17 @@
             <textarea v-model="duesForm.remarks" class="form-input" placeholder="Additional notes or details..."></textarea>
           </div>
 
+          <div v-if="selectedFarmer && !Number(selectedFarmer?.dues_paid)" class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
+            <small class="info-text">Receipt prints automatically after collection.</small>
+          </div>
+
           <div class="modal-actions">
             <button @click="showDuesForm = false" class="btn-secondary">Cancel</button>
-            <button @click="collectMonthlyDues" class="btn-success" :disabled="!selectedFarmer || !duesForm.collection_date">Collect Dues</button>
+            <button @click="collectMonthlyDues" class="btn-success" :disabled="!selectedFarmer || !duesForm.collection_date || Number(selectedFarmer?.dues_paid) || duesCollecting">
+              {{ duesCollecting ? 'Recording...' : 'Collect Dues & Print Receipt' }}
+            </button>
           </div>
         </div>
       </div>
@@ -1929,11 +2406,49 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import { useMachineryStore } from '../stores/machineryStore';
+import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue';
+import ExpenseReceiptPrint from '../components/ExpenseReceiptPrint.vue';
+import ProofPreviewModal from '../components/ProofPreviewModal.vue';
+import TypedNumberInput from '../components/TypedNumberInput.vue';
 import { useBackdropTheme } from '../composables/useBackdropTheme';
+import { useFinancialApi } from '../utils/financialApi';
+import { canVerifyMachineryPayment } from '../utils/roleAccess';
+import { getMachineryDueDateString, isMachineryOverdue, formatManilaDateLabel } from '../utils/philippineTime';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const machineryStore = useMachineryStore();
+const pendingDownPayments = ref([]);
+const pendingBalanceSubmissions = ref([]);
+const pendingRefundRequests = ref([]);
+const showVerifyDpModal = ref(false);
+const showRejectDpModal = ref(false);
+const showVerifyFinalModal = ref(false);
+const showRejectRefundModal = ref(false);
+const showProcessRefundModal = ref(false);
+const refundActionTarget = ref(null);
+const rejectRefundReason = ref('');
+const refundProcessDate = ref('');
+const refundProcessRemarks = ref('');
+const paymentActionBooking = ref(null);
+const verifyReceiptNumber = ref('');
+const rejectPaymentReason = ref('');
+const paymentActionLoading = ref(false);
+const showReceiptModal = ref(false);
+const lastReceipt = ref(null);
+const receiptAutoPrint = ref(true);
+const showProofPreview = ref(false);
+const proofPreviewSrc = ref('');
+
+const isExpenseReceipt = computed(
+  () => lastReceipt.value?.module === 'machinery_expense'
+);
+
+const pendingPaymentsCount = computed(
+  () => pendingDownPayments.value.length + pendingRefundRequests.value.length
+);
 const { isDark } = useBackdropTheme();
 const isLight = computed(() => !isDark.value);
 const reportLogoUrl = 'https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3';
@@ -1956,9 +2471,22 @@ const hasAccess = computed(() => {
 
 // Check if user is treasurer (can manage/edit data)
 const isTreasurer = computed(() => userRole.value === 'treasurer');
+const isPresident = computed(() => userRole.value === 'president');
+const isPaymentVerifier = computed(() => ['treasurer', 'president'].includes(userRole.value));
+
+const canVerifyBookingPayment = (booking) =>
+  canVerifyMachineryPayment(
+    userRole.value,
+    booking?.booker_role || 'farmer',
+    authStore.currentUser?.id,
+    booking?.farmer_id
+  );
 
 // Check if user is admin (sees only profit and reports tabs)
 const isAdmin = computed(() => userRole.value === 'admin');
+
+const { authHeaders, buildParams, financialGet, financialPost, financialPut, financialDelete } =
+  useFinancialApi(authStore, selectedBarangayId, () => isAdmin.value);
 
 // Barangay tied to the report scope (admin = filter; others = user's barangay)
 const reportEffectiveBarangayId = computed(() => {
@@ -1988,12 +2516,62 @@ const canCollectDues = computed(() => ['president', 'treasurer'].includes(userRo
 const isViewOnly = computed(() => ['president', 'auditor'].includes(userRole.value));
 
 // Compute filtered expenses based on selected machinery
-const filteredExpenses = computed(() => {
-  if (!filters.value.machinery_id) {
-    return expenses.value;
+const expenseSummary = ref({ pending_count: 0, recorded_booking_count: 0, manual_count: 0 });
+const completingPendingExpense = ref(false);
+const pendingExpenseContext = ref(null);
+
+const applyPendingExpenseFilters = (list) => {
+  let filtered = [...list];
+  if (filters.value.machinery_id) {
+    filtered = filtered.filter((exp) => exp.machinery_id === parseInt(filters.value.machinery_id, 10));
   }
-  return expenses.value.filter(exp => exp.machinery_id === parseInt(filters.value.machinery_id));
+  if (filters.value.operator_id) {
+    filtered = filtered.filter((exp) => exp.operator_id === parseInt(filters.value.operator_id, 10));
+  }
+  return filtered;
+};
+
+const applyExpenseFilters = (list) => {
+  let filtered = applyPendingExpenseFilters(list);
+  if (filters.value.expense_status) {
+    filtered = filtered.filter((exp) => exp.expense_status === filters.value.expense_status);
+  }
+  if (filters.value.start_date) {
+    filtered = filtered.filter((exp) => new Date(exp.date_of_expense) >= new Date(filters.value.start_date));
+  }
+  if (filters.value.end_date) {
+    filtered = filtered.filter((exp) => new Date(exp.date_of_expense) <= new Date(filters.value.end_date));
+  }
+  return filtered;
+};
+
+const pendingExpenses = computed(() =>
+  applyPendingExpenseFilters(expenses.value.filter((exp) => exp.expense_status === 'Pending'))
+);
+
+const recordedBookingExpenses = computed(() =>
+  applyExpenseFilters(
+    expenses.value.filter((exp) => exp.expense_status === 'Recorded' && exp.expense_source === 'booking')
+  )
+);
+
+const manualExpenses = computed(() =>
+  applyExpenseFilters(
+    expenses.value.filter((exp) => exp.expense_source === 'manual' && exp.expense_status === 'Recorded')
+  )
+);
+
+const expenseOperators = computed(() => {
+  const map = new Map();
+  expenses.value.forEach((exp) => {
+    if (exp.operator_id && exp.operator_name) {
+      map.set(exp.operator_id, { id: exp.operator_id, name: exp.operator_name });
+    }
+  });
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
 });
+
+const filteredExpenses = computed(() => expenses.value);
 
 // Collection Form Computed Properties
 const remainingBalance = computed(() => {
@@ -2018,20 +2596,11 @@ const showPartialWarning = computed(() => {
   return collectionForm.value.paymentAmount >= remainingBalance.value * 0.99; // 99% or more of balance
 });
 
-const getDueDate = (bookingDate) => {
-  if (!bookingDate) return null;
-  const d = new Date(bookingDate);
-  d.setDate(d.getDate() + 30);
-  return d;
-};
+const getDueDate = (bookingDate) => getMachineryDueDateString(bookingDate);
 
-// Check if booking is overdue (past 30 days from booking date)
 const isOverdue = computed(() => {
   if (!editingCollection.value || !editingCollection.value.booking_date) return false;
-  const bookingDate = new Date(editingCollection.value.booking_date);
-  const dueDate = new Date(bookingDate);
-  dueDate.setDate(dueDate.getDate() + 30);
-  return new Date() > dueDate;
+  return isMachineryOverdue(editingCollection.value.booking_date);
 });
 
 // Profit Distribution Calculation (30% Org, 20% Training, 50% Members)
@@ -2064,6 +2633,7 @@ if (!hasAccess.value) {
 // Others (Treasurer, President, Auditor): See all tabs
 const activeTab = ref('expenses');
 const allTabs = [
+  { id: 'payments', label: 'Down Payments & Refunds', paymentVerifierOnly: true },
   { id: 'expenses', label: 'Expenses' },
   { id: 'income', label: 'Income' },
   { id: 'ar', label: 'A/R & Collections' },
@@ -2073,21 +2643,43 @@ const allTabs = [
 
 const tabs = computed(() => {
   if (isAdmin.value) {
-    // Admin only sees profit and reports tabs
-    return allTabs.filter(tab => ['profit', 'reports'].includes(tab.id));
+    return allTabs.filter((tab) => ['profit', 'reports'].includes(tab.id));
   }
+  let list = allTabs.filter((tab) => !tab.paymentVerifierOnly || isPaymentVerifier.value);
   if (!canCollectDues.value) {
-    return allTabs.filter(tab => tab.id !== 'dues');
+    list = list.filter((tab) => tab.id !== 'dues');
   }
-  return allTabs;
+  return list.map((tab) => {
+    if (tab.id === 'payments' && pendingPaymentsCount.value > 0) {
+      return { ...tab, badge: pendingPaymentsCount.value };
+    }
+    if (tab.id === 'ar' && isPaymentVerifier.value && pendingBalanceSubmissions.value.length > 0) {
+      return { ...tab, badge: pendingBalanceSubmissions.value.length };
+    }
+    return tab;
+  });
 });
 
 // Set default active tab based on role
 watch(() => userRole.value, (role) => {
   if (role === 'admin') {
     activeTab.value = 'profit';
+  } else if ((role === 'treasurer' || role === 'president') && !route.query.tab) {
+    activeTab.value = 'payments';
   }
 }, { immediate: true });
+
+watch(activeTab, (tab) => {
+  if (tab === 'payments' && isPaymentVerifier.value) {
+    loadBookingPayments();
+  }
+  if (tab === 'ar' && isPaymentVerifier.value) {
+    loadPendingBalanceSubmissions();
+  }
+  if (tab === 'expenses') {
+    loadExpenses();
+  }
+});
 
 // State
 const expenses = ref([]);
@@ -2260,14 +2852,17 @@ const filters = ref({
   machinery_id: '',
   income_source: 'all',
   start_date: '',
-  end_date: ''
+  end_date: '',
+  expense_status: '',
+  operator_id: ''
 });
 
 const expenseForm = ref({
   machinery_id: '',
+  booking_id: '',
   date_of_expense: '',
   particulars: '',
-  reference_number: '',
+  payment_method: 'Cash',
   fuel_and_oil: 0,
   labor_cost: 0,
   per_diem: 0,
@@ -2288,9 +2883,10 @@ const incomeForm = ref({
 });
 
 const collectionForm = ref({
-  paymentType: 'full', // 'full' or 'partial'
+  paymentType: 'full',
   paymentAmount: 0,
   collectionDate: new Date().toISOString().split('T')[0],
+  payment_method: 'Cash',
   receiptNumber: '',
   remarks: ''
 });
@@ -2312,6 +2908,7 @@ const duesSummary = ref({
   last_collection_date: null
 });
 const showDuesForm = ref(false);
+const duesCollecting = ref(false);
 const selectedFarmer = ref(null);
 const duesSearchQuery = ref('');
 const filteredEligibleFarmers = computed(() => {
@@ -2384,6 +2981,7 @@ const consolidatedIncomeRecords = computed(() => {
       original_amount: dues.amount || 120,
       payment_status: 'Collected',
       remarks: dues.remarks || '',
+      receipt_number: dues.receipt_number || null,
       period_start: dues.period_start || null,
       period_end: dues.period_end || null
     })));
@@ -2504,26 +3102,364 @@ const normalizeNumericFields = (form) => {
   return form;
 };
 
+const loadPendingBalanceSubmissions = async () => {
+  if (!isPaymentVerifier.value || !authStore.currentUser?.id) return;
+  try {
+    const barangayScope = isAdmin.value && selectedBarangayId.value ? selectedBarangayId.value : null;
+    pendingBalanceSubmissions.value = await machineryStore.fetchPendingBalancePayments(
+      authStore.currentUser.id,
+      barangayScope
+    );
+  } catch (e) {
+    console.error('Failed to load pending balance payments:', e);
+  }
+};
+
+const loadBookingPayments = async () => {
+  if (!isPaymentVerifier.value || !authStore.currentUser?.id) return;
+  try {
+    const barangayScope = isAdmin.value && selectedBarangayId.value ? selectedBarangayId.value : null;
+    pendingDownPayments.value = await machineryStore.fetchPendingDownPayments(
+      authStore.currentUser.id,
+      barangayScope
+    );
+    pendingRefundRequests.value = await machineryStore.fetchRefundRequests(
+      authStore.currentUser.id,
+      'active',
+      barangayScope
+    );
+  } catch (e) {
+    console.error('Failed to load booking payments:', e);
+  }
+};
+
+const closeRefundModals = () => {
+  showRejectRefundModal.value = false;
+  showProcessRefundModal.value = false;
+  refundActionTarget.value = null;
+  rejectRefundReason.value = '';
+  refundProcessRemarks.value = '';
+  refundProcessDate.value = '';
+};
+
+const approveRefundRequest = async (refund) => {
+  paymentActionLoading.value = true;
+  try {
+    await machineryStore.reviewRefund(refund.id, {
+      reviewed_by: authStore.currentUser.id,
+      action: 'approve'
+    });
+    showAlert('Refund approved. Process payment when funds are released.', 'success');
+    await loadBookingPayments();
+  } catch (e) {
+    showAlert(e.message || 'Failed to approve refund', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const openRejectRefundModal = (refund) => {
+  refundActionTarget.value = refund;
+  rejectRefundReason.value = '';
+  showRejectRefundModal.value = true;
+};
+
+const openProcessRefundModal = (refund) => {
+  refundActionTarget.value = refund;
+  refundProcessDate.value = new Date().toISOString().slice(0, 10);
+  refundProcessRemarks.value = '';
+  showProcessRefundModal.value = true;
+};
+
+const confirmRejectRefund = async () => {
+  if (!refundActionTarget.value || !rejectRefundReason.value.trim()) return;
+  paymentActionLoading.value = true;
+  try {
+    await machineryStore.reviewRefund(refundActionTarget.value.id, {
+      reviewed_by: authStore.currentUser.id,
+      action: 'reject',
+      rejection_reason: rejectRefundReason.value.trim()
+    });
+    showAlert('Refund request rejected.', 'success');
+    closeRefundModals();
+    await loadBookingPayments();
+  } catch (e) {
+    showAlert(e.message || 'Failed to reject refund', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const confirmProcessRefund = async () => {
+  if (!refundActionTarget.value) return;
+  paymentActionLoading.value = true;
+  try {
+    const data = await machineryStore.processRefund(refundActionTarget.value.id, {
+      processed_by: authStore.currentUser.id,
+      refund_date: refundProcessDate.value || undefined,
+      remarks: refundProcessRemarks.value.trim() || undefined
+    });
+    showAlert('Refund processed. Down payment removed from machinery income.', 'success');
+    closeRefundModals();
+    await loadBookingPayments();
+    loadIncome();
+    if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
+  } catch (e) {
+    showAlert(e.message || 'Failed to process refund', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const showReceiptAfterVerify = async (receiptNumber) => {
+  if (!receiptNumber) return;
+  try {
+    lastReceipt.value = await machineryStore.fetchReceipt(receiptNumber);
+    if (!lastReceipt.value) throw new Error('Receipt not found');
+    if (!lastReceipt.value.barangay_name) {
+      lastReceipt.value.barangay_name = authStore.currentUser?.barangay_name || reportBarangayNameForReport.value || '';
+    }
+    if (!lastReceipt.value.collector_name) {
+      lastReceipt.value.collector_name = authStore.currentUser?.full_name || 'Treasurer';
+    }
+    if (!lastReceipt.value.payment_for) {
+      lastReceipt.value.payment_for = lastReceipt.value.remarks || 'Association dues';
+    }
+    receiptAutoPrint.value = true;
+    showReceiptModal.value = true;
+  } catch (e) {
+    console.error('Failed to load receipt:', e);
+    showAlert(e.message || 'Dues saved but receipt could not be loaded. Try Print from the history table.', 'error');
+  }
+};
+
+const closeReceiptModal = () => {
+  showReceiptModal.value = false;
+  receiptAutoPrint.value = false;
+};
+
+const paymentProofUrl = (path) => {
+  if (!path) return '';
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  return path.startsWith('http') ? path : `${base}${path}`;
+};
+
+const openProofPreview = (src) => {
+  if (!src) return;
+  proofPreviewSrc.value = src;
+  showProofPreview.value = true;
+};
+
+const closeProofPreview = () => {
+  showProofPreview.value = false;
+  proofPreviewSrc.value = '';
+};
+
+const verifyDownPaymentBooking = async (booking) => {
+  openVerifyDownPaymentModal(booking);
+};
+
+const openVerifyDownPaymentModal = (booking) => {
+  paymentActionBooking.value = booking;
+  verifyReceiptNumber.value = booking.down_payment_reference || '';
+  showVerifyDpModal.value = true;
+};
+
+const openRejectDownPaymentModal = (booking) => {
+  paymentActionBooking.value = booking;
+  rejectPaymentReason.value = '';
+  showRejectDpModal.value = true;
+};
+
+const closePaymentModals = () => {
+  showVerifyDpModal.value = false;
+  showRejectDpModal.value = false;
+  showVerifyFinalModal.value = false;
+  paymentActionBooking.value = null;
+  paymentSubmissionTarget.value = null;
+  verifyReceiptNumber.value = '';
+  rejectPaymentReason.value = '';
+};
+
+const confirmVerifyDownPayment = async () => {
+  if (!paymentActionBooking.value) return;
+  paymentActionLoading.value = true;
+  try {
+    const data = await machineryStore.verifyDownPayment(paymentActionBooking.value.id, {
+      verified_by: authStore.currentUser.id,
+      receipt_number: verifyReceiptNumber.value || undefined
+    });
+    showAlert('Down payment verified and recorded in Income.', 'success');
+    closePaymentModals();
+    await loadBookingPayments();
+    loadIncome();
+    loadProfitSummary();
+    loadARData();
+    if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
+  } catch (e) {
+    showAlert(e.message || 'Verification failed', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const paymentSubmissionTarget = ref(null);
+
+const openVerifyBalanceSubmissionModal = (submission) => {
+  paymentSubmissionTarget.value = submission;
+  paymentActionBooking.value = submission;
+  verifyReceiptNumber.value = '';
+  showVerifyDpModal.value = false;
+  showVerifyFinalModal.value = true;
+};
+
+const openRejectBalanceSubmissionModal = (submission) => {
+  paymentSubmissionTarget.value = submission;
+  paymentActionBooking.value = submission;
+  rejectPaymentReason.value = '';
+  showRejectDpModal.value = true;
+};
+
+const confirmVerifyFinalPayment = async () => {
+  if (!paymentSubmissionTarget.value) return;
+  paymentActionLoading.value = true;
+  try {
+    const data = await machineryStore.verifyBalancePaymentSubmission(paymentSubmissionTarget.value.id, {
+      verified_by: authStore.currentUser.id,
+      receipt_number: verifyReceiptNumber.value || undefined
+    });
+    showAlert(data.is_full_payment ? 'Final payment verified.' : 'Partial payment verified.', 'success');
+    closePaymentModals();
+    paymentSubmissionTarget.value = null;
+    await loadPendingBalanceSubmissions();
+    loadIncome();
+    loadProfitSummary();
+    loadARData();
+    loadCollections();
+    loadExpenses();
+    if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
+  } catch (e) {
+    showAlert(e.message || 'Verification failed', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const confirmRejectDownPayment = async () => {
+  if (paymentSubmissionTarget.value) {
+    paymentActionLoading.value = true;
+    try {
+      await machineryStore.rejectBalancePaymentSubmission(paymentSubmissionTarget.value.id, {
+        rejected_by: authStore.currentUser.id,
+        rejection_reason: rejectPaymentReason.value.trim()
+      });
+      showAlert('Payment rejected. Farmer may resubmit.', 'success');
+      closePaymentModals();
+      paymentSubmissionTarget.value = null;
+      await loadPendingBalanceSubmissions();
+    } catch (e) {
+      showAlert(e.message || 'Rejection failed', 'error');
+    } finally {
+      paymentActionLoading.value = false;
+    }
+    return;
+  }
+  if (!paymentActionBooking.value || !rejectPaymentReason.value.trim()) return;
+  paymentActionLoading.value = true;
+  try {
+    await machineryStore.rejectDownPayment(paymentActionBooking.value.id, {
+      rejected_by: authStore.currentUser.id,
+      rejection_reason: rejectPaymentReason.value.trim()
+    });
+    showAlert('Payment rejected. Farmer may resubmit.', 'success');
+    closePaymentModals();
+    await loadBookingPayments();
+  } catch (e) {
+    showAlert(e.message || 'Rejection failed', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const rejectDownPaymentBooking = async (booking) => {
+  openRejectDownPaymentModal(booking);
+};
+
 const loadExpenses = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
-      ...(filters.value.income_source && { income_source: filters.value.income_source }),
+    const params = buildParams({
+      limit: 300,
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id }),
-      ...(filters.value.start_date && { start_date: filters.value.start_date }),
-      ...(filters.value.end_date && { end_date: filters.value.end_date })
+      ...(filters.value.operator_id && { operator_id: filters.value.operator_id })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
       expenses.value = data.expenses;
+      if (data.summary) {
+        expenseSummary.value = {
+          pending_count: Number(data.summary.pending_count || 0),
+          recorded_booking_count: Number(data.summary.recorded_booking_count || 0),
+          manual_count: Number(data.summary.manual_count || 0)
+        };
+      }
     }
   } catch (error) {
     console.error('Error loading expenses:', error);
     showAlert('Failed to load expenses', 'error');
   }
+};
+
+const clearExpenseFilters = () => {
+  filters.value.machinery_id = '';
+  filters.value.expense_status = '';
+  filters.value.operator_id = '';
+  filters.value.start_date = '';
+  filters.value.end_date = '';
+  loadExpenses();
+};
+
+const openManualExpenseForm = () => {
+  completingPendingExpense.value = false;
+  pendingExpenseContext.value = null;
+  editingExpense.value = null;
+  resetExpenseForm();
+  showExpenseForm.value = true;
+};
+
+const completePendingExpense = (expense) => {
+  completingPendingExpense.value = true;
+  pendingExpenseContext.value = { ...expense };
+  editingExpense.value = expense;
+  expenseForm.value = {
+    machinery_id: expense.machinery_id,
+    booking_id: expense.booking_id,
+    date_of_expense: expense.date_of_expense || new Date().toISOString().split('T')[0],
+    particulars: expense.particulars || '',
+    payment_method: 'Cash',
+    fuel_and_oil: 0,
+    labor_cost: 0,
+    per_diem: 0,
+    repair_and_maintenance: 0,
+    office_supply: 0,
+    communication_expense: 0,
+    utilities_expense: 0,
+    sundries: 0,
+    total_amount: 0
+  };
+  showExpenseForm.value = true;
+};
+
+const closeExpenseForm = () => {
+  showExpenseForm.value = false;
+  completingPendingExpense.value = false;
+  pendingExpenseContext.value = null;
+  editingExpense.value = null;
+  resetExpenseForm();
 };
 
 const loadMachinery = async () => {
@@ -2586,14 +3522,15 @@ const loadTotalMembers = async () => {
 
 const loadIncome = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.income_source && { income_source: filters.value.income_source }),
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/income?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
@@ -2607,14 +3544,14 @@ const loadIncome = async () => {
 
 const loadProfitSummary = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
-      ...(filters.value.end_date && { end_date: filters.value.end_date }),
-      ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value })
+      ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
@@ -2627,14 +3564,14 @@ const loadProfitSummary = async () => {
 
 const loadExpenseBreakdown = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
-      ...(filters.value.end_date && { end_date: filters.value.end_date }),
-      ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value })
+      ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
@@ -2647,15 +3584,15 @@ const loadExpenseBreakdown = async () => {
 
 const loadBookingUsageStats = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date }),
-      ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value }),
       limit: '10'
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/booking-usage-stats?${params}`);
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/booking-usage-stats?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
 
     if (data.success) {
@@ -2666,6 +3603,12 @@ const loadBookingUsageStats = async () => {
     bookingUsageLeaders.value = [];
   }
 };
+
+const buildExpenseParticulars = () => {
+  const machine = machinery.value.find((m) => String(m.id) === String(expenseForm.value.machinery_id))
+  const name = machine?.machinery_name || pendingExpenseContext.value?.machinery_name || 'Machinery'
+  return `${name} operational expense`
+}
 
 const saveExpense = async () => {
   try {
@@ -2680,16 +3623,6 @@ const saveExpense = async () => {
       return;
     }
     
-    if (!expenseForm.value.particulars || expenseForm.value.particulars.trim() === '') {
-      showAlert('Please enter Particulars (Details of expense)', 'error');
-      return;
-    }
-
-    if (!expenseForm.value.reference_number || expenseForm.value.reference_number.trim() === '') {
-      showAlert('Receipt/Reference number is required', 'error');
-      return;
-    }
-    
     if (!expenseForm.value.total_amount || expenseForm.value.total_amount <= 0) {
       showAlert('Total Amount must be greater than 0', 'error');
       return;
@@ -2700,11 +3633,14 @@ const saveExpense = async () => {
       ? `${API_BASE_URL}/machinery-financial/expenses/${editingExpense.value.id}`
       : `${API_BASE_URL}/machinery-financial/expenses`;
     
-    const payloadData = normalizeNumericFields({ ...expenseForm.value });
+    const payloadData = normalizeNumericFields({
+      ...expenseForm.value,
+      particulars: (expenseForm.value.particulars || '').trim() || buildExpenseParticulars()
+    });
     
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(true),
       body: JSON.stringify({
         ...payloadData,
         user_id: authStore.currentUser.id
@@ -2715,15 +3651,16 @@ const saveExpense = async () => {
     
     if (data.success) {
       showAlert(
-        editingExpense.value ? 'Expense updated successfully' : 'Expense recorded successfully',
+        completingPendingExpense.value
+          ? 'Expense recorded successfully. Operator income credited from labor cost.'
+          : (editingExpense.value ? 'Expense updated successfully' : 'Expense recorded successfully'),
         'success'
       );
-      showExpenseForm.value = false;
-      editingExpense.value = null;
-      resetExpenseForm();
+      closeExpenseForm();
       loadExpenses();
       loadProfitSummary();
       loadExpenseBreakdown();
+      if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
     } else {
       showAlert(data.message || 'Failed to save expense', 'error');
     }
@@ -2735,14 +3672,7 @@ const saveExpense = async () => {
 
 const saveIncome = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...incomeForm.value,
-        user_id: authStore.currentUser.id
-      })
-    });
+    const response = await financialPost(`${API_BASE_URL}/machinery-financial/income`, incomeForm.value);
     
     const data = await response.json();
     
@@ -2762,6 +3692,8 @@ const saveIncome = async () => {
 };
 
 const editExpense = (expense) => {
+  completingPendingExpense.value = false;
+  pendingExpenseContext.value = null;
   editingExpense.value = expense;
   const normalized = normalizeNumericFields({ ...expense });
   expenseForm.value = normalized;
@@ -2772,11 +3704,7 @@ const deleteExpense = async (id) => {
   if (!confirm('Are you sure you want to delete this expense?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: authStore.currentUser.id })
-    });
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/expenses/${id}`);
     
     const data = await response.json();
     
@@ -2798,11 +3726,7 @@ const deleteIncome = async (id) => {
   if (!confirm('Are you sure you want to delete this income record?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: authStore.currentUser.id })
-    });
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/income/${id}`);
     
     if (response.ok) {
       showAlert('Income deleted successfully', 'success');
@@ -2819,12 +3743,13 @@ const deleteIncome = async (id) => {
 
 const loadARData = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/ar?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/ar?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
@@ -2843,12 +3768,13 @@ const loadARData = async () => {
 
 const loadCollections = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
-    
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections?${params}`);
+
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
     
     if (data.success) {
@@ -2862,6 +3788,14 @@ const loadCollections = async () => {
 
 const recordCollection = (ar) => {
   editingCollection.value = ar;
+  collectionForm.value = {
+    paymentType: 'full',
+    paymentAmount: parseFloat(ar.remaining_balance) || 0,
+    collectionDate: new Date().toISOString().split('T')[0],
+    payment_method: 'Cash',
+    receiptNumber: '',
+    remarks: ''
+  };
   showCollectionForm.value = true;
 };
 
@@ -2869,11 +3803,7 @@ const deleteCollection = async (id) => {
   if (!confirm('Are you sure you want to delete this collection record?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: authStore.currentUser.id })
-    });
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/collections/${id}`);
     
     const data = await response.json();
     
@@ -2924,11 +3854,6 @@ const saveCollection = async () => {
       showAlert('Payment amount must be greater than 0', 'error');
       return;
     }
-
-    if (!collectionForm.value.receiptNumber || collectionForm.value.receiptNumber.trim() === '') {
-      showAlert('Receipt number is required', 'error');
-      return;
-    }
     
     if (collectionForm.value.paymentAmount > remainingBalance.value + 0.01) {
       showAlert('Payment amount cannot exceed remaining balance (₱' + formatNumber(remainingBalance.value) + ')', 'error');
@@ -2948,26 +3873,21 @@ const saveCollection = async () => {
       machinery_id: editingCollection.value.machinery_id,
       collection_amount: collectionForm.value.paymentAmount,
       collection_date: collectionForm.value.collectionDate,
-      payment_method: 'cash', // Always cash for face-to-face payment
-      receipt_number: collectionForm.value.receiptNumber.trim(),
+      payment_method: collectionForm.value.payment_method || 'Cash',
       remarks: collectionForm.value.remarks || null,
       user_id: authStore.currentUser.id,
-      payment_type: collectionForm.value.paymentType, // 'full' or 'partial'
+      payment_type: collectionForm.value.paymentType,
       total_collection: totalCollectionAmount.value
     };
     
     // Save collection to backend
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(collectionData)
-    });
+    const response = await financialPost(`${API_BASE_URL}/machinery-financial/collections`, collectionData);
     
     const data = await response.json();
     
     if (data.success) {
       showAlert(
-        `Collection recorded successfully: ₱${formatNumber(collectionForm.value.paymentAmount)}. Payment moved to income section.`,
+        `Collection recorded: ₱${formatNumber(collectionForm.value.paymentAmount)}. Receipt ${data.receipt_number || ''}`,
         'success'
       );
       
@@ -2975,8 +3895,9 @@ const saveCollection = async () => {
       resetCollectionForm();
       loadCollections();
       loadARData();
-      loadIncome(); // Refresh income to show new collection
+      loadIncome();
       loadProfitSummary();
+      if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
     } else {
       showAlert(data.message || 'Failed to record collection', 'error');
     }
@@ -2991,6 +3912,7 @@ const resetCollectionForm = () => {
     paymentType: 'full',
     paymentAmount: 0,
     collectionDate: new Date().toISOString().split('T')[0],
+    payment_method: 'Cash',
     receiptNumber: '',
     remarks: ''
   };
@@ -3021,15 +3943,10 @@ const generateProfitDistributionRecord = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-distribution/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: authStore.currentUser.id,
-        start_date: filters.value.start_date || null,
-        end_date: filters.value.end_date || null,
-        distribution_period: `${filters.value.start_date || 'beginning'} to ${filters.value.end_date || 'present'}`
-      })
+    const response = await financialPost(`${API_BASE_URL}/machinery-financial/profit-distribution/generate`, {
+      start_date: filters.value.start_date || null,
+      end_date: filters.value.end_date || null,
+      distribution_period: `${filters.value.start_date || 'beginning'} to ${filters.value.end_date || 'present'}`
     });
 
     const data = await response.json();
@@ -3054,7 +3971,7 @@ const generateReport = async (type, options = {}) => {
   
   reportLoading.value = true;
   try {
-    const response = await fetch(buildReportApiUrl({ type }));
+    const response = await fetch(buildReportApiUrl({ type }), { headers: authHeaders() });
     const data = await response.json();
     
     if (data.success) {
@@ -3134,15 +4051,9 @@ const formatReportPeriodLong = (startStr, endStr) => {
 };
 
 const buildReportApiUrl = ({ type, startDate, endDate }) => {
-  const params = new URLSearchParams({
-    user_id: String(authStore.currentUser.id),
-    type: type || 'custom'
-  });
+  const params = buildParams({ type: type || 'custom' });
   if (startDate) params.set('start_date', startDate);
   if (endDate) params.set('end_date', endDate);
-  if (isAdmin.value && selectedBarangayId.value) {
-    params.set('barangay_id', String(selectedBarangayId.value));
-  }
   if (filters.value.machinery_id) {
     params.set('machinery_id', String(filters.value.machinery_id));
   }
@@ -3199,7 +4110,8 @@ const generateReportCustom = async (options = {}) => {
         type: 'custom',
         startDate: reportFilters.value.startDate,
         endDate: reportFilters.value.endDate
-      })
+      }),
+      { headers: authHeaders() }
     );
     const data = await response.json();
     
@@ -3603,9 +4515,10 @@ const printReport = async () => {
 const resetExpenseForm = () => {
   expenseForm.value = {
     machinery_id: '',
+    booking_id: '',
     date_of_expense: '',
     particulars: '',
-    reference_number: '',
+    payment_method: 'Cash',
     fuel_and_oil: 0,
     labor_cost: 0,
     per_diem: 0,
@@ -3638,13 +4551,14 @@ const showAlert = (message, type = 'success') => {
 // Monthly Dues Methods
 const loadMonthlyDues = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues?${params}`);
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
 
     if (data.success) {
@@ -3658,7 +4572,11 @@ const loadMonthlyDues = async () => {
 
 const loadEligibleFarmers = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues/eligible-farmers?user_id=${authStore.currentUser.id}`);
+    const params = buildParams();
+    const response = await fetch(
+      `${API_BASE_URL}/machinery-financial/monthly-dues/eligible-farmers?${params}`,
+      { headers: authHeaders() }
+    );
     const data = await response.json();
 
     if (data.success) {
@@ -3681,13 +4599,14 @@ const loadEligibleFarmers = async () => {
 
 const loadDuesSummary = async () => {
   try {
-    const params = new URLSearchParams({
-      user_id: authStore.currentUser.id,
+    const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues/summary?${params}`);
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues/summary?${params}`, {
+      headers: authHeaders()
+    });
     const data = await response.json();
 
     if (data.success) {
@@ -3699,6 +4618,8 @@ const loadDuesSummary = async () => {
 };
 
 const collectMonthlyDues = async () => {
+  if (duesCollecting.value) return;
+
   try {
     if (!duesForm.value.farmer_id) {
       showAlert('Please select a member', 'error');
@@ -3710,32 +4631,51 @@ const collectMonthlyDues = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...duesForm.value,
-        user_id: authStore.currentUser.id
-      })
-    });
+    duesCollecting.value = true;
+    const farmerId = duesForm.value.farmer_id;
+
+    const response = await financialPost(`${API_BASE_URL}/machinery-financial/monthly-dues`, duesForm.value);
 
     const data = await response.json();
 
     if (data.success) {
-      showAlert(`Association dues recorded successfully: ₱${formatNumber(120)} from ${data.farmer_name}`, 'success');
+      const receiptNum = data.receipt_number;
+      const farmerName = data.farmer_name;
+
       showDuesForm.value = false;
-      resetDuesForm();
-      loadMonthlyDues();
-      loadEligibleFarmers();
-      loadDuesSummary();
-      loadIncome(); // Refresh income to show new dues
+
+      await Promise.all([
+        loadMonthlyDues(),
+        loadEligibleFarmers(),
+        loadDuesSummary()
+      ]);
+      loadIncome();
       loadProfitSummary();
+
+      if (farmerId) {
+        const refreshed = eligibleFarmers.value.find((farmer) => farmer.id === farmerId);
+        if (refreshed) selectFarmer(refreshed);
+      }
+
+      duesForm.value.remarks = '';
+      duesForm.value.collection_date = new Date().toISOString().split('T')[0];
+      duesForm.value.payment_method = 'Cash';
+
+      showAlert(`Association dues recorded: ₱${formatNumber(120)} from ${farmerName}`, 'success');
+
+      if (receiptNum) {
+        await showReceiptAfterVerify(receiptNum);
+      } else {
+        showAlert('Dues recorded but no receipt number was returned.', 'error');
+      }
     } else {
       showAlert(data.message || 'Failed to collect monthly dues', 'error');
     }
   } catch (error) {
     console.error('Error collecting monthly dues:', error);
     showAlert('Failed to collect monthly dues', 'error');
+  } finally {
+    duesCollecting.value = false;
   }
 };
 
@@ -3776,18 +4716,27 @@ const applyMachineryFilterRefresh = () => {
   if (activeTab.value === 'expenses') {
     loadExpenses();
   }
+  if (activeTab.value === 'payments') {
+    loadBookingPayments();
+  }
   if (activeTab.value === 'ar') {
     loadARData();
     loadCollections();
+    if (isPaymentVerifier.value) loadPendingBalanceSubmissions();
   }
 };
 
 watch(() => filters.value.machinery_id, applyMachineryFilterRefresh);
 
-const getDefaultTabForRole = () => (isAdmin.value ? 'profit' : 'expenses');
+const getDefaultTabForRole = () => {
+  if (isAdmin.value) return 'profit';
+  if (isTreasurer.value) return 'payments';
+  if (isPresident.value) return 'payments';
+  return 'expenses';
+};
 
 const resolveTabFromQuery = (tabQuery) => {
-  const validTabs = ['expenses', 'income', 'dues', 'ar', 'profit', 'reports'];
+  const validTabs = ['payments', 'expenses', 'income', 'dues', 'ar', 'profit', 'reports'];
   const requestedTab = tabQuery === 'monthly-dues' ? 'dues' : tabQuery;
 
   if (!requestedTab || !validTabs.includes(requestedTab)) {
@@ -3795,6 +4744,10 @@ const resolveTabFromQuery = (tabQuery) => {
   }
 
   if (requestedTab === 'dues' && !canCollectDues.value) {
+    return getDefaultTabForRole();
+  }
+
+  if (requestedTab === 'payments' && !isPaymentVerifier.value) {
     return getDefaultTabForRole();
   }
 
@@ -3847,7 +4800,10 @@ onMounted(async () => {
     loadMonthlyDues();
     loadEligibleFarmers();
     loadDuesSummary();
-    // Load barangays for admin filter
+    if (isPaymentVerifier.value) {
+      loadBookingPayments();
+      loadPendingBalanceSubmissions();
+    }
     if (isAdmin.value) {
       loadBarangays();
     }
@@ -4253,6 +5209,62 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.tab.active .tab-badge {
+  background: #fff;
+  color: #166534;
+}
+
+.btn-link-inline {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #4ade80;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: 500;
+  line-height: inherit;
+}
+
+.payment-alert {
+  border-left-color: #f59e0b;
+}
+
+.proof-preview img {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 8px;
+  margin: 12px 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.payment-verify-grid {
+  margin: 12px 0;
+}
+
+.payment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .tab:hover {
   background: linear-gradient(135deg, rgba(220, 252, 231, 1), rgba(187, 247, 208, 0.96));
   border-color: rgba(22, 163, 74, 0.45);
@@ -4408,7 +5420,8 @@ onBeforeUnmount(() => {
 .collections-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 16px;
+  font-size: 0.625rem;
+  table-layout: fixed;
 }
 
 .expenses-table th:not(:last-child),
@@ -4433,29 +5446,36 @@ onBeforeUnmount(() => {
 .income-table th,
 .ar-table th,
 .collections-table th {
-  padding: 16px 18px;
+  padding: 0.28rem 0.32rem;
   text-align: center;
   vertical-align: middle;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-main);
-  border-bottom: 2px solid #6ee7a8;
-  font-size: 14px;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.03em;
   background: rgba(74, 222, 128, 0.08);
+  line-height: 1.12;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .expenses-table td,
 .income-table td,
 .ar-table td,
 .collections-table td {
-  padding: 16px 18px;
-  border-bottom: 1.5px solid #94a3b8;
+  padding: 0.26rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 0.625rem;
+  font-weight: 500;
   text-align: center;
   vertical-align: middle;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .expenses-table tbody tr:nth-child(even),
@@ -4474,8 +5494,8 @@ onBeforeUnmount(() => {
 }
 
 .amount-cell {
-  font-weight: 800;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 0.625rem;
   color: #b7f7c8;
   font-family: 'Courier New', monospace;
   text-align: center;
@@ -4483,7 +5503,7 @@ onBeforeUnmount(() => {
 
 .amount-cell.balance {
   color: #bbf7d0;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .amount-cell.balance.highlight {
@@ -4658,12 +5678,13 @@ onBeforeUnmount(() => {
 
 .status-badge {
   display: inline-block;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 0.08rem 0.28rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
 }
 
 .status-badge.full-payment {
@@ -4690,11 +5711,11 @@ onBeforeUnmount(() => {
 .income-table .badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 0.08rem 0.28rem;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -4711,29 +5732,24 @@ onBeforeUnmount(() => {
 }
 
 .actions-cell {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  gap: 0.25rem;
   justify-content: center;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
-.btn-edit,
-.btn-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-  color: var(--green);
+.actions-cell .table-action-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 5px;
 }
 
-.btn-edit:hover {
-  opacity: 0.9;
-}
-
-.btn-delete:hover {
-  opacity: 0.9;
-  color: var(--red);
+.actions-cell .table-action-btn svg {
+  width: 11px;
+  height: 11px;
 }
 
 .empty-state {
@@ -5104,6 +6120,16 @@ onBeforeUnmount(() => {
 
 .modal-large {
   max-width: 900px;
+}
+
+.receipt-modal-content {
+  max-width: 560px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.receipt-modal-expense {
+  max-width: 880px;
 }
 
 .modal-header {
@@ -5797,6 +6823,85 @@ onBeforeUnmount(() => {
 .badge-pending {
   background: #fef3c7;
   color: #92400e;
+}
+
+.badge-recorded {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pending-expense-alert {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+}
+
+.expense-section-block {
+  margin-bottom: 1.75rem;
+}
+
+.expense-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-count {
+  display: inline-flex;
+  min-width: 1.5rem;
+  justify-content: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #e5e7eb;
+  font-size: 0.8rem;
+}
+
+.section-hint {
+  margin: 0 0 0.75rem;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.transaction-context-panel {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.transaction-context-panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.ctx-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.context-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: #166534;
+}
+
+.btn-sm {
+  padding: 0.16rem 0.3rem;
+  font-size: 0.55rem;
+  line-height: 1.1;
 }
 
 .badge-cancelled {
@@ -7514,9 +8619,10 @@ onBeforeUnmount(() => {
 }
 
 .btn-small {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 10px;
+  padding: 0.16rem 0.3rem;
+  font-size: 0.55rem;
+  border-radius: 5px;
+  line-height: 1.1;
 }
 
 .tab-content .btn-success {
@@ -7543,7 +8649,8 @@ onBeforeUnmount(() => {
 .tab-content .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: 0.625rem;
+  table-layout: fixed;
 }
 
 .tab-content .data-table th:not(:last-child),
@@ -7556,25 +8663,32 @@ onBeforeUnmount(() => {
 }
 
 .tab-content .data-table th {
-  padding: 14px 16px;
+  padding: 0.28rem 0.32rem;
   text-align: center;
   vertical-align: middle;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-main);
-  border-bottom: 2px solid #6ee7a8;
-  font-size: 13px;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.03em;
+  line-height: 1.12;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .tab-content .data-table td {
-  padding: 14px 16px;
-  border-bottom: 1.5px solid #94a3b8;
+  padding: 0.26rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 500;
+  font-size: 0.625rem;
   text-align: center;
   vertical-align: middle;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .tab-content .data-table tbody tr:nth-child(even) {
@@ -7586,8 +8700,8 @@ onBeforeUnmount(() => {
 }
 
 .tab-content table.data-table tbody td.amount {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 0.625rem;
+  font-weight: 600;
   color: #b7f7c8;
   font-family: ui-monospace, 'Courier New', monospace;
   margin: 0;
@@ -7723,7 +8837,7 @@ onBeforeUnmount(() => {
 }
 
 .name {
-  font-weight: 700;
+  font-weight: 500;
   color: var(--text-main);
 }
 
@@ -8025,13 +9139,15 @@ tr.selected {
   color: #052e16;
   background: transparent;
   border-bottom-color: #86efac;
-  font-size: 14px;
+  font-size: 0.58rem;
+  font-weight: 600;
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 16px;
+  font-size: 0.625rem;
+  font-weight: 500;
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) tbody tr:nth-child(even) {
@@ -8411,13 +9527,15 @@ tr.selected {
 .financial-container.light-theme .tab-content .data-table th {
   color: #052e16;
   border-bottom-color: #86efac;
-  font-size: 14px;
+  font-size: 0.58rem;
+  font-weight: 600;
 }
 
 .financial-container.light-theme .tab-content .data-table td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 16px;
+  font-size: 0.625rem;
+  font-weight: 500;
 }
 
 .financial-container.light-theme .tab-content .data-table tbody tr:nth-child(even) {
@@ -8491,4 +9609,5 @@ tr.selected {
   color: #065f46 !important;
 }
 
+@import '../styles/compact-data-table.css';
 </style>
