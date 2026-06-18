@@ -139,6 +139,14 @@
           <p class="machinery-description">{{ machine.description || 'No description available' }}</p>
           <div class="machinery-details">
             <div class="detail-row">
+              <span class="detail-label">Barangay:</span>
+              <span class="detail-value">{{ machine.barangay_name || '—' }}</span>
+            </div>
+            <div class="detail-row" v-if="isCrossBarangayMachine(machine)">
+              <span class="detail-label">Rate:</span>
+              <span class="detail-value non-member-rate">Non-Member (cross-barangay)</span>
+            </div>
+            <div class="detail-row">
               <span class="detail-label">Price:</span>
               <span class="detail-value">₱{{ formatNumber(getEffectivePricePerUnit(machine)) }} {{ machine.unit_type }}</span>
             </div>
@@ -400,17 +408,13 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">{{ getAreaLabel() }} *</label>
-                <input
-                  v-model.number="bookingForm.area_size"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  :max="selectedMachineryForBooking?.max_capacity || undefined"
-                  class="form-input"
-                  :class="{ 'input-error': capacityError }"
-                  @input="validateAndCalculate"
+                <TypedNumberInput
+                  v-model="bookingForm.area_size"
+                  :min="0.01"
+                  :max="parseCapacity(selectedMachineryForBooking?.max_capacity)"
+                  :input-class="capacityError ? 'form-input input-error' : 'form-input'"
                   placeholder="0.00"
-                  required
+                  @input="validateAndCalculate"
                 />
                 <small v-if="selectedMachineryForBooking?.max_capacity" class="form-hint">
                   Maximum: {{ selectedMachineryForBooking.max_capacity }} {{ selectedMachineryForBooking.capacity_unit }}
@@ -525,6 +529,147 @@
               </div>
             </div>
 
+            <div class="detail-section" v-if="selectedBooking.down_payment_amount || downPaymentStatuses.includes(selectedBooking.status)">
+              <h3>Down Payment (20%)</h3>
+              <div class="down-payment-box">
+                <div class="dp-row"><span>Total Rental</span><strong>₱{{ formatNumber(selectedBooking.total_price) }}</strong></div>
+                <div class="dp-row"><span>Down Payment (20%)</span><strong>₱{{ formatNumber(selectedBooking.down_payment_amount || selectedBooking.total_price * 0.2) }}</strong></div>
+                <div class="dp-row"><span>Remaining Balance (80%)</span><strong>₱{{ formatNumber((selectedBooking.total_price || 0) - (selectedBooking.down_payment_amount || selectedBooking.total_price * 0.2)) }}</strong></div>
+              </div>
+
+              <div v-if="['Awaiting Down Payment', 'Payment Rejected'].includes(selectedBooking.status)" class="down-payment-form">
+                <p class="dp-hint" v-if="selectedBooking.status === 'Payment Rejected'">
+                  Previous payment was rejected: {{ selectedBooking.down_payment_rejection_reason || 'Please resubmit.' }}
+                </p>
+                <div class="form-group">
+                  <label>Payment Method *</label>
+                  <select v-model="downPaymentMethod" class="form-input">
+                    <option value="">Select method</option>
+                    <option value="Cash">Cash Payment</option>
+                    <option value="GCash">GCash Payment</option>
+                  </select>
+                </div>
+                <div v-if="downPaymentMethod === 'GCash'" class="gcash-section">
+                  <p class="dp-hint">Scan the organization GCash QR code and upload your payment screenshot.</p>
+                  <img v-if="gcashQrUrl" :src="gcashQrFullUrl" alt="GCash QR" class="gcash-qr" />
+                  <div class="form-group">
+                    <label>Reference Number (optional)</label>
+                    <input v-model="paymentReference" type="text" class="form-input" placeholder="GCash reference" />
+                  </div>
+                  <div class="form-group">
+                    <label>Payment Screenshot *</label>
+                    <input type="file" accept="image/*" @change="onPaymentProofChange" class="form-input" />
+                  </div>
+                </div>
+                <div v-if="downPaymentMethod === 'Cash'" class="form-group">
+                  <p class="dp-hint">Visit the treasurer to pay in cash. Then submit this form to notify them for verification.</p>
+                </div>
+                <button type="button" class="btn-primary" :disabled="submittingPayment || !downPaymentMethod" @click="submitDownPaymentForBooking">
+                  {{ submittingPayment ? 'Submitting...' : 'Submit Down Payment' }}
+                </button>
+              </div>
+
+              <div v-else-if="showDownPaymentSubmittedInfo" class="down-payment-status">
+                <div v-if="selectedBooking.down_payment_method" class="dp-row">
+                  <span>Payment Method</span><strong>{{ selectedBooking.down_payment_method }}</strong>
+                </div>
+                <div v-if="selectedBooking.down_payment_reference" class="dp-row">
+                  <span>Reference No.</span><strong>{{ selectedBooking.down_payment_reference }}</strong>
+                </div>
+                <div v-if="selectedBooking.status === 'Awaiting Payment Verification'" class="dp-row">
+                  <span>Verification</span><strong>Awaiting treasurer/president review</strong>
+                </div>
+                <div v-if="selectedBooking.receipt_number && isOfficialReceipt(selectedBooking.receipt_number)" class="dp-row dp-row-action">
+                  <span>Official Receipt</span>
+                  <button type="button" class="btn-text-action" @click="viewBookingReceipt(selectedBooking.receipt_number)">
+                    View Receipt ({{ selectedBooking.receipt_number }})
+                  </button>
+                </div>
+                <div v-if="selectedBooking.down_payment_proof" class="dp-row dp-row-action">
+                  <span>GCash Proof</span>
+                  <button type="button" class="btn-text-action" @click="openProofPreview(paymentProofUrl(selectedBooking.down_payment_proof))">
+                    View Proof
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section" v-if="canPayRemainingBalance">
+              <h3>Remaining Balance Payment</h3>
+              <div class="down-payment-box">
+                <div class="dp-row"><span>Total Rental</span><strong>₱{{ formatNumber(selectedBooking.total_price) }}</strong></div>
+                <div class="dp-row"><span>Already Paid</span><strong>₱{{ formatNumber(selectedBooking.total_paid || 0) }}</strong></div>
+                <div class="dp-row"><span>Remaining Balance</span><strong>₱{{ formatNumber(selectedBooking.remaining_balance) }}</strong></div>
+              </div>
+
+              <div class="down-payment-form">
+                <div class="form-group">
+                  <label>Amount to Pay *</label>
+                  <TypedNumberInput
+                    v-model="balancePaymentAmount"
+                    :max="parseCapacity(selectedBooking.remaining_balance)"
+                    :placeholder="'Max ₱' + formatNumber(selectedBooking.remaining_balance)"
+                  />
+                  <small class="dp-hint">You may pay partially or the full remaining balance.</small>
+                </div>
+                <div class="form-group">
+                  <label>Payment Method *</label>
+                  <select v-model="balancePaymentMethod" class="form-input">
+                    <option value="">Select method</option>
+                    <option value="Cash">Cash Payment</option>
+                    <option value="GCash">GCash Payment</option>
+                  </select>
+                </div>
+                <div v-if="balancePaymentMethod === 'GCash'" class="gcash-section">
+                  <p class="dp-hint">Scan the organization GCash QR code and upload your payment screenshot.</p>
+                  <img v-if="gcashQrUrl" :src="gcashQrFullUrl" alt="GCash QR" class="gcash-qr" />
+                  <div class="form-group">
+                    <label>Reference Number (optional)</label>
+                    <input v-model="balancePaymentReference" type="text" class="form-input" placeholder="GCash reference" />
+                  </div>
+                  <div class="form-group">
+                    <label>Payment Screenshot *</label>
+                    <input type="file" accept="image/*" @change="onBalanceProofChange" class="form-input" />
+                  </div>
+                </div>
+                <div v-if="balancePaymentMethod === 'Cash'" class="form-group">
+                  <p class="dp-hint">Pay the treasurer in cash, then submit this form for verification.</p>
+                </div>
+                <button type="button" class="btn-primary" :disabled="submittingBalancePayment || !balancePaymentMethod || !balancePaymentAmount" @click="submitBalancePaymentForBooking">
+                  {{ submittingBalancePayment ? 'Submitting...' : 'Submit Balance Payment' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="detail-section" v-if="selectedBooking.refund || showRefundRequestForm">
+              <h3>Down Payment Refund</h3>
+              <div v-if="selectedBooking.refund" class="down-payment-box">
+                <div class="dp-row"><span>Refund Number</span><strong>{{ selectedBooking.refund.refund_number || '—' }}</strong></div>
+                <div class="dp-row"><span>Refund Amount</span><strong>₱{{ formatNumber(selectedBooking.refund.refund_amount) }}</strong></div>
+                <div class="dp-row"><span>Status</span><strong>{{ selectedBooking.refund.refund_status }}</strong></div>
+                <div v-if="selectedBooking.refund.refund_reason" class="dp-row"><span>Reason</span><span>{{ selectedBooking.refund.refund_reason }}</span></div>
+                <div v-if="selectedBooking.refund.rejection_reason" class="rejection-box">
+                  <strong>Review note:</strong> {{ selectedBooking.refund.rejection_reason }}
+                </div>
+                <div v-if="refundReceiptNumber" class="dp-row dp-row-action">
+                  <span>Refund Receipt</span>
+                  <button type="button" class="btn-text-action" @click="viewBookingReceipt(refundReceiptNumber)">
+                    View Receipt ({{ refundReceiptNumber }})
+                  </button>
+                </div>
+              </div>
+              <div v-if="showRefundRequestForm" class="down-payment-form">
+                <p class="dp-hint">{{ refundReviewHint }}</p>
+                <div class="form-group">
+                  <label>Reason for Refund *</label>
+                  <textarea v-model="refundReason" class="form-input" rows="3" placeholder="e.g. machinery breakdown, weather, scheduling conflict"></textarea>
+                </div>
+                <button type="button" class="btn-primary" :disabled="submittingRefund || !refundReason.trim()" @click="submitRefundRequest">
+                  {{ submittingRefund ? 'Submitting...' : 'Submit Refund Request' }}
+                </button>
+              </div>
+            </div>
+
             <div class="detail-section" v-if="selectedBooking.approved_by_name">
               <h3>Approval Information</h3>
               <div class="details-grid">
@@ -552,8 +697,56 @@
               <p class="notes-text">{{ selectedBooking.notes }}</p>
             </div>
 
-            <div class="detail-section" v-if="selectedBooking.status === 'Completed' || (selectedBooking.total_paid || 0) > 0">
-              <h3>Payment History</h3>
+            <div class="detail-section" v-if="balanceSubmissions.length > 0">
+              <h3>Balance Payment Submissions</h3>
+              <div class="payments-table-wrap">
+                <table class="payments-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th class="text-right">Amount</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Receipt</th>
+                      <th>Proof</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="sub in balanceSubmissions" :key="'bs-' + sub.id">
+                      <td>{{ formatDate(sub.submitted_at || sub.created_at) }}</td>
+                      <td class="text-right">₱{{ formatNumber(sub.amount) }}</td>
+                      <td>{{ sub.payment_method || '—' }}</td>
+                      <td>{{ sub.status }}</td>
+                      <td>
+                        <button
+                          v-if="sub.receipt_number && isOfficialReceipt(sub.receipt_number)"
+                          type="button"
+                          class="btn-text-action"
+                          @click="viewBookingReceipt(sub.receipt_number)"
+                        >
+                          View
+                        </button>
+                        <span v-else>—</span>
+                      </td>
+                      <td>
+                        <button
+                          v-if="sub.proof_path"
+                          type="button"
+                          class="btn-text-action"
+                          @click="openProofPreview(paymentProofUrl(sub.proof_path))"
+                        >
+                          View Proof
+                        </button>
+                        <span v-else>—</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="detail-section" v-if="showPaymentHistorySection">
+              <h3>Payment History &amp; Receipts</h3>
               <div v-if="paymentHistoryLoading" class="empty-payments">Loading payment records...</div>
               <div v-else-if="paymentHistory.length === 0" class="empty-payments">
                 No payment records yet.
@@ -563,19 +756,33 @@
                   <thead>
                     <tr>
                       <th>Date</th>
-                      <th class="text-right">Amount Paid</th>
+                      <th>Type</th>
+                      <th class="text-right">Amount</th>
                       <th>Receipt Number</th>
                       <th>Recorded By</th>
                       <th>Remarks</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="payment in paymentHistory" :key="payment.id">
                       <td>{{ formatDate(payment.payment_date) }}</td>
-                      <td class="text-right">₱{{ formatNumber(payment.amount || 0) }}</td>
-                      <td>{{ payment.receipt_number || '-' }}</td>
-                      <td>{{ payment.recorded_by_name || '-' }}</td>
-                      <td>{{ payment.remarks || '-' }}</td>
+                      <td>{{ formatPaymentType(payment.payment_type) }}</td>
+                      <td class="text-right">₱{{ formatNumber(Math.abs(payment.amount || 0)) }}</td>
+                      <td>{{ payment.receipt_number || '—' }}</td>
+                      <td>{{ payment.recorded_by_name || '—' }}</td>
+                      <td>{{ payment.remarks || '—' }}</td>
+                      <td>
+                        <button
+                          v-if="payment.receipt_number && isOfficialReceipt(payment.receipt_number)"
+                          type="button"
+                          class="btn-text-action"
+                          @click="viewBookingReceipt(payment.receipt_number)"
+                        >
+                          View Receipt
+                        </button>
+                        <span v-else>—</span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -585,6 +792,25 @@
         </div>
       </div>
     </div>
+
+    <!-- RECEIPT VIEW MODAL -->
+    <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
+      <div class="modal-content receipt-modal-content">
+        <PaymentReceiptPrint
+          :receipt="lastReceipt"
+          :auto-print="receiptAutoPrint"
+          :kind="lastReceipt?.module === 'machinery_refund' ? 'refund' : 'payment'"
+          @close="closeReceiptModal"
+        />
+      </div>
+    </div>
+
+    <ProofPreviewModal
+      :show="showProofPreview"
+      :src="proofPreviewSrc"
+      title="GCash Payment Proof"
+      @close="closeProofPreview"
+    />
 
     <!-- Edit Booking Modal -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeModals">
@@ -694,13 +920,9 @@
 
             <div class="form-group">
               <label class="form-label">Area/Quantity ({{ bookingToEdit.area_unit }}) *</label>
-              <input 
-                v-model.number="bookingToEdit.area_size" 
-                type="number" 
-                min="0" 
-                step="0.01" 
-                class="form-input" 
-                required
+              <TypedNumberInput
+                v-model="bookingToEdit.area_size"
+                :min="0.01"
               />
             </div>
 
@@ -765,24 +987,43 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
+import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
+import ProofPreviewModal from '../components/ProofPreviewModal.vue'
 
 export default {
   name: 'MachineryBookingPage',
+  components: {
+    TypedNumberInput,
+    PaymentReceiptPrint,
+    ProofPreviewModal
+  },
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
     const route = useRoute()
 
     const isNonMember = computed(() => authStore.currentUser?.membership_status === 'non-member')
+    const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
+    const refundReviewHint = computed(() => {
+      const role = String(authStore.currentUser?.role || '').toLowerCase()
+      const reviewer = role === 'treasurer' ? 'president' : 'treasurer'
+      return `Request a refund of your 20% down payment. The ${reviewer} will review before funds are released.`
+    })
+
+    const isCrossBarangayMachine = (machine) => {
+      if (!machine?.barangay_id || !userBarangayId.value) return false
+      return String(machine.barangay_id) !== String(userBarangayId.value)
+    }
 
     const getEffectivePricePerUnit = (machine) => {
       if (!machine) return 0
       const base = parseFloat(machine.price_per_unit || 0)
       const memberPrice = parseFloat(machine.member_price || 0)
       const nonMemberPrice = parseFloat(machine.non_member_price || 0)
+      const useNonMemberRate = isNonMember.value || isCrossBarangayMachine(machine)
 
-      // Prefer explicit tiered pricing if present; otherwise fall back to base pricing
-      if (isNonMember.value) {
+      if (useNonMemberRate) {
         return nonMemberPrice || (base ? base * 1.25 : 0)
       }
 
@@ -807,6 +1048,25 @@ export default {
     const unpaidBookingsList = ref([])
     const paymentHistory = ref([])
     const paymentHistoryLoading = ref(false)
+    const balanceSubmissions = ref([])
+    const showReceiptModal = ref(false)
+    const lastReceipt = ref(null)
+    const receiptAutoPrint = ref(false)
+    const showProofPreview = ref(false)
+    const proofPreviewSrc = ref('')
+    const downPaymentMethod = ref('')
+    const paymentReference = ref('')
+    const paymentProofFile = ref(null)
+    const gcashQrUrl = ref('')
+    const submittingPayment = ref(false)
+    const balancePaymentMethod = ref('')
+    const balancePaymentReference = ref('')
+    const balancePaymentAmount = ref(0)
+    const balanceProofFile = ref(null)
+    const submittingBalancePayment = ref(false)
+    const refundReason = ref('')
+    const submittingRefund = ref(false)
+    const downPaymentStatuses = ['Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected', 'Down Payment Verified']
     let bookingsRefreshInterval = null
 
     const bookingForm = ref({
@@ -815,7 +1075,7 @@ export default {
       booking_date: '',
       barangay_place_id: '',
       service_location: '',
-      area_size: 0,
+      area_size: null,
       area_unit: '',
       notes: ''
     })
@@ -889,6 +1149,107 @@ export default {
     const loading = computed(() => machineryStore.loading)
     const error = computed(() => machineryStore.error)
     const selectedBooking = computed(() => machineryStore.selectedBooking)
+
+    const showDownPaymentSubmittedInfo = computed(() => {
+      const b = selectedBooking.value
+      if (!b) return false
+      return !!(
+        b.down_payment_method ||
+        b.down_payment_proof ||
+        b.receipt_number ||
+        ['Awaiting Payment Verification', 'Down Payment Verified'].includes(b.status)
+      )
+    })
+
+    const showPaymentHistorySection = computed(() => {
+      const b = selectedBooking.value
+      if (!b) return paymentHistoryLoading.value || paymentHistory.value.length > 0
+      return (
+        paymentHistoryLoading.value ||
+        paymentHistory.value.length > 0 ||
+        (b.total_paid || 0) > 0 ||
+        b.status === 'Completed' ||
+        !!b.receipt_number
+      )
+    })
+
+    const refundReceiptNumber = computed(() => {
+      const refundPayment = paymentHistory.value.find(
+        (p) => p.payment_type === 'refund' && isOfficialReceipt(p.receipt_number)
+      )
+      return refundPayment?.receipt_number || null
+    })
+
+    const isOfficialReceipt = (num) => num && String(num).startsWith('RCPT-')
+
+    const paymentProofUrl = (path) => getImageUrl(path)
+
+    const formatPaymentType = (type) => {
+      const map = {
+        down_payment: 'Down Payment (20%)',
+        partial: 'Partial Balance',
+        balance_payment: 'Balance Payment',
+        final_payment: 'Final Payment',
+        refund: 'Refund'
+      }
+      return map[type] || type || 'Payment'
+    }
+
+    const viewBookingReceipt = async (receiptNumber) => {
+      if (!receiptNumber) return
+      try {
+        lastReceipt.value = await machineryStore.fetchReceipt(receiptNumber)
+        if (!lastReceipt.value) throw new Error('Receipt not found')
+        if (!lastReceipt.value.barangay_name) {
+          lastReceipt.value.barangay_name =
+            selectedBooking.value?.barangay_name || authStore.currentUser?.barangay_name || ''
+        }
+        receiptAutoPrint.value = false
+        showReceiptModal.value = true
+      } catch (e) {
+        console.error('Failed to load receipt:', e)
+        alert(e.message || 'Could not load receipt')
+      }
+    }
+
+    const closeReceiptModal = () => {
+      showReceiptModal.value = false
+      receiptAutoPrint.value = false
+    }
+
+    const openProofPreview = (src) => {
+      if (!src) return
+      proofPreviewSrc.value = src
+      showProofPreview.value = true
+    }
+
+    const closeProofPreview = () => {
+      showProofPreview.value = false
+      proofPreviewSrc.value = ''
+    }
+
+    const canPayRemainingBalance = computed(() => {
+      const b = selectedBooking.value
+      if (!b) return false
+      const balance = parseFloat(b.remaining_balance) || 0
+      return balance > 0 && ['Completed', 'Awaiting Final Payment'].includes(b.status)
+    })
+
+    const refundEligibleStatuses = ['Incomplete', 'Cancelled', 'Rejected', 'Expired', 'Payment Rejected']
+    const openRefundStatuses = ['Refund Requested', 'Under Review', 'Approved', 'Pending', 'Refunded', 'Processed']
+
+    const showRefundRequestForm = computed(() => {
+      const b = selectedBooking.value
+      if (!b) return false
+      if (b.status === 'Completed' || parseInt(b.machine_used, 10) === 1) return false
+      if (!refundEligibleStatuses.includes(b.status)) return false
+      const downPaid = parseFloat(b.down_payment_amount) || parseFloat(b.total_paid) || 0
+      if (downPaid <= 0 && !b.down_payment_verified_at) return false
+      const refund = b.refund
+      if (!refund) return true
+      if (refund.refund_status === 'Rejected') return true
+      return !openRefundStatuses.includes(refund.refund_status)
+    })
 
     const minDate = computed(() => {
       const tomorrow = new Date()
@@ -1178,12 +1539,25 @@ export default {
       return availableMachinery.value.find(m => m.id == bookingForm.value.machinery_id)
     })
 
+    const authHeaders = () => {
+      const token = authStore.token || localStorage.getItem('token')
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+
+    const parseCapacity = (value) => {
+      const n = parseFloat(value)
+      return Number.isFinite(n) ? n : undefined
+    }
+
     // Methods
     const loadFarmerBalance = async () => {
       try {
         if (!authStore.currentUser?.id) return
         
-        const response = await fetch(`http://localhost:3000/api/machinery/bookings/farmer-balance/${authStore.currentUser.id}`)
+        const response = await fetch(
+          `/api/machinery/bookings/farmer-balance/${authStore.currentUser.id}`,
+          { headers: authHeaders() }
+        )
         const data = await response.json()
         
         if (data.success) {
@@ -1386,17 +1760,134 @@ export default {
     const viewBookingDetails = async (booking) => {
       try {
         paymentHistoryLoading.value = true
+        downPaymentMethod.value = ''
+        paymentReference.value = ''
+        paymentProofFile.value = null
         await machineryStore.getBookingDetails(booking.id)
 
-        const response = await fetch(`http://localhost:3000/api/machinery/bookings/${booking.id}/payments`)
+        const response = await fetch(`/api/machinery/bookings/${booking.id}/payments`, {
+          headers: authHeaders()
+        })
         const data = await response.json().catch(() => ({ success: false, payments: [] }))
         paymentHistory.value = data.success ? (data.payments || []) : []
+
+        try {
+          const subRes = await fetch(`/api/machinery/bookings/${booking.id}/balance-submissions`, {
+            headers: authHeaders()
+          })
+          const subData = await subRes.json().catch(() => ({ success: false, submissions: [] }))
+          balanceSubmissions.value = subData.success ? (subData.submissions || []) : []
+        } catch {
+          balanceSubmissions.value = []
+        }
+
+        if (['Awaiting Down Payment', 'Payment Rejected'].includes(booking.status)) {
+          try {
+            const qr = await machineryStore.fetchGcashQr()
+            gcashQrUrl.value = qr.qr_url || qr.qr_path || qr.path || ''
+          } catch (e) {
+            gcashQrUrl.value = ''
+          }
+        }
+        const detail = machineryStore.selectedBooking || booking
+        if (detail && (canPayRemainingBalance.value || detail.status === 'Awaiting Final Payment')) {
+          balancePaymentAmount.value = parseFloat(detail.remaining_balance) || 0
+          balancePaymentMethod.value = ''
+          balancePaymentReference.value = ''
+          balanceProofFile.value = null
+          refundReason.value = ''
+          try {
+            const qr = await machineryStore.fetchGcashQr()
+            gcashQrUrl.value = qr.qr_url || qr.qr_path || qr.path || ''
+          } catch (e) {
+            gcashQrUrl.value = ''
+          }
+        }
         showViewBookingModal.value = true
       } catch (error) {
         console.error('Error viewing booking:', error)
         paymentHistory.value = []
+        balanceSubmissions.value = []
       } finally {
         paymentHistoryLoading.value = false
+      }
+    }
+
+    const onPaymentProofChange = (e) => {
+      paymentProofFile.value = e.target.files?.[0] || null
+    }
+
+    const gcashQrFullUrl = computed(() => getImageUrl(gcashQrUrl.value))
+
+    const onBalanceProofChange = (e) => {
+      balanceProofFile.value = e.target.files?.[0] || null
+    }
+
+    const submitRefundRequest = async () => {
+      if (!selectedBooking.value || !refundReason.value.trim()) return
+      submittingRefund.value = true
+      try {
+        await machineryStore.requestRefund(selectedBooking.value.id, {
+          farmer_id: authStore.currentUser.id,
+          refund_reason: refundReason.value.trim()
+        })
+        successMessage.value = 'Refund request submitted. The treasurer will review your request.'
+        await machineryStore.getBookingDetails(selectedBooking.value.id)
+        refundReason.value = ''
+        await loadData()
+      } catch (error) {
+        console.error('Error submitting refund request:', error)
+      } finally {
+        submittingRefund.value = false
+      }
+    }
+
+    const submitBalancePaymentForBooking = async () => {
+      if (!selectedBooking.value || !balancePaymentMethod.value || !balancePaymentAmount.value) return
+      if (balancePaymentMethod.value === 'GCash' && !balanceProofFile.value) {
+        machineryStore.error = 'Please upload your GCash payment screenshot.'
+        return
+      }
+      submittingBalancePayment.value = true
+      try {
+        const fd = new FormData()
+        fd.append('farmer_id', String(authStore.currentUser.id))
+        fd.append('payment_method', balancePaymentMethod.value)
+        fd.append('amount', String(balancePaymentAmount.value))
+        if (balancePaymentReference.value) fd.append('payment_reference', balancePaymentReference.value)
+        if (balanceProofFile.value) fd.append('payment_proof', balanceProofFile.value)
+        await machineryStore.submitBalancePayment(selectedBooking.value.id, fd)
+        successMessage.value = 'Balance payment submitted. Awaiting treasurer verification.'
+        showViewBookingModal.value = false
+        await loadData()
+      } catch (error) {
+        console.error('Error submitting balance payment:', error)
+      } finally {
+        submittingBalancePayment.value = false
+      }
+    }
+
+    const submitDownPaymentForBooking = async () => {
+      if (!selectedBooking.value || !downPaymentMethod.value) return
+      if (downPaymentMethod.value === 'GCash' && !paymentProofFile.value) {
+        machineryStore.error = 'Please upload your GCash payment screenshot.'
+        return
+      }
+      submittingPayment.value = true
+      try {
+        const fd = new FormData()
+        fd.append('farmer_id', String(authStore.currentUser.id))
+        fd.append('payment_method', downPaymentMethod.value)
+        if (paymentReference.value) fd.append('payment_reference', paymentReference.value)
+        if (paymentProofFile.value) fd.append('payment_proof', paymentProofFile.value)
+        await machineryStore.submitDownPayment(selectedBooking.value.id, fd)
+        successMessage.value = 'Down payment submitted. Awaiting treasurer verification.'
+        showViewBookingModal.value = false
+        await loadData()
+      } catch (error) {
+        console.error('Error submitting down payment:', error)
+      } finally {
+        submittingPayment.value = false
       }
     }
 
@@ -1509,6 +2000,9 @@ export default {
       bookingToEdit.value = null
       paymentHistory.value = []
       paymentHistoryLoading.value = false
+      balanceSubmissions.value = []
+      closeReceiptModal()
+      closeProofPreview()
       machineryStore.clearSelection()
     }
 
@@ -1519,7 +2013,7 @@ export default {
         booking_date: '',
         barangay_place_id: '',
         service_location: '',
-        area_size: 0,
+        area_size: null,
         area_unit: '',
         notes: ''
       }
@@ -1543,11 +2037,20 @@ export default {
     const getBookingStatusClass = (status) => {
       const classes = {
         'Pending': 'warning',
+        'Awaiting Down Payment': 'warning',
+        'Awaiting Payment Verification': 'info',
+        'Payment Rejected': 'danger',
+        'Down Payment Verified': 'info',
+        'Booking Confirmed': 'success',
+        'Assigned to Operator': 'success',
+        'Awaiting Final Payment': 'warning',
         'Approved': 'success',
         'Expired': 'danger',
         'Completed': 'info',
         'Rejected': 'danger',
-        'Cancelled': 'default'
+        'Cancelled': 'default',
+        'Incomplete': 'danger',
+        'In Use': 'success'
       }
       return classes[status] || 'default'
     }
@@ -1705,10 +2208,47 @@ export default {
       paidBookingsCount,
       paymentHistory,
       paymentHistoryLoading,
+      balanceSubmissions,
+      showDownPaymentSubmittedInfo,
+      showPaymentHistorySection,
+      refundReceiptNumber,
+      isOfficialReceipt,
+      paymentProofUrl,
+      formatPaymentType,
+      viewBookingReceipt,
+      closeReceiptModal,
+      showReceiptModal,
+      lastReceipt,
+      receiptAutoPrint,
+      openProofPreview,
+      closeProofPreview,
+      showProofPreview,
+      proofPreviewSrc,
       getImageUrl,
+      downPaymentMethod,
+      paymentReference,
+      gcashQrFullUrl,
+      submittingPayment,
+      downPaymentStatuses,
+      onPaymentProofChange,
+      submitDownPaymentForBooking,
+      balancePaymentMethod,
+      balancePaymentReference,
+      balancePaymentAmount,
+      submittingBalancePayment,
+      onBalanceProofChange,
+      submitBalancePaymentForBooking,
+      canPayRemainingBalance,
+      showRefundRequestForm,
+      refundReason,
+      refundReviewHint,
+      submittingRefund,
+      submitRefundRequest,
       // Pricing helpers
       isNonMember,
-      getEffectivePricePerUnit
+      getEffectivePricePerUnit,
+      isCrossBarangayMachine,
+      parseCapacity
     }
   }
 }
@@ -2251,6 +2791,37 @@ export default {
   background: #324a3b;
 }
 
+.down-payment-status {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.dp-row-action {
+  align-items: center;
+}
+
+.down-payment-status .btn-text-action {
+  background: transparent;
+  border: none;
+  color: #7dd3fc;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.receipt-modal-overlay {
+  z-index: 11000;
+}
+
+.receipt-modal-content {
+  max-width: 720px;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
 .btn-text-action {
   font-size: 0.72rem;
   font-weight: 700;
@@ -2613,6 +3184,33 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+
+.down-payment-box {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.dp-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dp-hint {
+  font-size: 13px;
+  color: #b8d4a8;
+  margin-bottom: 12px;
+}
+.gcash-qr {
+  max-width: 200px;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+.down-payment-form .btn-primary {
+  margin-top: 12px;
 }
 
 .detail-section h3 {

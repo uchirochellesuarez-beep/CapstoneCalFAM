@@ -1678,6 +1678,16 @@ canvas {
 }
 
 /* FarmerSignup.vue: match Login glass auth (beat global dark :is(...) on .registration-form) */
+.signup-page.glass-auth-page .registration-form .form-group {
+  gap: 0.1rem !important;
+}
+
+.signup-page.glass-auth-page .registration-form .form-label {
+  font-size: 0.68rem !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
 .signup-page.glass-auth-page .registration-form .form-input,
 .signup-page.glass-auth-page .registration-form select.form-input,
 .signup-page.glass-auth-page .registration-form textarea.form-input {
@@ -1685,6 +1695,21 @@ canvas {
   color: #111111 !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
+  border-radius: 8px !important;
+  padding: 0.3rem 0.5rem !important;
+  font-size: 0.78rem !important;
+  line-height: 1.15 !important;
+  min-height: 0 !important;
+  height: 1.9rem !important;
+  box-sizing: border-box !important;
+}
+
+.signup-page.glass-auth-page .registration-form .field-input-wrapper .form-input {
+  padding-left: 1.75rem !important;
+}
+
+.signup-page.glass-auth-page .registration-form .password-input-wrapper.field-input-wrapper .form-input {
+  padding-right: 2.15rem !important;
 }
 
 .signup-page.glass-auth-page .registration-form .form-input:focus,

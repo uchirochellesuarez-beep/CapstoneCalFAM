@@ -139,24 +139,40 @@
     <!-- Modal: record payment -->
     <Teleport to="body">
       <div v-if="payModal" class="modal-overlay" @click.self="closePayModal">
-        <div class="modal-box">
-          <h3 class="modal-title">Magtala ng bayad</h3>
+        <div class="modal-box payment-modal-box">
+          <h3 class="modal-title">Record Payment</h3>
           <p class="modal-meta">
-            {{ payModal.farmer_name }} · {{ formatAssistanceType(payModal.assistance_type) }} · Natitira:
+            {{ payModal.farmer_name }} · {{ formatAssistanceType(payModal.assistance_type) }} · Remaining:
             <strong>₱{{ formatMoney(payModal.remaining_pesos) }}</strong>
           </p>
           <div class="form-group">
-            <label>Petsa ng bayad</label>
+            <label>Payment Date</label>
             <input v-model="payDate" type="date" class="input" />
           </div>
           <div class="form-group">
-            <label>Halaga (hanggang ₱{{ formatMoney(payModal.remaining_pesos) }})</label>
-            <input v-model.number="payAmount" type="number" min="0" step="0.01" class="input" />
+            <label>Amount (max ₱{{ formatMoney(payModal.remaining_pesos) }})</label>
+            <TypedNumberInput v-model="payAmount" :min="0" :max="payModal.remaining_pesos" input-class="input" />
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select v-model="payMethod" class="input">
+              <option value="Cash">Cash</option>
+              <option value="GCash">GCash</option>
+            </select>
+          </div>
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="input" value="Auto-generated (RCPT-YYYY-######)" disabled />
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn btn-muted" @click="closePayModal">Bawi</button>
-            <button type="button" class="btn btn-success" :disabled="paySubmitting" @click="submitPayment">Itala</button>
+            <button type="button" class="btn btn-muted" @click="closePayModal">Cancel</button>
+            <button type="button" class="btn btn-success" :disabled="paySubmitting" @click="submitPayment">Record &amp; Print Receipt</button>
           </div>
+        </div>
+      </div>
+      <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
+        <div class="modal-box receipt-modal-box" @click.stop>
+          <PaymentReceiptPrint :receipt="lastReceipt" :auto-print="receiptAutoPrint" @close="closeReceiptModal" />
         </div>
       </div>
     </Teleport>
@@ -166,6 +182,9 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
+import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 
 const authStore = useAuthStore()
 
@@ -200,7 +219,10 @@ const busyId = ref(null)
 const payModal = ref(null)
 const payDate = ref('')
 const payAmount = ref(0)
+const payMethod = ref('Cash')
 const paySubmitting = ref(false)
+
+const { showReceiptModal, lastReceipt, receiptAutoPrint, showAndPrintReceipt, closeReceiptModal } = usePaymentReceipt()
 
 function formatAssistanceType(type) {
   const map = { fertilizer: 'Pataba', seeds: 'Binhi', both: 'Pataba at Binhi' }
@@ -269,6 +291,7 @@ async function loadRows() {
 function openPayModal(r) {
   payModal.value = r
   payDate.value = todayISO()
+  payMethod.value = 'Cash'
   payAmount.value = Math.round(parseFloat(r.remaining_pesos) * 100) / 100
 }
 
@@ -299,7 +322,8 @@ async function submitPayment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: amt,
-          contribution_date: payDate.value
+          contribution_date: payDate.value,
+          payment_method: payMethod.value
     })
     }
     )
@@ -309,6 +333,13 @@ async function submitPayment() {
     }
     closePayModal()
     await loadRows()
+    if (data.receipt_number) {
+      try {
+        await showAndPrintReceipt(data.receipt_number)
+      } catch (receiptErr) {
+        console.error('Receipt print failed:', receiptErr)
+      }
+    }
   } catch (e) {
     error.value = e.message
   } finally {

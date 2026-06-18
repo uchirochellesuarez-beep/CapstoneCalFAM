@@ -289,6 +289,7 @@ const token = computed(() => authStore.token)
 
 const isFarmer = computed(() => userRole.value === 'farmer')
 const isPresident = computed(() => userRole.value === 'president')
+const isAdmin = computed(() => userRole.value === 'admin')
 const canCreateNews = computed(() => ['farmer', 'president'].includes(userRole.value))
 
 const loading = ref(false)
@@ -537,8 +538,7 @@ const closeCreateModal = () => {
 }
 
 const canEditNewsItem = (item) => {
-  if (isPresident.value) return true
-  if (!isFarmer.value) return false
+  if (isAdmin.value) return true
   return Number(item.author_id) === currentUserId.value
 }
 
@@ -661,8 +661,7 @@ const confirmDeleteNews = async () => {
 }
 
 const canDeleteNewsItem = (item) => {
-  if (isPresident.value) return true
-  if (!isFarmer.value) return false
+  if (isAdmin.value) return true
   return Number(item.author_id) === currentUserId.value
 }
 

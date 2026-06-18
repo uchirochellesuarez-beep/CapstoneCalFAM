@@ -1,277 +1,378 @@
 <template>
-  <div class="google-registration-page glass-module-page">
-    <!-- Progress Indicator -->
-    <div class="progress-bar">
-      <div class="progress-step completed">
-        <div class="step-number">1</div>
-        <span>Google Login</span>
-      </div>
-      <div class="progress-line"></div>
-      <div class="progress-step active">
-        <div class="step-number">2</div>
-        <span>Complete Profile</span>
-      </div>
-      <div class="progress-line"></div>
-      <div class="progress-step">
-        <div class="step-number">3</div>
-        <span>Review & Submit</span>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="registration-container">
-      <div class="registration-header">
-        <img v-if="profilePicture" :src="profilePicture" alt="Profile" class="profile-picture" />
-        <h1>Complete Your Profile</h1>
-        <p class="subtitle">Google account verified. Please complete your registration.</p>
-      </div>
-
-      <!-- Error/Success Messages -->
-      <div v-if="successMessage" class="message success-message">
-        ✓ {{ successMessage }}
-      </div>
-      <div v-if="errorMessage" class="message error-message">
-        ✗ {{ errorMessage }}
-      </div>
-
-      <!-- Registration Form -->
-      <form @submit.prevent="submitRegistration" class="registration-form">
-        <!-- Pre-filled Fields -->
-        <div class="form-section">
-          <h3 class="section-title">Google Information</h3>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Full Name</label>
-              <input v-model="formData.full_name" type="text" required class="form-input" />
-            </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input v-model="formData.email" type="email" disabled class="form-input disabled" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="required">Reference Number</label>
-            <input
-              v-model="formData.reference_number"
-              type="text"
-              required
-              minlength="19"
-              maxlength="19"
-              pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
-              inputmode="numeric"
-              class="form-input"
-              placeholder="00-00-00-000-000000"
-              @input="handleReferenceInput"
-            />
-            <small v-if="errors.reference_number" class="form-error">{{ errors.reference_number }}</small>
-          </div>
-        </div>
-
-        <!-- Required Fields Section -->
-        <div class="form-section">
-          <h3 class="section-title">Required Information</h3>
-
-          <!-- Phone Number -->
-<div class="form-group">
-  <label class="required">Phone Number</label>
-  <input
-    v-model="formData.phone_number"
-    type="tel"
-    placeholder="09XXXXXXXXX"
-    required
-    class="form-input"
-    maxlength="11"
-    pattern="[0-9]{11}"
-    inputmode="numeric"
-    @input="formData.phone_number = formData.phone_number.replace(/[^0-9]/g, '').slice(0,11)"
-    @blur="validatePhoneNumber"
-  />
-  <small v-if="errors.phone_number" class="form-error">{{ errors.phone_number }}</small>
-  <small class="form-help">Must be exactly 11 digits (Philippine format)</small>
-</div>
-
-          <!-- Date of Birth -->
-          <div class="form-group">
-            <label class="required">Date of Birth</label>
-            <input
-              v-model="formData.date_of_birth"
-              type="date"
-              :max="getMaxDateOfBirth()"
-              required
-              class="form-input"
-            />
-            <small class="form-help">You must be at least 18 years old</small>
-          </div>
-
-          <!-- Address -->
-          <div class="form-group">
-            <label class="required">Address</label>
-            <input
-              v-model="formData.address"
-              type="text"
-              placeholder="Enter your complete address"
-              required
-              class="form-input"
-            />
-          </div>
-
-          <!-- Educational Status -->
-          <div class="form-group">
-            <label class="required">Educational Status</label>
-            <select v-model="formData.educational_status" required class="form-input">
-              <option value="">Select educational status</option>
-              <option value="Elementary Level">Elementary Level</option>
-<option value="Elementary Graduate">Elementary Graduate</option>
-
-<option value="High School Level">High School Level</option>
-<option value="High School Graduate">High School Graduate</option>
-
-<option value="Vocational">Vocational</option>
-
-<option value="College Level">College Level</option>
-<option value="College Graduate">College Graduate</option>
-
-<option value="Post Graduate">Post Graduate</option>            </select>
-          </div>
-
-          <!-- Barangay (Required) -->
-          <div class="form-group">
-            <label class="required">Barangay</label>
-            <select v-model="formData.barangay_id" required class="form-input" @change="onBarangayChange">
-              <option value="">Select barangay</option>
-              <option v-for="brgy in barangays" :key="brgy.id" :value="brgy.id">
-                {{ brgy.name }}
-              </option>
-            </select>
-            <small v-if="errors.barangay_id" class="form-error">{{ errors.barangay_id }}</small>
-          </div>
-        </div>
-
-        <!-- Farmer-Specific Fields -->
-        <div class="form-section">
-          <h3 class="section-title">Farm Information</h3>
-
-          <!-- Land Area -->
-          <div class="form-group">
-            <label class="required">Land Area (hectares)</label>
-            <input
-              v-model="formData.land_area"
-              type="number"
-              step="0.01"
-              placeholder="0.5"
-              required
-              class="form-input"
-              @blur="validateLandArea"
-            />
-            <small v-if="errors.land_area" class="form-error">{{ errors.land_area }}</small>
-          </div>
-
-          <!-- Farm Location -->
-<div class="form-group">
-  <label class="required">Farm Location</label>
-  <input
-    v-model="formData.farm_location"
-    type="text"
-    required
-    class="form-input"
-  />
-  <small class="form-help">Location where the farm is located</small>
-</div>
-
-          <!-- Password -->
-          <div class="form-group">
-            <label class="required">Password</label>
-            <div class="password-input-wrapper">
-              <input
-                v-model="formData.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="At least 8 characters (letters and numbers)"
-                required
-                class="form-input"
-                @blur="validatePassword"
-              />
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="password-toggle"
-              >
-                <svg v-if="showPassword" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg v-else viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              </button>
-            </div>
-            <small v-if="errors.password" class="form-error">{{ errors.password }}</small>
-            <small class="form-help">Must be at least 8 characters with letters and numbers</small>
-          </div>
-
-          <!-- Confirm Password -->
-          <div class="form-group">
-            <label class="required">Confirm Password</label>
-            <div class="password-input-wrapper">
-              <input
-                v-model="formData.confirm_password"
-                :type="showConfirmPassword ? 'text' : 'password'"
-                placeholder="Re-enter your password"
-                required
-                class="form-input"
-                @blur="validateConfirmPassword"
-              />
-              <button
-                type="button"
-                @click="showConfirmPassword = !showConfirmPassword"
-                class="password-toggle"
-              >
-                <svg v-if="showConfirmPassword" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg v-else viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              </button>
-            </div>
-            <small v-if="errors.confirm_password" class="form-error">{{ errors.confirm_password }}</small>
-          </div>
-
-        </div>
-
-        <!-- Terms and Conditions -->
-        <div class="form-group checkbox-group">
-          <label>
-            <input v-model="formData.agreedToTerms" type="checkbox" required />
-            <span>I agree to the terms and conditions and data privacy policy</span>
-          </label>
-        </div>
-
-        <!-- Submit Buttons -->
-        <div class="button-group">
-          <button type="button" @click="goBack" class="btn btn-secondary">
-            Back
-          </button>
-          <button type="submit" :disabled="isSubmitting" class="btn btn-primary">
-            <span v-if="isSubmitting" class="spinner"></span>
-            {{ isSubmitting ? 'Submitting...' : 'Complete Registration' }}
-          </button>
-        </div>
-      </form>
-
-      <!-- Info Box -->
-      <div class="info-box">
-        <h4>What happens next?</h4>
-        <ul>
-          <li>Your account will be created with status "Pending"</li>
-          <li>Your Barangay President will review and approve your application</li>
-          <li>After approval, you can log in and access all features</li>
-        </ul>
+  <div class="signup-page glass-auth-page">
+    <div class="page-top-controls">
+      <ThemeToggle variant="floating" />
+      <div class="page-language-toggle" role="group" aria-label="Language selector">
+        <button
+          type="button"
+          @click="language = 'en'"
+          :class="['lang-btn', { active: language === 'en' }]"
+        >
+          English
+        </button>
+        <button
+          type="button"
+          @click="language = 'tl'"
+          :class="['lang-btn', { active: language === 'tl' }]"
+        >
+          Tagalog
+        </button>
       </div>
     </div>
+
+    <main class="layout-shell">
+      <section class="tagline-panel tagline-panel--desktop" aria-label="Platform highlight">
+        <div class="tagline-content">
+          <div class="identity-block">
+            <span class="identity-badge">{{ language === 'tl' ? 'Portal ng Magsasaka' : 'Farmer Portal' }}</span>
+            <p class="identity-title">{{ language === 'tl' ? 'Mula Binhi Hanggang Tagumpay' : 'From Seeds to Success' }}</p>
+            <p class="identity-caption">
+              {{
+                language === 'tl'
+                  ? 'Kumpletuhin ang inyong profile upang matapos ang Google registration.'
+                  : 'Complete your profile to finish Google registration.'
+              }}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-side" aria-label="Google registration form">
+        <div class="signup-card">
+          <div class="signup-card-inner">
+            <div class="form-header google-form-header">
+              <img
+                v-if="profilePicture"
+                :src="profilePicture"
+                alt=""
+                class="google-profile-photo"
+              />
+              <div>
+                <h2 class="form-title">{{ ui.title }}</h2>
+                <p v-if="formData.email" class="google-email-caption">{{ formData.email }}</p>
+              </div>
+            </div>
+
+            <div v-if="successMessage" class="message success-message">{{ successMessage }}</div>
+            <div v-if="errorMessage" class="message error-message">{{ errorMessage }}</div>
+
+            <form @submit.prevent="submitRegistration" class="registration-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.fullName }}</label>
+                  <input v-model="formData.full_name" type="text" required class="form-input" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group form-group-full">
+                  <label class="form-label">{{ ui.referenceNumber }}</label>
+                  <div class="field-input-wrapper">
+                    <span class="field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="16" rx="3" ry="3" />
+                        <path d="M8 9h8M8 13h5" />
+                      </svg>
+                    </span>
+                    <input
+                      v-model="formData.reference_number"
+                      type="text"
+                      required
+                      minlength="19"
+                      maxlength="19"
+                      pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
+                      inputmode="numeric"
+                      class="form-input"
+                      :placeholder="ui.referencePlaceholder"
+                      @input="handleReferenceInput"
+                    />
+                  </div>
+                  <span v-if="errors.reference_number" class="form-error">{{ errors.reference_number }}</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.birthDate }}</label>
+                  <input
+                    v-model="formData.date_of_birth"
+                    type="date"
+                    :max="getMaxDateOfBirth()"
+                    required
+                    class="form-input"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.phoneNumber }}</label>
+                  <input
+                    v-model="formData.phone_number"
+                    type="tel"
+                    required
+                    class="form-input"
+                    :placeholder="ui.phonePlaceholder"
+                    maxlength="11"
+                    @input="formData.phone_number = formData.phone_number.replace(/\D/g, '').slice(0, 11)"
+                    @blur="validatePhoneNumber"
+                  />
+                  <span v-if="errors.phone_number" class="form-error">{{ errors.phone_number }}</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.barangay }}</label>
+                  <select
+                    v-model="formData.barangay_id"
+                    required
+                    class="form-input"
+                    :disabled="barangaysLoading"
+                    @change="onBarangayChange"
+                  >
+                    <option value="" disabled>
+                      {{ barangaysLoading ? (language === 'tl' ? 'Naglo-load...' : 'Loading...') : ui.selectBarangay }}
+                    </option>
+                    <option v-for="brgy in barangays" :key="brgy.id" :value="brgy.id">
+                      {{ brgy.name }}
+                    </option>
+                  </select>
+                  <span v-if="errors.barangay_id" class="form-error">{{ errors.barangay_id }}</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.education }}</label>
+                  <select v-model="formData.educational_status" required class="form-input">
+                    <option value="">{{ ui.selectEducation }}</option>
+                    <option value="No Formal Education">{{ ui.noFormalEducation }}</option>
+                    <option value="Elementary Level">{{ ui.elementaryLevel }}</option>
+                    <option value="Elementary Graduate">{{ ui.elementaryGraduate }}</option>
+                    <option value="High School Level">{{ ui.highSchoolLevel }}</option>
+                    <option value="High School Graduate">{{ ui.highSchoolGraduate }}</option>
+                    <option value="Vocational">{{ ui.vocational }}</option>
+                    <option value="College Level">{{ ui.collegeLevel }}</option>
+                    <option value="College Graduate">{{ ui.collegeGraduate }}</option>
+                    <option value="Post Graduate">{{ ui.postGraduate }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">{{ ui.landArea }}</label>
+                  <TypedNumberInput
+                    v-model="formData.land_area"
+                    :min="0.01"
+                    :placeholder="ui.landAreaPlaceholder"
+                    @blur="validateLandArea"
+                  />
+                  <span v-if="errors.land_area" class="form-error">{{ errors.land_area }}</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group form-group-full">
+                  <label class="form-label">{{ ui.address }}</label>
+                  <input
+                    v-model="formData.address"
+                    type="text"
+                    required
+                    class="form-input"
+                    :placeholder="ui.addressPlaceholder"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group password-group">
+                  <label class="form-label">{{ ui.password }}</label>
+                  <div class="password-input-wrapper field-input-wrapper">
+                    <span class="field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                      </svg>
+                    </span>
+                    <input
+                      v-model="formData.password"
+                      :type="showPassword ? 'text' : 'password'"
+                      required
+                      class="form-input"
+                      autocomplete="new-password"
+                      :placeholder="ui.passwordPlaceholder"
+                      @blur="validatePassword"
+                    />
+                    <button
+                      type="button"
+                      @click="showPassword = !showPassword"
+                      class="password-toggle"
+                      :aria-label="showPassword ? ui.hidePassword : ui.showPassword"
+                    >
+                      <svg v-if="showPassword" class="password-toggle-svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                      </svg>
+                      <svg v-else class="password-toggle-svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    </button>
+                  </div>
+                  <span v-if="errors.password" class="form-error">{{ errors.password }}</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group confirm-password-group">
+                  <label class="form-label">{{ ui.confirmPassword }}</label>
+                  <div class="password-input-wrapper field-input-wrapper">
+                    <span class="field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                      </svg>
+                    </span>
+                    <input
+                      v-model="formData.confirm_password"
+                      :type="showConfirmPassword ? 'text' : 'password'"
+                      required
+                      class="form-input"
+                      autocomplete="new-password"
+                      :placeholder="ui.confirmPasswordPlaceholder"
+                      @blur="validateConfirmPassword"
+                    />
+                    <button
+                      type="button"
+                      @click="showConfirmPassword = !showConfirmPassword"
+                      class="password-toggle"
+                      :aria-label="showConfirmPassword ? ui.hidePassword : ui.showPassword"
+                    >
+                      <svg v-if="showConfirmPassword" class="password-toggle-svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                      </svg>
+                      <svg v-else class="password-toggle-svg" viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    </button>
+                  </div>
+                  <span v-if="errors.confirm_password" class="form-error">{{ errors.confirm_password }}</span>
+                </div>
+              </div>
+
+              <div class="form-row form-row-legal">
+                <RegistrationLegalNotice v-model:agreed="agreedToTerms" :language="language" />
+              </div>
+
+              <div class="form-row form-row-actions">
+                <button type="submit" :disabled="isSubmitting" class="submit-btn">
+                  {{ isSubmitting ? ui.submitting : ui.submit }}
+                </button>
+              </div>
+
+              <div class="form-row form-row-footer">
+                <div class="form-footer">
+                  <div class="footer-cta">
+                    <p class="footer-text">{{ ui.alreadyHaveAccount }}</p>
+                    <router-link to="/login" class="link-btn">{{ ui.signIn }}</router-link>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
 
 const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
+const language = ref('en')
+
+const labels = {
+  en: {
+    title: 'Complete Your Profile',
+    fullName: 'Full Name',
+    referenceNumber: 'Reference Number',
+    referencePlaceholder: '00-00-00-000-000000',
+    birthDate: 'Date of Birth',
+    phoneNumber: 'Phone Number',
+    phonePlaceholder: '09XXXXXXXXX',
+    barangay: 'Barangay',
+    selectBarangay: 'Select your barangay',
+    education: 'Educational Status',
+    selectEducation: 'Select educational attainment',
+    noFormalEducation: 'No Formal Education',
+    elementaryLevel: 'Elementary Level',
+    elementaryGraduate: 'Elementary Graduate',
+    highSchoolLevel: 'High School Level',
+    highSchoolGraduate: 'High School Graduate',
+    vocational: 'Vocational',
+    collegeLevel: 'College Level',
+    collegeGraduate: 'College Graduate',
+    postGraduate: 'Post Graduate',
+    landArea: 'Farm Area (hectares)',
+    landAreaPlaceholder: 'e.g. 1.25',
+    address: 'Home Address',
+    addressPlaceholder: 'Complete home address',
+    password: 'Password',
+    passwordPlaceholder: 'At least 8 characters',
+    confirmPassword: 'Confirm Password',
+    confirmPasswordPlaceholder: 'Re-enter password',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+    submit: 'Complete Registration',
+    submitting: 'Submitting...',
+    alreadyHaveAccount: 'Already have an account?',
+    signIn: 'Sign In'
+  },
+  tl: {
+    title: 'Kumpletuhin ang Profile',
+    fullName: 'Buong Pangalan',
+    referenceNumber: 'Reference Number',
+    referencePlaceholder: '00-00-00-000-000000',
+    birthDate: 'Petsa ng Kapanganakan',
+    phoneNumber: 'Numero ng Telepono',
+    phonePlaceholder: '09XXXXXXXXX',
+    barangay: 'Barangay',
+    selectBarangay: 'Piliin ang iyong barangay',
+    education: 'Antas ng Edukasyon',
+    selectEducation: 'Piliin ang natapos na edukasyon',
+    noFormalEducation: 'Walang Pormal na Edukasyon',
+    elementaryLevel: 'Elementarya (Hindi Tapos)',
+    elementaryGraduate: 'Elementarya (Tapos)',
+    highSchoolLevel: 'High School (Hindi Tapos)',
+    highSchoolGraduate: 'High School (Tapos)',
+    vocational: 'Bokasyonal',
+    collegeLevel: 'Kolehiyo (Hindi Tapos)',
+    collegeGraduate: 'Kolehiyo (Tapos)',
+    postGraduate: 'Post Graduate',
+    landArea: 'Lawak ng Sakahan (ektarya)',
+    landAreaPlaceholder: 'hal. 1.25',
+    address: 'Tirahan',
+    addressPlaceholder: 'Kumpletong address',
+    password: 'Password',
+    passwordPlaceholder: 'Hindi bababa sa 8 character',
+    confirmPassword: 'Kumpirmahin ang Password',
+    confirmPasswordPlaceholder: 'Ulitin ang password',
+    showPassword: 'Ipakita ang password',
+    hidePassword: 'Itago ang password',
+    submit: 'Tapusin ang Pagrehistro',
+    submitting: 'Nagsusumite...',
+    alreadyHaveAccount: 'Mayroon nang account?',
+    signIn: 'Mag-login'
+  }
+}
+
+const ui = computed(() => labels[language.value])
 
 const formData = reactive({
   google_id: '',
@@ -285,20 +386,20 @@ const formData = reactive({
   educational_status: '',
   barangay_id: '',
   land_area: '',
-  farm_location: '',
   password: '',
-  confirm_password: '',
-  agreedToTerms: false
+  confirm_password: ''
 })
 
 const profilePicture = ref(route.query.picture || '')
 const token = ref(route.query.token || '')
 const barangays = ref([])
+const barangaysLoading = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const agreedToTerms = ref(false)
 const errors = reactive({
   reference_number: '',
   phone_number: '',
@@ -309,6 +410,7 @@ const errors = reactive({
 })
 
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
+
 const formatReferenceNumberInput = (value = '') => {
   const digits = String(value).replace(/\D/g, '').slice(0, 15)
   const parts = [2, 2, 2, 3, 6]
@@ -327,21 +429,32 @@ const handleReferenceInput = () => {
   formData.reference_number = formatReferenceNumberInput(formData.reference_number)
   errors.reference_number = REFERENCE_FORMAT_REGEX.test(formData.reference_number)
     ? ''
-    : 'Reference number must follow 00-00-00-000-000000 format'
+    : (language.value === 'tl'
+      ? 'Ang reference number ay dapat sumunod sa format na 00-00-00-000-000000.'
+      : 'Reference number must follow 00-00-00-000-000000 format.')
 }
 
-// Load barangays on mount
-onMounted(async () => {
+const loadBarangays = async () => {
+  barangaysLoading.value = true
   try {
     const response = await fetch('/api/barangays')
     const data = await response.json()
-    if (data.success) {
-      barangays.value = data.barangays
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to load barangays')
     }
-  } catch (error) {
-    console.error('Failed to load barangays:', error)
-    errorMessage.value = 'Failed to load barangays'
+    barangays.value = data.barangays || []
+  } catch (err) {
+    console.error('Failed to load barangays:', err)
+    errorMessage.value = language.value === 'tl'
+      ? 'Hindi ma-load ang listahan ng barangay.'
+      : 'Could not load barangay list.'
+  } finally {
+    barangaysLoading.value = false
   }
+}
+
+onMounted(() => {
+  loadBarangays()
 })
 
 const getMaxDateOfBirth = () => {
@@ -353,7 +466,9 @@ const getMaxDateOfBirth = () => {
 const validatePhoneNumber = () => {
   const phoneDigitsOnly = formData.phone_number.replace(/\D/g, '')
   if (formData.phone_number && phoneDigitsOnly.length !== 11) {
-    errors.phone_number = `Phone number must be exactly 11 digits (you entered ${phoneDigitsOnly.length})`
+    errors.phone_number = language.value === 'tl'
+      ? `Dapat eksaktong 11 digit ang numero (nakapasok: ${phoneDigitsOnly.length}).`
+      : `Phone number must be exactly 11 digits (you entered ${phoneDigitsOnly.length}).`
   } else {
     errors.phone_number = ''
   }
@@ -361,8 +476,10 @@ const validatePhoneNumber = () => {
 
 const validateLandArea = () => {
   const area = parseFloat(formData.land_area)
-  if (formData.land_area && (isNaN(area) || area <= 0)) {
-    errors.land_area = 'Land area must be a positive number'
+  if (formData.land_area && (Number.isNaN(area) || area <= 0)) {
+    errors.land_area = language.value === 'tl'
+      ? 'Ang lawak ng sakahan ay dapat positibong numero.'
+      : 'Land area must be a positive number.'
   } else {
     errors.land_area = ''
   }
@@ -378,12 +495,12 @@ const validatePassword = () => {
   const pwd = formData.password
   errors.password = ''
 
-  if (!pwd) {
-    return
-  }
+  if (!pwd) return
 
   if (pwd.length < 8) {
-    errors.password = 'Password must be at least 8 characters long'
+    errors.password = language.value === 'tl'
+      ? 'Ang password ay dapat hindi bababa sa 8 character.'
+      : 'Password must be at least 8 characters long.'
     return
   }
 
@@ -391,11 +508,12 @@ const validatePassword = () => {
   const hasNumbers = /[0-9]/.test(pwd)
 
   if (!hasLetters || !hasNumbers) {
-    errors.password = 'Password must contain both letters and numbers'
+    errors.password = language.value === 'tl'
+      ? 'Ang password ay dapat may letra at numero.'
+      : 'Password must contain both letters and numbers.'
     return
   }
 
-  // Also validate confirm password if it's filled
   if (formData.confirm_password) {
     validateConfirmPassword()
   }
@@ -404,56 +522,51 @@ const validatePassword = () => {
 const validateConfirmPassword = () => {
   errors.confirm_password = ''
 
-  if (!formData.confirm_password) {
-    return
-  }
+  if (!formData.confirm_password) return
 
   if (formData.password !== formData.confirm_password) {
-    errors.confirm_password = 'Passwords do not match'
+    errors.confirm_password = language.value === 'tl'
+      ? 'Hindi magkatugma ang password.'
+      : 'Passwords do not match.'
   }
 }
 
 const validateForm = () => {
   let isValid = true
 
-  // Validate reference format
   if (!REFERENCE_FORMAT_REGEX.test(formData.reference_number || '')) {
-    errors.reference_number = 'Reference number must follow 00-00-00-000-000000 format'
+    errors.reference_number = language.value === 'tl'
+      ? 'Ang reference number ay dapat sumunod sa format na 00-00-00-000-000000.'
+      : 'Reference number must follow 00-00-00-000-000000 format.'
     isValid = false
   } else {
     errors.reference_number = ''
   }
 
-  // Validate phone
   validatePhoneNumber()
   if (errors.phone_number) isValid = false
 
-  // Validate land area
   validateLandArea()
   if (errors.land_area) isValid = false
 
-  // Validate barangay
   if (!formData.barangay_id) {
-    errors.barangay_id = 'Barangay is required'
+    errors.barangay_id = language.value === 'tl' ? 'Kinakailangan ang barangay.' : 'Barangay is required.'
     isValid = false
   }
 
-  // Validate password
   validatePassword()
   if (errors.password) isValid = false
 
-  // Validate confirm password
   validateConfirmPassword()
   if (errors.confirm_password) isValid = false
 
-  // Ensure passwords are provided
   if (!formData.password) {
-    errors.password = 'Password is required'
+    errors.password = language.value === 'tl' ? 'Kinakailangan ang password.' : 'Password is required.'
     isValid = false
   }
 
   if (!formData.confirm_password) {
-    errors.confirm_password = 'Please confirm your password'
+    errors.confirm_password = language.value === 'tl' ? 'Kumpirmahin ang password.' : 'Please confirm your password.'
     isValid = false
   }
 
@@ -461,13 +574,17 @@ const validateForm = () => {
 }
 
 const submitRegistration = async () => {
-  if (!validateForm()) {
-    errorMessage.value = 'Please fix the errors above'
+  if (!agreedToTerms.value) {
+    errorMessage.value = language.value === 'tl'
+      ? 'Dapat sumang-ayon sa mga tuntunin at data privacy policy bago magrehistro.'
+      : 'You must agree to the terms and conditions and data privacy policy before registering.'
     return
   }
 
-  if (!formData.agreedToTerms) {
-    errorMessage.value = 'You must agree to the terms and conditions'
+  if (!validateForm()) {
+    errorMessage.value = language.value === 'tl'
+      ? 'Pakitama ang mga error sa form.'
+      : 'Please fix the errors above.'
     return
   }
 
@@ -475,28 +592,25 @@ const submitRegistration = async () => {
     isSubmitting.value = true
     errorMessage.value = ''
 
-    // First, verify the Google token to get google_id
     const verifyResponse = await fetch('/api/auth/google/verify-token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: token.value })
     })
 
     const verifyData = await verifyResponse.json()
     if (!verifyData.success) {
-      throw new Error('Token verification failed. Please try registering again.')
+      throw new Error(language.value === 'tl'
+        ? 'Nabigo ang token verification. Subukang mag-register muli.'
+        : 'Token verification failed. Please try registering again.')
     }
 
     formData.google_id = verifyData.profileData.google_id
+    formData.profile_picture = profilePicture.value || formData.profile_picture
 
-    // Submit registration
     const response = await fetch('/api/auth/google/register', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
     })
 
@@ -506,438 +620,49 @@ const submitRegistration = async () => {
       throw new Error(data.message || 'Registration failed')
     }
 
-    successMessage.value = 'Registration successful! Redirecting to login...'
-    
+    successMessage.value = language.value === 'tl'
+      ? 'Matagumpay ang pagrehistro! Papunta sa login...'
+      : 'Registration successful! Redirecting to login...'
+
     setTimeout(() => {
       router.push('/login')
     }, 2000)
   } catch (error) {
-    errorMessage.value = error.message || 'Registration failed. Please try again.'
+    errorMessage.value = error.message || (language.value === 'tl'
+      ? 'Nabigo ang pagrehistro. Subukang muli.'
+      : 'Registration failed. Please try again.')
     console.error('Registration error:', error)
   } finally {
     isSubmitting.value = false
   }
 }
-
-const goBack = () => {
-  router.push('/login')
-}
 </script>
 
+<style scoped src="../styles/auth-signup-shared.css"></style>
+
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-.google-registration-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  position: relative;
-  isolation: isolate;
-}
-
-.google-registration-page::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255, 255, 255, 0.12) 0%, transparent 55%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.google-registration-page > * {
-  position: relative;
-  z-index: 1;
-}
-
-.progress-bar {
-  max-width: 600px;
-  margin: 0 auto 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.progress-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.step-number {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background-color: #e5e7eb;
-  color: #6b7280;
+.google-form-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  gap: 0.55rem;
+  text-align: left;
 }
 
-.progress-step.active .step-number {
-  background-color: #667eea;
-  color: white;
-}
-
-.progress-step.completed .step-number {
-  background-color: #10b981;
-  color: white;
-}
-
-.progress-step span {
-  font-size: 0.75rem;
-  color: white;
-  text-align: center;
-}
-
-.progress-line {
-  flex: 1;
-  height: 2px;
-  background-color: rgba(255, 255, 255, 0.3);
-  margin: 0 1rem;
-}
-
-.registration-container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.registration-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.profile-picture {
-  width: 80px;
-  height: 80px;
+.google-profile-photo {
+  width: 2.35rem;
+  height: 2.35rem;
   border-radius: 50%;
-  border: 4px solid #667eea;
-  margin-bottom: 1rem;
   object-fit: cover;
+  border: 2px solid rgba(134, 239, 172, 0.55);
+  flex-shrink: 0;
 }
 
-.registration-header h1 {
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.message {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-  animation: slideIn 0.3s ease;
-}
-
-.success-message {
-  background-color: #ecfdf5;
-  border-left: 4px solid #10b981;
-  color: #047857;
-}
-
-.error-message {
-  background-color: #fef2f2;
-  border-left: 4px solid #dc2626;
-  color: #b91c1c;
-}
-
-.registration-form {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.form-section {
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 2rem;
-}
-
-.form-section:last-of-type {
-  border-bottom: none;
-}
-
-.section-title {
-  color: #1f2937;
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.section-subtitle {
-  color: #6b7280;
-  font-size: 0.85rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  color: #1f2937;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.required::after {
-  content: ' *';
-  color: #dc2626;
-}
-
-.form-input {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-input.disabled {
-  background-color: #f3f4f6;
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input-wrapper .form-input {
-  padding-right: 2.75rem;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #111827;
-  -webkit-appearance: none;
-  appearance: none;
-  box-shadow: none !important;
-  border: none !important;
-  outline: none !important;
-}
-
-.password-toggle:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-  -webkit-focus-ring-color: transparent;
-}
-
-.password-toggle:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-.password-toggle svg {
-  width: 1.2em;
-  height: 1.2em;
-  stroke: #111827;
-}
-
-.password-toggle:hover {
-  transform: translateY(-50%) scale(1.15) !important;
-  color: #667eea;
-  outline: none;
-  border: none;
-  box-shadow: none;
-}
-
-.password-toggle:hover svg {
-  stroke: #667eea;
-}
-
-.form-help {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.form-error {
-  font-size: 0.8rem;
-  color: #dc2626;
-  font-weight: 500;
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #1f2937;
-  cursor: pointer;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-}
-
-.button-group {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.btn {
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  background-color: #667eea;
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #5568d3;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #e5e7eb;
-  color: #1f2937;
-}
-
-.btn-secondary:hover {
-  background-color: #d1d5db;
-}
-
-.spinner {
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.info-box {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #eff6ff;
-  border-left: 4px solid #3b82f6;
-  border-radius: 0.375rem;
-}
-
-.info-box h4 {
-  color: #1e40af;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.info-box ul {
-  list-style: none;
-  padding: 0;
-  color: #1e40af;
-  font-size: 0.9rem;
-}
-
-.info-box li {
-  padding-left: 1.5rem;
-  position: relative;
-  margin-bottom: 0.5rem;
-}
-
-.info-box li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  font-weight: bold;
-}
-
-@media (max-width: 640px) {
-  .registration-container {
-    padding: 1.5rem;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .button-group {
-    flex-direction: column;
-  }
-
-  .progress-bar {
-    font-size: 0.75rem;
-  }
-
-  .progress-line {
-    margin: 0 0.5rem;
-  }
+.google-email-caption {
+  margin: 0.12rem 0 0;
+  font-size: 0.62rem;
+  color: rgba(211, 218, 206, 0.82);
+  line-height: 1.2;
+  word-break: break-all;
 }
 </style>

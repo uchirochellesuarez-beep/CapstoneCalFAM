@@ -17,9 +17,9 @@
     </div>
 
     <div v-else class="tab-content tab-content--main">
-      <div v-if="error" class="info-banner info-banner--error">
-        <strong>Error loading Share Capital:</strong> {{ error }}
-        <div v-if="error.includes('tables not found')" class="error-hint">
+      <div v-if="setupError" class="info-banner info-banner--error">
+        <strong>Setup required:</strong> {{ setupError }}
+        <div v-if="setupError.includes('tables not found')" class="error-hint">
           <strong>Fix needed:</strong> Run the database migration by opening a terminal and executing:
           <div class="code-block">
             mysql -u root -p calffa &lt; backend/migrations/create_share_capital_module.sql
@@ -59,14 +59,16 @@
                     <th>Type</th>
                     <th>Amount</th>
                     <th>Status</th>
+                    <th>Receipt No.</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="loading">
-                    <td colspan="4">Loading...</td>
+                    <td colspan="6">Loading...</td>
                   </tr>
                   <tr v-else-if="meContributions.length === 0">
-                    <td colspan="4">No contributions recorded</td>
+                    <td colspan="6">No contributions recorded</td>
                   </tr>
                   <tr v-else v-for="c in meContributions" :key="c.id">
                     <td>{{ formatDate(c.contribution_date) }}</td>
@@ -74,6 +76,15 @@
                     <td class="amount">₱{{ formatMoney(c.amount) }}</td>
                     <td>
                       <span class="badge" :class="c.status === 'confirmed' ? 'badge-success' : 'badge-muted'">{{ c.status }}</span>
+                    </td>
+                    <td>{{ c.receipt_number || '—' }}</td>
+                    <td class="actions">
+                      <button
+                        v-if="c.receipt_number"
+                        type="button"
+                        class="btn-link-inline"
+                        @click="printContributionReceipt(c.receipt_number)"
+                      >Print</button>
                     </td>
                   </tr>
                 </tbody>
@@ -250,13 +261,18 @@
               </div>
 
               <!-- Treasurer actions -->
-              <div v-if="canEdit" class="action-row">
-                <div class="form-inline">
+              <div v-if="canEdit" class="action-row payment-collection-panel">
+                <div class="form-inline payment-form-grid">
                   <label class="inline-label">Contribution Date</label>
                   <input class="input" type="date" v-model="newContributionDate" />
+                  <label class="inline-label">Payment Method</label>
+                  <select class="input" v-model="newContributionMethod">
+                    <option value="Cash">Cash</option>
+                    <option value="GCash">GCash</option>
+                  </select>
                   <label class="inline-label">6-Month Share</label>
                   <input class="input" type="number" :value="100" disabled />
-                  <button class="btn" @click="recordContribution" :disabled="loading">Record</button>
+                  <button class="btn" @click="recordContribution" :disabled="loading">Record &amp; Print Receipt</button>
                 </div>
 
                 <button class="btn btn-danger" @click="processWithdrawal" :disabled="loading || selectedTotals.balance <= 0">
@@ -273,15 +289,17 @@
                       <th>Type</th>
                       <th>Amount</th>
                       <th>Status</th>
-                      <th v-if="canEdit"></th>
+                      <th>Receipt No.</th>
+                      <th></th>
+                      <th v-if="canEdit">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-if="loadingFarmer">
-                      <td colspan="5">Loading...</td>
+                      <td :colspan="canEdit ? 7 : 6">Loading...</td>
                     </tr>
                     <tr v-else-if="selectedContributions.length === 0">
-                      <td colspan="5">No contributions recorded</td>
+                      <td :colspan="canEdit ? 7 : 6">No contributions recorded</td>
                     </tr>
                     <tr v-else v-for="c in selectedContributions" :key="c.id">
                       <td>
@@ -304,6 +322,15 @@
                         <template v-else>
                           <span class="badge" :class="c.status === 'confirmed' ? 'badge-success' : 'badge-muted'">{{ c.status }}</span>
                         </template>
+                      </td>
+                      <td>{{ c.receipt_number || '—' }}</td>
+                      <td class="actions">
+                        <button
+                          v-if="c.receipt_number"
+                          type="button"
+                          class="btn-link-inline"
+                          @click="printContributionReceipt(c.receipt_number)"
+                        >Print</button>
                       </td>
                       <td v-if="canEdit" class="actions">
                         <template v-if="editingId === c.id && canEditContribution(c)">
@@ -351,6 +378,19 @@
         </template>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
+        <div class="modal-box receipt-modal-box" @click.stop>
+          <PaymentReceiptPrint :receipt="lastReceipt" :auto-print="receiptAutoPrint" @close="closeReceiptModal" />
+        </div>
+      </div>
+    </Teleport>
+
+    <div v-if="alert.show" :class="['alert', 'alert-' + alert.type]">
+      <span class="alert-message">{{ alert.message }}</span>
+      <button type="button" @click="alert.show = false" class="alert-close">×</button>
+    </div>
   </div>
 </template>
 
@@ -358,6 +398,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
+import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 
 const authStore = useAuthStore()
 const { isDark } = useBackdropTheme()
@@ -407,7 +449,29 @@ const filteredFarmers = computed(() => {
 
 const loading = ref(false)
 const loadingFarmer = ref(false)
-const error = ref('')
+const setupError = ref('')
+
+const alert = ref({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
+let alertTimer = null
+const showAlert = (message, type = 'success') => {
+  if (alertTimer) clearTimeout(alertTimer)
+  alert.value = { show: true, message, type }
+  alertTimer = setTimeout(() => {
+    alert.value.show = false
+    alertTimer = null
+  }, 4000)
+}
+
+function setSetupError(message) {
+  if (message && String(message).toLowerCase().includes('tables not found')) {
+    setupError.value = message
+  }
+}
 
 const farmers = ref([])
 const overviewTotals = ref({ total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 })
@@ -421,6 +485,21 @@ const meWithdrawals = ref([])
 const meTotals = ref({ total_contributed: 0, total_withdrawn: 0, balance: 0 })
 
 const newContributionDate = ref(todayISO())
+const newContributionMethod = ref('Cash')
+
+const { showReceiptModal, lastReceipt, receiptAutoPrint, showAndPrintReceipt, closeReceiptModal } = usePaymentReceipt()
+
+async function printContributionReceipt(receiptNumber) {
+  if (!receiptNumber) {
+    showAlert('No receipt available for this contribution.', 'error')
+    return
+  }
+  try {
+    await showAndPrintReceipt(receiptNumber)
+  } catch (e) {
+    showAlert(e.message || 'Failed to load receipt.', 'error')
+  }
+}
 
 const editingId = ref(null)
 const editDate = ref('')
@@ -458,13 +537,18 @@ function canEditContribution(contribution) {
 }
 
 async function apiFetch(path, options = {}) {
+  const token = authStore.token || localStorage.getItem('token')
+  if (!token) {
+    showAlert('Session expired. Please login again.', 'error')
+    throw new Error('Unauthorized')
+  }
   const headers = {
     ...(options.headers || {}),
-    'Authorization': `Bearer ${authStore.token}`
+    Authorization: `Bearer ${token}`
   }
   const response = await fetch(path, { ...options, headers })
   if (response.status === 401) {
-    error.value = 'Session expired. Please login again.'
+    showAlert('Session expired. Please login again.', 'error')
     throw new Error('Unauthorized')
   }
   return response
@@ -496,7 +580,7 @@ async function loadOverview() {
     return
   }
 
-  error.value = ''
+  setupError.value = ''
   loading.value = true
   try {
     const params = new URLSearchParams()
@@ -520,14 +604,14 @@ async function loadOverview() {
       }
     }
   } catch (e) {
-    error.value = e.message
+    setSetupError(e.message)
+    showAlert(e.message, 'error')
   } finally {
     loading.value = false
   }
 }
 
 async function loadFarmerDetails(farmerId) {
-  error.value = ''
   loadingFarmer.value = true
   try {
     const res = await apiFetch(`/api/share-capital/farmer/${farmerId}`)
@@ -539,7 +623,7 @@ async function loadFarmerDetails(farmerId) {
     selectedContributions.value = data.contributions || []
     selectedWithdrawals.value = data.withdrawals || []
   } catch (e) {
-    error.value = e.message
+    showAlert(e.message, 'error')
   } finally {
     loadingFarmer.value = false
   }
@@ -554,12 +638,11 @@ async function selectFarmer(f) {
 async function recordContribution() {
   if (!selectedFarmer.value) return
   if (!newContributionDate.value) {
-    alert('Please select a contribution date')
+    showAlert('Please select a contribution date', 'error')
     return
   }
 
   loading.value = true
-  error.value = ''
   try {
     const res = await apiFetch('/api/share-capital/contributions', {
       method: 'POST',
@@ -567,7 +650,8 @@ async function recordContribution() {
       body: JSON.stringify({
         farmer_id: selectedFarmer.value.id,
         contribution_date: newContributionDate.value,
-        amount: 100
+        amount: 100,
+        payment_method: newContributionMethod.value
       })
     })
     const data = await res.json().catch(() => null)
@@ -576,8 +660,17 @@ async function recordContribution() {
     }
     await loadFarmerDetails(selectedFarmer.value.id)
     await loadOverview()
+    if (data.receipt_number) {
+      try {
+        await showAndPrintReceipt(data.receipt_number)
+      } catch (receiptErr) {
+        console.error('Receipt print failed:', receiptErr)
+        showAlert('Contribution saved but receipt could not be loaded. Use Print from the history table.', 'error')
+      }
+    }
+    showAlert(data.message || 'Share contribution recorded successfully', 'success')
   } catch (e) {
-    error.value = e.message
+    showAlert(e.message, 'error')
   } finally {
     loading.value = false
   }
@@ -597,12 +690,11 @@ function cancelEdit() {
 
 async function saveEdit(id) {
   if (!editDate.value) {
-    alert('Please select a date')
+    showAlert('Please select a date', 'error')
     return
   }
 
   loading.value = true
-  error.value = ''
   try {
     const res = await apiFetch(`/api/share-capital/contributions/${id}`, {
       method: 'PUT',
@@ -622,8 +714,9 @@ async function saveEdit(id) {
       await loadFarmerDetails(selectedFarmer.value.id)
       await loadOverview()
     }
+    showAlert('Contribution updated successfully', 'success')
   } catch (e) {
-    error.value = e.message
+    showAlert(e.message, 'error')
   } finally {
     loading.value = false
   }
@@ -640,7 +733,6 @@ async function processWithdrawal() {
   const remarks = prompt('Remarks (optional):')
 
   loading.value = true
-  error.value = ''
   try {
     const res = await apiFetch('/api/share-capital/withdrawals', {
       method: 'POST',
@@ -657,15 +749,16 @@ async function processWithdrawal() {
     }
     await loadFarmerDetails(selectedFarmer.value.id)
     await loadOverview()
+    showAlert('Withdrawal processed successfully', 'success')
   } catch (e) {
-    error.value = e.message
+    showAlert(e.message, 'error')
   } finally {
     loading.value = false
   }
 }
 
 async function loadMe() {
-  error.value = ''
+  setupError.value = ''
   loading.value = true
   try {
     const res = await apiFetch('/api/share-capital/me')
@@ -677,7 +770,8 @@ async function loadMe() {
     meContributions.value = data.contributions || []
     meWithdrawals.value = data.withdrawals || []
   } catch (e) {
-    error.value = e.message
+    setSetupError(e.message)
+    showAlert(e.message, 'error')
   } finally {
     loading.value = false
   }
@@ -1067,7 +1161,8 @@ onMounted(async () => {
 .tab-content .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 0.625rem;
+  table-layout: fixed;
 }
 
 .tab-content .data-table thead {
@@ -1075,14 +1170,15 @@ onMounted(async () => {
 }
 
 .tab-content .data-table th {
-  padding: 12px 14px;
+  padding: 0.28rem 0.32rem;
   text-align: left;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-main);
-  border-bottom: 2px solid #6ee7a8;
-  font-size: 12px;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.03em;
+  line-height: 1.12;
 }
 
 .tab-content .data-table th:not(:last-child),
@@ -1091,10 +1187,12 @@ onMounted(async () => {
 }
 
 .tab-content .data-table td {
-  padding: 12px 14px;
-  border-bottom: 1.5px solid #94a3b8;
+  padding: 0.26rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 0.625rem;
+  line-height: 1.15;
 }
 
 .tab-content .data-table tbody tr:nth-child(even) {
@@ -1106,8 +1204,8 @@ onMounted(async () => {
 }
 
 .tab-content table.data-table tbody td.amount {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 0.625rem;
+  font-weight: 600;
   color: #b7f7c8;
   font-family: ui-monospace, 'Courier New', monospace;
   line-height: 1.25;
@@ -1119,7 +1217,7 @@ onMounted(async () => {
 }
 
 .name {
-  font-weight: 800;
+  font-weight: 500;
   color: var(--text-main);
 }
 
@@ -1157,9 +1255,11 @@ onMounted(async () => {
 }
 
 .btn-small {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 10px;
+  padding: 0.16rem 0.3rem;
+  font-size: 0.55rem;
+  border-radius: 6px;
+  font-weight: 600;
+  line-height: 1.1;
 }
 
 .btn-primary-action {
@@ -1220,10 +1320,10 @@ onMounted(async () => {
 
 .badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 0.08rem 0.28rem;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 0.55rem;
+  font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
@@ -1465,13 +1565,15 @@ select.input {
 .financial-container.share-capital-page.light-theme .tab-content .data-table th {
   color: #000000 !important;
   border-bottom-color: #86efac !important;
-  font-size: 0.9375rem !important;
+  font-size: 0.58rem !important;
+  font-weight: 600 !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table td {
   color: #000000 !important;
   border-bottom-color: #e2e8f0 !important;
-  font-size: 1rem !important;
+  font-size: 0.625rem !important;
+  font-weight: 500 !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content .data-table tbody tr:nth-child(even) {
@@ -1639,4 +1741,88 @@ select.input {
     padding: 18px 16px;
   }
 }
+
+.btn-link-inline {
+  background: none;
+  border: none;
+  color: #4ade80;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 0;
+  margin: 0;
+}
+
+.financial-container.share-capital-page.light-theme .btn-link-inline {
+  color: #166534;
+}
+
+.alert {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  z-index: 10060;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  animation: shareCapitalAlertSlideUp 0.3s ease-out;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  min-width: 320px;
+  max-width: 520px;
+}
+
+@keyframes shareCapitalAlertSlideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert-success {
+  background: #ecfdf5 !important;
+  color: #14532d !important;
+  border-color: #86efac !important;
+}
+
+.alert-error {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+.alert-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 800;
+  color: inherit;
+  opacity: 0.75;
+  padding: 0 2px;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+@import '../styles/compact-data-table.css';
 </style>
