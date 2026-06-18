@@ -1,8 +1,14 @@
 <template>
-  <div class="financial-container glass-module-page seed-fertilizer-plan" :class="{ 'light-theme': isLight }">
+  <div class="financial-container glass-module-page seed-fertilizer-plan">
     <div class="page-header">
       <div class="header-content">
         <h1>Seed &amp; Fertilizer Plan</h1>
+        <p class="page-subtitle hero-subtitle">
+          Kapag <strong>naipamahagi na</strong> ang tulong (Distributed / Confirmed Received), makikita dito ang magsasaka.
+          Ang Treasurer/President ay <strong>nagtatala ng bayad</strong> —
+          bawat tala ay may petsa at halaga sa
+          <router-link to="/share-capital">Share Capital</router-link> ng magsasaka.
+        </p>
       </div>
     </div>
 
@@ -133,24 +139,40 @@
     <!-- Modal: record payment -->
     <Teleport to="body">
       <div v-if="payModal" class="modal-overlay" @click.self="closePayModal">
-        <div class="modal-box">
-          <h3 class="modal-title">Magtala ng bayad</h3>
+        <div class="modal-box payment-modal-box">
+          <h3 class="modal-title">Record Payment</h3>
           <p class="modal-meta">
-            {{ payModal.farmer_name }} · {{ formatAssistanceType(payModal.assistance_type) }} · Natitira:
+            {{ payModal.farmer_name }} · {{ formatAssistanceType(payModal.assistance_type) }} · Remaining:
             <strong>₱{{ formatMoney(payModal.remaining_pesos) }}</strong>
           </p>
           <div class="form-group">
-            <label>Petsa ng bayad</label>
+            <label>Payment Date</label>
             <input v-model="payDate" type="date" class="input" />
           </div>
           <div class="form-group">
-            <label>Halaga (hanggang ₱{{ formatMoney(payModal.remaining_pesos) }})</label>
-            <input v-model.number="payAmount" type="number" min="0" step="0.01" class="input" />
+            <label>Amount (max ₱{{ formatMoney(payModal.remaining_pesos) }})</label>
+            <TypedNumberInput v-model="payAmount" :min="0" :max="payModal.remaining_pesos" input-class="input" />
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select v-model="payMethod" class="input">
+              <option value="Cash">Cash</option>
+              <option value="GCash">GCash</option>
+            </select>
+          </div>
+          <div class="form-group auto-receipt-note">
+            <label>Official Receipt</label>
+            <input type="text" class="input" value="Auto-generated (RCPT-YYYY-######)" disabled />
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn btn-muted" @click="closePayModal">Bawi</button>
-            <button type="button" class="btn btn-success" :disabled="paySubmitting" @click="submitPayment">Itala</button>
+            <button type="button" class="btn btn-muted" @click="closePayModal">Cancel</button>
+            <button type="button" class="btn btn-success" :disabled="paySubmitting" @click="submitPayment">Record &amp; Print Receipt</button>
           </div>
+        </div>
+      </div>
+      <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
+        <div class="modal-box receipt-modal-box" @click.stop>
+          <PaymentReceiptPrint :receipt="lastReceipt" :auto-print="receiptAutoPrint" @close="closeReceiptModal" />
         </div>
       </div>
     </Teleport>
@@ -160,11 +182,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
-import { useBackdropTheme } from '../composables/useBackdropTheme'
+import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
+import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 
 const authStore = useAuthStore()
-const { isDark } = useBackdropTheme()
-const isLight = computed(() => !isDark.value)
 
 const barangayId = computed(() => {
   const id = authStore.currentUser?.barangay_id
@@ -197,7 +219,10 @@ const busyId = ref(null)
 const payModal = ref(null)
 const payDate = ref('')
 const payAmount = ref(0)
+const payMethod = ref('Cash')
 const paySubmitting = ref(false)
+
+const { showReceiptModal, lastReceipt, receiptAutoPrint, showAndPrintReceipt, closeReceiptModal } = usePaymentReceipt()
 
 function formatAssistanceType(type) {
   const map = { fertilizer: 'Pataba', seeds: 'Binhi', both: 'Pataba at Binhi' }
@@ -266,6 +291,7 @@ async function loadRows() {
 function openPayModal(r) {
   payModal.value = r
   payDate.value = todayISO()
+  payMethod.value = 'Cash'
   payAmount.value = Math.round(parseFloat(r.remaining_pesos) * 100) / 100
 }
 
@@ -296,7 +322,8 @@ async function submitPayment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: amt,
-          contribution_date: payDate.value
+          contribution_date: payDate.value,
+          payment_method: payMethod.value
     })
     }
     )
@@ -306,6 +333,13 @@ async function submitPayment() {
     }
     closePayModal()
     await loadRows()
+    if (data.receipt_number) {
+      try {
+        await showAndPrintReceipt(data.receipt_number)
+      } catch (receiptErr) {
+        console.error('Receipt print failed:', receiptErr)
+      }
+    }
   } catch (e) {
     error.value = e.message
   } finally {
@@ -418,15 +452,13 @@ onMounted(async () => {
     inset -1px -1px 0 rgba(0, 0, 0, 0.34);
   position: relative;
   overflow: hidden;
-  text-align: left;
 }
 
 .header-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
-  max-width: none;
+  max-width: 760px;
   align-items: flex-start;
   text-align: left;
 }
@@ -459,120 +491,10 @@ onMounted(async () => {
   line-height: 1.05;
   letter-spacing: -0.9px;
   margin: 0;
-  width: 100%;
-  text-align: left;
   background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) .page-header h1 {
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-  color: #ffffff;
-  -webkit-text-fill-color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) :is(
-  .page-subtitle,
-  .page-title,
-  .inner-subtitle,
-  .card-title,
-  .card-sub,
-  .stat-label,
-  .stat-value,
-  .empty-title,
-  .empty-text,
-  .name,
-  .sub,
-  .pay-history,
-  .pay-date,
-  .info-banner,
-  .muted,
-  .modal-title,
-  .modal-meta,
-  .form-group label
-) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) :is(
-  .card-sub,
-  .note-sub,
-  .sub,
-  .muted,
-  .empty-text
-) {
-  opacity: 0.92;
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content .data-table :is(th, td) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content table.data-table tbody td.amount {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.financial-container.seed-fertilizer-plan:not(.light-theme) .badge-dist {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.financial-container.seed-fertilizer-plan.light-theme {
-  --text-main: #052e16;
-  --text-muted: #14532d;
-  --text-soft: #166534;
-  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
-  color: var(--text-main);
-}
-
-.financial-container.seed-fertilizer-plan.light-theme .page-header {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
-  border: 2px solid #86efac !important;
-}
-
-.financial-container.seed-fertilizer-plan.light-theme .page-header h1 {
-  background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
-  -webkit-text-fill-color: #052e16 !important;
-  color: #052e16 !important;
-  text-shadow: none;
-}
-
-.financial-container.seed-fertilizer-plan.light-theme :is(
-  .page-title,
-  .page-subtitle,
-  .inner-subtitle,
-  .card-title,
-  .card-sub,
-  .stat-label,
-  .stat-value,
-  .name,
-  .sub,
-  .pay-history,
-  .modal-title,
-  .form-group label
-) {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-}
-
-.financial-container.seed-fertilizer-plan.light-theme .stat-card {
-  background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.38) !important;
-}
-
-.financial-container.seed-fertilizer-plan.light-theme .tab-content .card {
-  background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.38) !important;
 }
 
 .page-subtitle {
@@ -581,6 +503,21 @@ onMounted(async () => {
   font-size: 16px;
   line-height: 1.45;
   font-weight: 500;
+}
+
+.hero-subtitle {
+  max-width: 52rem;
+}
+
+.page-subtitle a {
+  color: var(--lime);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.page-subtitle a:hover {
+  color: var(--green);
 }
 
 .page-title {
@@ -629,12 +566,6 @@ onMounted(async () => {
   margin-bottom: 20px;
   padding: 22px 26px;
   border-radius: 20px;
-  text-align: left;
-}
-
-.tab-content .page-header.inner-banner :is(.page-title, .page-subtitle) {
-  text-align: left;
-  width: 100%;
 }
 
 .info-banner {

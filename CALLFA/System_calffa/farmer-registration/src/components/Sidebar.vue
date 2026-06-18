@@ -3,7 +3,7 @@
     <!-- Sidebar Navigation -->
     <nav
       class="sidebar"
-      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer && isDark, 'light-theme': isLight }"
+      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer, 'light-theme': isLight }"
     >
       <div class="backdrop-sidebar" :class="backdropThemeClass"></div>
       <!-- CALFFA LOGO HEADER -->
@@ -37,7 +37,11 @@
 
     <!-- Navigation Sections with Grouped Items -->
     <div class="nav-sections">
+      <!-- FARM MANAGEMENT Section -->
       <div class="nav-section">
+        <div class="section-header">
+          <span class="section-title">FARM MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in farmManagementItems"
@@ -53,7 +57,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="!isBarangayManagpi">
+      <!-- OPERATIONS Section -->
+      <div class="nav-section" v-if="operationsItems.length">
+        <div class="section-header">
+          <span class="section-title">OPERATIONS</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in operationsItems"
@@ -75,7 +83,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canCommunity && !isBarangayManagpi">
+      <!-- Community Section (Farmers and eligible officers) -->
+      <div class="nav-section" v-if="canCommunity && communityItems.length">
+        <div class="section-header">
+          <span class="section-title">COMMUNITY</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in communityItems"
@@ -97,7 +109,11 @@
         </ul>
       </div>
 
+      <!-- Member Management Section (Admin and President only) -->
       <div class="nav-section" v-if="canManageMembers">
+        <div class="section-header">
+          <span class="section-title">MEMBER MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/farmers-table') }"
@@ -111,28 +127,36 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canManageLoans && !isAdmin && !isBarangayManagpi">
+      <!-- Loan Management Section (Treasurer and President only) -->
+      <div class="nav-section" v-if="canManageLoans && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">LOAN MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/admin-loans') }"
             @click="handleMenuClick({ text: 'Loan Management', route: '/admin-loans' })"
           >
             <router-link class="nav-link" to="/admin-loans" aria-label="Loan Management">
-              <LoanApplicationsIcon class="icon-component" size="20" color="currentColor"></LoanApplicationsIcon>
+              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
               <span class="text">Loan Management</span>
             </router-link>
           </li>
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canCollectMonthlyDues && !isAdmin && !isBarangayManagpi">
+      <!-- Association Dues Section (President and Treasurer only) -->
+      <div class="nav-section" v-if="canCollectMonthlyDues && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">COLLECTIONS</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/seed-fertilizer-plan') }"
             @click="handleMenuClick({ text: 'Seed & Fertilizer Plan', route: '/seed-fertilizer-plan' })"
           >
             <router-link class="nav-link" to="/seed-fertilizer-plan" aria-label="Seed & Fertilizer Plan">
-              <FarmIcon class="icon-component" size="20" color="currentColor"></FarmIcon>
+              <BankIcon class="icon-component" size="20" color="currentColor"></BankIcon>
               <span class="text">Seed & Fertilizer Plan</span>
             </router-link>
           </li>
@@ -141,14 +165,18 @@
             @click="handleMenuClick({ text: 'Association Dues', route: '/machinery-financial?tab=dues' })"
           >
             <router-link class="nav-link" to="/machinery-financial?tab=dues" aria-label="Association Dues">
-              <CoinsIcon class="icon-component" size="20" color="currentColor"></CoinsIcon>
+              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
               <span class="text">Association Dues</span>
             </router-link>
           </li>
         </ul>
       </div>
 
-      <div class="nav-section" v-if="isPresident && !isAdmin && !isBarangayManagpi">
+      <!-- Machinery Management Section (President only) -->
+      <div class="nav-section" v-if="isPresident && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">MACHINERY MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/machinery-management') }"
@@ -162,7 +190,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canAccessFarmerIncomeHub && !isAdmin && !isBarangayManagpi">
+      <!-- Farmer Income Section (President, Officers, Agriculturist) -->
+      <div class="nav-section" v-if="canAccessFarmerIncomeHub && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">KITA NG MAGSASAKA</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/farmer-income-hub') }"
@@ -176,7 +208,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canViewMembersSummary && !isBarangayManagpi">
+      <!-- Members Summary (Agriculturist) -->
+      <div class="nav-section" v-if="canViewMembersSummary">
+        <div class="section-header">
+          <span class="section-title">MEMBERS</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/members-summary') }"
@@ -190,7 +226,11 @@
         </ul>
       </div>
 
+      <!-- Insights Section -->
       <div class="nav-section">
+        <div class="section-header">
+          <span class="section-title">INSIGHTS</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in insightsItems"
@@ -206,7 +246,11 @@
         </ul>
       </div>
 
+      <!-- Admin Section (if admin) -->
       <div class="nav-section" v-if="isAdmin">
+        <div class="section-header">
+          <span class="section-title">ADMIN</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in adminItems"
@@ -230,14 +274,11 @@
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
+import { canBookMachinery, canApplyOfficerLoan } from "../utils/roleAccess";
 import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
 import MachineryIcon from "./icons/MachineryIcon.vue";
-import ChartLineIcon from "./icons/ChartLineIcon.vue";
-import AnalyticsIcon from "./icons/AnalyticsIcon.vue";
-import LoanIcon from "./icons/LoanIcon.vue";
-import LoanApplicationsIcon from "./icons/LoanApplicationsIcon.vue";
-import CoinsIcon from "./icons/CoinsIcon.vue";
+import MoneyIcon from "./icons/MoneyIcon.vue";
 import MembersIcon from "./icons/MembersIcon.vue";
 import DocumentIcon from "./icons/DocumentIcon.vue";
 import ApprovalIcon from "./icons/ApprovalIcon.vue";
@@ -284,9 +325,9 @@ const canViewMembersSummary = computed(() => {
   return role === 'agriculturist';
 });
 const canManageLoans = computed(() => {
-  // Admin, Treasurer, President, and operations officers can manage member loans
+  // Admin, Treasurer, and President can manage loans
   const role = currentUser.value?.role;
-  return ['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(role);
+  return ['admin', 'treasurer', 'president'].includes(role);
 });
 const canCollectMonthlyDues = computed(() => {
   // President and Treasurer can record association dues
@@ -317,14 +358,8 @@ const canAccessFarmerIncomeHub = computed(() => {
 });
 
 const canCommunity = computed(() => {
-  // Farmers and officers (except agriculturist) can see community section for loans
   const role = currentUser.value?.role;
-  return ['farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role);
-});
-
-// Check if user is from Managpi barangay (id = 2) - transactions not available
-const isBarangayManagpi = computed(() => {
-  return currentUser.value?.barangay_id === 2;
+  return role === 'farmer' || canApplyOfficerLoan(role);
 });
 
 // Check if user is a non-member - non-members don't have sidebar access
@@ -353,8 +388,8 @@ const operationsItems = computed(() => {
   const items = [];
   const role = currentUser.value?.role;
   
-  // Machinery Booking for farmers only (and admins can see all)
-  if (!isAdmin.value && currentUser.value?.role === 'farmer') {
+  // Machinery Booking for farmers and eligible officers (not agriculturist)
+  if (!isAdmin.value && canBookMachinery(role)) {
     items.push({ text: "Machinery Booking", route: "/machinery-booking", icon: MachineryIcon });
   }
   
@@ -363,11 +398,15 @@ const operationsItems = computed(() => {
     items.push({ text: "Machinery Approval", route: "/machinery-approval", icon: ApprovalIcon });
   }
 
+  if (isOperator.value) {
+    items.push({ text: "Operator Dashboard", route: "/operator-dashboard", icon: DashboardIcon });
+  }
+
   // Machinery Financial for admin, president, and treasurer; Loan Portfolio for officers (admin has it under ADMIN)
   if (canManageFinancial.value) {
-    items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: ChartLineIcon });
+    items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: MoneyIcon });
     if (!isAdmin.value) {
-      items.push({ text: "Financial Overview", route: "/financial-overview", icon: AnalyticsIcon });
+      items.push({ text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon });
     }
   }
 
@@ -383,9 +422,11 @@ const communityItems = computed(() => {
   const role = currentUser.value?.role;
   const items = [];
   
-  // Loans — same modern UI for farmers and officers
-  if (['farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role)) {
-    items.push({ text: "Loans", route: "/officer-loans", icon: LoanIcon });
+  // Loans - different route for officers vs farmers
+  if (role === 'farmer') {
+    items.push({ text: "Loans", route: "/loan", icon: MoneyIcon });
+  } else if (canApplyOfficerLoan(role)) {
+    items.push({ text: "Loans", route: "/officer-loans", icon: MoneyIcon });
   }
   
   // Kita sa Pagsasaka - for farmers and officers (except admin/agriculturist)
@@ -405,9 +446,9 @@ const insightsItems = [
 
 const adminItems = [
   { text: "Barangays", route: "/barangays", icon: BankIcon, badge: null },
-  { text: "Loan Management", route: "/admin-loans", icon: LoanApplicationsIcon, badge: null },
+  { text: "Loan Management", route: "/admin-loans", icon: MoneyIcon, badge: null },
   { text: "Machinery Management", route: "/machinery-management", icon: MachineryIcon, badge: null },
-  { text: "Financial Overview", route: "/financial-overview", icon: AnalyticsIcon, badge: null },
+  { text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon, badge: null },
   { text: "Share Capital", route: "/share-capital", icon: BankIcon, badge: null },
 ];
 
@@ -841,7 +882,7 @@ const isActiveRoute = (path) => {
 }
 
 .nav-section {
-  margin-bottom: 0.35rem;
+  margin-bottom: 1.65rem;
 }
 
 .nav-section:last-child {

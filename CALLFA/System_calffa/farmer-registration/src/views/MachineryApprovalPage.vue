@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container glass-module-page machinery-page" :class="{ 'light-theme': isLight }">
+  <div class="page-container glass-module-page machinery-page machinery-approval-page">
     <div v-if="!canApproveBookings && !canCompleteBookings" class="access-denied-card">
       <h2 class="access-denied-title">Access Denied</h2>
       <p>This page is only available for:</p>
@@ -29,68 +29,42 @@
 
       <div class="stats-grid machinery-stats-grid">
         <div v-if="canApproveBookings" class="stat-card pending" @click="quickFilter('Pending')">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path class="glyph-stroke" d="M7 3h10" stroke-width="2.2" stroke-linecap="round" />
-              <path class="glyph-stroke" d="M7 21h10" stroke-width="2.2" stroke-linecap="round" />
-              <path class="glyph-stroke" d="M8 3v5.2l4 3.6 4-3.6V3" stroke-width="2" stroke-linejoin="round" />
-              <path class="glyph-stroke" d="M8 21v-5.2l4-3.6 4 3.6V21" stroke-width="2" stroke-linejoin="round" />
-              <path class="glyph-stroke" d="M12 9.2v2.8" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </div>
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Pn</span></div>
           <div class="stat-content">
             <div class="stat-value">{{ pendingCount }}</div>
             <div class="stat-label">Pending</div>
           </div>
         </div>
-        <div v-if="canCompleteBookings" class="stat-card approved" @click="quickFilter('Approved')">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle class="glyph-stroke" cx="12" cy="12" r="8.5" stroke-width="2" />
-              <path class="glyph-stroke" d="M8.5 12.2l2.4 2.4 4.8-5.2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+        <div v-if="canApproveBookings" class="stat-card approved" @click="quickFilter('Down Payment Verified')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Cf</span></div>
+          <div class="stat-content">
+            <div class="stat-value">{{ confirmCount }}</div>
+            <div class="stat-label">To Confirm</div>
           </div>
+        </div>
+        <div v-if="canCompleteBookings" class="stat-card approved" @click="quickFilter('Assigned to Operator')">
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ap</span></div>
           <div class="stat-content">
             <div class="stat-value">{{ approvedCount }}</div>
             <div class="stat-label">To Process</div>
           </div>
         </div>
         <div v-if="canCompleteBookings" class="stat-card incomplete" @click="quickFilter('Incomplete')">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle class="glyph-stroke" cx="12" cy="12" r="8.5" stroke-width="2" />
-              <path class="glyph-stroke" d="M12 8v5" stroke-width="2.2" stroke-linecap="round" />
-              <circle class="glyph-fill" cx="12" cy="16.2" r="1.1" />
-            </svg>
-          </div>
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ic</span></div>
           <div class="stat-content">
             <div class="stat-value">{{ incompleteCount }}</div>
             <div class="stat-label">Incomplete</div>
           </div>
         </div>
         <div class="stat-card rejected" @click="quickFilter('Rejected')">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path class="glyph-stroke" d="M12 2.8l7.8 4.5v9.4L12 21.2 4.2 16.7V7.3L12 2.8z" stroke-width="2" stroke-linejoin="round" />
-              <path class="glyph-stroke" d="M9.1 9.1l5.8 5.8M14.9 9.1l-5.8 5.8" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-          </div>
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Rj</span></div>
           <div class="stat-content">
             <div class="stat-value">{{ rejectedCount }}</div>
             <div class="stat-label">Rejected</div>
           </div>
         </div>
         <div class="stat-card expired" @click="quickFilter('Expired')">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect class="glyph-stroke" x="4" y="6" width="16" height="14" rx="2" stroke-width="2" />
-              <path class="glyph-stroke" d="M4 10h16" stroke-width="2" />
-              <path class="glyph-stroke" d="M8.5 4v3.5M15.5 4v3.5" stroke-width="2.2" stroke-linecap="round" />
-              <path class="glyph-stroke" d="M8.5 14.5h7" stroke-width="2" stroke-linecap="round" opacity="0.55" />
-              <circle class="glyph-stroke" cx="16.5" cy="16.5" r="3.2" stroke-width="1.8" />
-              <path class="glyph-stroke" d="M16.5 15v2M15.5 16h2" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-          </div>
+          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ex</span></div>
           <div class="stat-content">
             <div class="stat-value">{{ expiredCount }}</div>
             <div class="stat-label">Expired</div>
@@ -119,10 +93,19 @@
               v-if="canApproveBookings"
               type="button"
               class="tab"
-              :class="{ active: activeFilter === 'Approved' }"
-              @click="quickFilter('Approved')"
+              :class="{ active: activeFilter === 'Down Payment Verified' }"
+              @click="quickFilter('Down Payment Verified')"
             >
-              Approved ({{ approvedCount }})
+              To Confirm ({{ confirmCount }})
+            </button>
+            <button
+              v-if="canCompleteBookings"
+              type="button"
+              class="tab"
+              :class="{ active: activeFilter === 'Assigned to Operator' }"
+              @click="quickFilter('Assigned to Operator')"
+            >
+              Assigned ({{ assignedCount }})
             </button>
             <button
               v-if="canCompleteBookings"
@@ -162,39 +145,23 @@
             </button>
           </div>
 
+          <div v-if="isApprover && filters.status === 'Pending'" class="alert alert-info banner-inline-alert">
+            Naka-<strong>Pending</strong> view ka. Gumamit ng ibang tabs para makita ang approved, rejected, o iba pang booking.
+          </div>
+
           <div class="filters-row machinery-filters">
             <div class="form-group">
               <label>Start date</label>
-              <div class="mf-date-field">
-                <input
-                  v-model="filters.start_date"
-                  type="date"
-                  class="mf-date-input"
-                  @change="applyFilters"
-                />
-                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+              <div class="input-shell">
+                <span class="field-icon" aria-hidden="true"></span>
+                <input v-model="filters.start_date" type="date" @change="applyFilters" />
               </div>
             </div>
             <div class="form-group">
               <label>End date</label>
-              <div class="mf-date-field">
-                <input
-                  v-model="filters.end_date"
-                  type="date"
-                  class="mf-date-input"
-                  @change="applyFilters"
-                />
-                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+              <div class="input-shell">
+                <span class="field-icon" aria-hidden="true"></span>
+                <input v-model="filters.end_date" type="date" @change="applyFilters" />
               </div>
             </div>
             <button type="button" class="mach-clear-filters-btn" @click="clearFilters">Clear filters</button>
@@ -203,7 +170,6 @@
           <div class="table-container machinery-table-container">
             <table class="loans-table machinery-loans-table">
               <colgroup v-if="canApproveBookings">
-                <col class="col-id" />
                 <col class="col-name" />
                 <col class="col-purpose" />
                 <col class="col-date" />
@@ -215,7 +181,6 @@
                 <col class="col-actions" />
               </colgroup>
               <colgroup v-else>
-                <col class="col-id" />
                 <col class="col-name" />
                 <col class="col-purpose" />
                 <col class="col-date" />
@@ -227,7 +192,6 @@
               </colgroup>
               <thead>
                 <tr>
-                  <th class="th-id">ID</th>
                   <th class="th-name">Farmer</th>
                   <th class="th-purpose">Machinery</th>
                   <th class="th-booking-date">Booking Date</th>
@@ -247,7 +211,6 @@
                   <td :colspan="tableColspan" class="empty-cell">No bookings found.</td>
                 </tr>
                 <tr v-else v-for="booking in bookings" :key="booking.id">
-                  <td class="td-id">{{ booking.id }}</td>
                   <td class="td-name">
                     <div class="machinery-td-stack">
                       <strong>{{ booking.farmer_name }}</strong>
@@ -303,7 +266,16 @@
                         Reject
                       </button>
                       <button
-                        v-if="booking.status === 'Approved' && canCompleteBookings"
+                        v-if="booking.status === 'Down Payment Verified' && canApproveBookings"
+                        type="button"
+                        class="btn btn-approve"
+                        title="Confirm booking"
+                        @click="confirmBookingConfirm(booking)"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        v-if="operatorWorkStatuses.includes(booking.status) && canCompleteBookings"
                         type="button"
                         class="btn btn-approve"
                         title="Mark completed"
@@ -312,7 +284,7 @@
                         Done
                       </button>
                       <button
-                        v-if="booking.status === 'Approved' && canCompleteBookings"
+                        v-if="operatorWorkStatuses.includes(booking.status) && canCompleteBookings"
                         type="button"
                         class="btn btn-reject"
                         title="Mark incomplete"
@@ -441,6 +413,12 @@
               Approve Booking
             </button>
           </div>
+          <div class="modal-actions" v-else-if="selectedBooking.status === 'Down Payment Verified' && canApproveBookings">
+            <button @click="closeModals" class="btn-secondary">Close</button>
+            <button @click="confirmBookingConfirm(selectedBooking)" class="btn-success">
+              Confirm Booking & Reserve Dates
+            </button>
+          </div>
           <div class="modal-actions" v-else-if="selectedBooking.status === 'Pending'">
             <button @click="closeModals" class="btn-secondary">Close</button>
             <p class="modal-permission-note">Only Business Managers and Operation Managers can approve bookings.</p>
@@ -462,12 +440,39 @@
             <p><strong>Machinery:</strong> {{ bookingToProcess?.machinery_name }}</p>
             <p><strong>Date:</strong> {{ formatDate(bookingToProcess?.booking_date) }}</p>
             <p><strong>Total Amount:</strong> ₱{{ formatNumber(bookingToProcess?.total_price) }}</p>
+          <p><strong>Down Payment (20%):</strong> ₱{{ formatNumber(bookingToProcess?.total_price * 0.2) }}</p>
+          <p class="modal-hint">Dates will NOT be reserved until the farmer pays the down payment and the treasurer verifies it.</p>
           </div>
 
           <div class="modal-actions">
             <button @click="closeModals" class="btn-secondary">Cancel</button>
             <button @click="approveBooking" class="btn-success" :disabled="loading">
               {{ loading ? 'Approving...' : 'Approve Booking' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Booking Modal -->
+    <div v-if="showConfirmModal" class="modal-overlay" @click.self="closeModals">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirm Booking</h2>
+          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p>Down payment has been verified. Confirming will reserve the machinery dates and assign the operator.</p>
+          <div class="booking-summary">
+            <p><strong>Farmer:</strong> {{ bookingToProcess?.farmer_name }}</p>
+            <p><strong>Machinery:</strong> {{ bookingToProcess?.machinery_name }}</p>
+            <p><strong>Date:</strong> {{ formatDate(bookingToProcess?.booking_date) }}</p>
+            <p><strong>Down Payment:</strong> ₱{{ formatNumber(bookingToProcess?.down_payment_amount) }}</p>
+          </div>
+          <div class="modal-actions">
+            <button @click="closeModals" class="btn-secondary">Cancel</button>
+            <button @click="confirmBookingFinal" class="btn-success" :disabled="loading">
+              {{ loading ? 'Confirming...' : 'Confirm Booking' }}
             </button>
           </div>
         </div>
@@ -583,19 +588,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
-import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 export default {
   name: 'MachineryApprovalPage',
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
-    const { isDark } = useBackdropTheme()
-    const isLight = computed(() => !isDark.value)
 
     // State
     const showViewModal = ref(false)
     const showApproveModal = ref(false)
+    const showConfirmModal = ref(false)
     const showRejectModal = ref(false)
     const showCompleteModal = ref(false)
     const showIncompleteModal = ref(false)
@@ -637,6 +640,18 @@ export default {
     const approvedCount = computed(() => {
       return allBookings.value.filter(b => b.status === 'Approved').length
     })
+
+    const confirmCount = computed(() => {
+      return allBookings.value.filter(b => b.status === 'Down Payment Verified').length
+    })
+
+    const assignedCount = computed(() => {
+      return allBookings.value.filter(b =>
+        ['Assigned to Operator', 'Booking Confirmed', 'In Use'].includes(b.status)
+      ).length
+    })
+
+    const operatorWorkStatuses = ['Assigned to Operator', 'Booking Confirmed', 'In Use', 'Approved']
 
     const rejectedCount = computed(() => {
       return allBookings.value.filter(b => b.status === 'Rejected').length
@@ -688,11 +703,18 @@ export default {
       return userRole === 'operator'
     })
 
-    const tableColspan = computed(() => (canApproveBookings.value ? 10 : 9))
+    const tableColspan = computed(() => (canApproveBookings.value ? 9 : 8))
 
     const bookingStatusSlug = (status) => {
       const map = {
         Pending: 'pending',
+        'Awaiting Down Payment': 'pending',
+        'Awaiting Payment Verification': 'pending',
+        'Payment Rejected': 'rejected',
+        'Down Payment Verified': 'approved',
+        'Booking Confirmed': 'approved',
+        'Assigned to Operator': 'approved',
+        'Awaiting Final Payment': 'pending',
         Approved: 'approved',
         Incomplete: 'incomplete',
         Completed: 'completed',
@@ -724,10 +746,9 @@ export default {
           filters.value.status = 'Pending'
           activeFilter.value = 'Pending'
         } else if (canCompleteBookings.value && !filters.value.status && !filters.value.payment_status && !filters.value.start_date && !filters.value.end_date) {
-          // For operators, auto-filter to Approved bookings (work items)
-          filterToApply.status = 'Approved'
-          filters.value.status = 'Approved'
-          activeFilter.value = 'Approved'
+          filterToApply.status = 'Assigned to Operator'
+          filters.value.status = 'Assigned to Operator'
+          activeFilter.value = 'Assigned to Operator'
         }
         
         // First load all bookings for counts
@@ -741,8 +762,7 @@ export default {
           // If still no filter but is approver, ensure Pending is shown
           await machineryStore.fetchBookings({ status: 'Pending' })
         } else if (canCompleteBookings.value) {
-          // If still no filter but is operator, ensure Approved is shown
-          await machineryStore.fetchBookings({ status: 'Approved' })
+          await machineryStore.fetchBookings({ status: 'Assigned to Operator' })
         }
       } catch (error) {
         console.error('Error loading bookings:', error)
@@ -812,11 +832,33 @@ export default {
         }
 
         await machineryStore.approveBooking(bookingToProcess.value.id, approvalData)
-        successMessage.value = 'Booking approved successfully!'
+        successMessage.value = 'Booking approved. Farmer must pay 20% down payment before dates are reserved.'
         closeModals()
         await loadData()
       } catch (error) {
         console.error('Error approving booking:', error)
+      }
+    }
+
+    const confirmBookingConfirm = (booking) => {
+      if (!['business_manager', 'operation_manager'].includes(authStore.currentUser?.role)) {
+        alert('Only managers can confirm bookings.')
+        return
+      }
+      bookingToProcess.value = booking
+      showConfirmModal.value = true
+      showViewModal.value = false
+    }
+
+    const confirmBookingFinal = async () => {
+      try {
+        await machineryStore.confirmBooking(bookingToProcess.value.id, authStore.currentUser?.id)
+        successMessage.value = 'Booking confirmed. Machinery dates are now reserved and assigned to operator.'
+        closeModals()
+        await loadData()
+      } catch (error) {
+        console.error('Error confirming booking:', error)
+        alert(error.message || 'Failed to confirm booking')
       }
     }
 
@@ -864,7 +906,7 @@ export default {
     const completeBooking = async () => {
       try {
         await machineryStore.completeBooking(bookingToProcess.value.id, 'completed')
-        successMessage.value = 'Booking marked as completed successfully.'
+        successMessage.value = 'Rental marked complete. Outstanding balance will appear in collectibles if unpaid.'
         closeModals()
         await loadData()
       } catch (error) {
@@ -895,7 +937,7 @@ export default {
           'incomplete', 
           completionNotes.value
         )
-        successMessage.value = 'Booking marked as incomplete. Issues noted.'
+        successMessage.value = 'Booking marked as incomplete. Down payment refund will be processed.'
         closeModals()
         await loadData()
       } catch (error) {
@@ -906,6 +948,7 @@ export default {
     const closeModals = () => {
       showViewModal.value = false
       showApproveModal.value = false
+      showConfirmModal.value = false
       showRejectModal.value = false
       showCompleteModal.value = false
       showIncompleteModal.value = false
@@ -986,6 +1029,7 @@ export default {
       // State
       showViewModal,
       showApproveModal,
+      showConfirmModal,
       showRejectModal,
       showCompleteModal,
       showIncompleteModal,
@@ -1004,6 +1048,9 @@ export default {
       selectedBooking,
       pendingCount,
       approvedCount,
+      confirmCount,
+      assignedCount,
+      operatorWorkStatuses,
       rejectedCount,
       expiredCount,
       incompleteCount,
@@ -1024,6 +1071,8 @@ export default {
       viewBooking,
       approveBookingConfirm,
       approveBooking,
+      confirmBookingConfirm,
+      confirmBookingFinal,
       rejectBookingConfirm,
       rejectBooking,
       completeBookingConfirm,
@@ -1038,8 +1087,7 @@ export default {
       formatNumber,
       formatDate,
       formatDateTime,
-      activeFilter,
-      isLight
+      activeFilter
     }
   }
 }
@@ -1139,12 +1187,12 @@ export default {
 .stat-card {
   background: linear-gradient(140deg, rgba(167, 243, 198, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 10px 22px rgba(5, 11, 8, 0.28);
-  padding: 1.15rem 1.1rem;
+  padding: 1.1rem 1rem;
   display: flex;
   align-items: center;
-  gap: 1.05rem;
+  gap: 1rem;
   cursor: pointer;
   transition:
     transform 220ms ease,
@@ -1170,112 +1218,13 @@ export default {
   background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.24);
   flex-shrink: 0;
-  transition: transform 220ms ease;
 }
 
-.stat-card:hover .stat-icon-wrap {
-  transform: translateY(-1px);
-}
-
-.stat-glyph {
-  width: 1.25rem;
-  height: 1.25rem;
-  display: block;
-}
-
-.stat-glyph,
-.stat-glyph * {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.stat-glyph .glyph-stroke {
-  stroke: currentColor;
-  fill: none;
-}
-
-.stat-glyph .glyph-fill {
-  fill: currentColor;
-  stroke: none;
-}
-
-.stat-card.pending .stat-icon-wrap {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.55), rgba(217, 119, 6, 0.48));
-  color: #78350f;
-  border-color: rgba(180, 83, 9, 0.45);
-}
-
-.stat-card.approved .stat-icon-wrap {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.5), rgba(22, 163, 74, 0.45));
-  color: #052e16;
-  border-color: rgba(21, 128, 61, 0.45);
-}
-
-.stat-card.incomplete .stat-icon-wrap {
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.5), rgba(202, 138, 4, 0.45));
-  color: #854d0e;
-  border-color: rgba(161, 98, 7, 0.45);
-}
-
-.stat-card.rejected .stat-icon-wrap {
-  background: linear-gradient(135deg, rgba(252, 165, 165, 0.5), rgba(220, 38, 38, 0.45));
-  color: #7f1d1d;
-  border-color: rgba(185, 28, 28, 0.45);
-}
-
-.stat-card.expired .stat-icon-wrap {
-  background: linear-gradient(135deg, rgba(203, 213, 225, 0.5), rgba(100, 116, 139, 0.45));
-  color: #334155;
-  border-color: rgba(71, 85, 105, 0.45);
-}
-
-.stat-card.pending .stat-glyph,
-.stat-card.pending .stat-glyph * {
-  color: #78350f;
-  stroke: #78350f;
-}
-
-.stat-card.approved .stat-glyph,
-.stat-card.approved .stat-glyph * {
-  color: #052e16;
-  stroke: #052e16;
-}
-
-.stat-card.incomplete .stat-glyph,
-.stat-card.incomplete .stat-glyph * {
-  color: #854d0e;
-  stroke: #854d0e;
-}
-
-.stat-card.rejected .stat-glyph,
-.stat-card.rejected .stat-glyph * {
-  color: #7f1d1d;
-  stroke: #7f1d1d;
-}
-
-.stat-card.expired .stat-glyph,
-.stat-card.expired .stat-glyph * {
-  color: #1e293b;
-  stroke: #1e293b;
-}
-
-:global(body.glass-dark:not(.farmer-user)) .machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-stroke {
-  stroke: #f8fafc;
-}
-
-:global(body.glass-dark:not(.farmer-user)) .machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-fill {
-  fill: #f8fafc;
-}
-
-.stat-card.incomplete .stat-glyph .glyph-fill {
-  fill: #854d0e;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-  min-width: 0;
+.stat-icon.stat-abbr {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ecfdf5;
 }
 
 .stat-value {
@@ -1289,6 +1238,16 @@ export default {
   color: rgba(236, 253, 245, 0.88);
   font-weight: 700;
   font-size: 0.875rem;
+}
+
+.stat-card.incomplete .stat-icon-wrap {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(254, 243, 199, 0.22);
+}
+
+.stat-card.expired .stat-icon-wrap {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(241, 245, 249, 0.12);
 }
 
 .card.machinery-bookings-card {
@@ -1348,6 +1307,20 @@ export default {
   box-shadow: 0 0 16px rgba(74, 222, 128, 0.4);
 }
 
+.banner-inline-alert {
+  margin-bottom: 1rem;
+}
+
+.alert.alert-info {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(219, 234, 254, 0.88);
+  color: #0f3f66;
+  border-left: 4px solid #38bdf8;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .filters-row {
   display: flex;
   flex-wrap: wrap;
@@ -1370,79 +1343,40 @@ export default {
   margin-bottom: 0.42rem;
 }
 
-.mf-date-field {
+.input-shell {
   position: relative;
-  width: 100%;
 }
 
-.mf-date-input {
-  position: relative;
+.input-shell .field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(187, 247, 208, 0.35);
+}
+
+.input-shell input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.85rem 2.85rem 0.85rem 0.92rem;
+  padding: 0.85rem 0.92rem 0.85rem 2.05rem;
   border-radius: 12px;
   border: 1px solid rgba(134, 239, 172, 0.28);
   background: rgba(8, 30, 22, 0.52);
   color: #ecfdf5;
   font-size: 0.94rem;
   font-family: inherit;
-  color-scheme: light;
 }
 
-.mf-date-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2.85rem;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  opacity: 0;
-  cursor: pointer;
-  z-index: 3;
-}
-
-.mf-date-input:focus {
+.input-shell input:focus {
   outline: none;
   border-color: rgba(110, 231, 183, 0.9);
   box-shadow:
     0 0 0 3px rgba(74, 222, 128, 0.15),
     0 0 16px rgba(74, 222, 128, 0.22);
-}
-
-.mf-date-icon {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  padding: 4px;
-  box-sizing: content-box;
-  color: #ecfdf5;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62));
-  border: 1px solid rgba(134, 239, 172, 0.55);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.mf-date-icon :is(rect, line) {
-  stroke: currentColor;
-}
-
-.machinery-page.light-theme .mf-date-input {
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: #14532d;
-}
-
-.machinery-page.light-theme .mf-date-icon {
-  color: #15803d;
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border-color: #16a34a;
-  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.12);
 }
 
 .mach-clear-filters-btn {
@@ -1482,7 +1416,7 @@ export default {
 
 .machinery-loans-table.loans-table th,
 .machinery-loans-table.loans-table td {
-  padding: 0.62rem 0.48rem;
+  padding: 0.28rem 0.26rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -1497,16 +1431,16 @@ export default {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
   font-weight: 700;
   color: rgba(234, 241, 236, 0.94);
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
+  font-size: 0.56rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1.15;
+  line-height: 1.1;
   border-bottom-color: rgba(190, 235, 203, 0.2);
 }
 
 .machinery-loans-table.loans-table td {
-  font-size: 0.73rem;
-  line-height: 1.22;
+  font-size: 0.62rem;
+  line-height: 1.12;
   color: rgba(226, 234, 229, 0.92);
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
@@ -1515,14 +1449,11 @@ export default {
   background: rgba(74, 222, 128, 0.07);
 }
 
-.machinery-loans-table col.col-id {
-  width: 5%;
-}
 .machinery-loans-table col.col-name {
-  width: 14%;
+  width: 16%;
 }
 .machinery-loans-table col.col-purpose {
-  width: 12%;
+  width: 14%;
 }
 .machinery-loans-table col.col-date {
   width: 9%;
@@ -2122,6 +2053,5 @@ export default {
   }
 }
 
-
-
+@import '../styles/compact-data-table.css';
 </style>

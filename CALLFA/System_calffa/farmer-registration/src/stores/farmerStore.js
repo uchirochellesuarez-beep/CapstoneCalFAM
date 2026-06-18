@@ -129,7 +129,13 @@ export const useFarmerStore = defineStore('farmer', {
       this.error = null
       
       try {
-        const response = await fetch(`${API_BASE_URL}`)
+        const token = localStorage.getItem('token')
+        const response = await fetch(`${API_BASE_URL}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : ''
+          }
+        })
         
         if (!response.ok) {
           const data = await response.json()
