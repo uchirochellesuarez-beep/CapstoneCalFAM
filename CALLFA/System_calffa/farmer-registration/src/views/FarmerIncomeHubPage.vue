@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container farmer-income-hub-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <h1 class="page-title">Farmer Income Records</h1>
       <p class="page-subtitle">Manage farmer income records and distributions</p>
@@ -117,6 +117,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 import PresidentFarmerIncomePage from './PresidentFarmerIncomePage.vue'
 import OfficerFarmerIncomePage from './OfficerFarmerIncomePage.vue'
 import AgriculturistIncomeReviewPage from './AgriculturistIncomeReviewPage.vue'
@@ -124,6 +125,8 @@ import ExpenseFoundationUpload from '../components/ExpenseFoundationUpload.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const currentUser = computed(() => authStore.currentUser)
 
 const isPresident = computed(() => currentUser.value?.role === 'president')
@@ -219,7 +222,7 @@ const fetchStats = async () => {
   background: transparent;
 }
 
-.page-header {
+.farmer-income-hub-page:not(.light-theme) .page-header {
   margin-bottom: 32px;
   padding: 28px 32px;
   text-align: left;
@@ -229,26 +232,26 @@ const fetchStats = async () => {
   box-shadow: 0 18px 36px rgba(5, 12, 8, 0.32);
 }
 
-.page-title {
+.farmer-income-hub-page:not(.light-theme) .page-title {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #4ade80;
+  color: #ffffff;
   font-size: clamp(2rem, 2.8vw, 2.6rem);
   font-weight: 900;
   letter-spacing: -0.04em;
   margin: 0 0 10px;
 }
 
-.page-subtitle {
-  color: rgba(220, 252, 231, 0.78);
+.farmer-income-hub-page:not(.light-theme) .page-subtitle {
+  color: #ffffff;
   font-size: 1.05rem;
   margin: 0;
   max-width: 560px;
   line-height: 1.45;
 }
 
-.tabs-container {
+.farmer-income-hub-page:not(.light-theme) .tabs-container {
   margin: 28px 0 30px;
   padding: 16px 18px;
   display: flex;
@@ -268,7 +271,7 @@ const fetchStats = async () => {
   width: 100%;
 }
 
-.tab-btn {
+.farmer-income-hub-page:not(.light-theme) .tab-btn {
   padding: 14px 24px;
   background: linear-gradient(135deg, rgba(156, 107, 40, 0.9), rgba(108, 149, 94, 0.9));
   border: 1px solid rgba(255, 232, 179, 0.36);
@@ -293,7 +296,7 @@ const fetchStats = async () => {
   flex: 1 1 0;
 }
 
-.tab-btn:hover {
+.farmer-income-hub-page:not(.light-theme) .tab-btn:hover {
   color: #ffffff;
   transform: translateY(-2px);
   filter: brightness(1.06);
@@ -302,7 +305,7 @@ const fetchStats = async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.tab-btn.active {
+.farmer-income-hub-page:not(.light-theme) .tab-btn.active {
   color: #052e16;
   border-bottom-color: transparent;
   background: linear-gradient(135deg, #bbf7d0 0%, #86efac 55%, #4ade80 100%);
@@ -335,7 +338,7 @@ const fetchStats = async () => {
   margin-top: 18px;
 }
 
-.empty-state {
+.farmer-income-hub-page:not(.light-theme) .empty-state {
   text-align: center;
   padding: 56px 24px;
   border-radius: 24px;
@@ -350,34 +353,48 @@ const fetchStats = async () => {
   line-height: 1;
 }
 
-.empty-state p {
-  color: rgba(220, 252, 231, 0.78);
+.farmer-income-hub-page:not(.light-theme) .empty-state p {
+  color: #ffffff;
   margin: 0;
   line-height: 1.5;
   font-size: 1.04rem;
 }
 
-.foundation-hub-panel {
-  max-width: 720px;
-  margin: 0 auto;
+.farmer-income-hub-page:not(.light-theme) .foundation-hub-panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
   text-align: left;
   padding: 24px 26px;
   border-radius: 24px;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.9), rgba(14, 33, 23, 0.88));
   border: 1px solid rgba(126, 184, 145, 0.22);
   box-shadow: 0 16px 30px rgba(5, 12, 8, 0.24);
+  box-sizing: border-box;
 }
 
-.hub-foundation-intro {
+.foundation-hub-panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.foundation-hub-panel :deep(.foundation-panel) {
+  margin-top: 0;
+  width: 100%;
+}
+
+.farmer-income-hub-page:not(.light-theme) .hub-foundation-intro {
   font-size: 0.95rem;
   line-height: 1.55;
-  color: rgba(220, 252, 231, 0.85);
+  color: #ffffff;
   margin: 0 0 1rem 0;
 }
 
-.hub-foundation-intro strong,
-.hub-foundation-intro em {
-  color: #bbf7d0;
+.farmer-income-hub-page:not(.light-theme) .hub-foundation-intro strong,
+.farmer-income-hub-page:not(.light-theme) .hub-foundation-intro em {
+  color: #ffffff;
 }
 
 .alert-warn {
@@ -396,26 +413,142 @@ const fetchStats = async () => {
   margin-bottom: 1rem;
 }
 
-.farmer-pick-row label {
+.farmer-income-hub-page:not(.light-theme) .farmer-pick-row label {
   font-weight: 600;
-  color: rgba(220, 252, 231, 0.88);
+  color: #ffffff;
   font-size: 0.9rem;
 }
 
-.foundation-farmer-select {
+.farmer-income-hub-page:not(.light-theme) .foundation-farmer-select {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(126, 184, 145, 0.35);
   font-size: 1rem;
   max-width: 100%;
   background: rgba(0, 0, 0, 0.28);
-  color: #ecfdf5;
+  color: #ffffff;
 }
 
 .foundation-farmer-select:focus {
   outline: none;
   border-color: rgba(74, 222, 128, 0.55);
   box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+}
+
+/* ===== LIGHT MODE — white surfaces ===== */
+.farmer-income-hub-page.light-theme .page-header {
+  margin-bottom: 32px;
+  padding: 28px 32px;
+  text-align: left;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  border-radius: 26px;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.farmer-income-hub-page.light-theme .page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  font-size: clamp(2rem, 2.8vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+}
+
+.farmer-income-hub-page.light-theme .page-subtitle {
+  color: #166534 !important;
+  font-size: 1.05rem;
+  margin: 0;
+  max-width: 560px;
+  line-height: 1.45;
+}
+
+.farmer-income-hub-page.light-theme .tabs-container {
+  margin: 28px 0 30px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: center;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  border-radius: 24px;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+}
+
+.farmer-income-hub-page.light-theme .tab-btn {
+  padding: 14px 24px;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  border-radius: 16px;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  font-size: 1.02rem;
+  font-weight: 800;
+  min-height: 52px;
+  flex: 1 1 0;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08) !important;
+}
+
+.farmer-income-hub-page.light-theme .tab-btn.active,
+.farmer-income-hub-page.light-theme .tab-btn:hover {
+  background: #ffffff !important;
+  border-color: #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-income-hub-page.light-theme .tab-badge {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  padding: 4px 10px;
+  min-width: 24px;
+}
+
+.farmer-income-hub-page.light-theme .tab-btn.active .tab-badge {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.farmer-income-hub-page.light-theme .hub-foundation-intro {
+  margin: 0 0 1.35rem;
+  line-height: 1.6;
+}
+
+.farmer-income-hub-page.light-theme .foundation-farmer-select {
+  padding: 12px 16px;
+  border-radius: 12px;
+}
+
+.farmer-income-hub-page.light-theme .empty-state,
+.farmer-income-hub-page.light-theme .foundation-hub-panel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+  padding: 28px 32px;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+  border-radius: 24px;
+}
+
+.farmer-income-hub-page.light-theme .empty-state p,
+.farmer-income-hub-page.light-theme .hub-foundation-intro,
+.farmer-income-hub-page.light-theme .hub-foundation-intro strong,
+.farmer-income-hub-page.light-theme .hub-foundation-intro em,
+.farmer-income-hub-page.light-theme .farmer-pick-row label {
+  color: #052e16 !important;
+}
+
+.farmer-income-hub-page.light-theme .foundation-farmer-select {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 @media (max-width: 768px) {

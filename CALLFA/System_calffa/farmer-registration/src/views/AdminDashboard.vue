@@ -181,15 +181,6 @@
 
       </div>
     </div>
-
-    <div v-if="isAdmin" class="fab-wrap">
-      <button class="fab-main" @click="toggleFab" aria-label="Quick actions">{{ fabOpen ? '×' : '+' }}</button>
-      <div v-if="fabOpen" class="fab-actions">
-        <button class="fab-action" @click="goToApprovals">Approve Members</button>
-        <button class="fab-action" @click="goToMembers">Add/View Members</button>
-        <button class="fab-action" @click="goToLogs">View Logs</button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -218,7 +209,6 @@ const loading = ref(false)
 const currentTime = ref('')
 const currentDay = ref('')
 const currentDate = ref('')
-const fabOpen = ref(false)
 let timeInterval = null
 
 // Animated counters
@@ -491,25 +481,6 @@ const loadFarmerFinancialData = async () => {
   } catch (err) {
     console.error('Error loading farmer financial data:', err)
   }
-}
-
-const goToApprovals = () => {
-  router.push('/farmers-table')
-  fabOpen.value = false
-}
-
-const goToMembers = () => {
-  router.push('/farmers-table')
-  fabOpen.value = false
-}
-
-const goToLogs = () => {
-  router.push('/system-activity')
-  fabOpen.value = false
-}
-
-const toggleFab = () => {
-  fabOpen.value = !fabOpen.value
 }
 
 const toggleBarangaySort = () => {
@@ -1686,85 +1657,6 @@ canvas {
   max-height: 260px;
 }
 
-/* FAB Button */
-.fab-wrap {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 100;
-}
-
-.fab-main {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #53b476 0%, #2f8f53 100%);
-  color: white;
-  border: none;
-  font-size: 28px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(47, 143, 83, 0.35);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fab-main:hover {
-  transform: scale(1.12) translateY(-4px);
-  box-shadow: 0 12px 32px rgba(47, 143, 83, 0.5);
-}
-
-.fab-main:active {
-  transform: scale(1.08);
-}
-
-.fab-actions {
-  position: absolute;
-  bottom: 80px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.fab-action {
-  background: #273a2d;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  padding: 12px 18px;
-  color: #eaf9e0;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow:
-    10px 10px 18px rgba(7, 12, 9, 0.55),
-    -8px -8px 16px rgba(43, 62, 47, 0.5),
-    inset 1px 1px 0 rgba(255,255,255,0.08),
-    inset -1px -1px 0 rgba(0,0,0,0.34);
-  white-space: nowrap;
-  letter-spacing: 0.3px;
-}
-
-.fab-action:hover {
-  background: #2d4333;
-  border-color: rgba(255,255,255,0.2);
-  transform: translateX(-6px);
-  box-shadow:
-    12px 12px 22px rgba(7, 12, 9, 0.62),
-    -10px -10px 20px rgba(47, 68, 51, 0.56),
-    inset 1px 1px 0 rgba(255,255,255,0.12),
-    inset -1px -1px 0 rgba(0,0,0,0.4);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -1780,8 +1672,6 @@ canvas {
   .glass-charts-grid { grid-template-columns: 1fr; gap: 18px; }
   .analytics-section { padding: 24px 18px 20px; border-radius: 18px; }
   .filter-panel-grid { grid-template-columns: 1fr 1fr; }
-  .fab-wrap { bottom: 20px; right: 20px; }
-  .fab-main { width: 56px; height: 56px; font-size: 24px; }
 }
 
 @media (max-width: 480px) {
@@ -1792,7 +1682,6 @@ canvas {
   .stats-overview { grid-template-columns: 1fr; }
   .dashboard-title { font-size: 22px; }
   .filter-panel-grid { grid-template-columns: 1fr; }
-  .fab-wrap { bottom: 16px; right: 16px; }
 }
 
 /* =============================================
@@ -2009,17 +1898,5 @@ canvas {
 
 .dashboard-container.light-theme .gl-dot {
   box-shadow: 0 0 4px rgba(22, 101, 52, 0.2);
-}
-
-.dashboard-container.light-theme .fab-main {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  border-color: #86efac;
-  color: #ffffff;
-}
-
-.dashboard-container.light-theme .fab-action {
-  background: #ffffff;
-  color: #14532d;
-  border: 2px solid #86efac;
 }
 </style>

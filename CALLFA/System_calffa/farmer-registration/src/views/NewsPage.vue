@@ -1437,9 +1437,15 @@ onMounted(fetchNews)
 }
 
 .news-page.light-theme :deep(.action-btn--danger) {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+}
+
+.news-page.light-theme :deep(.action-btn--danger:hover) {
   color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: #fecaca;
+  border-color: #dc2626;
 }
 
 .news-page.light-theme :deep(.notice-card-footer) {

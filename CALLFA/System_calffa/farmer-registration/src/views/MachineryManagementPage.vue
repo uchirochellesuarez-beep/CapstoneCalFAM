@@ -1777,17 +1777,21 @@ export default {
   border-radius: 7px;
   background: transparent;
   border: none;
-  color: rgba(200, 235, 210, 0.5);
+  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   transition: all 0.18s ease;
 }
+.inv2-view-btn svg {
+  color: currentColor;
+  stroke: currentColor;
+}
 .inv2-view-btn.active {
-  background: rgba(45, 92, 74, 0.55);
-  color: #ecfdf5;
+  background: rgba(45, 92, 74, 0.75);
+  color: #ffffff;
 }
 .inv2-view-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(200, 235, 210, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 .inv2-close {
   width: 36px;
@@ -1795,12 +1799,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 9px;
-  color: rgba(200, 235, 210, 0.7);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.18s ease;
+}
+.inv2-close svg {
+  color: currentColor;
+  stroke: currentColor;
 }
 .inv2-close:hover {
   background: rgba(248, 113, 113, 0.16);
@@ -3493,6 +3501,35 @@ export default {
 .machinery-management-page:not(.light-theme) :is(.inv2-toolbar, .inv2-chips) {
   background: rgba(30, 66, 52, 0.65) !important;
   border-color: var(--line-soft) !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.machinery-management-page:not(.light-theme) .inv2-view-btn.active {
+  background: rgba(45, 92, 74, 0.82) !important;
+  color: #ffffff !important;
+}
+
+.machinery-management-page:not(.light-theme) .inv2-view-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.machinery-management-page:not(.light-theme) .inv2-close {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+}
+
+.machinery-management-page:not(.light-theme) .inv2-close:hover {
+  color: #ffffff !important;
 }
 
 .machinery-management-page:not(.light-theme) :is(.bookings-table tbody tr:hover, .inventory-table tbody tr:hover, .inv2-row:hover td) {
