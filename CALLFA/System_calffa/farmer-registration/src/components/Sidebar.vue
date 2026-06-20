@@ -3,7 +3,7 @@
     <!-- Sidebar Navigation -->
     <nav
       class="sidebar"
-      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer, 'light-theme': isLight }"
+      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer && isDark, 'light-theme': isLight }"
     >
       <div class="backdrop-sidebar" :class="backdropThemeClass"></div>
       <!-- CALFFA LOGO HEADER -->
@@ -37,11 +37,7 @@
 
     <!-- Navigation Sections with Grouped Items -->
     <div class="nav-sections">
-      <!-- FARM MANAGEMENT Section -->
       <div class="nav-section">
-        <div class="section-header">
-          <span class="section-title">FARM MANAGEMENT</span>
-        </div>
         <ul class="nav-list">
           <li
             v-for="item in farmManagementItems"
@@ -109,11 +105,7 @@
         </ul>
       </div>
 
-      <!-- Member Management Section (Admin and President only) -->
       <div class="nav-section" v-if="canManageMembers">
-        <div class="section-header">
-          <span class="section-title">MEMBER MANAGEMENT</span>
-        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/farmers-table') }"
@@ -138,7 +130,7 @@
             @click="handleMenuClick({ text: 'Loan Management', route: '/admin-loans' })"
           >
             <router-link class="nav-link" to="/admin-loans" aria-label="Loan Management">
-              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
+              <LoanApplicationsIcon class="icon-component" size="20" color="currentColor"></LoanApplicationsIcon>
               <span class="text">Loan Management</span>
             </router-link>
           </li>
@@ -156,7 +148,7 @@
             @click="handleMenuClick({ text: 'Seed & Fertilizer Plan', route: '/seed-fertilizer-plan' })"
           >
             <router-link class="nav-link" to="/seed-fertilizer-plan" aria-label="Seed & Fertilizer Plan">
-              <BankIcon class="icon-component" size="20" color="currentColor"></BankIcon>
+              <FarmIcon class="icon-component" size="20" color="currentColor"></FarmIcon>
               <span class="text">Seed & Fertilizer Plan</span>
             </router-link>
           </li>
@@ -165,7 +157,7 @@
             @click="handleMenuClick({ text: 'Association Dues', route: '/machinery-financial?tab=dues' })"
           >
             <router-link class="nav-link" to="/machinery-financial?tab=dues" aria-label="Association Dues">
-              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
+              <CoinsIcon class="icon-component" size="20" color="currentColor"></CoinsIcon>
               <span class="text">Association Dues</span>
             </router-link>
           </li>
@@ -226,11 +218,7 @@
         </ul>
       </div>
 
-      <!-- Insights Section -->
       <div class="nav-section">
-        <div class="section-header">
-          <span class="section-title">INSIGHTS</span>
-        </div>
         <ul class="nav-list">
           <li
             v-for="item in insightsItems"
@@ -246,11 +234,7 @@
         </ul>
       </div>
 
-      <!-- Admin Section (if admin) -->
       <div class="nav-section" v-if="isAdmin">
-        <div class="section-header">
-          <span class="section-title">ADMIN</span>
-        </div>
         <ul class="nav-list">
           <li
             v-for="item in adminItems"
@@ -278,7 +262,11 @@ import { canBookMachinery, canApplyOfficerLoan } from "../utils/roleAccess";
 import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
 import MachineryIcon from "./icons/MachineryIcon.vue";
-import MoneyIcon from "./icons/MoneyIcon.vue";
+import ChartLineIcon from "./icons/ChartLineIcon.vue";
+import AnalyticsIcon from "./icons/AnalyticsIcon.vue";
+import LoanIcon from "./icons/LoanIcon.vue";
+import LoanApplicationsIcon from "./icons/LoanApplicationsIcon.vue";
+import CoinsIcon from "./icons/CoinsIcon.vue";
 import MembersIcon from "./icons/MembersIcon.vue";
 import DocumentIcon from "./icons/DocumentIcon.vue";
 import ApprovalIcon from "./icons/ApprovalIcon.vue";
@@ -404,9 +392,9 @@ const operationsItems = computed(() => {
 
   // Machinery Financial for admin, president, and treasurer; Loan Portfolio for officers (admin has it under ADMIN)
   if (canManageFinancial.value) {
-    items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: MoneyIcon });
+    items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: ChartLineIcon });
     if (!isAdmin.value) {
-      items.push({ text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon });
+      items.push({ text: "Financial Overview", route: "/financial-overview", icon: AnalyticsIcon });
     }
   }
 
@@ -424,9 +412,9 @@ const communityItems = computed(() => {
   
   // Loans - different route for officers vs farmers
   if (role === 'farmer') {
-    items.push({ text: "Loans", route: "/loan", icon: MoneyIcon });
+    items.push({ text: "Loans", route: "/loan", icon: LoanIcon });
   } else if (canApplyOfficerLoan(role)) {
-    items.push({ text: "Loans", route: "/officer-loans", icon: MoneyIcon });
+    items.push({ text: "Loans", route: "/officer-loans", icon: LoanIcon });
   }
   
   // Kita sa Pagsasaka - for farmers and officers (except admin/agriculturist)
@@ -446,9 +434,9 @@ const insightsItems = [
 
 const adminItems = [
   { text: "Barangays", route: "/barangays", icon: BankIcon, badge: null },
-  { text: "Loan Management", route: "/admin-loans", icon: MoneyIcon, badge: null },
+  { text: "Loan Management", route: "/admin-loans", icon: LoanApplicationsIcon, badge: null },
   { text: "Machinery Management", route: "/machinery-management", icon: MachineryIcon, badge: null },
-  { text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon, badge: null },
+  { text: "Financial Overview", route: "/financial-overview", icon: AnalyticsIcon, badge: null },
   { text: "Share Capital", route: "/share-capital", icon: BankIcon, badge: null },
 ];
 
@@ -882,7 +870,7 @@ const isActiveRoute = (path) => {
 }
 
 .nav-section {
-  margin-bottom: 1.65rem;
+  margin-bottom: 0.35rem;
 }
 
 .nav-section:last-child {

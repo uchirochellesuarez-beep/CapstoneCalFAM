@@ -1228,60 +1228,162 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme :deep(.edit-label),
 .farmer-table-page.light-theme :deep(.detail-label) {
-  color: #166534 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .farmer-table-page.light-theme :deep(.detail-value),
 .farmer-table-page.light-theme :deep(.member-name),
 .farmer-table-page.light-theme :deep(.edit-photo-name) {
-  color: #052e16 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .farmer-table-page.light-theme :deep(.edit-photo-sub),
 .farmer-table-page.light-theme :deep(.edit-hint) {
-  color: #166534 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .farmer-table-page.light-theme :deep(.edit-photo-row) {
-  background: #f8fdf9 !important;
-  border: 1.5px solid #bbf7d0 !important;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-overlay) {
+  background: rgba(236, 253, 245, 0.55) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .farmer-table-page.light-theme :deep(.modal-content) {
-  background: #fffef9 !important;
-  border: 2px solid #86efac !important;
-  color: #052e16 !important;
-  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.15) !important;
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%) !important;
+  border: 2px solid #166534 !important;
+  color: #000000 !important;
+  border-radius: 20px !important;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header) {
-  border-bottom: 1px solid #bbf7d0 !important;
+  position: relative;
+  overflow: hidden;
+  padding: 1.35rem 1.5rem !important;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
+  border-bottom: 2px solid #166534 !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-title) {
-  color: #052e16 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-size: 1.28rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header button) {
-  color: #64748b !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  border-radius: 10px !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header button:hover) {
-  color: #052e16 !important;
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-body) {
+  padding: 1.5rem !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(240, 253, 244, 0.35) 100%) !important;
+}
+
+.farmer-table-page.light-theme :deep(.member-name) {
+  font-size: 1.22rem !important;
+  font-weight: 800 !important;
+  margin-top: 0.85rem !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-body .rounded-full.object-cover) {
+  border-color: #166534 !important;
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.18) !important;
+}
+
+.farmer-table-page.light-theme :deep(.modal-avatar-fallback) {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border-color: #166534 !important;
+}
+
+.farmer-table-page.light-theme :deep(.details-grid) {
+  gap: 0.85rem 1rem !important;
+}
+
+.farmer-table-page.light-theme :deep(.detail-item) {
+  padding: 0.75rem 0.9rem !important;
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.35) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.06) !important;
+}
+
+.farmer-table-page.light-theme :deep(.detail-label) {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.06em !important;
+}
+
+.farmer-table-page.light-theme :deep(.detail-value) {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-footer) {
-  border-top: 1px solid #bbf7d0 !important;
+  border-top: 2px solid rgba(22, 101, 52, 0.35) !important;
+  padding: 1.2rem 1.5rem !important;
+  background: #ffffff !important;
 }
 
 .farmer-table-page.light-theme :deep(.btn-secondary) {
-  background: #ffffff !important;
-  color: #14532d !important;
-  border: 1.5px solid #86efac !important;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  border-radius: 11px !important;
+  font-weight: 800 !important;
+  padding: 0.72rem 1.35rem !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
 }
 
 .farmer-table-page.light-theme :deep(.btn-secondary:hover) {
-  background: #f0fdf4 !important;
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 55%, #22c55e 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #166534 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.28) !important;
+}
+
+.farmer-table-page.light-theme :deep(.btn-primary) {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
 }
 
 /* Compact tables in child tabs (Pending / Registered Members) */

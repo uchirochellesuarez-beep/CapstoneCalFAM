@@ -1,64 +1,119 @@
 <template>
-  <div class="page-container glass-module-page">
+  <div class="page-container glass-module-page officer-loans-page" :class="{ 'light-theme': isLight }">
     <div class="page-header glass-header">
-      <div class="header-title-row">
-        <h1 class="page-title">{{ pageTitle }}</h1>
+      <div class="header-content">
+        <div class="header-title-row">
+          <h1 class="page-title">{{ pageTitle }}</h1>
+        </div>
+        <p class="page-subtitle">Manage member-facing loan applications with clear status tracking and quick admin actions.</p>
       </div>
-      <p class="page-subtitle">Manage member-facing loan applications with clear status tracking and quick admin actions.</p>
     </div>
 
     <!-- Loan Statistics -->
     <div class="stats-grid">
-      <div class="stat-card pending">
-        <div class="stat-icon-wrap"><div class="stat-icon stat-abbr">Pn</div></div>
+      <button type="button" class="stat-card pending stat-card-clickable" :class="{ 'stat-card-active': activeTab === 'pending' }" @click="activeTab = 'pending'">
+        <div class="stat-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ pendingLoans.length }}</div>
           <div class="stat-label">Pending</div>
         </div>
-      </div>
-      <div class="stat-card approved">
-        <div class="stat-icon-wrap"><div class="stat-icon stat-abbr">Ap</div></div>
+      </button>
+      <button type="button" class="stat-card approved stat-card-clickable" :class="{ 'stat-card-active': activeTab === 'approved' }" @click="activeTab = 'approved'">
+        <div class="stat-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ approvedLoans.length }}</div>
           <div class="stat-label">Approved</div>
         </div>
-      </div>
-      <div class="stat-card active">
-        <div class="stat-icon-wrap"><div class="stat-icon stat-abbr">Ac</div></div>
+      </button>
+      <button type="button" class="stat-card active stat-card-clickable" :class="{ 'stat-card-active': activeTab === 'active' }" @click="activeTab = 'active'">
+        <div class="stat-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ activeLoans.length }}</div>
           <div class="stat-label">Active</div>
         </div>
-      </div>
-      <div class="stat-card rejected">
-        <div class="stat-icon-wrap"><div class="stat-icon stat-abbr">Rj</div></div>
+      </button>
+      <button type="button" class="stat-card rejected stat-card-clickable" :class="{ 'stat-card-active': activeTab === 'rejected' }" @click="activeTab = 'rejected'">
+        <div class="stat-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ rejectedLoans.length }}</div>
           <div class="stat-label">Rejected</div>
         </div>
-      </div>
+      </button>
     </div>
 
     <div class="content-grid">
       <!-- Loan Application Form -->
       <div class="card application-card">
-        <h2 class="card-title">Apply for New Loan</h2>
-        <div class="application-steps" aria-label="Application steps">
-          <div class="step-chip active"><span>1</span> Fill in details</div>
-          <div class="step-chip"><span>2</span> Review terms</div>
-          <div class="step-chip"><span>3</span> Submit request</div>
+        <div class="card-head">
+          <h2 class="card-title card-title-with-icon">
+            <span class="card-title-icon" aria-hidden="true">
+              <LoanApplyIcon :size="18" />
+            </span>
+            Apply for New Loan
+          </h2>
+          <div class="application-steps" aria-label="Application steps">
+            <div class="step-chip active">
+              <span class="step-num">1</span>
+              <span class="step-label">Fill in details</span>
+            </div>
+            <div class="step-connector" aria-hidden="true"></div>
+            <div class="step-chip">
+              <span class="step-num">2</span>
+              <span class="step-label">Review terms</span>
+            </div>
+            <div class="step-connector" aria-hidden="true"></div>
+            <div class="step-chip">
+              <span class="step-num">3</span>
+              <span class="step-label">Submit request</span>
+            </div>
+          </div>
         </div>
-        
+
+        <div class="card-body">
         <!-- Eligibility Message -->
-        <div v-if="eligibilityMessage" class="alert" :class="canApplyLoan ? 'alert-info' : 'alert-warning'">
-          {{ eligibilityMessage }}
+        <div v-if="eligibilityMessage" class="alert alert-with-icon" :class="canApplyLoan ? 'alert-info' : 'alert-warning'">
+          <svg v-if="canApplyLoan" class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <svg v-else class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          </svg>
+          <span>{{ eligibilityMessage }}</span>
         </div>
         
         <form @submit.prevent="submitLoanApplication" class="loan-form" v-if="canApplyLoan">
+          <div class="form-row-two">
           <div class="form-group">
             <label>Loan Type</label>
             <div class="input-shell">
-              <span class="field-icon" aria-hidden="true"></span>
+              <span class="field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                </svg>
+              </span>
               <select v-model="loanForm.type" required @change="updateMaxAmount">
                 <option value="">Select loan type</option>
                 <option value="agricultural">Agricultural Loan (Max: ₱5,000)</option>
@@ -82,20 +137,21 @@
               />
             </div>
             <small v-if="loanForm.type" class="help-text">
-              Maximum: ₱{{ maxLoanAmount.toLocaleString() }} | 
-              Interest: 1% | 
-              Payment Term: 6 months
-            </small>
-            <small v-if="loanForm.amount" class="calculation-text">
-              Principal: ₱{{ parseFloat(loanForm.amount).toLocaleString() }} + 
-              Interest (1%): ₱{{ (parseFloat(loanForm.amount) * 0.01).toLocaleString() }} = 
-              Total: ₱{{ (parseFloat(loanForm.amount) * 1.01).toLocaleString() }}
+              Max ₱{{ maxLoanAmount.toLocaleString() }} · 1% interest · 6 months
             </small>
           </div>
-          <div class="form-group">
+          </div>
+          <div class="form-group form-group-full">
             <label>Purpose (Optional)</label>
             <div class="input-shell">
-              <span class="field-icon" aria-hidden="true"></span>
+              <span class="field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="17" y1="10" x2="3" y2="10" />
+                  <line x1="21" y1="6" x2="3" y2="6" />
+                  <line x1="21" y1="14" x2="3" y2="14" />
+                  <line x1="17" y1="18" x2="3" y2="18" />
+                </svg>
+              </span>
               <input
                 type="text"
                 v-model="loanForm.purpose"
@@ -104,65 +160,111 @@
               />
             </div>
           </div>
+          <div v-if="loanForm.amount" class="amount-summary">
+            <span>Principal <strong>₱{{ parseFloat(loanForm.amount).toLocaleString() }}</strong></span>
+            <span>Interest <strong>₱{{ (parseFloat(loanForm.amount) * 0.01).toLocaleString() }}</strong></span>
+            <span class="amount-total">Total <strong>₱{{ (parseFloat(loanForm.amount) * 1.01).toLocaleString() }}</strong></span>
+          </div>
           <div class="loan-info-box">
-            <h4>Loan Terms & Conditions</h4>
-            <ul>
-              <li>Fixed interest rate: <strong>1%</strong></li>
+            <h4 class="loan-info-title">
+              <svg class="loan-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              Loan Terms & Conditions
+            </h4>
+            <ul class="terms-grid">
+              <li>Fixed interest: <strong>1%</strong></li>
               <li>Payment period: <strong>6 months</strong></li>
-              <li>Maximum loans: <strong>1 loan per 6 months</strong> (2 loans per year)</li>
-              <li>Must complete existing loans before applying for new one</li>
-              <li>{{ approvalDescription }}</li>
+              <li>Max: <strong>1 loan / 6 months</strong></li>
+              <li>Complete existing loans first</li>
+              <li class="terms-full">{{ approvalDescription }}</li>
             </ul>
           </div>
+          <div class="form-actions">
           <button type="submit" class="submit-btn" :disabled="loading || !canApplyLoan">
+            <svg class="submit-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
             {{ loading ? 'Submitting...' : 'Submit Application' }}
           </button>
+          </div>
         </form>
+        </div>
       </div>
 
       <!-- My Loans Section with Tabs -->
       <div class="card loans-card">
-        <h2 class="card-title">My Loan Applications</h2>
-        <p class="loan-guidance-text">Tip: Piliin ang status tab para mabilis mong makita kung anong hakbang na ang application mo.</p>
-        
+        <div class="card-head">
+        <h2 class="card-title card-title-with-icon">
+          <span class="card-title-icon card-title-icon-list" aria-hidden="true">
+            <LoanApplicationsIcon :size="18" />
+          </span>
+          My Loan Applications
+        </h2>
+        </div>
+
+        <div class="card-body loans-card-body">
         <!-- Tabs -->
+        <div class="tabs-wrap">
         <div class="tabs">
           <button
-            :class="['tab', { active: activeTab === 'pending' }]"
+            :class="['tab', 'tab-pending', { active: activeTab === 'pending' }]"
             @click="activeTab = 'pending'"
           >
-            Pending ({{ pendingLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Pending ({{ pendingLoans.length }})
+            </span>
           </button>
           <button
-            :class="['tab', { active: activeTab === 'approved' }]"
+            :class="['tab', 'tab-approved', { active: activeTab === 'approved' }]"
             @click="activeTab = 'approved'"
           >
-            Approved ({{ approvedLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Approved ({{ approvedLoans.length }})
+            </span>
           </button>
           <button
-            :class="['tab', { active: activeTab === 'active' }]"
+            :class="['tab', 'tab-repaying', { active: activeTab === 'active' }]"
             @click="activeTab = 'active'"
           >
-            Active ({{ activeLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Active ({{ activeLoans.length }})
+            </span>
           </button>
           <button
-            :class="['tab', { active: activeTab === 'rejected' }]"
+            :class="['tab', 'tab-rejected', { active: activeTab === 'rejected' }]"
             @click="activeTab = 'rejected'"
           >
-            Rejected ({{ rejectedLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Rejected ({{ rejectedLoans.length }})
+            </span>
           </button>
           <button
-            :class="['tab', { active: activeTab === 'completed' }]"
+            :class="['tab', 'tab-completed', { active: activeTab === 'completed' }]"
             @click="activeTab = 'completed'"
           >
-            Completed ({{ completedLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Completed ({{ completedLoans.length }})
+            </span>
           </button>
           <button
-            :class="['tab', { active: activeTab === 'overdue' }]"
+            :class="['tab', 'tab-overdue', { active: activeTab === 'overdue' }]"
             @click="activeTab = 'overdue'"
           >
-            Overdue ({{ overdueLoans.length }})
+            <span class="tab-inner">
+              <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              Overdue ({{ overdueLoans.length }})
+            </span>
           </button>
+        </div>
         </div>
 
         <!-- Tab Content -->
@@ -170,6 +272,12 @@
           <!-- Pending Loans -->
           <div v-if="activeTab === 'pending'">
             <div v-if="pendingLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+              </div>
               <p>No pending loan applications yet.</p>
             </div>
             <div v-else class="loans-list">
@@ -203,6 +311,12 @@
           <!-- Approved Loans -->
           <div v-if="activeTab === 'approved'">
             <div v-if="approvedLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon empty-state-icon-success" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
               <p>No approved loan applications yet.</p>
             </div>
             <div v-else class="loans-list">
@@ -234,6 +348,11 @@
           <!-- Active Loans -->
           <div v-if="activeTab === 'active'">
             <div v-if="activeLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon empty-state-icon-active" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </div>
               <p>No active loans at the moment.</p>
             </div>
             <div v-else class="loans-list">
@@ -275,6 +394,13 @@
           <!-- Rejected Loans -->
           <div v-if="activeTab === 'rejected'">
             <div v-if="rejectedLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon empty-state-icon-danger" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </div>
               <p>No rejected applications.</p>
             </div>
             <div v-else class="loans-list">
@@ -299,6 +425,13 @@
           <!-- Overdue Loans -->
           <div v-if="activeTab === 'overdue'">
             <div v-if="overdueLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon empty-state-icon-warning" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                </svg>
+              </div>
               <p>No overdue loan balances.</p>
             </div>
             <div v-else class="loans-list">
@@ -345,6 +478,13 @@
           <!-- Completed Loans -->
           <div v-if="activeTab === 'completed'">
             <div v-if="completedLoans.length === 0" class="empty-state">
+              <div class="empty-state-icon empty-state-icon-success" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <polyline points="9 15 11 17 15 13" />
+                </svg>
+              </div>
               <p>No loan applications yet.</p>
             </div>
             <div v-else class="loans-list">
@@ -370,6 +510,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -511,9 +652,9 @@
               type="button"
               class="danger-outline-btn"
               :disabled="loading"
-              @click="deleteLoanApplication"
+              @click="openDeleteConfirm"
             >
-              {{ loading ? 'Deleting...' : 'Delete' }}
+              Delete
             </button>
           </div>
         </div>
@@ -521,77 +662,288 @@
     </div>
 
     <!-- Edit Loan Modal -->
-    <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Edit Loan Application</h3>
-          <button @click="closeEditModal" class="close-btn">&times;</button>
+    <Teleport to="body">
+      <Transition name="loan-modal-fade">
+        <div
+          v-if="showEditModal"
+          class="officer-loan-modal-backdrop"
+          @click.self="closeEditModal"
+        >
+          <div
+            class="officer-loan-modal officer-loan-modal--edit"
+            :class="{ 'light-theme': isLight }"
+            role="dialog"
+            aria-labelledby="edit-loan-title"
+            @click.stop
+          >
+            <div class="officer-loan-modal-header">
+              <div class="officer-loan-modal-title-wrap">
+                <span class="officer-loan-modal-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                </span>
+                <div>
+                  <h3 id="edit-loan-title">Edit Loan Application</h3>
+                  <p class="officer-loan-modal-sub">I-update ang detalye ng pending application</p>
+                </div>
+              </div>
+              <button type="button" class="officer-loan-modal-close" aria-label="Close" @click="closeEditModal">×</button>
+            </div>
+            <div class="officer-loan-modal-body">
+              <form @submit.prevent="updateLoan" class="edit-loan-form">
+                <div class="form-group">
+                  <label for="edit-loan-type">Loan Type</label>
+                  <select id="edit-loan-type" v-model="editForm.type" required @change="updateEditMaxAmount">
+                    <option value="">Select loan type</option>
+                    <option value="agricultural">Agricultural Loan (Max: ₱5,000)</option>
+                    <option value="provident">Provident Loan (Max: ₱3,000)</option>
+                    <option value="educational">Educational Loan (Max: ₱3,000)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit-loan-amount">Loan Amount (₱)</label>
+                  <input
+                    id="edit-loan-amount"
+                    type="number"
+                    v-model="editForm.amount"
+                    placeholder="Enter amount"
+                    required
+                    min="500"
+                    :max="editMaxAmount"
+                    step="100"
+                  />
+                  <small v-if="editForm.type" class="help-text">
+                    Maximum: ₱{{ editMaxAmount.toLocaleString() }} · Interest: 1% · Payment Term: 6 months
+                  </small>
+                </div>
+                <div v-if="editForm.amount" class="edit-amount-summary">
+                  <div class="edit-summary-row">
+                    <span>Principal</span>
+                    <strong>₱{{ parseFloat(editForm.amount).toLocaleString() }}</strong>
+                  </div>
+                  <div class="edit-summary-row">
+                    <span>Interest (1%)</span>
+                    <strong>₱{{ (parseFloat(editForm.amount) * 0.01).toLocaleString() }}</strong>
+                  </div>
+                  <div class="edit-summary-row edit-summary-total">
+                    <span>Total to Pay</span>
+                    <strong>₱{{ (parseFloat(editForm.amount) * 1.01).toLocaleString() }}</strong>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-loan-purpose">Purpose (Optional)</label>
+                  <input
+                    id="edit-loan-purpose"
+                    type="text"
+                    v-model="editForm.purpose"
+                    placeholder="Enter loan purpose"
+                    maxlength="200"
+                  />
+                </div>
+                <div class="officer-loan-modal-actions">
+                  <button type="button" class="officer-loan-modal-btn secondary" @click="closeEditModal">Cancel</button>
+                  <button type="submit" class="officer-loan-modal-btn primary" :disabled="loading">
+                    {{ loading ? 'Updating…' : 'Update Loan' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="modal-body">
-          <form @submit.prevent="updateLoan" class="edit-loan-form">
-            <div class="form-group">
-              <label>Loan Type</label>
-              <select v-model="editForm.type" required @change="updateEditMaxAmount">
-                <option value="">Select loan type</option>
-                <option value="agricultural">Agricultural Loan (Max: ₱5,000)</option>
-                <option value="provident">Provident Loan (Max: ₱3,000)</option>
-                <option value="educational">Educational Loan (Max: ₱3,000)</option>
-              </select>
+      </Transition>
+    </Teleport>
+
+    <!-- Toast notification -->
+    <Transition name="loan-toast-fade">
+      <div
+        v-if="toastMessage"
+        class="loan-toast"
+        :class="toastType"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="loan-toast-icon" aria-hidden="true">
+          <svg v-if="toastType === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </span>
+        <span class="loan-toast-text">{{ toastMessage }}</span>
+        <button type="button" class="loan-toast-close" aria-label="Dismiss" @click="clearToast">×</button>
+      </div>
+    </Transition>
+
+    <!-- Success summary modal (replaces browser alert) -->
+    <Teleport to="body">
+      <Transition name="loan-modal-fade">
+        <div
+          v-if="showSuccessModal"
+          class="loan-notice-backdrop"
+          @click.self="closeSuccessModal"
+        >
+          <div
+            class="loan-notice-modal"
+            :class="{ 'light-theme': isLight }"
+            role="dialog"
+            aria-labelledby="loan-success-title"
+          >
+            <div class="loan-notice-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
             </div>
-            <div class="form-group">
-              <label>Loan Amount (₱)</label>
-              <input
-                type="number"
-                v-model="editForm.amount"
-                placeholder="Enter amount"
-                required
-                min="500"
-                :max="editMaxAmount"
-                step="100"
-              />
-              <small v-if="editForm.type" class="help-text">
-                Maximum: ₱{{ editMaxAmount.toLocaleString() }} | 
-                Interest: 1% | 
-                Payment Term: 6 months
-              </small>
-              <small v-if="editForm.amount" class="calculation-text">
-                Principal: ₱{{ parseFloat(editForm.amount).toLocaleString() }} + 
-                Interest (1%): ₱{{ (parseFloat(editForm.amount) * 0.01).toLocaleString() }} = 
-                Total: ₱{{ (parseFloat(editForm.amount) * 1.01).toLocaleString() }}
-              </small>
+            <h3 id="loan-success-title" class="loan-notice-title">{{ successModal.title }}</h3>
+            <p class="loan-notice-sub">Narito ang buod ng inyong loan application:</p>
+            <div class="loan-notice-details">
+              <div class="loan-notice-row">
+                <span>Principal</span>
+                <strong>₱{{ successModal.principal.toLocaleString() }}</strong>
+              </div>
+              <div class="loan-notice-row">
+                <span>Interest (1%)</span>
+                <strong>₱{{ successModal.interest.toLocaleString() }}</strong>
+              </div>
+              <div class="loan-notice-row loan-notice-row-total">
+                <span>Total to Pay</span>
+                <strong>₱{{ successModal.total.toLocaleString() }}</strong>
+              </div>
+              <div class="loan-notice-row">
+                <span>Payment Term</span>
+                <strong>{{ successModal.paymentTerm }} months</strong>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Purpose (Optional)</label>
-              <input
-                type="text"
-                v-model="editForm.purpose"
-                placeholder="Enter loan purpose"
-                maxlength="200"
-              />
+            <p v-if="successModal.footnote" class="loan-notice-foot">{{ successModal.footnote }}</p>
+            <button type="button" class="loan-notice-btn" @click="closeSuccessModal">OK, naintindihan ko</button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Delete confirmation modal (replaces browser confirm) -->
+    <Teleport to="body">
+      <Transition name="loan-modal-fade">
+        <div
+          v-if="showDeleteConfirmModal"
+          class="loan-notice-backdrop"
+          @click.self="closeDeleteConfirm"
+        >
+          <div
+            class="loan-delete-confirm-modal"
+            :class="{ 'light-theme': isLight }"
+            role="alertdialog"
+            aria-labelledby="loan-delete-title"
+            aria-describedby="loan-delete-desc"
+            @click.stop
+          >
+            <div class="loan-delete-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
             </div>
-            <div class="modal-actions">
-              <button type="button" @click="closeEditModal" class="cancel-btn">Cancel</button>
-              <button type="submit" class="submit-btn" :disabled="loading">
-                {{ loading ? 'Updating...' : 'Update Loan' }}
+            <h3 id="loan-delete-title" class="loan-delete-title">Delete Loan Application?</h3>
+            <p id="loan-delete-desc" class="loan-delete-message">
+              Are you sure you want to delete this loan application?
+            </p>
+            <p class="loan-delete-warning">This action cannot be undone.</p>
+            <div class="loan-delete-actions">
+              <button
+                type="button"
+                class="loan-delete-cancel"
+                :disabled="deleteInProgress"
+                @click="closeDeleteConfirm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="loan-delete-btn"
+                :disabled="deleteInProgress"
+                @click="confirmDeleteLoan"
+              >
+                {{ deleteInProgress ? 'Deleting...' : 'Delete' }}
               </button>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { getManilaReferenceDateString } from '../utils/philippineTime'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
+import LoanApplyIcon from '../components/icons/LoanApplyIcon.vue'
+import LoanApplicationsIcon from '../components/icons/LoanApplicationsIcon.vue'
+
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const authStore = useAuthStore()
 const route = useRoute()
 
 const highlightedLoanId = ref(null)
+
+const toastMessage = ref('')
+const toastType = ref('success')
+let toastTimer = null
+
+const showSuccessModal = ref(false)
+const showDeleteConfirmModal = ref(false)
+const deleteInProgress = ref(false)
+const successModal = ref({
+  title: '',
+  principal: 0,
+  interest: 0,
+  total: 0,
+  paymentTerm: 0,
+  footnote: ''
+})
+
+const showToast = (message, type = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toastMessage.value = ''
+  }, 4500)
+}
+
+const clearToast = () => {
+  toastMessage.value = ''
+  if (toastTimer) clearTimeout(toastTimer)
+}
+
+const openLoanSuccessModal = (title, details, footnote = '') => {
+  successModal.value = {
+    title,
+    principal: Number(details?.principal || 0),
+    interest: Number(details?.interest || 0),
+    total: Number(details?.total || 0),
+    paymentTerm: Number(details?.payment_term || 0),
+    footnote
+  }
+  showSuccessModal.value = true
+}
+
+const closeSuccessModal = () => {
+  showSuccessModal.value = false
+}
 
 const pageTitle = computed(() => {
   const role = authStore.currentUser?.role
@@ -710,6 +1062,10 @@ onMounted(async () => {
   }
 })
 
+onUnmounted(() => {
+  if (toastTimer) clearTimeout(toastTimer)
+})
+
 const checkEligibility = async () => {
   try {
     const farmerId = authStore.currentUser?.id
@@ -760,22 +1116,22 @@ const loadLoans = async () => {
 
 const submitLoanApplication = async () => {
   if (!authStore.currentUser || !authStore.currentUser.id) {
-    alert('Please log in to apply for a loan')
+    showToast('Please log in to apply for a loan', 'error')
     return
   }
   
   if (!loanForm.value.type) {
-    alert('Please select a loan type')
+    showToast('Please select a loan type', 'error')
     return
   }
   
   if (!loanForm.value.amount || parseFloat(loanForm.value.amount) <= 0) {
-    alert('Please enter a valid loan amount')
+    showToast('Please enter a valid loan amount', 'error')
     return
   }
   
   if (parseFloat(loanForm.value.amount) > maxLoanAmount.value) {
-    alert(`Loan amount cannot exceed ₱${maxLoanAmount.value.toLocaleString()} for ${loanForm.value.type} loan`)
+    showToast(`Loan amount cannot exceed ₱${maxLoanAmount.value.toLocaleString()} for ${loanForm.value.type} loan`, 'error')
     return
   }
   
@@ -803,8 +1159,11 @@ const submitLoanApplication = async () => {
     console.log('Loan application response:', result)
     
     if (response.ok) {
-      const details = result.details
-      alert(`Loan application submitted successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months\n\n${approvalDescription.value}`)
+      openLoanSuccessModal(
+        'Loan application submitted!',
+        result.details,
+        approvalDescription.value
+      )
       loanForm.value = {
         type: '',
         amount: '',
@@ -814,11 +1173,11 @@ const submitLoanApplication = async () => {
       await loadLoans()
       await checkEligibility()
     } else {
-      alert(result.message || 'Failed to submit loan application')
+      showToast(result.message || 'Failed to submit loan application', 'error')
     }
   } catch (error) {
     console.error('Error submitting loan:', error)
-    alert('Failed to submit loan application: ' + error.message)
+    showToast('Failed to submit loan application: ' + error.message, 'error')
   } finally {
     loading.value = false
   }
@@ -920,11 +1279,21 @@ const editLoanFromModal = () => {
   nextTick(() => editLoan(loan))
 }
 
-const deleteLoanApplication = async () => {
-  const id = selectedLoan.value?.id
-  if (!id || !confirm('Are you sure you want to delete this loan application?')) return
+const openDeleteConfirm = () => {
+  if (!selectedLoan.value?.id) return
+  showDeleteConfirmModal.value = true
+}
 
-  loading.value = true
+const closeDeleteConfirm = () => {
+  if (deleteInProgress.value) return
+  showDeleteConfirmModal.value = false
+}
+
+const confirmDeleteLoan = async () => {
+  const id = selectedLoan.value?.id
+  if (!id) return
+
+  deleteInProgress.value = true
   try {
     const response = await fetch(`http://localhost:3000/api/loans/${id}`, {
       method: 'DELETE',
@@ -932,34 +1301,35 @@ const deleteLoanApplication = async () => {
     })
     const result = await response.json()
     if (response.ok) {
-      alert('Loan application deleted successfully')
+      showToast('Loan application deleted successfully.')
+      showDeleteConfirmModal.value = false
       closeModal()
       await loadLoans()
       await checkEligibility()
     } else {
-      alert(result.message || 'Failed to delete loan application')
+      showToast(result.message || 'Failed to delete loan application', 'error')
     }
   } catch (error) {
     console.error('Error deleting loan:', error)
-    alert('Failed to delete loan application: ' + error.message)
+    showToast('Failed to delete loan application: ' + error.message, 'error')
   } finally {
-    loading.value = false
+    deleteInProgress.value = false
   }
 }
 
 const updateLoan = async () => {
   if (!editForm.value.type) {
-    alert('Please select a loan type')
+    showToast('Please select a loan type', 'error')
     return
   }
   
   if (!editForm.value.amount || parseFloat(editForm.value.amount) <= 0) {
-    alert('Please enter a valid loan amount')
+    showToast('Please enter a valid loan amount', 'error')
     return
   }
   
   if (parseFloat(editForm.value.amount) > editMaxAmount.value) {
-    alert(`Loan amount cannot exceed ₱${editMaxAmount.value.toLocaleString()} for ${editForm.value.type} loan`)
+    showToast(`Loan amount cannot exceed ₱${editMaxAmount.value.toLocaleString()} for ${editForm.value.type} loan`, 'error')
     return
   }
   
@@ -983,16 +1353,15 @@ const updateLoan = async () => {
     const result = await response.json()
     
     if (response.ok) {
-      const details = result.details
-      alert(`Loan updated successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months`)
+      openLoanSuccessModal('Loan updated successfully!', result.details)
       closeEditModal()
       await loadLoans()
     } else {
-      alert(result.message || 'Failed to update loan application')
+      showToast(result.message || 'Failed to update loan application', 'error')
     }
   } catch (error) {
     console.error('Error updating loan:', error)
-    alert('Failed to update loan application: ' + error.message)
+    showToast('Failed to update loan application: ' + error.message, 'error')
   } finally {
     loading.value = false
   }
@@ -1409,7 +1778,7 @@ const formatPurpose = (purpose) => {
 .loan-amount {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #059669;
+  color: #000000;
   margin-bottom: 0.75rem;
 }
 
@@ -1433,7 +1802,7 @@ const formatPurpose = (purpose) => {
 
 .progress-text {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #000000;
   text-align: right;
 }
 
@@ -1685,6 +2054,15 @@ const formatPurpose = (purpose) => {
   background: linear-gradient(145deg, #0f1712 0%, #132119 28%, #1f3627 64%, #2a4735 100%);
   border-radius: 20px;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  padding: 1.75rem 1.85rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.page-container > * {
+  position: relative;
+  z-index: 1;
 }
 
 .page-container::before {
@@ -1702,6 +2080,10 @@ const formatPurpose = (purpose) => {
   z-index: 5000 !important;
 }
 
+.page-header.glass-header {
+  margin-bottom: 0;
+}
+
 .glass-header {
   background: linear-gradient(135deg, rgba(167, 243, 198, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -1709,7 +2091,56 @@ const formatPurpose = (purpose) => {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 24px;
-  padding: 1.5rem 1.75rem;
+  padding: 1.35rem 1.6rem;
+  margin-bottom: 0;
+}
+
+.glass-header .header-content {
+  max-width: none;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  padding: 0;
+  display: block;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.card-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.card-title-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, rgba(134, 239, 172, 0.55), rgba(74, 222, 128, 0.42));
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #052e16;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 12px rgba(6, 78, 59, 0.28);
+}
+
+.card-title-icon-list {
+  background: linear-gradient(145deg, rgba(147, 197, 253, 0.55), rgba(96, 165, 250, 0.42));
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #1e3a8a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 12px rgba(30, 64, 175, 0.28);
+}
+
+.card-title-icon :deep(svg),
+.card-title-icon :deep(svg *) {
+  display: block;
+  stroke: currentColor;
+  filter: drop-shadow(0 1px 2px rgba(3, 12, 8, 0.2));
 }
 
 .header-title-row {
@@ -1731,7 +2162,35 @@ const formatPurpose = (purpose) => {
 
 .stats-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.1rem;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.stat-card-clickable {
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.stat-card-clickable:focus-visible {
+  outline: 2px solid rgba(134, 239, 172, 0.85);
+  outline-offset: 2px;
+}
+
+.stat-card-active {
+  border-color: rgba(167, 243, 198, 0.65) !important;
+  box-shadow: 0 14px 28px rgba(5, 11, 8, 0.38), 0 0 0 1px rgba(74, 222, 128, 0.35), 0 0 20px rgba(74, 222, 128, 0.18);
+}
+
+.stat-content {
+  min-width: 0;
+  flex: 1;
 }
 
 .stat-card {
@@ -1760,16 +2219,71 @@ const formatPurpose = (purpose) => {
   background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.24);
   flex-shrink: 0;
+  transition: transform 220ms ease;
 }
 
-.stat-icon-wrap .stat-icon {
-  font-size: 20px;
+.stat-card:hover .stat-icon-wrap {
+  transform: translateY(-1px);
 }
 
-.stat-icon.stat-abbr {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.stat-icon-wrap svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+}
+
+.stat-card.pending .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.55), rgba(217, 119, 6, 0.48));
+  color: #78350f;
+  border-color: rgba(180, 83, 9, 0.45);
+}
+
+.stat-card.approved .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.5), rgba(22, 163, 74, 0.45));
+  color: #052e16;
+  border-color: rgba(21, 128, 61, 0.45);
+}
+
+.stat-card.active .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.5), rgba(37, 99, 235, 0.45));
+  color: #1e3a8a;
+  border-color: rgba(29, 78, 216, 0.45);
+}
+
+.stat-card.rejected .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(252, 165, 165, 0.5), rgba(220, 38, 38, 0.45));
+  color: #7f1d1d;
+  border-color: rgba(185, 28, 28, 0.45);
+}
+
+.stat-icon-wrap svg,
+.stat-icon-wrap svg * {
+  stroke: currentColor;
+  fill: none;
+}
+
+.stat-card.pending .stat-icon-wrap svg,
+.stat-card.pending .stat-icon-wrap svg * {
+  color: #78350f;
+  stroke: #78350f;
+}
+
+.stat-card.approved .stat-icon-wrap svg,
+.stat-card.approved .stat-icon-wrap svg * {
+  color: #052e16;
+  stroke: #052e16;
+}
+
+.stat-card.active .stat-icon-wrap svg,
+.stat-card.active .stat-icon-wrap svg * {
+  color: #1e3a8a;
+  stroke: #1e3a8a;
+}
+
+.stat-card.rejected .stat-icon-wrap svg,
+.stat-card.rejected .stat-icon-wrap svg * {
+  color: #7f1d1d;
+  stroke: #7f1d1d;
 }
 
 .stat-value {
@@ -1785,8 +2299,10 @@ const formatPurpose = (purpose) => {
 }
 
 .content-grid {
-  grid-template-columns: minmax(300px, 0.95fr) minmax(460px, 1.35fr);
-  gap: 1.5rem;
+  grid-template-columns: minmax(300px, 1fr) minmax(380px, 1.15fr);
+  gap: 1.35rem;
+  align-items: stretch;
+  flex: 1;
 }
 
 .card {
@@ -1794,26 +2310,128 @@ const formatPurpose = (purpose) => {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 22px;
   box-shadow: 0 16px 30px rgba(4, 9, 7, 0.34);
+  padding: 1.35rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.card-head {
+  flex-shrink: 0;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.loans-card-body {
+  gap: 0;
 }
 
 .card-title {
   color: #ecfdf5;
   font-weight: 800;
+  margin-bottom: 0.85rem;
+}
+
+.card-head .card-title {
+  margin-bottom: 0.85rem;
 }
 
 .alert-info {
-  background: rgba(219, 234, 254, 0.88);
-  color: #0f3f66;
+  background: rgba(14, 116, 144, 0.22);
+  color: #e0f2fe;
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-left: 4px solid #38bdf8;
   border-radius: 12px;
 }
 
+.alert-with-icon {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.alert-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: inherit;
+}
+
+.alert-icon,
+.alert-icon * {
+  stroke: currentColor;
+}
+
+.alert-warning .alert-icon {
+  color: #b45309;
+}
+
+.alert-info .alert-icon {
+  color: #1d4ed8;
+}
+
 .alert-warning {
   border-radius: 12px;
+  background: rgba(180, 83, 9, 0.22);
+  color: #fef3c7;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-left: 4px solid #f59e0b;
 }
 
 .loan-form {
-  gap: 1.1rem;
+  gap: 0.9rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.form-group-full {
+  margin-bottom: 0;
+}
+
+.amount-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(8, 30, 22, 0.55);
+  border: 1px solid rgba(134, 239, 172, 0.22);
+  font-size: 0.82rem;
+  color: rgba(220, 252, 231, 0.88);
+}
+
+.amount-summary strong {
+  color: #86efac;
+  font-weight: 800;
+}
+
+.amount-summary .amount-total strong {
+  color: #bbf7d0;
+}
+
+.form-actions {
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+.form-actions .submit-btn {
+  width: 100%;
 }
 
 .application-card .form-group label {
@@ -1836,10 +2454,24 @@ const formatPurpose = (purpose) => {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(187, 247, 208, 0.9);
+  color: #16a34a;
   font-size: 14px;
+  font-weight: 700;
   pointer-events: none;
   z-index: 2;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.field-icon svg,
+.field-icon svg * {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke: currentColor;
 }
 
 .loan-form .form-group input,
@@ -1871,8 +2503,62 @@ const formatPurpose = (purpose) => {
 }
 
 .loan-info-box {
-  background: rgba(239, 246, 255, 0.9);
-  border-radius: 14px;
+  background: rgba(8, 30, 22, 0.48);
+  border: 1px solid rgba(134, 239, 172, 0.25);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 0;
+}
+
+.loan-info-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+  color: #bbf7d0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.loan-info-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: #16a34a;
+}
+
+.terms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.terms-grid li {
+  padding: 0.2rem 0 0.2rem 0.75rem;
+  font-size: 0.78rem;
+  color: rgba(220, 252, 231, 0.85);
+  position: relative;
+  line-height: 1.4;
+}
+
+.terms-grid li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #86efac;
+  font-weight: 700;
+}
+
+.terms-grid li strong {
+  color: #bbf7d0;
+}
+
+.terms-grid .terms-full {
+  grid-column: 1 / -1;
+  padding-top: 0.15rem;
 }
 
 .submit-btn {
@@ -1882,6 +2568,16 @@ const formatPurpose = (purpose) => {
   font-size: 0.98rem;
   font-weight: 800;
   transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.submit-btn-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -1891,11 +2587,20 @@ const formatPurpose = (purpose) => {
   filter: brightness(1.02);
 }
 
+.tabs-wrap {
+  margin-bottom: 0.85rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .tabs {
   border-bottom: none;
-  gap: 0.6rem;
-  padding-bottom: 0.4rem;
-  margin-bottom: 1.1rem;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0;
+  flex-wrap: nowrap;
+  min-width: min-content;
 }
 
 .tab {
@@ -1906,6 +2611,57 @@ const formatPurpose = (purpose) => {
   font-weight: 700;
   padding: 0.52rem 0.85rem;
   transition: all 220ms ease;
+}
+
+.tab-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.tab-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  opacity: 1;
+  color: inherit;
+}
+
+.tab-icon,
+.tab-icon * {
+  stroke: currentColor;
+}
+
+.tab:not(.active) .tab-icon {
+  opacity: 1;
+}
+
+.tab-pending:not(.active) .tab-icon {
+  color: #b45309;
+}
+
+.tab-approved:not(.active) .tab-icon {
+  color: #15803d;
+}
+
+.tab-repaying:not(.active) .tab-icon {
+  color: #1d4ed8;
+}
+
+.tab-rejected:not(.active) .tab-icon {
+  color: #b91c1c;
+}
+
+.tab-completed:not(.active) .tab-icon {
+  color: #047857;
+}
+
+.tab-overdue:not(.active) .tab-icon {
+  color: #c2410c;
+}
+
+.tab.active .tab-icon {
+  color: #052e16;
 }
 
 .tab:hover {
@@ -1924,47 +2680,84 @@ const formatPurpose = (purpose) => {
   display: none;
 }
 
-.loan-guidance-text {
-  margin: -0.1rem 0 0.95rem;
-  color: rgba(220, 252, 231, 0.86);
-  font-size: 0.92rem;
-}
-
 .application-steps {
   display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-  margin: 0.1rem 0 0.9rem;
+  align-items: center;
+  gap: 0;
+  margin: 0;
 }
 
 .step-chip {
-  display: inline-flex;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.42rem;
-  padding: 0.46rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  gap: 0.35rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #dcfce7;
-  background: rgba(16, 56, 39, 0.55);
-  border: 1px solid rgba(134, 239, 172, 0.26);
+  color: rgba(220, 252, 231, 0.75);
+  background: rgba(16, 56, 39, 0.45);
+  border: 1px solid rgba(134, 239, 172, 0.2);
+  text-align: center;
+  min-width: 0;
 }
 
-.step-chip span {
-  width: 18px;
-  height: 18px;
+.step-connector {
+  width: 1.25rem;
+  height: 2px;
+  flex-shrink: 0;
+  background: rgba(134, 239, 172, 0.28);
+  margin: 0 -0.15rem;
+  align-self: center;
+  margin-top: -1.1rem;
+}
+
+.step-label {
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 0.72rem;
   font-weight: 800;
-  background: rgba(220, 252, 231, 0.2);
+  background: rgba(220, 252, 231, 0.15);
+  color: #dcfce7;
+  flex-shrink: 0;
 }
 
 .step-chip.active {
-  background: rgba(22, 163, 74, 0.45);
-  border-color: rgba(187, 247, 208, 0.56);
+  background: rgba(22, 163, 74, 0.4);
+  border-color: rgba(187, 247, 208, 0.5);
+  color: #ecfdf5;
+}
+
+.step-chip.active .step-num {
+  background: rgba(187, 247, 208, 0.35);
+  color: #052e16;
+}
+
+.tab-content {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .loan-item {
@@ -1975,7 +2768,7 @@ const formatPurpose = (purpose) => {
 }
 
 .loan-amount {
-  color: #0f5132;
+  color: #000000;
   font-size: 2.15rem;
   font-weight: 900;
   margin-bottom: 0.42rem;
@@ -1998,7 +2791,7 @@ const formatPurpose = (purpose) => {
 .loan-item.approved .loan-status,
 .loan-item.completed .loan-status {
   background: #dcfce7;
-  color: #14532d;
+  color: #16a34a;
   border: 1px solid #86efac;
 }
 
@@ -2039,13 +2832,51 @@ const formatPurpose = (purpose) => {
 
 .approval-stage-text {
   font-size: 0.92rem;
-  color: #0f172a;
+  color: #000000;
   font-weight: 700;
 }
 
 .modal-content {
   background: #ffffff !important;
   border: 1px solid #bbf7d0;
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .modal-content {
+  background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99)) !important;
+  border: 1px solid rgba(134, 239, 172, 0.32) !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .modal-header h3 {
+  color: #ecfdf5 !important;
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .close-btn {
+  color: rgba(220, 252, 231, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .detail-item {
+  background: rgba(0, 0, 0, 0.24);
+  border-color: rgba(126, 184, 145, 0.22);
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .detail-item label {
+  color: rgba(220, 252, 231, 0.65) !important;
+}
+
+.page-container.officer-loans-page:not(.light-theme) .modal-overlay .detail-item p {
+  color: #ecfdf5 !important;
 }
 
 .modal-header h3 {
@@ -2098,7 +2929,7 @@ const formatPurpose = (purpose) => {
 
 .loan-details {
   font-size: 1.04rem;
-  color: #0b1f16 !important;
+  color: #000000 !important;
   line-height: 1.75;
   background: #ffffff;
   border: 1px solid #d1fae5;
@@ -2108,12 +2939,12 @@ const formatPurpose = (purpose) => {
 
 .loan-details p {
   margin: 0.42rem 0;
-  color: #0b1f16 !important;
+  color: #000000 !important;
   font-weight: 600;
 }
 
 .loan-details strong {
-  color: #14532d !important;
+  color: #000000 !important;
   font-weight: 800;
 }
 
@@ -2140,7 +2971,7 @@ const formatPurpose = (purpose) => {
 .secondary-action {
   background: #ffffff;
   border: 1px solid #16a34a;
-  color: #0f5132;
+  color: #000000;
   font-weight: 700;
   transition: transform 180ms ease, background-color 220ms ease, box-shadow 220ms ease;
 }
@@ -2152,11 +2983,63 @@ const formatPurpose = (purpose) => {
 }
 
 .empty-state {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  min-height: 220px;
+  flex: 1;
+  min-height: 300px;
   color: rgba(220, 252, 231, 0.86);
+  gap: 0.65rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: rgba(8, 30, 22, 0.35);
+  border: 1px dashed rgba(134, 239, 172, 0.2);
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(134, 239, 172, 0.28), rgba(74, 222, 128, 0.18));
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #14532d;
+}
+
+.empty-state-icon svg,
+.empty-state-icon svg * {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: block;
+  stroke: currentColor;
+}
+
+.empty-state-icon-success {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.32), rgba(22, 163, 74, 0.24));
+  border-color: rgba(21, 128, 61, 0.35);
+  color: #14532d;
+}
+
+.empty-state-icon-active {
+  background: linear-gradient(135deg, rgba(147, 197, 253, 0.32), rgba(37, 99, 235, 0.24));
+  border-color: rgba(29, 78, 216, 0.35);
+  color: #1e3a8a;
+}
+
+.empty-state-icon-danger {
+  background: linear-gradient(135deg, rgba(252, 165, 165, 0.32), rgba(220, 38, 38, 0.24));
+  border-color: rgba(185, 28, 28, 0.35);
+  color: #7f1d1d;
+}
+
+.empty-state-icon-warning {
+  background: linear-gradient(135deg, rgba(253, 186, 116, 0.32), rgba(217, 119, 6, 0.24));
+  border-color: rgba(180, 83, 9, 0.35);
+  color: #92400e;
 }
 
 .empty-illustration {
@@ -2292,6 +3175,443 @@ const formatPurpose = (purpose) => {
   background: #f8fafc;
 }
 
+/* Edit loan modal — teleported glass panel */
+.officer-loan-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 6500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 12, 9, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.officer-loan-modal {
+  width: min(560px, 100%);
+  max-height: min(92vh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+}
+
+.officer-loan-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.officer-loan-modal-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.officer-loan-modal-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(74, 222, 128, 0.16);
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  color: #86efac;
+}
+
+.officer-loan-modal-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke: currentColor;
+}
+
+.officer-loan-modal-header h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  line-height: 1.3;
+}
+
+.officer-loan-modal-sub {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.officer-loan-modal-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(220, 252, 231, 0.85);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.officer-loan-modal-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.officer-loan-modal-body {
+  padding: 1.2rem 1.35rem 1.35rem;
+  overflow-y: auto;
+}
+
+.officer-loan-modal .edit-loan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.officer-loan-modal .edit-loan-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.officer-loan-modal .edit-loan-form .form-group label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.officer-loan-modal .edit-loan-form .form-group input,
+.officer-loan-modal .edit-loan-form .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 0.9rem !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(134, 239, 172, 0.28) !important;
+  background: rgba(8, 30, 22, 0.55) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.95rem;
+}
+
+.officer-loan-modal .edit-loan-form .form-group select option {
+  background: #142e22;
+  color: #ffffff;
+}
+
+.officer-loan-modal .edit-loan-form .form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55);
+}
+
+.officer-loan-modal .edit-loan-form .form-group input:focus,
+.officer-loan-modal .edit-loan-form .form-group select:focus {
+  outline: none;
+  border-color: rgba(110, 231, 183, 0.85) !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15) !important;
+}
+
+.officer-loan-modal .edit-loan-form .help-text {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.edit-amount-summary {
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(134, 239, 172, 0.22);
+}
+
+.edit-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  font-size: 0.88rem;
+  color: #ffffff;
+}
+
+.edit-summary-row strong {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  font-weight: 800;
+}
+
+.edit-summary-total {
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(134, 239, 172, 0.2);
+}
+
+.edit-summary-total strong {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  font-size: 1rem;
+}
+
+.officer-loan-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.officer-loan-modal-btn {
+  padding: 0.68rem 1.15rem;
+  border-radius: 11px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  transition: transform 0.18s ease, filter 0.18s ease, background 0.18s ease;
+}
+
+.officer-loan-modal-btn.primary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(190, 235, 203, 0.28) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.officer-loan-modal-btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+.officer-loan-modal-btn.primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.officer-loan-modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(190, 235, 203, 0.28) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.officer-loan-modal-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.officer-loan-modal.light-theme {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%);
+  border: 2px solid #4ade80;
+  color: #052e16;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.officer-loan-modal-backdrop:has(.officer-loan-modal.light-theme) {
+  background: rgba(236, 253, 245, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-header {
+  position: relative;
+  overflow: hidden;
+  padding: 1.35rem 1.4rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%);
+  border-bottom: 2px solid #86efac;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-header::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -8%;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.28) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-header h3 {
+  color: #052e16;
+  -webkit-text-fill-color: #052e16;
+  font-size: 1.28rem;
+  letter-spacing: -0.02em;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-sub {
+  color: #166534;
+  -webkit-text-fill-color: #166534;
+  font-weight: 600;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-icon {
+  background: linear-gradient(135deg, #ffffff 0%, #dcfce7 100%);
+  border: 2px solid #4ade80;
+  color: #15803d;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12);
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-close {
+  background: #ffffff;
+  border: 2px solid #86efac;
+  color: #166534;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-close:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-body {
+  padding: 1.35rem 1.4rem 1.45rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(240, 253, 244, 0.35) 100%);
+}
+
+.officer-loan-modal.light-theme .edit-loan-form .form-group label {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.officer-loan-modal.light-theme .edit-loan-form .form-group input,
+.officer-loan-modal.light-theme .edit-loan-form .form-group select {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.officer-loan-modal.light-theme .edit-loan-form .form-group input::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+.officer-loan-modal.light-theme .edit-loan-form .form-group input:focus,
+.officer-loan-modal.light-theme .edit-loan-form .form-group select:focus {
+  outline: none;
+  border-color: #16a34a !important;
+  background: #f0fdf4 !important;
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.22), 0 4px 12px rgba(22, 101, 52, 0.1) !important;
+}
+
+.officer-loan-modal.light-theme .edit-loan-form .help-text {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  font-weight: 600;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(220, 252, 231, 0.65);
+  border: 1px solid rgba(134, 239, 172, 0.45);
+}
+
+.officer-loan-modal.light-theme .edit-amount-summary {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 55%, #bbf7d0 100%);
+  border: 2px solid #4ade80;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 6px 16px rgba(22, 101, 52, 0.1);
+  padding: 1rem 1.05rem;
+}
+
+.officer-loan-modal.light-theme .edit-summary-row {
+  color: #166534;
+  font-weight: 600;
+}
+
+.officer-loan-modal.light-theme .edit-summary-row strong {
+  color: #052e16;
+  -webkit-text-fill-color: #052e16;
+}
+
+.officer-loan-modal.light-theme .edit-summary-total {
+  border-top-color: rgba(22, 101, 52, 0.18);
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+}
+
+.officer-loan-modal.light-theme .edit-summary-total strong {
+  color: #15803d;
+  -webkit-text-fill-color: #15803d;
+  font-size: 1.08rem;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-actions {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(134, 239, 172, 0.45);
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-btn.secondary {
+  background: #ffffff !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-btn.secondary:hover {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12) !important;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-btn.primary {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 55%, #22c55e 100%) !important;
+  border-color: #166534 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.28) !important;
+}
+
+.officer-loan-modal.light-theme .officer-loan-modal-btn.primary:disabled {
+  opacity: 0.6;
+  filter: grayscale(0.15);
+}
+
 .edit-loan-form .form-group input,
 .edit-loan-form .form-group select {
   padding: 0.75rem 0.875rem !important;
@@ -2324,15 +3644,803 @@ const formatPurpose = (purpose) => {
   .content-grid {
     grid-template-columns: 1fr;
   }
+
+  .form-row-two {
+    grid-template-columns: 1fr;
+  }
+
+  .terms-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
+  .page-container {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .application-steps {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .step-connector {
+    display: none;
+  }
+
+  .step-chip {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .step-label {
+    white-space: normal;
+  }
+
   .loan-amount {
     font-size: 1.82rem;
   }
 
   .tab {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
+    padding: 0.48rem 0.7rem;
   }
+
+  .tab-icon {
+    display: none;
+  }
+}
+
+/* ===== LIGHT MODE — Senior-friendly bright theme (matches Admin Loans) ===== */
+.page-container.officer-loans-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: #052e16;
+  border-radius: 18px;
+}
+
+.page-container.officer-loans-page.light-theme::before {
+  opacity: 0.35;
+}
+
+.page-container.officer-loans-page.light-theme :is(.glass-header, .card) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.page-container.officer-loans-page.light-theme .page-title {
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card.pending {
+  border-left-color: #f59e0b !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card.approved {
+  border-left-color: #10b981 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card.active {
+  border-left-color: #3b82f6 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card.rejected {
+  border-left-color: #ef4444 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-value {
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-label {
+  color: #166534 !important;
+}
+
+.page-container.officer-loans-page.light-theme .stat-card-active {
+  border-color: #22c55e !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.15), 0 0 0 2px rgba(34, 197, 94, 0.25) !important;
+}
+
+.page-container.officer-loans-page.light-theme .card-head {
+  border-bottom-color: rgba(22, 101, 52, 0.16);
+}
+
+.page-container.officer-loans-page.light-theme .card-title {
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .application-card .form-group label {
+  color: #166534 !important;
+}
+
+.page-container.officer-loans-page.light-theme .field-icon {
+  color: #15803d;
+}
+
+.page-container.officer-loans-page.light-theme .loan-form .form-group input,
+.page-container.officer-loans-page.light-theme .loan-form .form-group select {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.page-container.officer-loans-page.light-theme .loan-form .form-group input::placeholder {
+  color: #94a3b8;
+}
+
+.page-container.officer-loans-page.light-theme .loan-form .form-group input:focus,
+.page-container.officer-loans-page.light-theme .loan-form .form-group select:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+.page-container.officer-loans-page.light-theme .application-card .help-text {
+  color: #64748b;
+}
+
+.page-container.officer-loans-page.light-theme .application-card .calculation-text {
+  color: #15803d;
+}
+
+.page-container.officer-loans-page.light-theme .amount-summary {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #16a34a;
+}
+
+.page-container.officer-loans-page.light-theme .amount-summary strong {
+  color: #15803d;
+}
+
+.page-container.officer-loans-page.light-theme .loan-info-box {
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.page-container.officer-loans-page.light-theme .loan-info-title {
+  color: #166534;
+}
+
+.page-container.officer-loans-page.light-theme .loan-info-icon {
+  color: #15803d;
+}
+
+.page-container.officer-loans-page.light-theme .terms-grid li {
+  color: #16a34a;
+}
+
+.page-container.officer-loans-page.light-theme .terms-grid li strong {
+  color: #052e16;
+}
+
+.page-container.officer-loans-page.light-theme .step-chip {
+  background: #ffffff;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.page-container.officer-loans-page.light-theme .step-connector {
+  background: rgba(34, 197, 94, 0.35);
+}
+
+.page-container.officer-loans-page.light-theme .step-chip.active {
+  background: #dcfce7;
+  border-color: #4ade80;
+  color: #052e16;
+}
+
+.page-container.officer-loans-page.light-theme .step-num {
+  background: #ffffff;
+  color: #166534;
+  border: 2px solid #22c55e;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.14);
+}
+
+.page-container.officer-loans-page.light-theme .step-chip.active .step-num {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border: 2px solid #15803d;
+  box-shadow: 0 3px 10px rgba(22, 101, 52, 0.22);
+}
+
+.page-container.officer-loans-page.light-theme .alert-info {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #0ea5e9;
+}
+
+.page-container.officer-loans-page.light-theme .alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.page-container.officer-loans-page.light-theme .tab {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  box-shadow: none !important;
+}
+
+.page-container.officer-loans-page.light-theme .tab:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .tab.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  border-color: #22c55e !important;
+  box-shadow: none !important;
+}
+
+.page-container.officer-loans-page.light-theme .empty-state {
+  background: #ffffff;
+  border: 2px dashed #86efac;
+  color: #166534;
+}
+
+.page-container.officer-loans-page.light-theme .empty-state-icon {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.page-container.officer-loans-page.light-theme .modal-content {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.officer-loans-page.light-theme .modal-header h3 {
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .detail-item {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.page-container.officer-loans-page.light-theme .detail-item label {
+  color: #166534 !important;
+}
+
+.page-container.officer-loans-page.light-theme .detail-item p {
+  color: #052e16 !important;
+}
+
+.page-container.officer-loans-page.light-theme .loan-details {
+  background: #ffffff;
+  border-color: #86efac;
+  color: #000000 !important;
+}
+
+.page-container.officer-loans-page.light-theme .loan-details p {
+  color: #000000 !important;
+}
+
+.page-container.officer-loans-page.light-theme .loan-details strong {
+  color: #000000 !important;
+}
+
+.page-container.officer-loans-page.light-theme .approval-stage-text {
+  color: #000000;
+}
+
+.page-container.officer-loans-page.light-theme .loan-amount {
+  color: #000000 !important;
+}
+
+.page-container.officer-loans-page.light-theme .officer-pending-actions {
+  border-top-color: rgba(22, 101, 52, 0.16);
+}
+
+/* Toast + success modal notifications */
+.loan-toast {
+  position: fixed;
+  top: 5.5rem;
+  right: 1.25rem;
+  z-index: 6000;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: linear-gradient(145deg, rgba(20, 83, 45, 0.97), rgba(14, 50, 32, 0.98));
+  color: #dcfce7;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.loan-toast.error {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.97), rgba(91, 22, 22, 0.98));
+  color: #fee2e2;
+}
+
+.loan-toast-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  color: #86efac;
+}
+
+.loan-toast.error .loan-toast-icon {
+  color: #fca5a5;
+}
+
+.loan-toast-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke: currentColor;
+}
+
+.loan-toast-text {
+  flex: 1;
+}
+
+.loan-toast-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.75;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.loan-toast-close:hover {
+  opacity: 1;
+}
+
+.loan-toast-fade-enter-active,
+.loan-toast-fade-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.loan-toast-fade-enter-from,
+.loan-toast-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.loan-notice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 12, 9, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.loan-notice-modal {
+  width: min(420px, 100%);
+  padding: 1.35rem 1.4rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  color: #ffffff;
+}
+
+.loan-notice-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 222, 128, 0.18);
+  border: 1px solid rgba(134, 239, 172, 0.4);
+  color: #86efac;
+}
+
+.loan-notice-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  stroke: currentColor;
+}
+
+.loan-notice-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.loan-notice-sub {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  opacity: 0.92;
+}
+
+.loan-notice-details {
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(126, 184, 145, 0.22);
+  text-align: left;
+}
+
+.loan-notice-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.loan-notice-row strong {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  font-weight: 800;
+}
+
+.loan-notice-row-total {
+  margin-top: 0.25rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(134, 239, 172, 0.22);
+}
+
+.loan-notice-row-total strong {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  font-size: 1rem;
+}
+
+.loan-notice-foot {
+  margin: 0 0 1rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  opacity: 0.92;
+}
+
+.loan-notice-btn {
+  width: 100%;
+  padding: 0.72rem 1rem;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.loan-notice-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14) !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+.loan-notice-modal.light-theme {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%);
+  border: 2px solid #4ade80;
+  color: #052e16;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: 1.5rem 1.45rem 1.35rem;
+}
+
+.loan-notice-backdrop:has(.loan-notice-modal.light-theme) {
+  background: rgba(236, 253, 245, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.loan-notice-modal.light-theme .loan-notice-icon {
+  width: 3.75rem;
+  height: 3.75rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%);
+  border: 3px solid #ffffff;
+  color: #ffffff;
+  box-shadow:
+    0 8px 20px rgba(22, 101, 52, 0.22),
+    0 0 0 4px rgba(74, 222, 128, 0.25);
+}
+
+.loan-notice-modal.light-theme .loan-notice-icon svg {
+  stroke: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+}
+
+.loan-notice-modal.light-theme .loan-notice-title {
+  color: #052e16;
+  -webkit-text-fill-color: #052e16;
+  font-size: 1.32rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.45rem;
+}
+
+.loan-notice-modal.light-theme .loan-notice-sub,
+.loan-notice-modal.light-theme .loan-notice-foot {
+  color: #166534;
+  -webkit-text-fill-color: #166534;
+  font-weight: 600;
+}
+
+.loan-notice-modal.light-theme .loan-notice-sub {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(220, 252, 231, 0.75);
+  border: 1px solid rgba(134, 239, 172, 0.5);
+  font-size: 0.84rem;
+}
+
+.loan-notice-modal.light-theme .loan-notice-details {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 55%, #bbf7d0 100%);
+  border: 2px solid #4ade80;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 6px 16px rgba(22, 101, 52, 0.1);
+  padding: 1rem 1.05rem;
+  margin-bottom: 1rem;
+}
+
+.loan-notice-modal.light-theme .loan-notice-row {
+  color: #166534;
+  -webkit-text-fill-color: #166534;
+  font-weight: 600;
+  padding: 0.4rem 0;
+}
+
+.loan-notice-modal.light-theme .loan-notice-row strong {
+  color: #052e16;
+  -webkit-text-fill-color: #052e16;
+}
+
+.loan-notice-modal.light-theme .loan-notice-row-total {
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 2px solid rgba(22, 101, 52, 0.14);
+}
+
+.loan-notice-modal.light-theme .loan-notice-row-total strong {
+  color: #15803d;
+  -webkit-text-fill-color: #15803d;
+  font-size: 1.1rem;
+}
+
+.loan-notice-modal.light-theme .loan-notice-foot {
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: rgba(254, 249, 195, 0.45);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  text-align: left;
+}
+
+.loan-notice-modal.light-theme .loan-notice-btn {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.loan-notice-modal.light-theme .loan-notice-btn:hover {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 55%, #22c55e 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #166534 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.28) !important;
+}
+
+.loan-modal-fade-enter-active,
+.loan-modal-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.loan-modal-fade-enter-active .loan-notice-modal,
+.loan-modal-fade-leave-active .loan-notice-modal,
+.loan-modal-fade-enter-active .loan-delete-confirm-modal,
+.loan-modal-fade-leave-active .loan-delete-confirm-modal,
+.loan-modal-fade-enter-active .officer-loan-modal,
+.loan-modal-fade-leave-active .officer-loan-modal {
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.loan-modal-fade-enter-from,
+.loan-modal-fade-leave-to {
+  opacity: 0;
+}
+
+.loan-modal-fade-enter-from .loan-notice-modal,
+.loan-modal-fade-leave-to .loan-notice-modal,
+.loan-modal-fade-enter-from .loan-delete-confirm-modal,
+.loan-modal-fade-leave-to .loan-delete-confirm-modal,
+.loan-modal-fade-enter-from .officer-loan-modal,
+.loan-modal-fade-leave-to .officer-loan-modal {
+  transform: translateY(12px) scale(0.98);
+  opacity: 0;
+}
+
+.loan-delete-confirm-modal {
+  width: min(420px, 100%);
+  padding: 1.35rem 1.4rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: linear-gradient(145deg, rgba(44, 22, 22, 0.99), rgba(33, 14, 14, 0.99));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  color: #fef2f2;
+}
+
+.loan-delete-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(248, 113, 113, 0.18);
+  border: 1px solid rgba(252, 165, 165, 0.4);
+  color: #fca5a5;
+}
+
+.loan-delete-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  stroke: currentColor;
+}
+
+.loan-delete-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fef2f2;
+}
+
+.loan-delete-message {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(254, 226, 226, 0.82);
+}
+
+.loan-delete-warning {
+  margin: 0 0 1.1rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #fca5a5;
+}
+
+.loan-delete-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.loan-delete-cancel,
+.loan-delete-btn {
+  flex: 1;
+  padding: 0.72rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+}
+
+.loan-delete-cancel {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+}
+
+.loan-delete-cancel:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.loan-delete-btn {
+  border: none;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+}
+
+.loan-delete-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.loan-delete-cancel:disabled,
+.loan-delete-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.loan-delete-confirm-modal.light-theme {
+  background: linear-gradient(145deg, #ffffff, #fff1f2);
+  border-color: #fca5a5;
+  color: #450a0a;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-icon {
+  background: rgba(254, 202, 202, 0.45);
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-title {
+  color: #7f1d1d;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-message {
+  color: #991b1b;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-warning {
+  color: #b91c1c;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-cancel {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+}
+
+.loan-delete-confirm-modal.light-theme .loan-delete-cancel:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.page-container.officer-loans-page.light-theme .loan-toast {
+  background: linear-gradient(145deg, #ffffff, #f0fdf4);
+  color: #16a34a;
+  border-color: #86efac;
+}
+
+.page-container.officer-loans-page.light-theme .loan-toast.error {
+  background: linear-gradient(145deg, #fff1f2, #fee2e2);
+  color: #991b1b;
+  border-color: #fca5a5;
 }
 </style>

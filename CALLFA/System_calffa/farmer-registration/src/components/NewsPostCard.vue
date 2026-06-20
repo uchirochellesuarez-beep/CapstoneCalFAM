@@ -22,11 +22,30 @@
           <span class="notice-time">{{ timeOnly }}</span>
         </div>
         <div v-if="canEdit || canDelete" class="notice-actions">
-          <button v-if="canEdit" type="button" class="action-btn" title="Edit" @click="$emit('edit', item)">
+          <button
+            v-if="canEdit"
+            type="button"
+            class="action-btn"
+            title="Edit"
+            @click="$emit('edit', item)"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4l10.5-10.5a2 2 0 000-2.83L17.83 7a2 2 0 00-2.83 0L4 16.5V20z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <button v-if="canDelete" type="button" class="action-btn action-btn--danger" title="Delete" @click="$emit('delete', item.id)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h16M9 7V5h6v2M8 10v7M12 10v7M16 10v7M6.5 7l1 13h6l1-13" stroke-linecap="round"/></svg>
+          <button
+            v-if="canDelete"
+            type="button"
+            class="action-btn action-btn--danger"
+            title="Delete news"
+            aria-label="Delete news"
+            @click="$emit('delete', item.id)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18" />
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
           </button>
         </div>
       </div>
@@ -257,12 +276,32 @@ const statusLabel = computed(() => {
 
 .notice-actions { display: flex; gap: 0.35rem; }
 .action-btn {
-  width: 2.25rem; height: 2.25rem; display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; border: 1px solid rgba(190, 235, 203, 0.14);
-  background: rgba(0, 0, 0, 0.2); color: #2dd4bf; cursor: pointer; padding: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  background: rgba(0, 0, 0, 0.2);
+  color: #2dd4bf;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.action-btn svg { width: 1rem; height: 1rem; }
-.action-btn--danger { color: #f87171; }
+.action-btn svg { width: 1.2rem; height: 1.2rem; }
+.action-btn:hover { background: rgba(45, 212, 191, 0.12); }
+.action-btn--danger {
+  color: #fca5a5;
+  background: rgba(127, 29, 29, 0.35);
+  border-color: rgba(248, 113, 113, 0.55);
+}
+.action-btn--danger svg { width: 1.25rem; height: 1.25rem; }
+.action-btn--danger:hover {
+  color: #fecaca;
+  background: rgba(153, 27, 27, 0.55);
+  border-color: #f87171;
+}
 
 .notice-card-body { padding: 1.15rem 1.35rem 1rem 1.5rem; }
 .notice-badge-latest {
