@@ -724,6 +724,12 @@ const pageTitle = computed(() => {
   if (userRole === 'president') {
     return 'Treasurer Loan Approvals';
   }
+  if (userRole === 'operation_manager') {
+    return 'Loan Management (Operation Manager)';
+  }
+  if (userRole === 'business_manager') {
+    return 'Loan Management (Business Manager)';
+  }
   return 'Loan Management';
 })
 
@@ -736,6 +742,10 @@ const pageSubtitle = computed(() => {
     return 'Review and approve treasurer loan applications';
   } else if (userRole === 'treasurer') {
     return 'Manage your officer loan applications';
+  } else if (userRole === 'operation_manager') {
+    return '';
+  } else if (userRole === 'business_manager') {
+    return 'Manage member-facing loan applications with clear status tracking and quick admin actions.';
   }
   return 'Review and manage farmer and officer loan applications';
 })
@@ -827,6 +837,11 @@ async function fetchLoans() {
           !['president', 'treasurer'].includes(loan.applicant_role) ||  // All non-officer loans
           loan.applicant_role === 'president' ||  // President loans for cross-reference
           (loan.applicant_role === 'treasurer' && loan.farmer_id === userId)  // Only their own treasurer loans
+        );
+      } else if (['operation_manager', 'business_manager'].includes(userRole)) {
+        // Operations officers manage member (non-officer) loans in their barangay
+        loans.value = data.loans.filter(loan =>
+          !['president', 'treasurer'].includes(loan.applicant_role)
         );
       } else {
         // Admin sees all loans

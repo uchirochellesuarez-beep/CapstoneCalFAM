@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container glass-module-page machinery-page">
+  <div class="page-container glass-module-page machinery-page" :class="{ 'light-theme': isLight }">
     <div v-if="!canApproveBookings && !canCompleteBookings" class="access-denied-card">
       <h2 class="access-denied-title">Access Denied</h2>
       <p>This page is only available for:</p>
@@ -29,35 +29,68 @@
 
       <div class="stats-grid machinery-stats-grid">
         <div v-if="canApproveBookings" class="stat-card pending" @click="quickFilter('Pending')">
-          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Pn</span></div>
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path class="glyph-stroke" d="M7 3h10" stroke-width="2.2" stroke-linecap="round" />
+              <path class="glyph-stroke" d="M7 21h10" stroke-width="2.2" stroke-linecap="round" />
+              <path class="glyph-stroke" d="M8 3v5.2l4 3.6 4-3.6V3" stroke-width="2" stroke-linejoin="round" />
+              <path class="glyph-stroke" d="M8 21v-5.2l4-3.6 4 3.6V21" stroke-width="2" stroke-linejoin="round" />
+              <path class="glyph-stroke" d="M12 9.2v2.8" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ pendingCount }}</div>
             <div class="stat-label">Pending</div>
           </div>
         </div>
         <div v-if="canCompleteBookings" class="stat-card approved" @click="quickFilter('Approved')">
-          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ap</span></div>
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="glyph-stroke" cx="12" cy="12" r="8.5" stroke-width="2" />
+              <path class="glyph-stroke" d="M8.5 12.2l2.4 2.4 4.8-5.2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ approvedCount }}</div>
             <div class="stat-label">To Process</div>
           </div>
         </div>
         <div v-if="canCompleteBookings" class="stat-card incomplete" @click="quickFilter('Incomplete')">
-          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ic</span></div>
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="glyph-stroke" cx="12" cy="12" r="8.5" stroke-width="2" />
+              <path class="glyph-stroke" d="M12 8v5" stroke-width="2.2" stroke-linecap="round" />
+              <circle class="glyph-fill" cx="12" cy="16.2" r="1.1" />
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ incompleteCount }}</div>
             <div class="stat-label">Incomplete</div>
           </div>
         </div>
         <div class="stat-card rejected" @click="quickFilter('Rejected')">
-          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Rj</span></div>
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path class="glyph-stroke" d="M12 2.8l7.8 4.5v9.4L12 21.2 4.2 16.7V7.3L12 2.8z" stroke-width="2" stroke-linejoin="round" />
+              <path class="glyph-stroke" d="M9.1 9.1l5.8 5.8M14.9 9.1l-5.8 5.8" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ rejectedCount }}</div>
             <div class="stat-label">Rejected</div>
           </div>
         </div>
         <div class="stat-card expired" @click="quickFilter('Expired')">
-          <div class="stat-icon-wrap"><span class="stat-icon stat-abbr">Ex</span></div>
+          <div class="stat-icon-wrap" aria-hidden="true">
+            <svg class="stat-glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect class="glyph-stroke" x="4" y="6" width="16" height="14" rx="2" stroke-width="2" />
+              <path class="glyph-stroke" d="M4 10h16" stroke-width="2" />
+              <path class="glyph-stroke" d="M8.5 4v3.5M15.5 4v3.5" stroke-width="2.2" stroke-linecap="round" />
+              <path class="glyph-stroke" d="M8.5 14.5h7" stroke-width="2" stroke-linecap="round" opacity="0.55" />
+              <circle class="glyph-stroke" cx="16.5" cy="16.5" r="3.2" stroke-width="1.8" />
+              <path class="glyph-stroke" d="M16.5 15v2M15.5 16h2" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </div>
           <div class="stat-content">
             <div class="stat-value">{{ expiredCount }}</div>
             <div class="stat-label">Expired</div>
@@ -129,23 +162,39 @@
             </button>
           </div>
 
-          <div v-if="isApprover && filters.status === 'Pending'" class="alert alert-info banner-inline-alert">
-            Naka-<strong>Pending</strong> view ka. Gumamit ng ibang tabs para makita ang approved, rejected, o iba pang booking.
-          </div>
-
           <div class="filters-row machinery-filters">
             <div class="form-group">
               <label>Start date</label>
-              <div class="input-shell">
-                <span class="field-icon" aria-hidden="true"></span>
-                <input v-model="filters.start_date" type="date" @change="applyFilters" />
+              <div class="mf-date-field">
+                <input
+                  v-model="filters.start_date"
+                  type="date"
+                  class="mf-date-input"
+                  @change="applyFilters"
+                />
+                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
               </div>
             </div>
             <div class="form-group">
               <label>End date</label>
-              <div class="input-shell">
-                <span class="field-icon" aria-hidden="true"></span>
-                <input v-model="filters.end_date" type="date" @change="applyFilters" />
+              <div class="mf-date-field">
+                <input
+                  v-model="filters.end_date"
+                  type="date"
+                  class="mf-date-input"
+                  @change="applyFilters"
+                />
+                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
               </div>
             </div>
             <button type="button" class="mach-clear-filters-btn" @click="clearFilters">Clear filters</button>
@@ -534,12 +583,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 export default {
   name: 'MachineryApprovalPage',
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
+    const { isDark } = useBackdropTheme()
+    const isLight = computed(() => !isDark.value)
 
     // State
     const showViewModal = ref(false)
@@ -986,7 +1038,8 @@ export default {
       formatNumber,
       formatDate,
       formatDateTime,
-      activeFilter
+      activeFilter,
+      isLight
     }
   }
 }
@@ -1086,12 +1139,12 @@ export default {
 .stat-card {
   background: linear-gradient(140deg, rgba(167, 243, 198, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: 0 10px 22px rgba(5, 11, 8, 0.28);
-  padding: 1.1rem 1rem;
+  padding: 1.15rem 1.1rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.05rem;
   cursor: pointer;
   transition:
     transform 220ms ease,
@@ -1117,13 +1170,112 @@ export default {
   background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.24);
   flex-shrink: 0;
+  transition: transform 220ms ease;
 }
 
-.stat-icon.stat-abbr {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #ecfdf5;
+.stat-card:hover .stat-icon-wrap {
+  transform: translateY(-1px);
+}
+
+.stat-glyph {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+}
+
+.stat-glyph,
+.stat-glyph * {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stat-glyph .glyph-stroke {
+  stroke: currentColor;
+  fill: none;
+}
+
+.stat-glyph .glyph-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.stat-card.pending .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.55), rgba(217, 119, 6, 0.48));
+  color: #78350f;
+  border-color: rgba(180, 83, 9, 0.45);
+}
+
+.stat-card.approved .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.5), rgba(22, 163, 74, 0.45));
+  color: #052e16;
+  border-color: rgba(21, 128, 61, 0.45);
+}
+
+.stat-card.incomplete .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.5), rgba(202, 138, 4, 0.45));
+  color: #854d0e;
+  border-color: rgba(161, 98, 7, 0.45);
+}
+
+.stat-card.rejected .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(252, 165, 165, 0.5), rgba(220, 38, 38, 0.45));
+  color: #7f1d1d;
+  border-color: rgba(185, 28, 28, 0.45);
+}
+
+.stat-card.expired .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.5), rgba(100, 116, 139, 0.45));
+  color: #334155;
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+.stat-card.pending .stat-glyph,
+.stat-card.pending .stat-glyph * {
+  color: #78350f;
+  stroke: #78350f;
+}
+
+.stat-card.approved .stat-glyph,
+.stat-card.approved .stat-glyph * {
+  color: #052e16;
+  stroke: #052e16;
+}
+
+.stat-card.incomplete .stat-glyph,
+.stat-card.incomplete .stat-glyph * {
+  color: #854d0e;
+  stroke: #854d0e;
+}
+
+.stat-card.rejected .stat-glyph,
+.stat-card.rejected .stat-glyph * {
+  color: #7f1d1d;
+  stroke: #7f1d1d;
+}
+
+.stat-card.expired .stat-glyph,
+.stat-card.expired .stat-glyph * {
+  color: #1e293b;
+  stroke: #1e293b;
+}
+
+:global(body.glass-dark:not(.farmer-user)) .machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-stroke {
+  stroke: #f8fafc;
+}
+
+:global(body.glass-dark:not(.farmer-user)) .machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-fill {
+  fill: #f8fafc;
+}
+
+.stat-card.incomplete .stat-glyph .glyph-fill {
+  fill: #854d0e;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
 }
 
 .stat-value {
@@ -1137,16 +1289,6 @@ export default {
   color: rgba(236, 253, 245, 0.88);
   font-weight: 700;
   font-size: 0.875rem;
-}
-
-.stat-card.incomplete .stat-icon-wrap {
-  border-color: rgba(251, 191, 36, 0.55);
-  background: rgba(254, 243, 199, 0.22);
-}
-
-.stat-card.expired .stat-icon-wrap {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(241, 245, 249, 0.12);
 }
 
 .card.machinery-bookings-card {
@@ -1206,20 +1348,6 @@ export default {
   box-shadow: 0 0 16px rgba(74, 222, 128, 0.4);
 }
 
-.banner-inline-alert {
-  margin-bottom: 1rem;
-}
-
-.alert.alert-info {
-  padding: 0.85rem 1rem;
-  border-radius: 12px;
-  background: rgba(219, 234, 254, 0.88);
-  color: #0f3f66;
-  border-left: 4px solid #38bdf8;
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
 .filters-row {
   display: flex;
   flex-wrap: wrap;
@@ -1242,40 +1370,79 @@ export default {
   margin-bottom: 0.42rem;
 }
 
-.input-shell {
+.mf-date-field {
   position: relative;
+  width: 100%;
 }
 
-.input-shell .field-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(187, 247, 208, 0.35);
-}
-
-.input-shell input {
+.mf-date-input {
+  position: relative;
   width: 100%;
   box-sizing: border-box;
-  padding: 0.85rem 0.92rem 0.85rem 2.05rem;
+  padding: 0.85rem 2.85rem 0.85rem 0.92rem;
   border-radius: 12px;
   border: 1px solid rgba(134, 239, 172, 0.28);
   background: rgba(8, 30, 22, 0.52);
   color: #ecfdf5;
   font-size: 0.94rem;
   font-family: inherit;
+  color-scheme: light;
 }
 
-.input-shell input:focus {
+.mf-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.85rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.mf-date-input:focus {
   outline: none;
   border-color: rgba(110, 231, 183, 0.9);
   box-shadow:
     0 0 0 3px rgba(74, 222, 128, 0.15),
     0 0 16px rgba(74, 222, 128, 0.22);
+}
+
+.mf-date-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+  box-sizing: content-box;
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62));
+  border: 1px solid rgba(134, 239, 172, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mf-date-icon :is(rect, line) {
+  stroke: currentColor;
+}
+
+.machinery-page.light-theme .mf-date-input {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #14532d;
+}
+
+.machinery-page.light-theme .mf-date-icon {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #16a34a;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.12);
 }
 
 .mach-clear-filters-btn {
@@ -1954,5 +2121,7 @@ export default {
     font-size: 0.66rem;
   }
 }
+
+
 
 </style>

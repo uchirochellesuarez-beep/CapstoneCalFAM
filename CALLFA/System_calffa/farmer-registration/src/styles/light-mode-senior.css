@@ -10,11 +10,11 @@ body.glass-light {
   --senior-surface: #fffef8;
   --senior-surface-alt: #f0faf3;
   --senior-border: #166534;
-  --senior-border-soft: rgba(22, 101, 52, 0.38);
-  --senior-edge: rgba(22, 101, 52, 0.42);
-  --senior-edge-soft: rgba(22, 101, 52, 0.28);
-  --senior-edge-strong: rgba(5, 46, 22, 0.52);
-  --senior-divider: rgba(22, 101, 52, 0.2);
+  --senior-border-soft: rgba(22, 101, 52, 0.44);
+  --senior-edge: rgba(22, 101, 52, 0.52);
+  --senior-edge-soft: rgba(22, 101, 52, 0.36);
+  --senior-edge-strong: rgba(5, 46, 22, 0.58);
+  --senior-divider: rgba(22, 101, 52, 0.28);
   --senior-text: #000000;
   --senior-text-body: #000000;
   --senior-text-muted: #000000;
@@ -26,7 +26,7 @@ body.glass-light {
   --glass-bg-end: var(--senior-bg-end);
   --glass-surface: rgba(255, 254, 248, 0.92);
   --glass-surface-strong: #fffef8;
-  --glass-border: rgba(22, 101, 52, 0.32);
+  --glass-border: rgba(22, 101, 52, 0.44);
   --glass-text: var(--senior-text);
   --glass-text-soft: var(--senior-text-body);
   --glass-shadow: 0 10px 28px rgba(22, 101, 52, 0.14);
@@ -1371,6 +1371,99 @@ body.glass-light .page-container.officer-loans-page.light-theme .step-chip.activ
   box-shadow: 0 3px 10px rgba(22, 101, 52, 0.22) !important;
 }
 
+/* ===== Machinery Approval page (Operation Manager) — same as Officer Loans ===== */
+body.glass-light .page-container.machinery-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme :is(.glass-header, .card, .modal-content) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme :is(.page-title, .stat-value, .card-title) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme :is(.page-subtitle, .stat-label, .loan-guidance-text) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme .tab {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme .tab.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+}
+
+body.glass-light .page-container.machinery-page.light-theme .form-group input,
+body.glass-light .page-container.machinery-page.light-theme .form-group select {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+/* ===== Machinery Booking page (Farmer) — same as Officer Loans ===== */
+body.glass-light .page-container.machinery-booking-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme :is(.glass-header, .glass-stat-card, .machinery-card, .bookings-table-container, .modal-content) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme :is(.page-title, .stat-value, .section-title, .machinery-title) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme :is(.page-subtitle, .stat-label, .stats-group-title, .machinery-description, .detail-label) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme .filter-select,
+body.glass-light .page-container.machinery-booking-page.light-theme .form-input {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme .bookings-table th {
+  background: #ecfdf5 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme .bookings-table td {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.machinery-booking-page.light-theme .empty-state {
+  color: var(--senior-text-body) !important;
+}
+
 /* Edit loan modal — lively light mode (override generic flat buttons) */
 body.glass-light .officer-loan-modal.light-theme {
   border: 2px solid #4ade80 !important;
@@ -2641,7 +2734,7 @@ body.glass-light :is(
   .tab-btn,
   .btn-action,
   .report-type-btn
-) :is(span, .btn-text, .btn-icon, .tab-btn-label, .tab-btn-count, svg, svg *) {
+) :is(span:not(.tab-badge), .btn-text, .btn-icon, .tab-btn-label, .tab-btn-count, svg, svg *) {
   color: inherit !important;
   -webkit-text-fill-color: inherit !important;
   stroke: currentColor !important;
@@ -2796,6 +2889,27 @@ body.glass-light .farmer-income-hub-page.light-theme .tab-btn.active .tab-badge 
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* Tab count badges — high contrast in light mode */
+body.glass-light .tab-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(30, 64, 175, 0.35) !important;
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light :is(.tab-btn.active, .tab.active) .tab-badge {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(30, 58, 138, 0.45) !important;
+}
+
 body.glass-light .farmer-income-hub-page.light-theme :is(.empty-state, .foundation-hub-panel) {
   padding: 28px 32px !important;
   border-radius: 24px !important;
@@ -2897,7 +3011,8 @@ body.glass-light .income-hub-subpage.light-theme :is(
   .empty-state,
   .record-card,
   .distribution-card,
-  .distribution-form
+  .distribution-form,
+  .record-details
 ) {
   background: #ffffff !important;
   border: 2px solid #86efac !important;
@@ -2958,16 +3073,108 @@ body.glass-light .income-hub-subpage.light-theme :is(
   .detail-label,
   .record-detail span:last-child,
   .financial-item > span:first-child,
-  .financial-item.income > span:last-child,
-  .financial-item.expense > span:last-child,
-  .financial-item.profit > span:last-child,
   .loading-state,
   .distributions-header h2,
   .empty-state,
-  .form-group label
+  .form-group label,
+  .results-count
 ) {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .fin-stat-label,
+body.glass-light .income-hub-subpage.light-theme .fin-stat-value {
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.income .fin-stat-label {
+  color: #1e3a8a !important;
+  -webkit-text-fill-color: #1e3a8a !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.income .fin-stat-value {
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.expense .fin-stat-label {
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.expense .fin-stat-value {
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.profit .fin-stat-label {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.profit .fin-stat-value {
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.loss .fin-stat-label {
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.loss .fin-stat-value {
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.income {
+  background: #dbeafe !important;
+  border-color: #3b82f6 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.expense {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.profit {
+  background: #dcfce7 !important;
+  border-color: #22c55e !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.loss {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.income .fin-stat-icon {
+  background: #bfdbfe !important;
+  border-color: #3b82f6 !important;
+  color: #1e3a8a !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.expense .fin-stat-icon {
+  background: #fecaca !important;
+  border-color: #ef4444 !important;
+  color: #991b1b !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.profit .fin-stat-icon {
+  background: #bbf7d0 !important;
+  border-color: #22c55e !important;
+  color: #14532d !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .financial-stat.loss .fin-stat-icon {
+  background: #fecaca !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-date {
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
 }
 
 body.glass-light .income-hub-subpage.light-theme .search-input::placeholder {
@@ -3009,9 +3216,9 @@ body.glass-light .income-hub-subpage.light-theme :is(
   .search-icon,
   .empty-icon,
   .stat-icon,
-  .inline-icon,
   .tab-btn-icon,
-  .title-icon
+  .title-icon,
+  .detail-icon
 ) {
   color: #166534 !important;
 }
@@ -3105,7 +3312,13 @@ body.glass-light .farmer-income-hub-modal.light-theme :is(
    ========================================================= */
 html body.glass-light :is(
   .page-container.light-theme,
+  .page-container,
+  .page-container.admin-loans-page,
+  .page-container.admin-loans-page.light-theme,
+  .page-container.barangays-page,
+  .page-container.barangays-page.light-theme,
   .financial-container.light-theme,
+  .financial-container,
   .dashboard-container.light-theme,
   .dashboard-container,
   .machinery-management-page.light-theme,
@@ -3113,11 +3326,18 @@ html body.glass-light :is(
   .financial-overview-container.light-theme,
   .members-summary-page.light-theme,
   .officer-loans-page.light-theme,
+  .officer-loans-page,
+  .machinery-booking-page.light-theme,
+  .machinery-booking-page,
+  .machinery-page.light-theme,
+  .machinery-page,
   .farmer-income-page.light-theme,
   .farmer-income-hub-page.light-theme,
   .income-hub-subpage.light-theme,
   .share-capital-page.light-theme,
   .blockchain-audit-page.light-theme,
+  .news-page,
+  .news-page.light-theme,
   .modal-overlay.light-theme,
   .farmer-income-page-modal.light-theme,
   .farmer-income-hub-modal.light-theme,
@@ -3128,6 +3348,7 @@ html body.glass-light :is(
   .loan-notice-backdrop
 ) :is(
   .page-header,
+  .glass-header,
   .card,
   .stat-card,
   .form-section,
@@ -3145,6 +3366,9 @@ html body.glass-light :is(
   .header-time-card,
   .analytics-section,
   .modal-container,
+  .modal-content,
+  .modal-header,
+  .card-head,
   .loan-card,
   .member-shares-card,
   .tab-nav,
@@ -3156,6 +3380,7 @@ html body.glass-light :is(
   .loan-notice-details,
   .foundation-panel,
   .table-wrap,
+  .table-container,
   .summary-card,
   .info-card,
   .panel-card,
@@ -3178,6 +3403,7 @@ html body.glass-light :is(
   .financial-overview-container.light-theme,
   .members-summary-page.light-theme,
   .officer-loans-page.light-theme,
+  .machinery-booking-page.light-theme,
   .farmer-income-page.light-theme,
   .share-capital-page.light-theme,
   .farmer-income-page-modal.light-theme,
@@ -3260,4 +3486,144 @@ html body.glass-light :is(
   .top-header
 ) {
   border-color: var(--senior-edge-strong) !important;
+}
+
+/* =========================================================
+   SYSTEM-WIDE v2 — all visible lines (light mode)
+   Covers headers, modals, tabs, inputs, tables, dividers
+   ========================================================= */
+html body.glass-light .main-content :is(
+  hr,
+  .glass-header,
+  .modal-content,
+  .modal-header,
+  .modal-footer,
+  .card-head,
+  .card-body,
+  .card-footer,
+  .tabs,
+  .tab-nav,
+  .tab,
+  .table-container,
+  .inventory-table-container,
+  .members-table-wrap,
+  .places-table-wrap,
+  .payment-history-table-wrap,
+  .inv2-table-wrap,
+  .filters-section,
+  .search-bar,
+  .search-box,
+  .filter-row,
+  .filter-group,
+  .filter-panel,
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .filter-input,
+  .search-input,
+  .mf-date-input,
+  .barangay-filter-select,
+  .pagination,
+  .pagination-btn,
+  .empty-state,
+  .toast,
+  .dropdown-menu,
+  .accordion-item,
+  .section-divider,
+  .news-card,
+  .news-item,
+  .news-filter,
+  .machinery-bookings-card,
+  .application-card,
+  .detail-section,
+  .notes-section
+) {
+  border-color: var(--senior-edge) !important;
+}
+
+html body.glass-light .main-content :is(
+  .loans-table th,
+  .loans-table td,
+  .members-table th,
+  .members-table td,
+  .barangays-table th,
+  .barangays-table td,
+  .machinery-table th,
+  .machinery-table td,
+  .bookings-table th,
+  .bookings-table td,
+  .inventory-table th,
+  .inventory-table td,
+  .inv2-table th,
+  .inv2-table td,
+  .places-table th,
+  .places-table td,
+  .payment-history-table th,
+  .payment-history-table td,
+  .search-results-table th,
+  .search-results-table td,
+  .machinery-loans-table th,
+  .machinery-loans-table td,
+  .expenses-table th,
+  .expenses-table td,
+  .financial-table th,
+  .financial-table td,
+  .detail-table th,
+  .detail-table td,
+  .dynamic-table th,
+  .dynamic-table td,
+  .data-table th,
+  .data-table td,
+  table th,
+  table td
+) {
+  border-color: var(--senior-edge-soft) !important;
+}
+
+html body.glass-light .main-content :is(
+  .record-header,
+  .record-financials,
+  .detail-section,
+  .modal-footer,
+  .modal-header,
+  .card-head,
+  .section-title,
+  hr
+) {
+  border-top-color: var(--senior-divider) !important;
+  border-bottom-color: var(--senior-divider) !important;
+}
+
+html body.glass-light .main-content .tab.active {
+  border-color: var(--senior-edge-strong) !important;
+}
+
+html body.glass-light :is(
+  .news-page,
+  .news-page.light-theme,
+  .page-container.admin-loans-page,
+  .page-container.admin-loans-page.light-theme,
+  .page-container.barangays-page,
+  .page-container.barangays-page.light-theme,
+  .page-container.glass-module-page,
+  .page-container.glass-module-page.light-theme,
+  .page-container,
+  .page-container.light-theme,
+  .financial-container,
+  .financial-container.light-theme,
+  .machinery-page,
+  .machinery-page.light-theme,
+  .machinery-booking-page,
+  .machinery-booking-page.light-theme,
+  .officer-loans-page,
+  .officer-loans-page.light-theme
+) :is(
+  .page-header,
+  .glass-header,
+  .card,
+  .stat-card,
+  .modal-content,
+  .table-wrap
+) {
+  border-color: var(--senior-edge) !important;
 }

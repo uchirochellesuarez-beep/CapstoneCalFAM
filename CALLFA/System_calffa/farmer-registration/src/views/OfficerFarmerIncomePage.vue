@@ -69,6 +69,9 @@
             class="search-input"
           />
         </div>
+        <p v-if="filteredRecords.length > 0" class="results-count">
+          {{ filteredRecords.length }} {{ filteredRecords.length === 1 ? 'talaan' : 'mga talaan' }}
+        </p>
       </div>
 
       <!-- Loading -->
@@ -141,22 +144,53 @@
           </div>
           <div class="record-details">
             <div class="record-detail">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              </span>
               <span class="detail-label">Lawak:</span>
               <span>{{ record.area_hectares }} ektarya</span>
             </div>
           </div>
           <div class="record-financials">
-            <div class="financial-item income">
-              <span>Benta:</span>
-              <span>₱{{ parseFloat(record.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+            <div class="financial-stat income">
+              <div class="fin-stat-head">
+                <span class="fin-stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                    <polyline points="17 6 23 6 23 12" />
+                  </svg>
+                </span>
+                <span class="fin-stat-label">Benta</span>
+              </div>
+              <span class="fin-stat-value">₱{{ parseFloat(record.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
-            <div class="financial-item expense">
-              <span>Gastos:</span>
-              <span>₱{{ parseFloat(record.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+            <div class="financial-stat expense">
+              <div class="fin-stat-head">
+                <span class="fin-stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                    <polyline points="17 18 23 18 23 12" />
+                  </svg>
+                </span>
+                <span class="fin-stat-label">Gastos</span>
+              </div>
+              <span class="fin-stat-value">₱{{ parseFloat(record.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
-            <div class="financial-item" :class="parseFloat(record.net_income || 0) >= 0 ? 'profit' : 'loss'">
-              <span>Net:</span>
-              <span>₱{{ parseFloat(record.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+            <div class="financial-stat" :class="parseFloat(record.net_income || 0) >= 0 ? 'profit' : 'loss'">
+              <div class="fin-stat-head">
+                <span class="fin-stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                  </svg>
+                </span>
+                <span class="fin-stat-label">Net</span>
+              </div>
+              <span class="fin-stat-value">₱{{ parseFloat(record.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
           </div>
         </div>
@@ -715,17 +749,29 @@ onMounted(() => {
 
 /* SEARCH */
 .filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
   margin-bottom: 1.25rem;
+}
+
+.results-count {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #166534;
 }
 
 .search-box {
   display: flex;
   align-items: center;
   background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 0 0.75rem;
-  max-width: 400px;
+  border: 2px solid #86efac;
+  border-radius: 14px;
+  padding: 0 1rem;
+  width: 100%;
+  max-width: none;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08);
 }
 
 .search-icon {
@@ -744,8 +790,8 @@ onMounted(() => {
 .search-input {
   flex: 1;
   border: none;
-  padding: 0.55rem 0;
-  font-size: 0.9rem;
+  padding: 0.75rem 0;
+  font-size: 0.95rem;
   outline: none;
   background: transparent;
 }
@@ -808,26 +854,29 @@ onMounted(() => {
 
 .record-card {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: 2px solid #86efac;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  transition: all 0.2s;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-left: 4px solid #22c55e;
 }
 
 .record-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.12);
+  border-color: #166534;
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 2px solid #d1fae5;
 }
 
 .farmer-info {
@@ -844,10 +893,30 @@ onMounted(() => {
   letter-spacing: -0.3px;
 }
 
+.farmer-name .inline-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 0.2rem;
+}
+
 .record-date {
   font-size: 0.85rem;
-  color: #7b8295;
+  color: #6b7280;
   font-weight: 500;
+}
+
+.record-date .inline-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #b45309;
+  padding: 0.15rem;
 }
 
 .header-actions {
@@ -858,30 +927,42 @@ onMounted(() => {
 }
 
 .status-badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
+  border: 1px solid transparent;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.status-submitted { background: #dbeafe; color: #0c4a6e; }
-.status-review { background: #fef3c7; color: #92400e; }
-.status-eligible { background: #dcfce7; color: #166534; }
-.status-upcoming { background: #fbdba6; color: #92400e; }
-.status-received { background: #c6f6d5; color: #22543d; }
+.status-submitted { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.status-review { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.status-eligible { background: #dcfce7; color: #166534; border-color: #86efac; }
+.status-upcoming { background: #ffedd5; color: #9a3412; border-color: #fdba74; }
+.status-received { background: #bbf7d0; color: #14532d; border-color: #4ade80; }
 
 .view-btn {
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.1rem;
   background: linear-gradient(135deg, #166534, #16a34a);
   color: white;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid #15803d;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   transition: all 0.2s;
   white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.22);
+}
+
+.view-btn .inline-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.1rem;
 }
 
 .view-btn:hover {
@@ -894,7 +975,10 @@ onMounted(() => {
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
-  padding: 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
 }
 
 .record-detail {
@@ -904,20 +988,139 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
+.detail-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
+  flex-shrink: 0;
+}
+
+.detail-icon svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .detail-label {
-  color: #7b8295;
-  font-weight: 600;
-  min-width: 60px;
+  color: #166534;
+  font-weight: 700;
+  min-width: auto;
 }
 
 .record-financials {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f3f4f6;
+  gap: 0.85rem;
+  padding-top: 0.25rem;
+  border-top: none;
 }
 
+.financial-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 2px solid transparent;
+}
+
+.fin-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.fin-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fin-stat-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.fin-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fin-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.financial-stat.income {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.financial-stat.income .fin-stat-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.financial-stat.income .fin-stat-label { color: #1e40af; }
+.financial-stat.income .fin-stat-value { color: #1d4ed8; }
+
+.financial-stat.expense {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.financial-stat.expense .fin-stat-icon {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.financial-stat.expense .fin-stat-label { color: #991b1b; }
+.financial-stat.expense .fin-stat-value { color: #dc2626; }
+
+.financial-stat.profit {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.financial-stat.profit .fin-stat-icon {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.financial-stat.profit .fin-stat-label { color: #166534; }
+.financial-stat.profit .fin-stat-value { color: #15803d; }
+
+.financial-stat.loss {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+.financial-stat.loss .fin-stat-icon {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+}
+
+.financial-stat.loss .fin-stat-label { color: #991b1b; }
+.financial-stat.loss .fin-stat-value { color: #b91c1c; }
+
+/* Legacy financial-item — kept for modal/other sections */
 .financial-item {
   display: flex;
   flex-direction: column;
@@ -961,7 +1164,11 @@ onMounted(() => {
   
   .record-financials {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
+  }
+
+  .financial-stat {
+    padding: 0.75rem 0.85rem;
   }
 }
 
@@ -1675,9 +1882,37 @@ onMounted(() => {
   padding: 4px 2px;
 }
 
+.income-hub-subpage.light-theme .results-count {
+  color: #166534;
+}
+
 .income-hub-subpage.light-theme .record-card {
   padding: 1.75rem 1.85rem;
   border-radius: 16px;
+  border-left: 4px solid #22c55e;
+}
+
+.income-hub-subpage.light-theme .record-details {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.income-hub-subpage.light-theme .farmer-name .inline-icon {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.income-hub-subpage.light-theme .record-date .inline-icon {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #b45309;
+}
+
+.income-hub-subpage.light-theme .detail-icon {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
 }
 
 .income-hub-subpage.light-theme .record-header {
@@ -1693,6 +1928,113 @@ onMounted(() => {
   padding: 2.5rem 2rem;
 }
 
+/* Light mode — high-contrast readable text on stat chips */
+.income-hub-subpage.light-theme .farmer-name {
+  color: #052e16;
+}
+
+.income-hub-subpage.light-theme .record-date {
+  color: #374151;
+}
+
+.income-hub-subpage.light-theme .detail-label {
+  color: #166534;
+}
+
+.income-hub-subpage.light-theme .record-detail span:last-child {
+  color: #052e16;
+}
+
+.income-hub-subpage.light-theme .financial-stat.income {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.income-hub-subpage.light-theme .financial-stat.income .fin-stat-icon {
+  background: #bfdbfe;
+  border-color: #3b82f6;
+  color: #1e3a8a;
+}
+
+.income-hub-subpage.light-theme .financial-stat.income .fin-stat-label {
+  color: #1e3a8a;
+}
+
+.income-hub-subpage.light-theme .financial-stat.income .fin-stat-value {
+  color: #1e40af;
+}
+
+.income-hub-subpage.light-theme .financial-stat.expense {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.income-hub-subpage.light-theme .financial-stat.expense .fin-stat-icon {
+  background: #fecaca;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.income-hub-subpage.light-theme .financial-stat.expense .fin-stat-label {
+  color: #991b1b;
+}
+
+.income-hub-subpage.light-theme .financial-stat.expense .fin-stat-value {
+  color: #b91c1c;
+}
+
+.income-hub-subpage.light-theme .financial-stat.profit {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.income-hub-subpage.light-theme .financial-stat.profit .fin-stat-icon {
+  background: #bbf7d0;
+  border-color: #22c55e;
+  color: #14532d;
+}
+
+.income-hub-subpage.light-theme .financial-stat.profit .fin-stat-label {
+  color: #14532d;
+}
+
+.income-hub-subpage.light-theme .financial-stat.profit .fin-stat-value {
+  color: #15803d;
+}
+
+.income-hub-subpage.light-theme .financial-stat.loss {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.income-hub-subpage.light-theme .financial-stat.loss .fin-stat-icon {
+  background: #fecaca;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+.income-hub-subpage.light-theme .financial-stat.loss .fin-stat-label {
+  color: #991b1b;
+}
+
+.income-hub-subpage.light-theme .financial-stat.loss .fin-stat-value {
+  color: #b91c1c;
+}
+
+.income-hub-subpage.light-theme .status-eligible {
+  background: #dcfce7;
+  color: #14532d;
+  border-color: #22c55e;
+}
+
+.income-hub-subpage.light-theme .search-input {
+  color: #052e16;
+}
+
+.income-hub-subpage.light-theme .search-input::placeholder {
+  color: #6b7280;
+}
+
 /* Dark shell when embedded under FarmerIncomeHubPage */
 .income-hub-subpage.page-container {
   max-width: 1400px;
@@ -1705,7 +2047,7 @@ onMounted(() => {
   margin-bottom: 1.25rem;
   padding: 1.25rem 1.35rem;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.96), rgba(14, 33, 23, 0.95));
-  border: 1px solid rgba(126, 184, 145, 0.22);
+  border: 2px solid rgba(4, 14, 10, 0.68);
   border-radius: 22px;
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
@@ -1734,7 +2076,7 @@ onMounted(() => {
   margin-bottom: 1.25rem;
   padding: 12px 14px;
   background: linear-gradient(145deg, rgba(66, 129, 92, 0.16), rgba(41, 88, 61, 0.18));
-  border: 1px solid rgba(126, 184, 145, 0.24);
+  border: 2px solid rgba(4, 14, 10, 0.52);
   border-radius: 18px;
   gap: 10px;
 }
@@ -1783,7 +2125,12 @@ onMounted(() => {
 .income-hub-subpage:not(.light-theme) .search-box {
   max-width: none;
   background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(126, 184, 145, 0.35);
+  border: 2px solid rgba(4, 14, 10, 0.52);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.income-hub-subpage:not(.light-theme) .results-count {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .income-hub-subpage:not(.light-theme) .search-icon {
@@ -1817,12 +2164,13 @@ onMounted(() => {
   padding: 2rem 1.25rem;
   border-radius: 22px;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.82), rgba(14, 33, 23, 0.8));
-  border: 1px solid rgba(126, 184, 145, 0.2);
+  border: 2px solid rgba(4, 14, 10, 0.52);
 }
 
 .income-hub-subpage:not(.light-theme) .record-card {
   background: linear-gradient(145deg, rgba(24, 48, 34, 0.96), rgba(14, 33, 23, 0.94));
-  border: 1px solid rgba(126, 184, 145, 0.22);
+  border: 2px solid rgba(4, 14, 10, 0.52);
+  border-left: 4px solid #4ade80;
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
 
@@ -1831,15 +2179,27 @@ onMounted(() => {
 }
 
 .income-hub-subpage:not(.light-theme) .record-header {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(4, 14, 10, 0.44);
 }
 
 .income-hub-subpage:not(.light-theme) .farmer-name {
   color: #ffffff;
 }
 
+.income-hub-subpage:not(.light-theme) .farmer-name .inline-icon {
+  background: rgba(74, 222, 128, 0.16);
+  border-color: rgba(134, 239, 172, 0.45);
+  color: #86efac;
+}
+
 .income-hub-subpage:not(.light-theme) .record-date {
   color: rgba(255, 255, 255, 0.88);
+}
+
+.income-hub-subpage:not(.light-theme) .record-date .inline-icon {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #fde68a;
 }
 
 .income-hub-subpage:not(.light-theme) .status-submitted {
@@ -1863,7 +2223,18 @@ onMounted(() => {
 }
 
 .income-hub-subpage:not(.light-theme) .detail-label {
-  color: rgba(255, 255, 255, 0.88);
+  color: #86efac;
+}
+
+.income-hub-subpage:not(.light-theme) .record-details {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(4, 14, 10, 0.44);
+}
+
+.income-hub-subpage:not(.light-theme) .detail-icon {
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(134, 239, 172, 0.35);
+  color: #86efac;
 }
 
 .income-hub-subpage:not(.light-theme) .record-detail span:last-child {
@@ -1871,7 +2242,83 @@ onMounted(() => {
 }
 
 .income-hub-subpage:not(.light-theme) .record-financials {
-  border-top-color: rgba(255, 255, 255, 0.08);
+  border-top: none;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.income {
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(96, 165, 250, 0.38);
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.income .fin-stat-icon {
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: #93c5fd;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.income .fin-stat-label {
+  color: #bfdbfe;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.income .fin-stat-value {
+  color: #93c5fd;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.expense {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.expense .fin-stat-icon {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fca5a5;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.expense .fin-stat-label {
+  color: #fecaca;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.expense .fin-stat-value {
+  color: #fca5a5;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.profit {
+  background: rgba(22, 163, 74, 0.14);
+  border-color: rgba(74, 222, 128, 0.38);
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.profit .fin-stat-icon {
+  background: rgba(22, 163, 74, 0.22);
+  border-color: rgba(74, 222, 128, 0.4);
+  color: #86efac;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.profit .fin-stat-label {
+  color: #bbf7d0;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.profit .fin-stat-value {
+  color: #4ade80;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.loss {
+  background: rgba(220, 38, 38, 0.14);
+  border-color: rgba(248, 113, 113, 0.38);
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.loss .fin-stat-icon {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fca5a5;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.loss .fin-stat-label {
+  color: #fecaca;
+}
+
+.income-hub-subpage:not(.light-theme) .financial-stat.loss .fin-stat-value {
+  color: #f87171;
 }
 
 .income-hub-subpage:not(.light-theme) .financial-item > span:first-child {
@@ -1879,15 +2326,15 @@ onMounted(() => {
 }
 
 .income-hub-subpage:not(.light-theme) .financial-item.income > span:last-child {
-  color: #ffffff;
+  color: #93c5fd;
 }
 
 .income-hub-subpage:not(.light-theme) .financial-item.expense > span:last-child {
-  color: #ffffff;
+  color: #fca5a5;
 }
 
 .income-hub-subpage:not(.light-theme) .financial-item.profit > span:last-child {
-  color: #ffffff;
+  color: #4ade80;
 }
 
 .income-hub-subpage:not(.light-theme) .distributions-header h2 {
@@ -2011,6 +2458,38 @@ onMounted(() => {
 .farmer-income-hub-modal:not(.light-theme) .expense-row.total-row {
   background: rgba(0, 0, 0, 0.25);
   color: #ecfdf5;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-profit-row {
+  background: #bbf7d0 !important;
+  border: 1px solid #86efac !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-profit-row span {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  font-weight: 700 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-loss-row {
+  background: #fecaca !important;
+  border: 1px solid #f87171 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-loss-row span {
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+  font-weight: 700 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .income-row span {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .expense-summary-row span {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
 }
 
 /* Dark mode — ensure all SVG icons stay visible */

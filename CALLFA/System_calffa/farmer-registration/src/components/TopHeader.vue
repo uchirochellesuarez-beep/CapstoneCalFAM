@@ -381,10 +381,12 @@ const handleNotificationClick = async (notification) => {
   // Navigate based on reference type
   if (notification.reference_type === 'loan') {
     const role = authStore.currentUser?.role
-    if (['admin', 'treasurer', 'president'].includes(role)) {
+    if (['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(role)) {
       router.push({ path: '/admin-loans', query: { highlight: notification.reference_id, type: 'loan' } })
+    } else if (role === 'operator') {
+      router.push({ path: '/officer-loans', query: { highlight: notification.reference_id, type: 'loan' } })
     } else {
-      router.push({ path: '/loan', query: { highlight: notification.reference_id, type: 'loan' } })
+      router.push({ path: '/officer-loans', query: { highlight: notification.reference_id, type: 'loan' } })
     }
   } else if (notification.reference_type === 'machinery_booking') {
     const role = authStore.currentUser?.role

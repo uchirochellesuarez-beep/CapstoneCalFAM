@@ -1726,6 +1726,38 @@ onMounted(() => {
   border: 1px solid rgba(126, 184, 145, 0.25);
 }
 
+.farmer-income-hub-modal:not(.light-theme) .net-profit-row {
+  background: #bbf7d0 !important;
+  border: 1px solid #86efac !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-profit-row span {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  font-weight: 700 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-loss-row {
+  background: #fecaca !important;
+  border: 1px solid #f87171 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .net-loss-row span {
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+  font-weight: 700 !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .income-row span {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .expense-summary-row span {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
 .farmer-income-hub-modal:not(.light-theme) .btn-close-modal {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(236, 253, 245, 0.92);

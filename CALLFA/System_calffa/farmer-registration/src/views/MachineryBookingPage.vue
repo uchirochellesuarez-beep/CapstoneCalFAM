@@ -1,5 +1,5 @@
 <template>
-  <div class="machinery-booking-page">
+  <div class="page-container glass-module-page machinery-booking-page" :class="{ 'light-theme': isLight }">
     <!-- Page Header -->
     <div class="page-header">
       <div class="glass-header">
@@ -272,7 +272,7 @@
     </div>
 
     <!-- Booking Modal -->
-    <div v-if="showBookingModal" class="modal-overlay" @click.self="closeModals">
+    <div v-if="showBookingModal" class="modal-overlay" :class="{ 'light-theme': isLight }" @click.self="closeModals">
       <div class="modal-content">
         <div class="modal-header">
           <h2>Book Machinery</h2>
@@ -465,7 +465,7 @@
     </div>
 
     <!-- View Booking Details Modal -->
-    <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay" @click.self="closeModals">
+    <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay" :class="{ 'light-theme': isLight }" @click.self="closeModals">
       <div class="modal-content modal-large">
         <div class="modal-header">
           <h2>Booking Details #{{ selectedBooking.id }}</h2>
@@ -587,7 +587,7 @@
     </div>
 
     <!-- Edit Booking Modal -->
-    <div v-if="showEditModal" class="modal-overlay" @click.self="closeModals">
+    <div v-if="showEditModal" class="modal-overlay" :class="{ 'light-theme': isLight }" @click.self="closeModals">
       <div class="modal-content">
         <div class="modal-header">
           <h2>Edit Booking</h2>
@@ -725,7 +725,7 @@
     </div>
 
     <!-- Cancel Booking Confirmation Modal -->
-    <div v-if="showCancelModal" class="modal-overlay" @click.self="closeModals">
+    <div v-if="showCancelModal" class="modal-overlay" :class="{ 'light-theme': isLight }" @click.self="closeModals">
       <div class="modal-content modal-small">
         <div class="modal-header">
           <h2>Cancel Booking</h2>
@@ -765,6 +765,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 export default {
   name: 'MachineryBookingPage',
@@ -772,6 +773,8 @@ export default {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
     const route = useRoute()
+    const { isDark } = useBackdropTheme()
+    const isLight = computed(() => !isDark.value)
 
     const isNonMember = computed(() => authStore.currentUser?.membership_status === 'non-member')
 
@@ -1625,6 +1628,7 @@ export default {
     })
 
     return {
+      isLight,
       // Stores
       authStore,
       // State
@@ -2747,6 +2751,358 @@ export default {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ===== LIGHT MODE — matches Loans / sidebar light theme ===== */
+.page-container.machinery-booking-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
+  color: #052e16;
+  border-radius: 18px;
+}
+
+.page-container.machinery-booking-page.light-theme .glass-header {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.page-container.machinery-booking-page.light-theme .page-title {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .stats-group-title {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .payment-group {
+  border-top-color: rgba(22, 101, 52, 0.18);
+}
+
+.page-container.machinery-booking-page.light-theme .glass-stat-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.page-container.machinery-booking-page.light-theme .glass-stat-card:hover {
+  border-color: #4ade80 !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.12) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .stat-label {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .stat-value {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .stat-outstanding .stat-value {
+  color: #b91c1c !important;
+}
+
+.page-container.machinery-booking-page.light-theme .outstanding-warning {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fca5a5;
+  border-left: 4px solid #ef4444;
+}
+
+.page-container.machinery-booking-page.light-theme .warning-content h3 {
+  color: #991b1b;
+}
+
+.page-container.machinery-booking-page.light-theme .warning-content p {
+  color: #7f1d1d;
+}
+
+.page-container.machinery-booking-page.light-theme .section-title {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .filter-select {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .machinery-card {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .machinery-card:hover {
+  box-shadow: 0 10px 24px rgba(22, 101, 52, 0.14) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .machinery-title {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .machinery-description {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .detail-label {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .detail-value {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .bookings-table-container {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .bookings-table thead {
+  background: #ecfdf5 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .bookings-table th {
+  color: #052e16 !important;
+  border-bottom-color: #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .bookings-table td {
+  color: #052e16 !important;
+  border-bottom-color: rgba(22, 101, 52, 0.12) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .booking-machinery small {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .price-cell {
+  color: #15803d !important;
+}
+
+.page-container.machinery-booking-page.light-theme .balance-unpaid {
+  color: #dc2626 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .btn-icon-small {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .btn-icon-small:hover {
+  background: #dcfce7 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .btn-secondary {
+  background: #ffffff !important;
+  color: #166534 !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .loading-container,
+.page-container.machinery-booking-page.light-theme .empty-state,
+.page-container.machinery-booking-page.light-theme .loading-cell,
+.page-container.machinery-booking-page.light-theme .empty-cell {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .empty-icon {
+  border-color: #86efac !important;
+  background: #f0fdf4 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .notification-highlight-row td {
+  color: #991b1b !important;
+}
+
+/* Modals — light theme */
+.page-container.machinery-booking-page.light-theme .modal-overlay.light-theme,
+.modal-overlay.light-theme {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.page-container.machinery-booking-page.light-theme .modal-content,
+.modal-overlay.light-theme .modal-content {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 20px 48px rgba(22, 101, 52, 0.16) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .modal-header,
+.modal-overlay.light-theme .modal-header {
+  border-bottom-color: rgba(22, 101, 52, 0.16) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .modal-header h2,
+.modal-overlay.light-theme .modal-header h2 {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .modal-close,
+.modal-overlay.light-theme .modal-close {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .form-label,
+.modal-overlay.light-theme .form-label {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .form-input,
+.modal-overlay.light-theme .form-input {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .form-input:focus,
+.modal-overlay.light-theme .form-input:focus {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .form-hint,
+.modal-overlay.light-theme .form-hint {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .booking-date-calendar,
+.modal-overlay.light-theme .booking-date-calendar {
+  background: #f0fdf4 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-loading,
+.modal-overlay.light-theme .cal-loading {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-nav-title,
+.modal-overlay.light-theme .cal-nav-title {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-nav-btn,
+.modal-overlay.light-theme .cal-nav-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-nav-btn:hover:not(:disabled),
+.modal-overlay.light-theme .cal-nav-btn:hover:not(:disabled) {
+  background: #dcfce7 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-weekdays,
+.modal-overlay.light-theme .cal-weekdays {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-cell,
+.modal-overlay.light-theme .cal-cell {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-cell:hover:not(:disabled),
+.modal-overlay.light-theme .cal-cell:hover:not(:disabled) {
+  border-color: #22c55e !important;
+  background: #ecfdf5 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-selected-hint,
+.modal-overlay.light-theme .cal-selected-hint {
+  color: #166534 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .cal-selected-hint--muted,
+.modal-overlay.light-theme .cal-selected-hint--muted {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .price-summary,
+.modal-overlay.light-theme .price-summary {
+  background: #f0fdf4 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .total-price,
+.modal-overlay.light-theme .total-price {
+  color: #15803d !important;
+}
+
+.page-container.machinery-booking-page.light-theme .detail-section h3,
+.modal-overlay.light-theme .detail-section h3 {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .detail-item label,
+.modal-overlay.light-theme .detail-item label {
+  color: #64748b !important;
+}
+
+.page-container.machinery-booking-page.light-theme .detail-item p,
+.page-container.machinery-booking-page.light-theme .detail-item span,
+.modal-overlay.light-theme .detail-item p,
+.modal-overlay.light-theme .detail-item span {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .price-highlight,
+.modal-overlay.light-theme .price-highlight {
+  color: #15803d !important;
+}
+
+.page-container.machinery-booking-page.light-theme .notes-text,
+.modal-overlay.light-theme .notes-text {
+  background: #f8fafc !important;
+  color: #052e16 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .booking-summary,
+.modal-overlay.light-theme .booking-summary {
+  background: #f0fdf4 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .booking-summary p,
+.modal-overlay.light-theme .booking-summary p {
+  color: #052e16 !important;
+}
+
+.page-container.machinery-booking-page.light-theme .payments-table-wrap,
+.modal-overlay.light-theme .payments-table-wrap {
+  background: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .payments-table th,
+.modal-overlay.light-theme .payments-table th {
+  background: #ecfdf5 !important;
+  color: #052e16 !important;
+  border-bottom-color: #86efac !important;
+}
+
+.page-container.machinery-booking-page.light-theme .payments-table td,
+.modal-overlay.light-theme .payments-table td {
+  color: #052e16 !important;
+  border-bottom-color: rgba(22, 101, 52, 0.12) !important;
+}
+
+.page-container.machinery-booking-page.light-theme .empty-payments,
+.modal-overlay.light-theme .empty-payments {
+  color: #64748b !important;
 }
 
 @media (max-width: 1200px) {
