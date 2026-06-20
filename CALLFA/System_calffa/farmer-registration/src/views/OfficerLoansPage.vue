@@ -5,7 +5,6 @@
         <div class="header-title-row">
           <h1 class="page-title">{{ pageTitle }}</h1>
         </div>
-        <p class="page-subtitle">Manage member-facing loan applications with clear status tracking and quick admin actions.</p>
       </div>
     </div>
 
@@ -949,13 +948,20 @@ const pageTitle = computed(() => {
   const role = authStore.currentUser?.role
   if (role === 'treasurer') return 'My Loans (Treasurer)'
   if (role === 'president') return 'My Loans (President)'
+  if (role === 'operation_manager') return 'My Loans (Operation Manager)'
+  if (role === 'business_manager') return 'My Loans (Business Manager)'
+  if (role === 'operator') return 'My Loans (Operator)'
   return 'My Loans'
 })
 
 const approvalDescription = computed(() => {
   const role = authStore.currentUser?.role
+  if (role === 'farmer') return 'Your loan will be reviewed by the President and Treasurer.'
   if (role === 'treasurer') return 'Your loan will be reviewed by the President.'
   if (role === 'president') return 'Your loan will be reviewed by the Treasurer.'
+  if (['operation_manager', 'business_manager', 'operator'].includes(role)) {
+    return 'Your loan will be reviewed by the Treasurer.'
+  }
   return 'Your loan will be reviewed by the approving officer.'
 })
 

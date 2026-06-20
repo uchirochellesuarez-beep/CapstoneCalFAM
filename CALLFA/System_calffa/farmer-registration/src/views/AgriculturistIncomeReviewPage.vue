@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container agriculturist-income-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <h1 class="page-title">Talaan ng Kita at Pamamahagi ng Tulong</h1>
       <p class="page-subtitle">Tuklasin ang mga inaprubang talaan at pamahalaan ang distribusyon ng tulong sa pagsasaka</p>
@@ -257,7 +257,7 @@
 
   <!-- DETAIL MODAL -->
   <Teleport to="body">
-    <div v-if="showDetailModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showDetailModal" class="modal-overlay agriculturist-income-modal" :class="{ 'light-theme': isLight }" @click.self="closeModal">
       <div class="modal-container modal-lg">
         <div class="modal-header">
           <h2>Detalye ng Talaan ng Kita</h2>
@@ -296,41 +296,74 @@
 
   <!-- ASSISTANCE FORM MODAL -->
   <Teleport to="body">
-    <div v-if="showAssistanceModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-container modal-md">
+    <div v-if="showAssistanceModal" class="modal-overlay agriculturist-income-modal" :class="{ 'light-theme': isLight }" @click.self="closeModal">
+      <div class="modal-container modal-md assistance-form-modal">
         <div class="modal-header">
           <h2>Lumikha ng Tulong</h2>
-          <button type="button" class="modal-close" @click="closeModal">&times;</button>
+          <button type="button" class="modal-close" @click="closeModal" aria-label="Isara">&times;</button>
         </div>
-        <div class="modal-body" v-if="selectedRecord">
-          <div class="form-group">
-            <label>Magsasaka</label>
-            <input type="text" :value="selectedRecord.farmer_name" disabled class="form-input" />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Pataba (Fertilizer)</label>
-              <div class="input-group">
-                <input v-model.number="assistanceForm.fertilizer_sacks" type="number" min="0" placeholder="0" class="form-input" />
-                <span class="input-unit">sako</span>
+        <div v-if="selectedRecord" class="assistance-form-content">
+          <div class="modal-body assistance-form-body">
+            <div class="assistance-farmer-banner">
+              <span class="assistance-farmer-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              <div class="assistance-farmer-text">
+                <span class="assistance-farmer-label">Magsasaka</span>
+                <strong class="assistance-farmer-name">{{ selectedRecord.farmer_name }}</strong>
               </div>
             </div>
-            <div class="form-group">
-              <label>Binhi (Seeds)</label>
-              <div class="input-group">
-                <input v-model.number="assistanceForm.seed_sacks" type="number" min="0" placeholder="0" class="form-input" />
-                <span class="input-unit">sako</span>
+
+            <div class="assistance-section">
+              <h3 class="assistance-section-title">Dami ng tulong</h3>
+              <div class="assistance-qty-grid">
+                <div class="form-group">
+                  <label for="assistance-fertilizer">Pataba (Fertilizer)</label>
+                  <div class="input-group">
+                    <input
+                      id="assistance-fertilizer"
+                      v-model.number="assistanceForm.fertilizer_sacks"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      class="form-input"
+                    />
+                    <span class="input-unit">sako</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="assistance-seeds">Binhi (Seeds)</label>
+                  <div class="input-group">
+                    <input
+                      id="assistance-seeds"
+                      v-model.number="assistanceForm.seed_sacks"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      class="form-input"
+                    />
+                    <span class="input-unit">sako</span>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div class="form-group assistance-notes">
+              <label for="assistance-notes">Tala (opsyonal)</label>
+              <textarea
+                id="assistance-notes"
+                v-model="assistanceForm.notes"
+                placeholder="Anumang karagdagang impormasyon..."
+                class="form-input form-textarea"
+                rows="3"
+              ></textarea>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Tala (opsyonal)</label>
-            <textarea v-model="assistanceForm.notes" placeholder="Anumang karagdagang impormasyon..." class="form-input form-textarea"></textarea>
-          </div>
-
-          <div class="modal-footer">
+          <div class="modal-footer assistance-form-footer">
             <button type="button" @click="closeModal" class="btn-cancel">Huwag</button>
             <button type="button" @click="submitAssistance" class="btn-submit" :disabled="submittingAssistance">
               {{ submittingAssistance ? 'Sinusubmit...' : 'Lumikha' }}
@@ -345,8 +378,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const currentUser = computed(() => authStore.currentUser)
 
 // Tab state
@@ -1077,8 +1113,172 @@ onMounted(() => {
 }
 
 .modal-md {
-  width: 90%;
-  max-width: 500px;
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Assistance form modal layout */
+.assistance-form-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.assistance-form-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.assistance-form-body {
+  padding: 20px 22px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.assistance-farmer-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid rgba(22, 101, 52, 0.28);
+  background: #f0fdf4;
+}
+
+.assistance-farmer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  flex-shrink: 0;
+}
+
+.assistance-farmer-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.assistance-farmer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.assistance-farmer-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #166534;
+}
+
+.assistance-farmer-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #052e16;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.assistance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assistance-section-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #166534;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(22, 101, 52, 0.22);
+}
+
+.assistance-qty-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.assistance-form-body .form-group {
+  margin-bottom: 0;
+  gap: 6px;
+}
+
+.assistance-form-body .form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.assistance-form-body .input-group {
+  min-height: 44px;
+}
+
+.assistance-form-body .form-input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.assistance-form-body .input-unit {
+  min-width: 3.25rem;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 0 10px 10px 0;
+}
+
+.assistance-notes .form-textarea {
+  min-height: 88px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.assistance-form-footer {
+  margin-top: 0;
+  padding: 16px 22px 22px;
+  border-top: 2px solid rgba(22, 101, 52, 0.22);
+  background: #fafdfa;
+}
+
+.assistance-form-footer .btn-cancel,
+.assistance-form-footer .btn-submit {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.assistance-form-footer .btn-cancel {
+  flex: 0 1 38%;
+  background: #ffffff;
+  color: #052e16;
+  border: 2px solid #86efac;
+}
+
+.assistance-form-footer .btn-cancel:hover {
+  background: #f0fdf4;
+  border-color: #166534;
+}
+
+.assistance-form-footer .btn-submit {
+  flex: 1 1 62%;
 }
 
 .modal-header {
@@ -1249,40 +1449,51 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Dark forest theme (layout & colors from design spec) */
-.page-container {
+/* Shared layout when embedded in Farmer Income Hub */
+.page-container.agriculturist-income-page {
   max-width: 100%;
   padding: 0;
   background: transparent;
   min-height: auto;
 }
 
-.page-header,
-.tab-navigation,
-.record-card,
-.loading-state,
-.empty-state,
-.modal-container,
-.detail-section,
-.card-financials {
+/* Dark forest theme */
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .page-header,
+  .tab-navigation,
+  .record-card,
+  .loading-state,
+  .empty-state,
+  .detail-section,
+  .card-financials
+) {
   background: linear-gradient(145deg, rgba(20, 38, 28, 0.95), rgba(14, 29, 21, 0.93)) !important;
-  border: 1px solid rgba(126, 184, 145, 0.18) !important;
+  border: 2px solid rgba(4, 14, 10, 0.52) !important;
   border-radius: 20px;
   box-shadow: 0 12px 28px rgba(6, 12, 9, 0.24) !important;
 }
 
-.page-header,
-.record-card,
-.modal-container,
-.detail-section,
-.loading-state,
-.empty-state {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-container {
+  background: linear-gradient(145deg, rgba(20, 38, 28, 0.95), rgba(14, 29, 21, 0.93)) !important;
+  border: 2px solid rgba(4, 14, 10, 0.52) !important;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(6, 12, 9, 0.24) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .page-header,
+  .record-card,
+  .loading-state,
+  .empty-state
+) {
   position: relative;
   overflow: hidden;
 }
 
-.page-header::before,
-.record-card::before {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .page-header,
+  .record-card
+)::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1290,316 +1501,761 @@ onMounted(() => {
   pointer-events: none;
 }
 
-.page-header {
+.page-container.agriculturist-income-page:not(.light-theme) .page-header {
   margin-bottom: 22px;
   padding: 20px 24px;
 }
 
-.page-title {
+.page-container.agriculturist-income-page:not(.light-theme) .page-title {
   font-size: clamp(1.8rem, 2.2vw, 2.35rem);
   font-weight: 900;
-  color: #86efac;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   letter-spacing: -0.04em;
 }
 
-.page-subtitle,
-.farmer-date,
-.info-label,
-.detail-grid strong,
-.form-group label,
-.input-unit,
-.loading-state p,
-.empty-state p {
-  color: rgba(220, 252, 231, 0.72) !important;
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .page-subtitle,
+  .farmer-name,
+  .farmer-date,
+  .info-label,
+  .info-value,
+  .info-row,
+  .fin-item,
+  .fin-item span,
+  .fin-value,
+  .fin-value.income,
+  .fin-value.expense,
+  .fin-value.profit,
+  .fin-value.loss,
+  .section-title,
+  .detail-grid div,
+  .detail-grid strong,
+  .detail-section h3,
+  .form-group label,
+  .input-unit,
+  .loading-state p,
+  .empty-state p,
+  .tab-btn,
+  .tab-btn.active,
+  .sms-error
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.tab-navigation {
+.page-container.agriculturist-income-page:not(.light-theme) .tab-navigation {
   gap: 12px;
   margin-bottom: 24px;
   padding: 14px 16px;
   border-bottom: none;
 }
 
-.tab-btn {
+.page-container.agriculturist-income-page:not(.light-theme) .tab-btn {
   min-height: 48px;
   padding: 12px 20px;
-  background: rgba(148, 166, 158, 0.12);
-  border: 1px solid rgba(126, 184, 145, 0.16);
-  border-bottom: none;
+  background: rgba(14, 33, 23, 0.92) !important;
+  border: 2px solid rgba(134, 239, 172, 0.32) !important;
+  border-bottom: 2px solid rgba(134, 239, 172, 0.32) !important;
   border-radius: 14px;
-  color: rgba(220, 252, 231, 0.8);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   font-weight: 700;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22);
 }
 
-.tab-btn.active {
-  color: #f0fdf4;
-  background: linear-gradient(145deg, rgba(28, 116, 68, 0.9), rgba(24, 84, 55, 0.9));
-  border-bottom: none;
+.page-container.agriculturist-income-page:not(.light-theme) .tab-btn.active {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(145deg, rgba(28, 116, 68, 0.95), rgba(24, 84, 55, 0.95)) !important;
+  border-color: rgba(134, 239, 172, 0.45) !important;
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.28);
 }
 
-.tab-btn:hover:not(.active) {
-  color: #f0fdf4;
-  background: rgba(255, 255, 255, 0.09);
+.page-container.agriculturist-income-page:not(.light-theme) .tab-btn:hover:not(.active) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: rgba(24, 48, 34, 0.96) !important;
+  border-color: rgba(134, 239, 172, 0.45) !important;
 }
 
-.alert-success {
+.page-container.agriculturist-income-page:not(.light-theme) .alert-success {
   background: rgba(34, 197, 94, 0.14);
   color: #bbf7d0;
   border: 1px solid rgba(74, 222, 128, 0.28);
 }
 
-.alert-error {
+.page-container.agriculturist-income-page:not(.light-theme) .alert-error {
   background: rgba(239, 68, 68, 0.12);
   color: #fecaca;
   border: 1px solid rgba(248, 113, 113, 0.28);
 }
 
-.alert-warning {
+.page-container.agriculturist-income-page:not(.light-theme) .alert-warning {
   background: rgba(245, 158, 11, 0.12);
   color: #fde68a;
   border: 1px solid rgba(251, 191, 36, 0.28);
 }
 
-.records-grid {
+.page-container.agriculturist-income-page:not(.light-theme) .records-grid {
   gap: 1.25rem;
   margin-bottom: 24px;
 }
 
-.record-card {
+.page-container.agriculturist-income-page:not(.light-theme) .record-card {
   border-radius: 18px;
 }
 
-.record-card.completed {
+.page-container.agriculturist-income-page:not(.light-theme) .record-card.completed {
   opacity: 0.92;
 }
 
-.card-header,
-.card-actions,
-.detail-grid div,
-.modal-header,
-.modal-footer {
-  border-color: rgba(126, 184, 145, 0.12) !important;
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .card-header,
+  .card-actions,
+  .detail-grid div,
+  .modal-header,
+  .modal-footer
+) {
+  border-color: rgba(4, 14, 10, 0.44) !important;
 }
 
-.card-header,
-.card-info,
-.card-financials,
-.card-actions,
-.modal-header,
-.modal-body {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .card-header,
+  .card-info,
+  .card-financials,
+  .card-actions
+),
+.modal-overlay.agriculturist-income-modal:not(.light-theme) :is(
+  .modal-header,
+  .modal-body
+) {
   padding: 18px;
 }
 
-.farmer-avatar {
+.page-container.agriculturist-income-page:not(.light-theme) .farmer-avatar {
   background: rgba(74, 222, 128, 0.12);
-  color: #86efac;
+  color: #ffffff;
 }
 
-.farmer-name,
-.info-value,
-.detail-grid div,
-.form-group label,
-.modal-header h2,
-.detail-section h3 {
-  color: #ecfdf5;
+.page-container.agriculturist-income-page:not(.light-theme) .empty-icon {
+  color: #ffffff;
 }
 
-.empty-icon {
-  color: rgba(134, 239, 172, 0.45);
-}
-
-.spinner {
+.page-container.agriculturist-income-page:not(.light-theme) .spinner {
   border-color: rgba(255, 255, 255, 0.12);
-  border-top-color: #34d399;
+  border-top-color: #ffffff;
 }
 
-.status-badge {
+.page-container.agriculturist-income-page:not(.light-theme) .status-badge {
   padding: 0.45rem 0.85rem;
   font-weight: 700;
 }
 
-.status-badge.eligible {
+.page-container.agriculturist-income-page:not(.light-theme) .status-badge.eligible {
   background-color: rgba(168, 85, 247, 0.16);
-  color: #e9d5ff;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.status-badge.pending {
+.page-container.agriculturist-income-page:not(.light-theme) .status-badge.pending {
   background-color: rgba(251, 191, 36, 0.15);
-  color: #fde68a;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.status-badge.completed {
+.page-container.agriculturist-income-page:not(.light-theme) .status-badge.completed {
   background-color: rgba(74, 222, 128, 0.14);
-  color: #bbf7d0;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.fin-item {
+.page-container.agriculturist-income-page:not(.light-theme) .fin-item {
   padding: 0.65rem 0;
   font-size: 0.92rem;
-  color: rgba(236, 253, 245, 0.88);
 }
 
-.fin-item span:first-child {
-  color: rgba(220, 252, 231, 0.86);
-  font-weight: 600;
-}
-
-.card-financials {
+.page-container.agriculturist-income-page:not(.light-theme) .card-financials {
   background: rgba(255, 255, 255, 0.03) !important;
 }
 
-.fin-value {
+.page-container.agriculturist-income-page:not(.light-theme) .fin-value {
   font-weight: 800;
 }
 
-.fin-value.income {
-  color: #86efac;
-}
-
-.fin-value.expense {
-  color: #fca5a5;
-}
-
-.fin-value.profit {
-  color: #bbf7d0;
-}
-
-.fin-value.loss {
-  color: #f87171;
-}
-
-.btn-details,
-.btn-assistance,
-.btn-completed,
-.btn-cancel,
-.btn-submit,
-.btn-sms-retry {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .btn-details,
+  .btn-assistance,
+  .btn-completed,
+  .btn-cancel,
+  .btn-submit,
+  .btn-sms-retry
+) {
   min-height: 42px;
   border-radius: 10px;
   font-weight: 700;
 }
 
-.btn-details,
-.btn-cancel {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .btn-details,
+  .btn-cancel
+) {
   background-color: rgba(255, 255, 255, 0.08);
-  color: #ecfdf5;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   border: 1px solid rgba(126, 184, 145, 0.16);
 }
 
-.btn-details:hover,
-.btn-cancel:hover {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .btn-details,
+  .btn-cancel
+):hover {
   background-color: rgba(255, 255, 255, 0.14);
 }
 
-.btn-assistance,
-.btn-submit {
+.page-container.agriculturist-income-page:not(.light-theme) :is(
+  .btn-assistance,
+  .btn-submit
+) {
   background: linear-gradient(135deg, #166534, #16a34a);
   color: #fff;
   border: none;
 }
 
-.btn-completed {
+.page-container.agriculturist-income-page:not(.light-theme) .btn-completed {
   background-color: rgba(74, 222, 128, 0.12);
-  color: #bbf7d0;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   border: 1px solid rgba(74, 222, 128, 0.22);
 }
 
-.btn-completed:hover {
-  background-color: rgba(74, 222, 128, 0.2);
-}
-
-.btn-sms-retry {
+.page-container.agriculturist-income-page:not(.light-theme) .btn-sms-retry {
   background: rgba(59, 130, 246, 0.16);
-  color: #93c5fd;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   border: 1px solid rgba(96, 165, 250, 0.35);
 }
 
-.btn-sms-retry:hover {
+.page-container.agriculturist-income-page:not(.light-theme) .btn-completed:hover {
+  background-color: rgba(74, 222, 128, 0.2);
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .btn-sms-retry:hover {
   background: rgba(59, 130, 246, 0.26);
 }
 
-.modal-overlay {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) {
   background-color: rgba(0, 0, 0, 0.64);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-.modal-header {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-header {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-.modal-close {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-close {
   color: rgba(220, 252, 231, 0.72);
 }
 
-.modal-close:hover {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-close:hover {
   color: #f0fdf4;
 }
 
-.detail-grid {
+.page-container.agriculturist-income-page:not(.light-theme) .detail-grid {
   gap: 10px;
 }
 
-.section-title {
+.page-container.agriculturist-income-page:not(.light-theme) .section-title {
   font-size: 1.2rem;
   font-weight: 600;
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   margin: 0 0 20px 0;
 }
 
-.form-input {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) :is(
+  .modal-header h2,
+  .detail-section h3,
+  .form-group label,
+  .detail-grid div,
+  .detail-grid strong,
+  .assistance-farmer-label,
+  .assistance-farmer-name,
+  .assistance-section-title
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .form-input {
   background: rgba(152, 174, 166, 0.14);
   border: 1px solid rgba(126, 184, 145, 0.18);
   border-radius: 10px;
-  color: #ecfdf5;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
 }
 
-.form-input:focus {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .form-input:focus {
   border-color: rgba(74, 222, 128, 0.45);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
-.form-input:disabled {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .form-input:disabled {
   background-color: rgba(255, 255, 255, 0.06);
   color: rgba(220, 252, 231, 0.58);
 }
 
-.input-unit {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .input-unit {
   background-color: rgba(255, 255, 255, 0.06);
   border-color: rgba(126, 184, 145, 0.18);
-  color: rgba(220, 252, 231, 0.72);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
 }
 
-.input-group .form-input {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .input-group .form-input {
   border-radius: 10px 0 0 10px;
 }
 
-.input-unit {
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .input-unit {
   border-radius: 0 10px 10px 0;
 }
 
-.sms-status.status-sent {
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-sent,
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-failed,
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-warning,
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-pending {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-sent {
   background-color: rgba(34, 197, 94, 0.2);
-  color: #bbf7d0;
 }
 
-.sms-status.status-failed {
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-failed {
   background-color: rgba(239, 68, 68, 0.18);
-  color: #fecaca;
 }
 
-.sms-status.status-warning {
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-warning {
   background-color: rgba(245, 158, 11, 0.15);
-  color: #fde68a;
 }
 
-.sms-status.status-pending {
+.page-container.agriculturist-income-page:not(.light-theme) .sms-status.status-pending {
   background-color: rgba(56, 189, 248, 0.15);
-  color: #7dd3fc;
 }
 
-.sms-error {
-  color: #fca5a5;
+.page-container.agriculturist-income-page:not(.light-theme) .sms-error {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Light mode — readable white surfaces */
+.page-container.agriculturist-income-page.light-theme :is(
+  .page-header,
+  .tab-navigation,
+  .record-card,
+  .loading-state,
+  .empty-state
+) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+  border-radius: 20px;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .modal-container {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 24px 56px rgba(22, 101, 52, 0.15) !important;
+  border-radius: 20px;
+}
+
+.page-container.agriculturist-income-page.light-theme .page-header {
+  margin-bottom: 22px;
+  padding: 20px 24px;
+}
+
+.page-container.agriculturist-income-page.light-theme .page-title {
+  color: #052e16 !important;
+  font-size: clamp(1.8rem, 2.2vw, 2.35rem);
+  font-weight: 900;
+}
+
+.page-container.agriculturist-income-page.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .tab-navigation {
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-bottom: none !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .tab-btn {
+  min-height: 48px;
+  padding: 12px 20px;
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  border-bottom: 2px solid #86efac !important;
+  border-radius: 14px;
+  color: #052e16 !important;
+  font-weight: 700;
+}
+
+.page-container.agriculturist-income-page.light-theme .tab-btn.active {
+  color: #052e16 !important;
+  background: #ffffff !important;
+  border-color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .tab-btn:hover:not(.active) {
+  border-color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .record-card {
+  border-left: 4px solid #22c55e !important;
+}
+
+.page-container.agriculturist-income-page.light-theme :is(
+  .card-header,
+  .card-financials,
+  .card-actions
+) {
+  border-color: rgba(22, 101, 52, 0.42) !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .card-header {
+  border-bottom: 2px solid rgba(22, 101, 52, 0.42) !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .card-financials {
+  border-top: 2px solid rgba(22, 101, 52, 0.42) !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .card-actions {
+  border-top: 2px solid rgba(22, 101, 52, 0.42) !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .info-row {
+  border-bottom: 1px solid rgba(22, 101, 52, 0.28);
+  padding-bottom: 8px;
+}
+
+.page-container.agriculturist-income-page.light-theme .info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-item {
+  border-bottom: 2px solid rgba(22, 101, 52, 0.24);
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-item:last-child {
+  border-bottom: none;
+}
+
+.page-container.agriculturist-income-page.light-theme .card-financials {
+  background: #f9fafb !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .farmer-name {
+  color: #052e16 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .farmer-date {
+  color: #6b7280 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .farmer-avatar {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .info-label {
+  color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .info-value {
+  color: #052e16 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-item {
+  color: #374151 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-item span:first-child {
+  color: #166534 !important;
+  font-weight: 700;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-value.income {
+  color: #1e40af !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-value.expense {
+  color: #b91c1c !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-value.profit {
+  color: #15803d !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .fin-value.loss {
+  color: #b91c1c !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .status-badge.eligible {
+  background-color: #f3e8ff !important;
+  color: #7e22ce !important;
+  border: 1px solid #c084fc;
+}
+
+.page-container.agriculturist-income-page.light-theme .status-badge.pending {
+  background-color: #fff7ed !important;
+  color: #c2410c !important;
+  border: 1px solid #fdba74;
+}
+
+.page-container.agriculturist-income-page.light-theme .status-badge.completed {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac;
+}
+
+.page-container.agriculturist-income-page.light-theme .btn-details {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .btn-details:hover {
+  border-color: #166534 !important;
+  background: #f0fdf4 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme :is(
+  .btn-assistance,
+  .btn-submit
+) {
+  background: linear-gradient(135deg, #166534, #16a34a) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .btn-cancel {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.agriculturist-income-page.light-theme :is(
+  .loading-state p,
+  .empty-state p
+) {
+  color: #374151 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .empty-icon {
+  color: #166534 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .spinner {
+  border-color: rgba(22, 101, 52, 0.15) !important;
+  border-top-color: #16a34a !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme {
+  background-color: rgba(5, 46, 22, 0.35) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .modal-header {
+  border-bottom: 2px solid rgba(22, 101, 52, 0.44) !important;
+  background: #ffffff !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .modal-footer {
+  border-top: 2px solid rgba(22, 101, 52, 0.44) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-section {
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+  margin-bottom: 16px !important;
+  box-shadow: none !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-section:last-child {
+  margin-bottom: 0 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-section h3 {
+  color: #166534 !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 12px !important;
+  border-bottom: 2px solid rgba(22, 101, 52, 0.32) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-grid div {
+  border-bottom: 2px solid rgba(22, 101, 52, 0.28) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-grid div:last-child {
+  border-bottom: none !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .detail-grid strong {
+  color: #166534 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme :is(
+  .modal-header h2,
+  .form-group label,
+  .detail-grid div
+) {
+  color: #052e16 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .modal-close {
+  color: #166534 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .form-input {
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+  color: #052e16 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .input-unit {
+  background: #f0fdf4 !important;
+  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+  border-left: none !important;
+  color: #166534 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .input-group .form-input {
+  border-right: none !important;
+}
+
+/* Assistance form — light mode */
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-form-modal .modal-header {
+  padding: 18px 22px;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-banner {
+  background: #f0fdf4 !important;
+  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-icon {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-label {
+  color: #166534 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-name {
+  color: #052e16 !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-section-title {
+  color: #166534 !important;
+  border-bottom-color: rgba(22, 101, 52, 0.32) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-form-footer {
+  background: #f9fdfb !important;
+  border-top-color: rgba(22, 101, 52, 0.36) !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-form-footer .btn-cancel {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border: 2px solid #86efac !important;
+}
+
+.modal-overlay.agriculturist-income-modal.light-theme .assistance-form-footer .btn-submit {
+  background: linear-gradient(135deg, #166534, #16a34a) !important;
+  color: #ffffff !important;
+}
+
+/* Assistance form — dark mode */
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-banner {
+  background: rgba(74, 222, 128, 0.1) !important;
+  border-color: rgba(134, 239, 172, 0.28) !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-icon {
+  background: rgba(74, 222, 128, 0.16) !important;
+  border-color: rgba(134, 239, 172, 0.32) !important;
+  color: #ffffff !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-name {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-section-title {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-bottom-color: rgba(4, 14, 10, 0.44) !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-form-footer {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-top-color: rgba(4, 14, 10, 0.44) !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .section-title {
+  color: #052e16 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .btn-completed {
+  background: #ecfdf5 !important;
+  color: #15803d !important;
+  border: 2px solid #86efac !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .btn-sms-retry {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 2px solid #93c5fd !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .sms-status.status-sent {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .sms-status.status-failed {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .sms-status.status-warning {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .sms-status.status-pending {
+  background-color: #e0f2fe !important;
+  color: #075985 !important;
+}
+
+.page-container.agriculturist-income-page.light-theme .sms-error {
+  color: #b91c1c !important;
 }
 
 /* Responsive */
@@ -1631,8 +2287,25 @@ onMounted(() => {
     flex-direction: column;
   }
 
-  .form-row {
+  .form-row,
+  .assistance-qty-grid {
     grid-template-columns: 1fr;
+  }
+
+  .assistance-form-body,
+  .assistance-form-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .assistance-form-footer {
+    flex-direction: column;
+  }
+
+  .assistance-form-footer .btn-cancel,
+  .assistance-form-footer .btn-submit {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }
 </style>

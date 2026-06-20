@@ -143,11 +143,18 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  // Check if route requires loan management access (admin, treasurer, president)
+  // Check if route requires loan management access
   const requiresLoanManagement = to.meta.requiresLoanManagement || (to.matched.some(record => record.meta.requiresLoanManagement))
-  if (requiresLoanManagement && !['admin', 'treasurer', 'president'].includes(userRole)) {
-    alert('Access denied. Only Admin, Treasurer, and President can access loan management.')
+  if (requiresLoanManagement && !['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(userRole)) {
+    alert('Access denied. Only authorized officers can access loan management.')
     next('/dashboard')
+    return
+  }
+
+  // Farmers and officers use the modern Loans page — redirect legacy /loan route
+  const personalLoanRoles = ['farmer', 'president', 'treasurer', 'operation_manager', 'business_manager', 'operator']
+  if (isLoggedIn && to.path === '/loan' && personalLoanRoles.includes(userRole)) {
+    next({ path: '/officer-loans', query: to.query, hash: to.hash })
     return
   }
 
@@ -169,7 +176,7 @@ router.beforeEach((to, from, next) => {
 
   // Check if route requires officer loan access
   const requiresOfficerLoan = to.meta.requiresOfficerLoan || (to.matched.some(record => record.meta.requiresOfficerLoan))
-  if (requiresOfficerLoan && !canApplyOfficerLoan(userRole) && userRole !== 'admin') {
+  if (requiresOfficerLoan && !['farmer', 'president', 'treasurer', 'operation_manager', 'business_manager', 'operator', 'admin'].includes(userRole)) {
     alert('Access denied. Officers can access this page.')
     next('/dashboard')
     return
