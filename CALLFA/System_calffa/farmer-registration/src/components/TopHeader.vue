@@ -3,7 +3,7 @@
     <div class="header-content">
       <!-- Right: User Controls -->
       <div class="user-controls">
-        <ThemeToggle variant="header" class="theme-toggle-btn" />
+        <ThemeToggle v-if="canToggleDarkMode" variant="header" class="theme-toggle-btn" />
 
         <!-- Notifications -->
         <div class="notification-container">
@@ -110,17 +110,31 @@
     <!-- Logout Confirmation Modal (teleported to body to avoid parent transform breaking fixed positioning) -->
     <Teleport to="body">
       <div v-if="showLogoutConfirm" class="logout-modal-overlay" @click="showLogoutConfirm = false">
-        <div class="logout-modal" @click.stop>
-          <div class="modal-header">
-            <h3>Confirm Logout</h3>
-            <button class="modal-close" @click="showLogoutConfirm = false">&times;</button>
+        <div
+          class="logout-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-modal-title"
+          @click.stop
+        >
+          <div class="logout-modal-header">
+            <h3 id="logout-modal-title" class="logout-modal-title">Confirm Logout</h3>
+            <button
+              type="button"
+              class="logout-modal-close"
+              aria-label="Close"
+              @click="showLogoutConfirm = false"
+            >
+              &times;
+            </button>
           </div>
-          <div class="modal-body">
-            <p>Are you sure you want to logout?</p>
+          <div class="logout-modal-body">
+            <p class="logout-modal-message">Are you sure you want to logout?</p>
+            <p class="logout-modal-hint">You will need to sign in again to access your account.</p>
           </div>
-          <div class="modal-footer">
-            <button class="btn-cancel" @click="showLogoutConfirm = false">No, Stay</button>
-            <button class="btn-logout" @click="confirmLogout">Yes, Logout</button>
+          <div class="logout-modal-footer">
+            <button type="button" class="logout-btn-cancel" @click="showLogoutConfirm = false">No, Stay</button>
+            <button type="button" class="logout-btn-confirm" @click="confirmLogout">Yes, Logout</button>
           </div>
         </div>
       </div>
@@ -133,9 +147,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import ThemeToggle from './ThemeToggle.vue'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { canToggleDarkMode } = useBackdropTheme()
 
 const systemStatus = ref(true)
 const currentTime = ref('')
@@ -775,6 +791,20 @@ onMounted(() => {
   color: #fbbf24;
 }
 
+.theme-toggle-btn :is(.theme-icon, .theme-icon-sun, .theme-icon-moon) {
+  color: inherit;
+  stroke: currentColor;
+}
+
+.theme-toggle-btn .theme-icon-moon {
+  fill: currentColor;
+}
+
+.theme-toggle-btn .theme-icon-sun .sun-core {
+  fill: currentColor;
+  fill-opacity: 0.35;
+}
+
 .theme-toggle-btn:hover {
   color: #fde68a;
   border-color: rgba(251, 191, 36, 0.55);
@@ -1306,189 +1336,174 @@ onMounted(() => {
 /* Logout Confirmation Modal - unscoped because it's teleported to body */
 .logout-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(8, 12, 10, 0.62);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  inset: 0;
+  background: rgba(4, 12, 8, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  padding: 16px;
 }
 
 .logout-modal {
   position: relative;
-  background: linear-gradient(155deg,
-    rgba(24, 34, 29, 0.96) 0%,
-    rgba(22, 31, 27, 0.94) 45%,
-    rgba(19, 28, 24, 0.96) 100%);
-  border-radius: 18px;
-  border: 1px solid rgba(116, 150, 128, 0.35);
-  box-shadow:
-    20px 20px 40px rgba(6, 10, 8, 0.62),
-    -12px -12px 24px rgba(53, 72, 61, 0.28),
-    inset 1px 1px 0 rgba(152, 186, 164, 0.1),
-    inset -1px -1px 0 rgba(6, 10, 8, 0.5);
-  backdrop-filter: blur(12px) saturate(120%);
-  -webkit-backdrop-filter: blur(12px) saturate(120%);
-  width: 90%;
-  max-width: 400px;
+  width: 100%;
+  max-width: 420px;
   overflow: hidden;
-  animation: slideUp 0.3s ease;
+  border-radius: 18px;
+  border: 2px solid #86efac !important;
+  background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%) !important;
+  box-shadow:
+    0 24px 48px rgba(4, 18, 12, 0.32),
+    0 8px 20px rgba(22, 101, 52, 0.14) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation: logoutModalSlideUp 0.28s ease;
 }
 
-.logout-modal::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg,
-    rgba(174, 204, 186, 0.08) 0%,
-    rgba(107, 191, 89, 0.06) 36%,
-    rgba(255, 145, 77, 0.04) 70%,
-    transparent 100%);
-  pointer-events: none;
-}
-
-@keyframes slideUp {
+@keyframes logoutModalSlideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(16px) scale(0.98);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
-.logout-modal .modal-header {
+.logout-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 18px 20px;
-  border-bottom: 1px solid rgba(152, 186, 164, 0.22);
-  background: rgba(18, 27, 23, 0.65);
-  position: relative;
-  z-index: 1;
+  border-bottom: 2px solid #bbf7d0;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
 }
 
-.logout-modal .modal-header h3 {
+.logout-modal-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #f2eee4;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: none !important;
+  letter-spacing: -0.01em;
 }
 
-.logout-modal .modal-close {
-  background: rgba(30, 43, 36, 0.82);
-  border: 1px solid rgba(126, 164, 141, 0.35);
-  border-radius: 10px;
-  font-size: 24px;
-  color: #d7cfbf;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
+.logout-modal-close {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  border-radius: 10px;
+  border: 2px solid #16a34a;
+  background: #ffffff;
+  color: #052e16;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
 }
 
-.logout-modal .modal-close:hover {
-  color: #fff8ef;
-  background: rgba(42, 56, 48, 0.88);
+.logout-modal-close:hover {
+  background: #ecfdf5;
+  transform: scale(1.04);
 }
 
-.logout-modal .modal-body {
-  padding: 20px;
-  position: relative;
-  z-index: 1;
+.logout-modal-body {
+  padding: 22px 20px;
+  background: #ffffff;
 }
 
-.logout-modal .modal-body p {
+.logout-modal-message {
   margin: 0;
-  font-size: 15px;
-  color: rgba(231, 225, 211, 0.88);
-  line-height: 1.6;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
-.logout-modal .modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid rgba(152, 186, 164, 0.22);
+.logout-modal-hint {
+  margin: 10px 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+.logout-modal-footer {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  background: rgba(18, 27, 23, 0.65);
-  position: relative;
-  z-index: 1;
+  padding: 16px 20px;
+  border-top: 2px solid #e2e8f0;
+  background: #f8fafc;
 }
 
-.logout-modal .btn-cancel,
-.logout-modal .btn-logout {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 14px;
+.logout-btn-cancel,
+.logout-btn-confirm {
+  min-width: 118px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
-.logout-modal .btn-cancel {
-  background: rgba(30, 43, 36, 0.72);
-  border: 1px solid rgba(126, 164, 141, 0.42);
-  color: #e5f3ea;
+.logout-btn-cancel {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #052e16;
+  border: 2px solid #16a34a;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.12);
 }
 
-.logout-modal .btn-cancel:hover {
-  background: rgba(40, 55, 48, 0.88);
-  border-color: rgba(134, 239, 172, 0.54);
-}
-
-.logout-modal .btn-logout {
-  background: linear-gradient(135deg,
-    rgba(220, 38, 38, 0.9) 0%,
-    rgba(185, 28, 28, 0.88) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.54);
-  color: #fef2f2;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-.logout-modal .btn-logout:hover {
-  background: linear-gradient(135deg,
-    rgba(220, 38, 38, 0.98) 0%,
-    rgba(185, 28, 28, 0.96) 100%);
-  border-color: rgba(255, 100, 100, 0.68);
+.logout-btn-cancel:hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.logout-btn-confirm {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #7f1d1d;
+  border: 2px solid #dc2626;
+  box-shadow: 0 4px 12px rgba(127, 29, 29, 0.14);
+}
+
+.logout-btn-confirm:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.22);
 }
 
 @media (max-width: 480px) {
   .logout-modal {
-    width: 95%;
     max-width: none;
   }
 
-  .logout-modal .modal-header {
-    padding: 16px;
+  .logout-modal-header,
+  .logout-modal-body,
+  .logout-modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
-  .logout-modal .modal-body {
-    padding: 16px;
-  }
-
-  .logout-modal .modal-footer {
-    padding: 12px 16px;
+  .logout-modal-footer {
     flex-direction: column-reverse;
   }
 
-  .logout-modal .btn-cancel,
-  .logout-modal .btn-logout {
+  .logout-btn-cancel,
+  .logout-btn-confirm {
     width: 100%;
+    min-width: 0;
   }
 }
 </style>

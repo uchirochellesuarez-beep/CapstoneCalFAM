@@ -1,7 +1,18 @@
 <template>
-  <div class="page-container income-hub-subpage">
+  <div class="page-container income-hub-subpage" :class="{ 'light-theme': isLight }">
     <div class="page-header">
-      <h1 class="page-title">🌾 Talaan ng Kita ng mga Magsasaka</h1>
+      <h1 class="page-title">
+        <span class="title-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="8" y1="13" x2="16" y2="13" />
+            <line x1="8" y1="17" x2="16" y2="17" />
+            <line x1="8" y1="9" x2="10" y2="9" />
+          </svg>
+        </span>
+        Talaan ng Kita ng mga Magsasaka
+      </h1>
       <p class="page-subtitle">Suriin ang mga naitatalang kita mula sa mga magsasaka sa iyong barangay</p>
     </div>
 
@@ -12,25 +23,32 @@
         :class="{ active: activeTab === 'records' }"
         @click="activeTab = 'records'"
       >
-        📋 Mga Talaan
+        <span class="tab-btn-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+            <rect x="9" y="3" width="6" height="4" rx="1" />
+            <path d="M9 12h6M9 16h6" />
+          </svg>
+        </span>
+        Mga Talaan
       </button>
     </div>
 
     <!-- Error Message -->
     <div v-if="errorMessage" class="alert alert-error">
-      <span>❌ {{ errorMessage }}</span>
+      <span>{{ errorMessage }}</span>
       <button class="alert-close" @click="errorMessage = ''">&times;</button>
     </div>
 
     <!-- Success Message -->
     <div v-if="successMessage" class="alert alert-success">
-      <span>✅ {{ successMessage }}</span>
+      <span>{{ successMessage }}</span>
       <button class="alert-close" @click="successMessage = ''">&times;</button>
     </div>
 
     <!-- No barangay warning -->
     <div v-if="!currentUser?.barangay_id" class="alert alert-warning">
-      ⚠️ Hindi ka naka-assign sa anumang barangay. Makipag-ugnayan sa admin.
+      Hindi ka naka-assign sa anumang barangay. Makipag-ugnayan sa admin.
     </div>
 
     <!-- TAB 1: INCOME RECORDS -->
@@ -38,7 +56,12 @@
       <!-- Search / Filter -->
       <div class="filter-bar" v-if="records.length > 0">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </span>
           <input
             type="text"
             v-model="searchQuery"
@@ -56,15 +79,24 @@
 
       <!-- Empty State -->
       <div v-else-if="records.length === 0 && currentUser?.barangay_id" class="empty-state">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-6l-2 3H10l-2-3H4" />
+            <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
+          </svg>
+        </div>
         <p>Wala pang naitatalang kita mula sa mga magsasaka sa iyong barangay.</p>
       </div>
 
       <!-- Records List -->
       <div v-else class="records-list">
-        <div v-if="filteredRecords.length === 0" class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <p>Walang nahanap na talaan para sa "{{ searchQuery }}"</p>
+        <div v-if="filteredRecords.length === 0 && searchQuery.trim()" class="empty-state empty-state--search" aria-label="Walang tumugmang talaan">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </div>
         </div>
         <div
           v-for="record in filteredRecords"
@@ -73,14 +105,38 @@
         >
           <div class="record-header">
             <div class="farmer-info">
-              <span class="farmer-name">👨‍🌾 {{ record.farmer_name }}</span>
-              <span class="record-date">📅 {{ formatDate(record.created_at) }}</span>
+              <span class="farmer-name">
+                <span class="inline-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </span>
+                {{ record.farmer_name }}
+              </span>
+              <span class="record-date">
+                <span class="inline-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
+                </span>
+                {{ formatDate(record.created_at) }}
+              </span>
             </div>
             <div class="header-actions">
               <span class="status-badge" :class="'status-' + getStatusClass(record.status)">
                 {{ record.status }}
               </span>
-              <button class="view-btn" @click="openRecordDetail(record)">👁️ Tingnan</button>
+              <button class="view-btn" @click="openRecordDetail(record)">
+                <span class="inline-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+                Tingnan
+              </button>
             </div>
           </div>
           <div class="record-details">
@@ -109,11 +165,20 @@
 
     <!-- VIEW DETAIL MODAL - RECORD -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" @click.self="closeDetailModal">
+      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" :class="{ 'light-theme': isLight }" @click.self="closeDetailModal">
         <div class="modal-container">
           <div class="modal-header">
             <div class="modal-title-with-status">
-              <h2>📋 Buong Detalye ng Talaan</h2>
+              <h2>
+                <span class="modal-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 12h6M9 16h6" />
+                  </svg>
+                </span>
+                Buong Detalye ng Talaan
+              </h2>
               <span class="modal-status-badge" :class="'status-' + getStatusClass(selectedRecord.status)">
                 {{ selectedRecord.status }}
               </span>
@@ -124,13 +189,27 @@
 
             <!-- Farmer Name Banner -->
             <div class="farmer-banner">
-              <span class="banner-icon">👨‍🌾</span>
+              <span class="banner-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
               <span class="banner-name">{{ selectedRecord.farmer_name }}</span>
             </div>
 
             <!-- Farm Info -->
             <div class="detail-section">
-              <h3 class="detail-section-title">🌱 Detalye ng Taniman</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22V12" />
+                    <path d="M12 12C12 8 8 4 4 4c0 4 4 8 8 8" />
+                    <path d="M12 12c0-4 4-8 8-8 0 4-4 8-8 8" />
+                  </svg>
+                </span>
+                Detalye ng Taniman
+              </h3>
               <div class="detail-grid">
                 <div class="detail-cell">
                   <span class="cell-label">Petsa ng Talaan</span>
@@ -153,7 +232,16 @@
 
             <!-- Fertilizers -->
             <div class="detail-section" v-if="selectedRecord.fertilizers && selectedRecord.fertilizers.length > 0">
-              <h3 class="detail-section-title">🧪 Mga Ginamit na Abono</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2v6l-2 2v12a2 2 0 002 2h4a2 2 0 002-2V10l-2-2V2" />
+                    <path d="M8 2h8" />
+                    <path d="M12 10v4" />
+                  </svg>
+                </span>
+                Mga Ginamit na Abono
+              </h3>
               <table class="detail-table">
                 <thead>
                   <tr>
@@ -180,13 +268,31 @@
               </table>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">🧪 Mga Ginamit na Abono</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2v6l-2 2v12a2 2 0 002 2h4a2 2 0 002-2V10l-2-2V2" />
+                    <path d="M8 2h8" />
+                    <path d="M12 10v4" />
+                  </svg>
+                </span>
+                Mga Ginamit na Abono
+              </h3>
               <p class="no-data">Walang naitalang abono.</p>
             </div>
 
             <!-- Pesticides -->
             <div class="detail-section" v-if="selectedRecord.pesticides && selectedRecord.pesticides.length > 0">
-              <h3 class="detail-section-title">🧴 Mga Ginamit na Lason</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 2h6l1 7H8L9 2z" />
+                    <path d="M12 9v13" />
+                    <path d="M8 22h8" />
+                  </svg>
+                </span>
+                Mga Ginamit na Lason
+              </h3>
               <table class="detail-table">
                 <thead>
                   <tr>
@@ -213,13 +319,32 @@
               </table>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">🧴 Mga Ginamit na Lason</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 2h6l1 7H8L9 2z" />
+                    <path d="M12 9v13" />
+                    <path d="M8 22h8" />
+                  </svg>
+                </span>
+                Mga Ginamit na Lason
+              </h3>
               <p class="no-data">Walang naitalang lason.</p>
             </div>
 
             <!-- Labor & Expenses -->
             <div class="detail-section">
-              <h3 class="detail-section-title">👷 Gastos sa Labor at Iba Pa</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                </span>
+                Gastos sa Labor at Iba Pa
+              </h3>
               <div class="expense-grid">
                 <div class="expense-row">
                   <span>Paghahanda ng Lupa</span>
@@ -266,7 +391,17 @@
 
             <!-- Harvest -->
             <div class="detail-section">
-              <h3 class="detail-section-title">🌾 Ani</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22V12" />
+                    <path d="M12 12C12 8 8 4 4 4c0 4 4 8 8 8" />
+                    <path d="M12 12c0-4 4-8 8-8 0 4-4 8-8 8" />
+                    <path d="M12 12v10" />
+                  </svg>
+                </span>
+                Ani
+              </h3>
               <div class="detail-grid">
                 <div class="detail-cell">
                   <span class="cell-label">Sako na Naani</span>
@@ -289,7 +424,16 @@
 
             <!-- Grand Summary -->
             <div class="detail-section summary-detail-section">
-              <h3 class="detail-section-title">📊 Buod</h3>
+              <h3 class="detail-section-title">
+                <span class="section-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                  </svg>
+                </span>
+                Buod
+              </h3>
               <div class="grand-summary">
                 <div class="grand-row income-row">
                   <span>Kabuuang Benta</span>
@@ -321,6 +465,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
+
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
@@ -432,10 +580,51 @@ onMounted(() => {
 }
 
 .page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   font-size: 1.75rem;
   font-weight: 700;
   color: #166534;
   margin: 0 0 0.25rem 0;
+}
+
+.title-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.14));
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  color: #86efac;
+}
+
+.title-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inline-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.farmer-name,
+.record-date,
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .page-subtitle {
@@ -462,6 +651,20 @@ onMounted(() => {
   color: #6b7280;
   transition: all 0.2s;
   font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tab-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-btn-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .tab-btn:hover {
@@ -526,8 +729,16 @@ onMounted(() => {
 }
 
 .search-icon {
-  font-size: 1rem;
-  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+}
+
+.search-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .search-input {
@@ -567,8 +778,25 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 18px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  color: #4ade80;
+}
+
+.empty-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.empty-state--search {
+  padding: 1.5rem;
 }
 
 /* RECORDS LIST */
@@ -934,12 +1162,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.modal-header h2 {
-  margin: 0;
-  color: #166534;
-  font-size: 1.25rem;
-}
-
 .modal-close {
   background: none;
   border: none;
@@ -1081,7 +1303,21 @@ onMounted(() => {
 }
 
 .banner-icon {
-  font-size: 1.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  color: #86efac;
+}
+
+.banner-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .banner-name {
@@ -1104,6 +1340,54 @@ onMounted(() => {
   color: #166534;
   font-size: 1rem;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  color: #86efac;
+}
+
+.section-title-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #166534;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-title-icon {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  color: #86efac;
+}
+
+.modal-title-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .detail-grid {
@@ -1351,6 +1635,64 @@ onMounted(() => {
   }
 }
 
+/* Light shell when embedded under FarmerIncomeHubPage */
+.income-hub-subpage.light-theme .page-header {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: #ffffff;
+  border: 2px solid #86efac;
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.income-hub-subpage.light-theme .page-title {
+  margin-bottom: 0.5rem;
+}
+
+.income-hub-subpage.light-theme .page-subtitle {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.income-hub-subpage.light-theme .tab-navigation {
+  padding: 14px 16px;
+  border-radius: 18px;
+  margin-bottom: 1.5rem;
+}
+
+.income-hub-subpage.light-theme .tab-navigation .tab-btn {
+  padding: 0.85rem 1.5rem;
+  min-height: 48px;
+}
+
+.income-hub-subpage.light-theme .search-box {
+  padding: 12px 16px;
+  gap: 10px;
+  border-radius: 12px;
+}
+
+.income-hub-subpage.light-theme .search-input {
+  padding: 4px 2px;
+}
+
+.income-hub-subpage.light-theme .record-card {
+  padding: 1.75rem 1.85rem;
+  border-radius: 16px;
+}
+
+.income-hub-subpage.light-theme .record-header {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.income-hub-subpage.light-theme .record-financials {
+  padding-top: 1.25rem;
+}
+
+.income-hub-subpage.light-theme .empty-state {
+  padding: 2.5rem 2rem;
+}
+
 /* Dark shell when embedded under FarmerIncomeHubPage */
 .income-hub-subpage.page-container {
   max-width: 1400px;
@@ -1359,7 +1701,7 @@ onMounted(() => {
   background: transparent;
 }
 
-.income-hub-subpage .page-header {
+.income-hub-subpage:not(.light-theme) .page-header {
   margin-bottom: 1.25rem;
   padding: 1.25rem 1.35rem;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.96), rgba(14, 33, 23, 0.95));
@@ -1368,17 +1710,26 @@ onMounted(() => {
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
 
-.income-hub-subpage .page-title {
-  color: #4ade80;
+.income-hub-subpage:not(.light-theme) .page-title {
+  color: #ffffff;
   font-size: clamp(1.35rem, 2vw, 1.85rem);
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
-.income-hub-subpage .page-subtitle {
-  color: rgba(220, 252, 231, 0.76);
+.income-hub-subpage:not(.light-theme) .title-icon {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.14));
+  border-color: rgba(134, 239, 172, 0.35);
+  color: #ffffff;
 }
 
-.income-hub-subpage .tab-navigation {
+.income-hub-subpage:not(.light-theme) .page-subtitle {
+  color: #ffffff;
+}
+
+.income-hub-subpage:not(.light-theme) .tab-navigation {
   border-bottom: none;
   margin-bottom: 1.25rem;
   padding: 12px 14px;
@@ -1388,269 +1739,359 @@ onMounted(() => {
   gap: 10px;
 }
 
-.income-hub-subpage .tab-navigation .tab-btn {
+.income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn {
   padding: 0.65rem 1.25rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 232, 179, 0.25);
   border-bottom: 1px solid rgba(255, 232, 179, 0.25);
   background: linear-gradient(135deg, rgba(156, 107, 40, 0.55), rgba(108, 149, 94, 0.55));
   color: rgba(255, 255, 255, 0.95);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
-.income-hub-subpage .tab-navigation .tab-btn:hover {
+.income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn:hover {
   color: #fff;
   filter: brightness(1.08);
 }
 
-.income-hub-subpage .tab-navigation .tab-btn.active {
+.income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn.active {
   color: #052e16;
   background: linear-gradient(135deg, #bbf7d0 0%, #86efac 55%, #4ade80 100%);
   border-color: rgba(220, 252, 231, 0.85);
 }
 
-.income-hub-subpage .alert-error {
+.income-hub-subpage:not(.light-theme) .alert-error {
   background: rgba(127, 29, 29, 0.4);
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.45);
 }
 
-.income-hub-subpage .alert-success {
+.income-hub-subpage:not(.light-theme) .alert-success {
   background: rgba(21, 128, 61, 0.35);
   color: #bbf7d0;
   border-color: rgba(74, 222, 128, 0.45);
 }
 
-.income-hub-subpage .alert-warning {
+.income-hub-subpage:not(.light-theme) .alert-warning {
   background: rgba(146, 64, 14, 0.35);
   color: #fde68a;
   border-color: rgba(250, 204, 21, 0.4);
 }
 
-.income-hub-subpage .search-box {
+.income-hub-subpage:not(.light-theme) .search-box {
   max-width: none;
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(126, 184, 145, 0.35);
 }
 
-.income-hub-subpage .search-icon {
-  color: rgba(186, 240, 200, 0.55);
+.income-hub-subpage:not(.light-theme) .search-icon {
+  color: #ffffff;
 }
 
-.income-hub-subpage .search-input {
-  color: #ecfdf5;
+.income-hub-subpage:not(.light-theme) .search-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
-.income-hub-subpage .search-input::placeholder {
-  color: rgba(220, 252, 231, 0.45);
+.income-hub-subpage:not(.light-theme) .search-input {
+  color: #ffffff;
 }
 
-.income-hub-subpage .loading-state {
-  color: rgba(220, 252, 231, 0.8);
+.income-hub-subpage:not(.light-theme) .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.62);
 }
 
-.income-hub-subpage .spinner {
+.income-hub-subpage:not(.light-theme) .loading-state {
+  color: #ffffff;
+}
+
+.income-hub-subpage:not(.light-theme) .spinner {
   border-color: rgba(255, 255, 255, 0.15);
   border-top-color: #4ade80;
 }
 
-.income-hub-subpage .empty-state {
-  color: rgba(220, 252, 231, 0.78);
+.income-hub-subpage:not(.light-theme) .empty-state {
+  color: #ffffff;
   padding: 2rem 1.25rem;
   border-radius: 22px;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.82), rgba(14, 33, 23, 0.8));
   border: 1px solid rgba(126, 184, 145, 0.2);
 }
 
-.income-hub-subpage .record-card {
+.income-hub-subpage:not(.light-theme) .record-card {
   background: linear-gradient(145deg, rgba(24, 48, 34, 0.96), rgba(14, 33, 23, 0.94));
   border: 1px solid rgba(126, 184, 145, 0.22);
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
 
-.income-hub-subpage .record-card:hover {
+.income-hub-subpage:not(.light-theme) .record-card:hover {
   box-shadow: 0 18px 40px rgba(5, 12, 8, 0.28);
 }
 
-.income-hub-subpage .record-header {
+.income-hub-subpage:not(.light-theme) .record-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .farmer-name {
-  color: #86efac;
+.income-hub-subpage:not(.light-theme) .farmer-name {
+  color: #ffffff;
 }
 
-.income-hub-subpage .record-date {
-  color: rgba(220, 252, 231, 0.62);
+.income-hub-subpage:not(.light-theme) .record-date {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .status-submitted {
+.income-hub-subpage:not(.light-theme) .status-submitted {
   background: rgba(59, 130, 246, 0.25);
   color: #bfdbfe;
   border: 1px solid rgba(96, 165, 250, 0.35);
 }
 
-.income-hub-subpage .status-review,
-.income-hub-subpage .status-upcoming {
+.income-hub-subpage:not(.light-theme) .status-review,
+.income-hub-subpage:not(.light-theme) .status-upcoming {
   background: rgba(250, 204, 21, 0.16);
   color: #fde68a;
   border: 1px solid rgba(250, 204, 21, 0.3);
 }
 
-.income-hub-subpage .status-eligible,
-.income-hub-subpage .status-received {
-  background: rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
-  border: 1px solid rgba(74, 222, 128, 0.4);
+.income-hub-subpage:not(.light-theme) .status-eligible,
+.income-hub-subpage:not(.light-theme) .status-received {
+  background: rgba(22, 101, 52, 0.72);
+  color: #ffffff;
+  border: 1px solid rgba(134, 239, 172, 0.45);
 }
 
-.income-hub-subpage .detail-label {
-  color: rgba(220, 252, 231, 0.55);
+.income-hub-subpage:not(.light-theme) .detail-label {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .record-detail span:last-child {
-  color: rgba(236, 253, 245, 0.92);
+.income-hub-subpage:not(.light-theme) .record-detail span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .record-financials {
+.income-hub-subpage:not(.light-theme) .record-financials {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .financial-item > span:first-child {
-  color: rgba(220, 252, 231, 0.55);
+.income-hub-subpage:not(.light-theme) .financial-item > span:first-child {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .financial-item.income > span:last-child {
-  color: #93c5fd;
+.income-hub-subpage:not(.light-theme) .financial-item.income > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .financial-item.expense > span:last-child {
-  color: #fca5a5;
+.income-hub-subpage:not(.light-theme) .financial-item.expense > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .financial-item.profit > span:last-child {
-  color: #86efac;
+.income-hub-subpage:not(.light-theme) .financial-item.profit > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .distributions-header h2 {
-  color: #86efac;
+.income-hub-subpage:not(.light-theme) .distributions-header h2 {
+  color: #ffffff;
 }
 
-.income-hub-subpage .distribution-card {
+.income-hub-subpage:not(.light-theme) .distribution-card {
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.92), rgba(14, 33, 23, 0.9));
   border: 1px solid rgba(126, 184, 145, 0.22);
-  color: rgba(226, 234, 229, 0.9);
+  color: #ffffff;
 }
 
-.income-hub-subpage .distribution-form,
-.income-hub-subpage .form-group input,
-.income-hub-subpage .form-group select,
-.income-hub-subpage .form-group textarea {
+.income-hub-subpage:not(.light-theme) .distribution-form,
+.income-hub-subpage:not(.light-theme) .form-group input,
+.income-hub-subpage:not(.light-theme) .form-group select,
+.income-hub-subpage:not(.light-theme) .form-group textarea {
   background: rgba(0, 0, 0, 0.25);
   border-color: rgba(126, 184, 145, 0.35);
   color: #ecfdf5;
 }
 
-.income-hub-subpage .form-group label {
-  color: rgba(220, 252, 231, 0.8);
+.income-hub-subpage:not(.light-theme) .form-group label {
+  color: #ffffff;
 }
 
-.income-hub-subpage .form-actions {
+.income-hub-subpage:not(.light-theme) .form-actions {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .btn-cancel {
+.income-hub-subpage:not(.light-theme) .btn-cancel {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(236, 253, 245, 0.9);
 }
 
-.income-hub-subpage .status-timeline,
-.income-hub-subpage .timeline-label {
-  color: rgba(220, 252, 231, 0.85);
+.income-hub-subpage:not(.light-theme) .status-timeline,
+.income-hub-subpage:not(.light-theme) .timeline-label {
+  color: #ffffff;
 }
 
 /* Teleported detail modal */
-.farmer-income-hub-modal.modal-overlay {
+.farmer-income-hub-modal:not(.light-theme).modal-overlay {
   background: rgba(6, 12, 9, 0.78);
   backdrop-filter: blur(8px);
 }
 
-.farmer-income-hub-modal .modal-container {
+.farmer-income-hub-modal:not(.light-theme) .modal-container {
   background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99));
   border: 1px solid rgba(126, 184, 145, 0.28);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
 }
 
-.farmer-income-hub-modal .modal-header {
+.farmer-income-hub-modal:not(.light-theme) .modal-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.farmer-income-hub-modal .modal-header h2 {
-  color: #ecfdf5;
+.farmer-income-hub-modal:not(.light-theme) .modal-header h2 {
+  color: #ffffff;
 }
 
-.farmer-income-hub-modal .modal-close {
-  color: rgba(220, 252, 231, 0.7);
+.farmer-income-hub-modal:not(.light-theme) .modal-close {
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.farmer-income-hub-modal .modal-close:hover {
-  color: #fff;
+.farmer-income-hub-modal:not(.light-theme) .modal-close:hover {
+  color: #ffffff;
 }
 
-.farmer-income-hub-modal .modal-body {
-  color: rgba(226, 234, 229, 0.92);
+.farmer-income-hub-modal:not(.light-theme) .modal-body {
+  color: #ffffff;
 }
 
-.farmer-income-hub-modal .detail-section-title {
-  color: #bbf7d0;
+.farmer-income-hub-modal:not(.light-theme) .detail-section-title {
+  color: #ffffff;
   border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
-.farmer-income-hub-modal .cell-label {
-  color: rgba(220, 252, 231, 0.55);
+.farmer-income-hub-modal:not(.light-theme) .cell-label {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.farmer-income-hub-modal .cell-value {
-  color: #ecfdf5;
+.farmer-income-hub-modal:not(.light-theme) .cell-value {
+  color: #ffffff;
 }
 
-.farmer-income-hub-modal .detail-table thead {
+.farmer-income-hub-modal:not(.light-theme) .detail-table thead {
   background: rgba(0, 0, 0, 0.28);
 }
 
-.farmer-income-hub-modal .detail-table th {
-  color: rgba(236, 253, 245, 0.92);
+.farmer-income-hub-modal:not(.light-theme) .detail-table th {
+  color: #ffffff;
   border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
-.farmer-income-hub-modal .detail-table td {
-  color: rgba(226, 234, 229, 0.9);
+.farmer-income-hub-modal:not(.light-theme) .detail-table td {
+  color: #ffffff;
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.farmer-income-hub-modal .detail-table tfoot tr {
+.farmer-income-hub-modal:not(.light-theme) .detail-table tfoot tr {
   background: rgba(0, 0, 0, 0.22);
 }
 
-.farmer-income-hub-modal .modal-footer {
+.farmer-income-hub-modal:not(.light-theme) .modal-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.farmer-income-hub-modal .summary-detail-section {
+.farmer-income-hub-modal:not(.light-theme) .summary-detail-section {
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(126, 184, 145, 0.25);
 }
 
-.farmer-income-hub-modal .no-data {
+.farmer-income-hub-modal:not(.light-theme) .no-data {
   color: rgba(220, 252, 231, 0.6);
 }
 
-.farmer-income-hub-modal .expense-row {
+.farmer-income-hub-modal:not(.light-theme) .expense-row {
   border-bottom-color: rgba(255, 255, 255, 0.06);
   color: rgba(226, 234, 229, 0.88);
 }
 
-.farmer-income-hub-modal .expense-row.total-row {
+.farmer-income-hub-modal:not(.light-theme) .expense-row.total-row {
   background: rgba(0, 0, 0, 0.25);
   color: #ecfdf5;
+}
+
+/* Dark mode — ensure all SVG icons stay visible */
+.income-hub-subpage:not(.light-theme) :is(
+  .title-icon,
+  .search-icon,
+  .empty-icon,
+  .stat-icon,
+  .inline-icon,
+  .tab-btn-icon,
+  .section-title-icon,
+  .modal-title-icon,
+  .banner-icon
+) svg,
+.income-hub-subpage:not(.light-theme) :is(
+  .title-icon,
+  .search-icon,
+  .empty-icon,
+  .stat-icon,
+  .inline-icon,
+  .tab-btn-icon,
+  .section-title-icon,
+  .modal-title-icon,
+  .banner-icon
+) svg * {
+  stroke: currentColor;
+}
+
+.income-hub-subpage:not(.light-theme) .title-icon {
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.4);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(34, 197, 94, 0.16));
+}
+
+.income-hub-subpage:not(.light-theme) .search-icon {
+  color: #bbf7d0;
+}
+
+.income-hub-subpage:not(.light-theme) .empty-icon {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(134, 239, 172, 0.32);
+}
+
+.income-hub-subpage:not(.light-theme) .stat-icon {
+  color: #fde68a;
+  border: 1px solid rgba(250, 204, 21, 0.4);
+}
+
+.income-hub-subpage:not(.light-theme) .farmer-name .inline-icon {
+  color: #bbf7d0;
+}
+
+.income-hub-subpage:not(.light-theme) .record-date .inline-icon {
+  color: rgba(220, 252, 231, 0.78);
+}
+
+.income-hub-subpage:not(.light-theme) .pending-badge .inline-icon {
+  color: #fde68a;
+}
+
+.income-hub-subpage:not(.light-theme) .view-btn .inline-icon {
+  color: #ffffff;
+}
+
+.income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn .tab-btn-icon {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn.active .tab-btn-icon {
+  color: #052e16;
+}
+
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) {
+  color: #86efac;
+  background: rgba(74, 222, 128, 0.16);
+  border: 1px solid rgba(134, 239, 172, 0.32);
+}
+
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) svg,
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) svg * {
+  stroke: currentColor;
 }
 </style>

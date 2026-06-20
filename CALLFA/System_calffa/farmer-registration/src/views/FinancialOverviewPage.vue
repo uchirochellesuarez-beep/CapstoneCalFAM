@@ -31,11 +31,27 @@
       </div>
       <div class="filter-group">
         <label class="filter-label" for="fin-date-from">From</label>
-        <input id="fin-date-from" v-model="filterDateFrom" type="date" class="filter-input" />
+        <div class="mf-date-field">
+          <input id="fin-date-from" v-model="filterDateFrom" type="date" class="filter-input mf-date-input" />
+          <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        </div>
       </div>
       <div class="filter-group">
         <label class="filter-label" for="fin-date-to">To</label>
-        <input id="fin-date-to" v-model="filterDateTo" type="date" class="filter-input" />
+        <div class="mf-date-field">
+          <input id="fin-date-to" v-model="filterDateTo" type="date" class="filter-input mf-date-input" />
+          <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        </div>
       </div>
       <button type="button" class="filter-clear-btn" @click="clearFilters">Clear Filters</button>
     </div>
@@ -60,7 +76,7 @@
         </div>
         <div class="stat-card stat-card-loan-outstanding">
           <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           </div>
           <div class="stat-info">
             <div class="stat-label">Loan Outstanding</div>
@@ -69,7 +85,10 @@
         </div>
         <div class="stat-card stat-card-machinery-income">
           <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M8 6h8l-1 14H9L8 6z"/><path d="M9 14h6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
           </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Income</div>
@@ -78,7 +97,10 @@
         </div>
         <div class="stat-card stat-card-machinery-expense">
           <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+              <polyline points="17 18 23 18 23 12" />
+            </svg>
           </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Expenses</div>
@@ -87,7 +109,10 @@
         </div>
         <div class="stat-card stat-card-machinery-net">
           <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18" />
+              <path d="M7 16l4-4 4 4 5-6" />
+            </svg>
           </div>
           <div class="stat-info">
             <div class="stat-label">Machinery Net</div>
@@ -96,7 +121,12 @@
         </div>
         <div class="stat-card stat-card-share-balance">
           <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
           </div>
           <div class="stat-info">
             <div class="stat-label">Share Capital Balance</div>
@@ -882,6 +912,62 @@ onMounted(async () => {
   background: #ffffff;
 }
 
+.mf-date-field {
+  position: relative;
+  width: 100%;
+}
+
+.mf-date-input {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding-right: 2.85rem !important;
+  color-scheme: light;
+}
+
+.mf-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.85rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.mf-date-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+  box-sizing: content-box;
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.financial-overview-container:not(.light-theme) .mf-date-icon {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62));
+  border-color: rgba(134, 239, 172, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.financial-overview-container.light-theme .mf-date-icon {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #16a34a;
+}
+
 .filter-clear-btn {
   padding: 12px 18px;
   min-height: 48px;
@@ -935,21 +1021,62 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid transparent;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover .stat-icon-wrap {
+  transform: translateY(-1px);
 }
 
 .stat-icon-wrap svg {
   width: 1.35rem;
   height: 1.35rem;
+  display: block;
 }
 
-.stat-card-loan-collected .stat-icon-wrap { background: rgba(22, 163, 74, 0.12); color: #15803d; }
-.stat-card-loan-outstanding .stat-icon-wrap { background: rgba(217, 119, 6, 0.12); color: #b45309; }
-.stat-card-machinery-income .stat-icon-wrap { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
-.stat-card-machinery-expense .stat-icon-wrap { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
-.stat-card-machinery-net .stat-icon-wrap { background: rgba(8, 145, 178, 0.12); color: #0e7490; }
-.stat-card-share-balance .stat-icon-wrap { background: rgba(124, 58, 237, 0.12); color: #6d28d9; }
-.stat-card-share-contributed .stat-icon-wrap { background: rgba(5, 150, 105, 0.12); color: #047857; }
+.stat-card-loan-collected .stat-icon-wrap {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.stat-card-loan-outstanding .stat-icon-wrap {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #c2410c;
+  border-color: #fdba74;
+}
+
+.stat-card-machinery-income .stat-icon-wrap {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.stat-card-machinery-expense .stat-icon-wrap {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.stat-card-machinery-net .stat-icon-wrap {
+  background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+  color: #0e7490;
+  border-color: #67e8f9;
+}
+
+.stat-card-share-balance .stat-icon-wrap {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #6d28d9;
+  border-color: #c4b5fd;
+}
+
+.stat-card-share-contributed .stat-icon-wrap {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border-color: #6ee7b7;
+}
 
 .stat-icon-peso {
   font-size: 1.35rem;
@@ -1205,8 +1332,108 @@ onMounted(async () => {
 }
 
 .financial-overview-container:not(.light-theme) .export-btn {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(34, 197, 94, 0.14)) !important;
-  border: 1px solid rgba(74, 222, 128, 0.34) !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border: 1px solid #86efac !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(6, 78, 35, 0.35) !important;
+}
+
+.financial-overview-container:not(.light-theme) .export-btn-secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(134, 239, 172, 0.4) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+.financial-overview-container:not(.light-theme) .export-btn-icon {
+  color: inherit !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.financial-overview-container:not(.light-theme) .filter-clear-btn {
+  background: rgba(34, 197, 94, 0.18) !important;
+  border-color: rgba(134, 239, 172, 0.45) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-loan-collected .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62)) !important;
+  color: #ecfdf5 !important;
+  border-color: rgba(134, 239, 172, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-loan-outstanding .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.72), rgba(234, 88, 12, 0.62)) !important;
+  color: #fff7ed !important;
+  border-color: rgba(253, 186, 116, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-machinery-income .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.72), rgba(37, 99, 235, 0.62)) !important;
+  color: #eff6ff !important;
+  border-color: rgba(147, 197, 253, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-machinery-expense .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.72), rgba(185, 28, 28, 0.62)) !important;
+  color: #fff1f2 !important;
+  border-color: rgba(252, 165, 165, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-machinery-net .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.72), rgba(13, 148, 136, 0.62)) !important;
+  color: #ecfdf5 !important;
+  border-color: rgba(94, 234, 212, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-share-balance .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.72), rgba(124, 58, 237, 0.62)) !important;
+  color: #f5f3ff !important;
+  border-color: rgba(196, 181, 253, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-card-share-contributed .stat-icon-wrap {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.72), rgba(5, 150, 105, 0.62)) !important;
+  color: #ecfdf5 !important;
+  border-color: rgba(110, 231, 183, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-icon-wrap svg,
+.financial-overview-container:not(.light-theme) .stat-icon-wrap svg * {
+  stroke: currentColor !important;
+  color: inherit !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-icon-peso {
+  color: inherit !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-value.collected {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-value.outstanding {
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
+}
+
+.financial-overview-container:not(.light-theme) .stat-value.expense,
+.financial-overview-container:not(.light-theme) .stat-value.overdue {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
 }
 
 .financial-overview-container:not(.light-theme) .chart-card {
@@ -1216,14 +1443,14 @@ onMounted(async () => {
 
 .financial-overview-container:not(.light-theme) :is(
   .page-title, .page-subtitle, .section-title, .chart-title, .page-note,
-  .stat-label, .stat-value, .stat-icon-wrap, .stat-icon-peso,
-  .filter-label, .filter-input, .filter-clear-btn,
+  .stat-label, .stat-value,
+  .filter-label, .filter-input,
   .financial-table th, .financial-table td,
   .financial-table .collected, .financial-table .outstanding,
   .financial-table .overdue, .financial-table .expense, .financial-table .rate,
   .financial-table .amount, .financial-table .loading-cell,
   .inline-link, .view-all-link,
-  .export-btn, .export-btn-secondary, .detail-link-btn
+  .detail-link-btn
 ) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
@@ -1329,6 +1556,14 @@ onMounted(async () => {
 .financial-overview-container.light-theme .stat-label {
   color: #374151 !important;
 }
+
+.financial-overview-container.light-theme .stat-card-loan-collected .stat-icon-wrap { color: #15803d !important; }
+.financial-overview-container.light-theme .stat-card-loan-outstanding .stat-icon-wrap { color: #c2410c !important; }
+.financial-overview-container.light-theme .stat-card-machinery-income .stat-icon-wrap { color: #1d4ed8 !important; }
+.financial-overview-container.light-theme .stat-card-machinery-expense .stat-icon-wrap { color: #b91c1c !important; }
+.financial-overview-container.light-theme .stat-card-machinery-net .stat-icon-wrap { color: #0e7490 !important; }
+.financial-overview-container.light-theme .stat-card-share-balance .stat-icon-wrap { color: #6d28d9 !important; }
+.financial-overview-container.light-theme .stat-card-share-contributed .stat-icon-wrap { color: #047857 !important; }
 
 .financial-overview-container.light-theme .stat-value {
   color: #000000 !important;

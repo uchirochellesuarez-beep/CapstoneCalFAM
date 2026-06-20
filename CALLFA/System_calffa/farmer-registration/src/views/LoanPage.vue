@@ -1344,7 +1344,7 @@ const formatPurpose = (purpose) => {
 .loan-amount {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #059669;
+  color: #000000;
   margin-bottom: 0.75rem;
 }
 
@@ -1368,7 +1368,7 @@ const formatPurpose = (purpose) => {
 
 .progress-text {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #000000;
   text-align: right;
 }
 
@@ -1910,7 +1910,7 @@ const formatPurpose = (purpose) => {
 }
 
 .loan-amount {
-  color: #0f5132;
+  color: #000000;
   font-size: 2.15rem;
   font-weight: 900;
   margin-bottom: 0.42rem;
@@ -1974,7 +1974,7 @@ const formatPurpose = (purpose) => {
 
 .approval-stage-text {
   font-size: 0.92rem;
-  color: #0f172a;
+  color: #000000;
   font-weight: 700;
 }
 
@@ -2033,7 +2033,7 @@ const formatPurpose = (purpose) => {
 
 .loan-details {
   font-size: 1.04rem;
-  color: #0b1f16 !important;
+  color: #000000 !important;
   line-height: 1.75;
   background: #ffffff;
   border: 1px solid #d1fae5;
@@ -2043,12 +2043,12 @@ const formatPurpose = (purpose) => {
 
 .loan-details p {
   margin: 0.42rem 0;
-  color: #0b1f16 !important;
+  color: #000000 !important;
   font-weight: 600;
 }
 
 .loan-details strong {
-  color: #14532d !important;
+  color: #000000 !important;
   font-weight: 800;
 }
 
@@ -2075,7 +2075,7 @@ const formatPurpose = (purpose) => {
 .secondary-action {
   background: #ffffff;
   border: 1px solid #16a34a;
-  color: #0f5132;
+  color: #000000;
   font-weight: 700;
   transition: transform 180ms ease, background-color 220ms ease, box-shadow 220ms ease;
 }

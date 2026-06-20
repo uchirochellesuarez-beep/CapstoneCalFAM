@@ -1,14 +1,8 @@
 <template>
-  <div class="financial-container glass-module-page seed-fertilizer-plan">
+  <div class="financial-container glass-module-page seed-fertilizer-plan" :class="{ 'light-theme': isLight }">
     <div class="page-header">
       <div class="header-content">
         <h1>Seed &amp; Fertilizer Plan</h1>
-        <p class="page-subtitle hero-subtitle">
-          Kapag <strong>naipamahagi na</strong> ang tulong (Distributed / Confirmed Received), makikita dito ang magsasaka.
-          Ang Treasurer/President ay <strong>nagtatala ng bayad</strong> —
-          bawat tala ay may petsa at halaga sa
-          <router-link to="/share-capital">Share Capital</router-link> ng magsasaka.
-        </p>
       </div>
     </div>
 
@@ -185,8 +179,11 @@ import { useAuthStore } from '../stores/authStore'
 import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
 import { usePaymentReceipt } from '../composables/usePaymentReceipt'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const barangayId = computed(() => {
   const id = authStore.currentUser?.barangay_id
@@ -452,13 +449,15 @@ onMounted(async () => {
     inset -1px -1px 0 rgba(0, 0, 0, 0.34);
   position: relative;
   overflow: hidden;
+  text-align: left;
 }
 
 .header-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 760px;
+  width: 100%;
+  max-width: none;
   align-items: flex-start;
   text-align: left;
 }
@@ -491,10 +490,120 @@ onMounted(async () => {
   line-height: 1.05;
   letter-spacing: -0.9px;
   margin: 0;
+  width: 100%;
+  text-align: left;
   background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) .page-header h1 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) :is(
+  .page-subtitle,
+  .page-title,
+  .inner-subtitle,
+  .card-title,
+  .card-sub,
+  .stat-label,
+  .stat-value,
+  .empty-title,
+  .empty-text,
+  .name,
+  .sub,
+  .pay-history,
+  .pay-date,
+  .info-banner,
+  .muted,
+  .modal-title,
+  .modal-meta,
+  .form-group label
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) :is(
+  .card-sub,
+  .note-sub,
+  .sub,
+  .muted,
+  .empty-text
+) {
+  opacity: 0.92;
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content .data-table :is(th, td) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content table.data-table tbody td.amount {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container.seed-fertilizer-plan:not(.light-theme) .badge-dist {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container.seed-fertilizer-plan.light-theme {
+  --text-main: #052e16;
+  --text-muted: #14532d;
+  --text-soft: #166534;
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--text-main);
+}
+
+.financial-container.seed-fertilizer-plan.light-theme .page-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 2px solid #86efac !important;
+}
+
+.financial-container.seed-fertilizer-plan.light-theme .page-header h1 {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #052e16 !important;
+  color: #052e16 !important;
+  text-shadow: none;
+}
+
+.financial-container.seed-fertilizer-plan.light-theme :is(
+  .page-title,
+  .page-subtitle,
+  .inner-subtitle,
+  .card-title,
+  .card-sub,
+  .stat-label,
+  .stat-value,
+  .name,
+  .sub,
+  .pay-history,
+  .modal-title,
+  .form-group label
+) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.financial-container.seed-fertilizer-plan.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+}
+
+.financial-container.seed-fertilizer-plan.light-theme .tab-content .card {
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
 }
 
 .page-subtitle {
@@ -503,21 +612,6 @@ onMounted(async () => {
   font-size: 16px;
   line-height: 1.45;
   font-weight: 500;
-}
-
-.hero-subtitle {
-  max-width: 52rem;
-}
-
-.page-subtitle a {
-  color: var(--lime);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.page-subtitle a:hover {
-  color: var(--green);
 }
 
 .page-title {
@@ -566,6 +660,12 @@ onMounted(async () => {
   margin-bottom: 20px;
   padding: 22px 26px;
   border-radius: 20px;
+  text-align: left;
+}
+
+.tab-content .page-header.inner-banner :is(.page-title, .page-subtitle) {
+  text-align: left;
+  width: 100%;
 }
 
 .info-banner {

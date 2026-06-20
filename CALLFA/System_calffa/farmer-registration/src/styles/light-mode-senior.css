@@ -9,8 +9,12 @@ body.glass-light {
   --senior-bg-end: #9edfb0;
   --senior-surface: #fffef8;
   --senior-surface-alt: #f0faf3;
-  --senior-border: #4ade80;
-  --senior-border-soft: #86efac;
+  --senior-border: #166534;
+  --senior-border-soft: rgba(22, 101, 52, 0.38);
+  --senior-edge: rgba(22, 101, 52, 0.42);
+  --senior-edge-soft: rgba(22, 101, 52, 0.28);
+  --senior-edge-strong: rgba(5, 46, 22, 0.52);
+  --senior-divider: rgba(22, 101, 52, 0.2);
   --senior-text: #000000;
   --senior-text-body: #000000;
   --senior-text-muted: #000000;
@@ -22,7 +26,7 @@ body.glass-light {
   --glass-bg-end: var(--senior-bg-end);
   --glass-surface: rgba(255, 254, 248, 0.92);
   --glass-surface-strong: #fffef8;
-  --glass-border: rgba(34, 197, 94, 0.35);
+  --glass-border: rgba(22, 101, 52, 0.32);
   --glass-text: var(--senior-text);
   --glass-text-soft: var(--senior-text-body);
   --glass-shadow: 0 10px 28px rgba(22, 101, 52, 0.14);
@@ -1334,6 +1338,309 @@ body.glass-light .page-container.admin-loans-page.light-theme .loans-table tbody
   background: #f8fdf9 !important;
 }
 
+/* ===== Officer Loans page (Treasurer / President) ===== */
+body.glass-light .page-container.officer-loans-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme :is(.glass-header, .card, .modal-content) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .stat-card {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme :is(.page-title, .stat-value, .card-title) {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme :is(.page-subtitle, .stat-label, .application-card .help-text) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .tab {
+  background: #ffffff !important;
+  border: 2px solid #166534 !important;
+  color: #14532d !important;
+  font-size: 0.9375rem !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .tab.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .loan-form .form-group input,
+body.glass-light .page-container.officer-loans-page.light-theme .loan-form .form-group select {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--senior-text) !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .empty-state {
+  color: var(--senior-text-body) !important;
+  font-size: 1rem !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .loan-item :is(.loan-amount, .approval-stage-text, .loan-details, .loan-details p, .loan-details strong) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .step-num {
+  background: #ffffff !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  border: 2px solid #22c55e !important;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.14) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .step-chip.active .step-num {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 3px 10px rgba(22, 101, 52, 0.22) !important;
+}
+
+/* Edit loan modal — lively light mode (override generic flat buttons) */
+body.glass-light .officer-loan-modal.light-theme {
+  border: 2px solid #4ade80 !important;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08) !important;
+}
+
+body.glass-light .officer-loan-modal.light-theme .officer-loan-modal-header {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
+  border-bottom: 2px solid #86efac !important;
+}
+
+body.glass-light .officer-loan-modal.light-theme .edit-amount-summary {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 55%, #bbf7d0 100%) !important;
+  border: 2px solid #4ade80 !important;
+}
+
+body.glass-light .officer-loan-modal.light-theme .officer-loan-modal-btn.secondary {
+  background: #ffffff !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  border: 2px solid #86efac !important;
+}
+
+body.glass-light .officer-loan-modal.light-theme .officer-loan-modal-btn.primary,
+body.glass-light .officer-loan-modal.light-theme button[type='submit'].officer-loan-modal-btn {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+}
+
+body.glass-light .officer-loan-modal.light-theme .officer-loan-modal-btn.primary:hover:not(:disabled),
+body.glass-light .officer-loan-modal.light-theme button[type='submit'].officer-loan-modal-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 55%, #22c55e 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #166534 !important;
+}
+
+/* Success loan notice modal — lively light mode */
+body.glass-light .loan-notice-modal.light-theme {
+  border: 2px solid #4ade80 !important;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08) !important;
+}
+
+body.glass-light .loan-notice-modal.light-theme .loan-notice-icon {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  border: 3px solid #ffffff !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 8px 20px rgba(22, 101, 52, 0.22),
+    0 0 0 4px rgba(74, 222, 128, 0.25) !important;
+}
+
+body.glass-light .loan-notice-modal.light-theme .loan-notice-details {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 55%, #bbf7d0 100%) !important;
+  border: 2px solid #4ade80 !important;
+}
+
+body.glass-light .loan-notice-modal.light-theme .loan-notice-btn {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+}
+
+body.glass-light .loan-notice-modal.light-theme .loan-notice-btn:hover {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 55%, #22c55e 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #166534 !important;
+}
+
+/* Farmer Income page — black readable text in light mode */
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .page-title,
+  .page-subtitle,
+  .section-title,
+  .form-section label,
+  .form-group label,
+  .dynamic-table th,
+  .dynamic-table td,
+  .computed-cell,
+  .total-label,
+  .total-value,
+  .labor-total-label,
+  .labor-total-value,
+  .summary-label,
+  .summary-value,
+  .detail-label,
+  .detail-value,
+  .financial-label,
+  .card-sub,
+  .empty-state,
+  .add-row-btn,
+  .model-info-box,
+  .foundation-summary,
+  .assistance-card .info-label,
+  .assistance-card .notes-label
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .form-group input,
+  .form-group select,
+  .dynamic-table td input,
+  .dynamic-table td select
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #86efac !important;
+}
+
+body.glass-light .farmer-income-page-modal.light-theme :is(
+  .modal-header h2,
+  .modal-body,
+  .detail-section-title,
+  .cell-label,
+  .cell-value,
+  .detail-table th,
+  .detail-table td,
+  .no-data,
+  .expense-row,
+  .expense-row span
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Farmer Income page — darker box edges & divider lines in light mode */
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .page-header,
+  .form-section,
+  .summary-section,
+  .record-card,
+  .assistance-summary,
+  .assistance-card,
+  .summary-box,
+  .empty-state,
+  .tab-btn
+) {
+  border: 2px solid #166534 !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .financial-item,
+  .summary-item,
+  .detail-cell,
+  .labor-total-box
+) {
+  border: 2px solid rgba(22, 101, 52, 0.42) !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .record-header,
+  .record-financials,
+  .section-title
+) {
+  border-bottom-color: rgba(22, 101, 52, 0.38) !important;
+  border-top-color: rgba(22, 101, 52, 0.38) !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme .record-financials {
+  border-top: 2px solid rgba(22, 101, 52, 0.38) !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme .record-header {
+  border-bottom: 2px solid rgba(22, 101, 52, 0.38) !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .dynamic-table th,
+  .detail-table th
+) {
+  border-bottom: 2px solid #166534 !important;
+}
+
+body.glass-light .page-container.farmer-income-page.light-theme :is(
+  .dynamic-table td,
+  .detail-table td
+) {
+  border-bottom: 1.5px solid rgba(22, 101, 52, 0.3) !important;
+}
+
+/* Members page — Member Details modal lively light mode */
+body.glass-light .farmer-table-page.light-theme .modal-overlay {
+  background: rgba(236, 253, 245, 0.55) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.glass-light .farmer-table-page.light-theme .modal-content {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%) !important;
+  border: 2px solid #166534 !important;
+  box-shadow: 0 24px 48px rgba(22, 101, 52, 0.16) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .modal-header {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
+  border-bottom: 2px solid #166534 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme :is(.modal-title, .member-name, .detail-label, .detail-value) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .detail-item {
+  border: 2px solid rgba(22, 101, 52, 0.35) !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .btn-secondary {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+}
+
 /* ===== Machinery Management page ===== */
 body.glass-light .machinery-management-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
@@ -1749,12 +2056,20 @@ body.glass-light :is(
   .modal-header h2, .inv2-title, .tab, .tab-btn, .role-tab-label,
   .payer-text, .payer-desc, .score-factors, .td-name,
   .notice-title, .notice-content, .hero-desc,
-  .top-header .profile-name, .top-header .profile-id,
-  .top-header .profile-status, .top-header .theme-toggle-btn,
-  .top-header .icon-btn
+  .top-header .profile-name,
+  .top-header .profile-status,
+  .top-header .icon-btn:not(.theme-toggle-btn)
 ) {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .top-header .profile-id {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  border: 1.5px solid #16a34a !important;
+  font-weight: 700 !important;
 }
 
 /* No gradient-clipped titles — solid black */
@@ -1803,7 +2118,7 @@ body.glass-light :is(
   -webkit-text-fill-color: #000000 !important;
 }
 
-/* White text only on solid green primary buttons */
+/* White text only on solid green primary buttons — superseded by global white buttons below */
 body.glass-light :is(
   .btn-primary,
   .btn-success,
@@ -1815,8 +2130,8 @@ body.glass-light :is(
   .submit-btn,
   button.btn-primary-action
 ) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 /* Beat page-scoped colored role/status overrides */
@@ -1875,11 +2190,12 @@ body.glass-light .signup-page.glass-auth-page .identity-caption {
 /* Swap dark glass card for a bright senior-friendly surface */
 body.glass-light .login-page.glass-auth-page .login-card,
 body.glass-light .signup-page.glass-auth-page .signup-card {
-  background: linear-gradient(155deg, #ffffff 0%, #f0fdf4 48%, #ecfdf5 100%) !important;
-  border: 2px solid #86efac !important;
+  background: linear-gradient(155deg, #ffffff 0%, #f8fdf9 48%, #f0fdf4 100%) !important;
+  border: 2px solid rgba(22, 101, 52, 0.42) !important;
   box-shadow:
     0 20px 48px rgba(22, 101, 52, 0.16),
     0 4px 14px rgba(22, 101, 52, 0.08) !important;
+  padding: 1.15rem 1.25rem !important;
 }
 
 body.glass-light .login-page.glass-auth-page .login-card::before,
@@ -1904,16 +2220,29 @@ body.glass-light .signup-page.glass-auth-page :is(.form-title, .form-label) {
   background: none !important;
 }
 
+body.glass-light .login-page.glass-auth-page .form-header,
+body.glass-light .signup-page.glass-auth-page .form-header {
+  margin-bottom: 0.65rem !important;
+  padding: 0 0.15rem !important;
+}
+
+body.glass-light .login-page.glass-auth-page .form-title,
+body.glass-light .signup-page.glass-auth-page .form-title {
+  font-size: 1.45rem !important;
+}
+
 body.glass-light .login-page.glass-auth-page .form-subtitle,
 body.glass-light .signup-page.glass-auth-page .form-subtitle {
-  color: #166534 !important;
-  -webkit-text-fill-color: #166534 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  font-weight: 600 !important;
 }
 
 body.glass-light .login-page.glass-auth-page :is(.auth-divider, .auth-divider-text),
 body.glass-light .signup-page.glass-auth-page :is(.auth-divider, .auth-divider-text) {
-  color: #374151 !important;
-  -webkit-text-fill-color: #374151 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-weight: 600 !important;
 }
 
 body.glass-light .login-page.glass-auth-page .auth-divider-line,
@@ -1929,7 +2258,8 @@ body.glass-light .signup-page.glass-auth-page .auth-divider-line {
 body.glass-light .login-page.glass-auth-page .form-footer,
 body.glass-light .signup-page.glass-auth-page .form-footer {
   background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
-  border-top: 2px solid #86efac !important;
+  border-top: 2px solid rgba(22, 101, 52, 0.35) !important;
+  padding: 0.72rem 0.85rem !important;
 }
 
 body.glass-light .login-page.glass-auth-page .form-footer :is(.footer-text, p),
@@ -1945,6 +2275,8 @@ body.glass-light .signup-page.glass-auth-page .link-btn {
   color: #14532d !important;
   -webkit-text-fill-color: #14532d !important;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+  padding: 0.5rem 1.05rem !important;
+  border-radius: 999px !important;
 }
 
 body.glass-light .login-page.glass-auth-page .link-btn:hover,
@@ -1953,6 +2285,7 @@ body.glass-light .signup-page.glass-auth-page .link-btn:hover {
   border-color: #15803d !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  transform: translateY(-2px) scale(1.03) !important;
 }
 
 body.glass-light .login-page.glass-auth-page .success-message,
@@ -1997,6 +2330,10 @@ body.glass-light .signup-page.glass-auth-page .lang-btn.active {
   border-color: #16a34a !important;
 }
 
+body.glass-light .signup-page.glass-auth-page .registration-legal-toggle-action {
+  color: #15803d !important;
+}
+
 body.glass-light .signup-page.glass-auth-page .registration-legal {
   background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%) !important;
   border: 2px solid #86efac !important;
@@ -2016,6 +2353,983 @@ body.glass-light .signup-page.glass-auth-page .registration-legal-summary {
   color: #000000 !important;
 }
 
-body.glass-light .signup-page.glass-auth-page .registration-legal-toggle-action {
-  color: #15803d !important;
+/* Auth inputs — darker borders + comfortable padding (light mode) */
+body.glass-light .login-page.glass-auth-page .auth-form .form-input,
+body.glass-light .signup-page.glass-auth-page .registration-form .form-input,
+body.glass-light .login-page.glass-auth-page .auth-form select.form-input,
+body.glass-light .signup-page.glass-auth-page .registration-form select.form-input,
+body.glass-light .login-page.glass-auth-page .auth-form textarea.form-input,
+body.glass-light .signup-page.glass-auth-page .registration-form textarea.form-input {
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+  padding: 0.72rem 0.85rem 0.72rem 2.25rem !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-radius: 13px !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .login-page.glass-auth-page .auth-form .form-input:focus,
+body.glass-light .signup-page.glass-auth-page .registration-form .form-input:focus,
+body.glass-light .login-page.glass-auth-page .auth-form select.form-input:focus,
+body.glass-light .signup-page.glass-auth-page .registration-form select.form-input:focus,
+body.glass-light .login-page.glass-auth-page .auth-form textarea.form-input:focus,
+body.glass-light .signup-page.glass-auth-page .registration-form textarea.form-input:focus {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .auth-form .form-input::placeholder,
+body.glass-light .signup-page.glass-auth-page .registration-form .form-input::placeholder,
+body.glass-light .login-page.glass-auth-page .auth-form textarea::placeholder,
+body.glass-light .signup-page.glass-auth-page .registration-form textarea::placeholder {
+  color: #4b5563 !important;
+  -webkit-text-fill-color: #4b5563 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .field-icon,
+body.glass-light .signup-page.glass-auth-page .field-icon {
+  color: #166534 !important;
+}
+
+body.glass-light .login-page.glass-auth-page .password-toggle,
+body.glass-light .signup-page.glass-auth-page .password-toggle {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+}
+
+body.glass-light .login-page.glass-auth-page .password-toggle:hover,
+body.glass-light .signup-page.glass-auth-page .password-toggle:hover {
+  background: transparent !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  transform: translateY(-50%) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .google-signin-btn,
+body.glass-light .signup-page.glass-auth-page .google-signin-btn {
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  padding: 0.78rem 1rem !important;
+  min-height: 48px !important;
+  border-radius: 13px !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .google-signin-btn:hover:not(.disabled),
+body.glass-light .signup-page.glass-auth-page .google-signin-btn:hover:not(.disabled) {
+  border-color: #4285f4 !important;
+  background: #f8faff !important;
+  box-shadow: 0 4px 14px rgba(66, 133, 244, 0.14) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .google-btn-text,
+body.glass-light .signup-page.glass-auth-page .google-btn-text {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* ===== Farmers — always senior light mode (dark mode is staff-only) ===== */
+body.farmer-user.glass-light .sidebar.light-theme {
+  border-right: 2px solid var(--senior-border-soft) !important;
+}
+
+body.farmer-user.glass-light .dashboard-container.light-theme,
+body.farmer-user.glass-light .glass-module-page.light-theme {
+  color: var(--senior-text-body) !important;
+}
+
+/* Light mode — theme toggle sun icon (header) */
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border: 2px solid #f59e0b !important;
+  color: #ea580c !important;
+  -webkit-text-fill-color: #ea580c !important;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.18) !important;
+}
+
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn:hover {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%) !important;
+  border-color: #ea580c !important;
+  color: #c2410c !important;
+  -webkit-text-fill-color: #c2410c !important;
+  filter: none !important;
+}
+
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn .theme-icon-sun .sun-core {
+  fill: #fbbf24 !important;
+  fill-opacity: 1 !important;
+  stroke: #ea580c !important;
+}
+
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn .theme-icon-sun path {
+  stroke: #ea580c !important;
+  fill: none !important;
+}
+
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn:hover .theme-icon-sun .sun-core {
+  fill: #f59e0b !important;
+  stroke: #c2410c !important;
+}
+
+body.glass-light:not(.farmer-user) .top-header .theme-toggle-btn:hover .theme-icon-sun path {
+  stroke: #c2410c !important;
+}
+
+/* ============================================================
+   LIGHT MODE — all buttons white surface (global)
+   ============================================================ */
+body.glass-light :is(
+  button,
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-secondary-outline,
+  .btn-success,
+  .btn-danger,
+  .btn-warning,
+  .btn-muted,
+  .btn-submit,
+  .submit-btn,
+  .submit-button,
+  .save-btn,
+  .export-btn,
+  .export-btn-secondary,
+  .print-btn,
+  .report-type-btn,
+  .btn-action,
+  .btn-summary,
+  .link-btn,
+  .btn-view,
+  .btn-approve,
+  .btn-reject,
+  .btn-book,
+  .btn-post,
+  .btn-ghost,
+  .btn-ghost-header,
+  .btn-reset,
+  .btn-close-modal,
+  .btn-primary-action,
+  .btn-small,
+  .btn-generate,
+  .orient-btn,
+  .filter-clear-btn,
+  .inv2-clear-all,
+  .btn-view-area,
+  .btn-header-add,
+  .btn-delete-confirm,
+  .btn-inventory-add,
+  .btn-upload-picture,
+  .btn-remove-picture,
+  .btn-place-save,
+  .btn-place-cancel,
+  .machinery-inventory-btn,
+  .machinery-action-btn,
+  .close-btn,
+  .tab,
+  .tab-btn,
+  .detail-link-btn,
+  .bulk-approve-btn,
+  .refresh-btn,
+  .retry-btn,
+  .edit-btn,
+  .danger-outline-btn,
+  .loan-notice-btn,
+  .loan-delete-cancel,
+  .loan-delete-btn,
+  .view-btn,
+  .btn-cancel,
+  .btn-confirm-reject,
+  .dues-record-btn,
+  .action-btn,
+  .inv2-add-btn,
+  .login-btn,
+  .lang-btn,
+  .toggle-btn,
+  .top-header .icon-btn,
+  .barangays-icon-btn,
+  .btn-icon-small,
+  .table-action-btn,
+  .orient-btn,
+  .btn-payment,
+  .btn-reject,
+  .btn-tab-icon,
+  .filter-search-btn
+):not(.theme-toggle-btn):not(.nav-link):not(.sidebar .nav-link) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 2px solid #166534 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  filter: none !important;
+}
+
+body.glass-light :is(
+  button,
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-secondary-outline,
+  .btn-success,
+  .btn-danger,
+  .btn-warning,
+  .btn-muted,
+  .btn-submit,
+  .submit-btn,
+  .submit-button,
+  .save-btn,
+  .export-btn,
+  .export-btn-secondary,
+  .print-btn,
+  .report-type-btn,
+  .btn-action,
+  .btn-summary,
+  .link-btn,
+  .btn-view,
+  .btn-approve,
+  .btn-reject,
+  .btn-book,
+  .btn-post,
+  .btn-ghost,
+  .btn-ghost-header,
+  .btn-reset,
+  .btn-close-modal,
+  .btn-primary-action,
+  .btn-small,
+  .btn-generate,
+  .orient-btn,
+  .filter-clear-btn,
+  .inv2-clear-all,
+  .btn-view-area,
+  .btn-header-add,
+  .btn-delete-confirm,
+  .btn-inventory-add,
+  .btn-upload-picture,
+  .btn-remove-picture,
+  .btn-place-save,
+  .btn-place-cancel,
+  .machinery-inventory-btn,
+  .machinery-action-btn,
+  .close-btn,
+  .tab,
+  .tab-btn,
+  .detail-link-btn,
+  .bulk-approve-btn,
+  .refresh-btn,
+  .retry-btn,
+  .edit-btn,
+  .danger-outline-btn,
+  .loan-notice-btn,
+  .loan-delete-cancel,
+  .loan-delete-btn,
+  .view-btn,
+  .btn-cancel,
+  .btn-confirm-reject,
+  .dues-record-btn,
+  .action-btn,
+  .inv2-add-btn,
+  .login-btn,
+  .lang-btn,
+  .toggle-btn,
+  .top-header .icon-btn,
+  .barangays-icon-btn,
+  .btn-icon-small,
+  .table-action-btn,
+  .btn-payment,
+  .filter-search-btn
+):not(.theme-toggle-btn):not(.nav-link):not(.sidebar .nav-link):hover:not(:disabled) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12) !important;
+  transform: translateY(-1px);
+}
+
+body.glass-light :is(
+  button,
+  .btn,
+  .tab,
+  .tab-btn
+):not(.theme-toggle-btn):not(.nav-link):disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+body.glass-light :is(.tab.active, .tab-btn.active):not(.theme-toggle-btn):not(.nav-link) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2), 0 4px 12px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light :is(
+  .btn-danger,
+  .btn-delete,
+  .btn-reject,
+  .btn-delete-confirm,
+  .danger-outline-btn,
+  .loan-delete-btn,
+  .action-btn--danger,
+  .table-action-delete,
+  .machinery-action-delete
+):not(.theme-toggle-btn) {
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border-color: #dc2626 !important;
+}
+
+body.glass-light :is(
+  .btn-danger,
+  .btn-delete,
+  .btn-reject,
+  .btn-delete-confirm,
+  .danger-outline-btn,
+  .loan-delete-btn,
+  .action-btn--danger,
+  .table-action-delete,
+  .machinery-action-delete
+):not(.theme-toggle-btn):hover:not(:disabled) {
+  background: #fff1f2 !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border-color: #b91c1c !important;
+}
+
+body.glass-light :is(
+  button,
+  .btn,
+  .tab,
+  .tab-btn,
+  .btn-action,
+  .report-type-btn
+) :is(span, .btn-text, .btn-icon, .tab-btn-label, .tab-btn-count, svg, svg *) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  stroke: currentColor !important;
+}
+
+/* Auth pages — restore gradient CTAs (beat global white-button rule above) */
+body.glass-light .login-page.glass-auth-page .submit-btn,
+body.glass-light .signup-page.glass-auth-page .submit-btn {
+  background: linear-gradient(
+    128deg,
+    #ea580c 0%,
+    #f59e0b 32%,
+    #fbbf24 58%,
+    #16a34a 100%
+  ) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  border-radius: 999px !important;
+  padding: 0.72rem 1.5rem !important;
+  min-height: 48px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  box-shadow:
+    0 10px 28px rgba(180, 60, 10, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .submit-btn:hover:not(:disabled),
+body.glass-light .signup-page.glass-auth-page .submit-btn:hover:not(:disabled) {
+  background: linear-gradient(
+    128deg,
+    #f97316 0%,
+    #fbbf24 35%,
+    #fde047 58%,
+    #22c55e 100%
+  ) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #166534 !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow:
+    0 16px 36px rgba(180, 60, 10, 0.32),
+    0 0 24px rgba(249, 115, 22, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .submit-btn:disabled,
+body.glass-light .signup-page.glass-auth-page .submit-btn:disabled {
+  opacity: 0.65 !important;
+  transform: none !important;
+}
+
+body.glass-light .login-page.glass-auth-page .submit-btn :is(span, svg, svg *),
+body.glass-light .signup-page.glass-auth-page .submit-btn :is(span, svg, svg *) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-light .login-page.glass-auth-page .link-btn,
+body.glass-light .signup-page.glass-auth-page .link-btn {
+  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
+  border: 2px solid #16a34a !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+  padding: 0.5rem 1.05rem !important;
+  border-radius: 999px !important;
+}
+
+body.glass-light .login-page.glass-auth-page .link-btn:hover,
+body.glass-light .signup-page.glass-auth-page .link-btn:hover {
+  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 45%, #22c55e 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .link-btn :is(span, svg, svg *),
+body.glass-light .signup-page.glass-auth-page .link-btn :is(span, svg, svg *) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+body.glass-light .login-page.glass-auth-page .page-language-toggle,
+body.glass-light .signup-page.glass-auth-page .page-language-toggle {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
+  padding: 0.28rem !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn,
+body.glass-light .signup-page.glass-auth-page .lang-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  padding: 0.38rem 0.95rem !important;
+  border-radius: 999px !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn:hover,
+body.glass-light .signup-page.glass-auth-page .lang-btn:hover {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  transform: none !important;
+}
+
+body.glass-light .login-page.glass-auth-page .lang-btn.active,
+body.glass-light .signup-page.glass-auth-page .lang-btn.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border-color: #16a34a !important;
+}
+
+/* ===== Farmer Income Hub — light mode spacing & surfaces ===== */
+body.glass-light .farmer-income-hub-page.light-theme .page-header {
+  padding: 28px 32px !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .page-subtitle {
+  margin-top: 6px !important;
+  line-height: 1.5 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .tabs-container {
+  padding: 18px 20px !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .tab-btn {
+  padding: 16px 28px !important;
+  min-height: 56px !important;
+  gap: 10px !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .tab-badge {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  padding: 4px 10px !important;
+  min-width: 24px !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .tab-btn.active .tab-badge {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme :is(.empty-state, .foundation-hub-panel) {
+  padding: 28px 32px !important;
+  border-radius: 24px !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .hub-foundation-intro {
+  margin: 0 0 1.35rem 0 !important;
+  line-height: 1.6 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .farmer-pick-row {
+  gap: 10px !important;
+  margin-bottom: 1.35rem !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .foundation-farmer-select {
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  border: 2px solid rgba(22, 101, 52, 0.35) !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .foundation-hub-panel :is(.foundation-panel, .foundation-format-toggle, .foundation-format-body) {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .foundation-hub-panel .foundation-panel {
+  padding: 1.5rem 1.65rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme.page-container {
+  padding: 0 4px 1.5rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .page-header {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+  padding: 1.5rem 1.75rem !important;
+  margin-bottom: 1.5rem !important;
+  border-radius: 22px !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .page-title {
+  margin-bottom: 0.5rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .page-subtitle {
+  margin: 0 !important;
+  line-height: 1.55 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .page-title {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .page-subtitle {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .title-icon {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .tab-navigation {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+  margin-bottom: 1.5rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .tab-navigation .tab-btn {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08) !important;
+  padding: 0.85rem 1.5rem !important;
+  min-height: 48px !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .tab-navigation .tab-btn.active,
+body.glass-light .income-hub-subpage.light-theme .tab-navigation .tab-btn:hover {
+  background: #ffffff !important;
+  border-color: #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme :is(
+  .stat-item,
+  .search-box,
+  .empty-state,
+  .record-card,
+  .distribution-card,
+  .distribution-form
+) {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+  color: #052e16 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .search-box {
+  padding: 12px 16px !important;
+  gap: 10px !important;
+  border-radius: 12px !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .search-input {
+  padding: 4px 2px !important;
+  font-size: 0.95rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .stat-item {
+  padding: 1.25rem 1.5rem !important;
+  gap: 1rem !important;
+  border-radius: 16px !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-card {
+  padding: 1.75rem 1.85rem !important;
+  border-radius: 16px !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-header {
+  padding-bottom: 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-financials {
+  padding-top: 1.25rem !important;
+  gap: 1rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-actions {
+  padding-top: 1.15rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .empty-state {
+  padding: 2.5rem 2rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .view-btn {
+  padding: 0.55rem 1.15rem !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme :is(
+  .stat-value,
+  .stat-label,
+  .search-input,
+  .farmer-name,
+  .record-date,
+  .detail-label,
+  .record-detail span:last-child,
+  .financial-item > span:first-child,
+  .financial-item.income > span:last-child,
+  .financial-item.expense > span:last-child,
+  .financial-item.profit > span:last-child,
+  .loading-state,
+  .distributions-header h2,
+  .empty-state,
+  .form-group label
+) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .search-input::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .search-icon {
+  color: #166534 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .stat-icon {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme :is(
+  .form-group input,
+  .form-group select,
+  .form-group textarea
+) {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  color-scheme: light;
+}
+
+body.glass-light .income-hub-subpage.light-theme .record-header,
+body.glass-light .income-hub-subpage.light-theme .record-financials,
+body.glass-light .income-hub-subpage.light-theme .record-actions,
+body.glass-light .income-hub-subpage.light-theme .form-actions {
+  border-top-color: #d1fae5 !important;
+  border-bottom-color: #d1fae5 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme :is(
+  .search-icon,
+  .empty-icon,
+  .stat-icon,
+  .inline-icon,
+  .tab-btn-icon,
+  .title-icon
+) {
+  color: #166534 !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .empty-icon {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .income-hub-subpage.light-theme .spinner {
+  border-color: rgba(22, 101, 52, 0.15) !important;
+  border-top-color: #16a34a !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .modal-container {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 24px 56px rgba(22, 101, 52, 0.15) !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme :is(
+  .modal-header h2,
+  .modal-body,
+  .modal-text,
+  .cell-value,
+  .detail-table td,
+  .expense-row
+) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme :is(
+  .detail-section-title,
+  .foot-value
+) {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme :is(
+  .cell-label,
+  .no-data,
+  .modal-close
+) {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .detail-table th {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .detail-table thead,
+body.glass-light .farmer-income-hub-modal.light-theme .detail-table tfoot tr,
+body.glass-light .farmer-income-hub-modal.light-theme .expense-row.total-row {
+  background: #f9fafb !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .reject-textarea {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .summary-detail-section {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .modal-footer {
+  border-top-color: #d1fae5 !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme :is(
+  .btn-cancel,
+  .btn-close-modal
+) {
+  background: #ffffff !important;
+  border: 2px solid var(--senior-edge-soft) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+/* =========================================================
+   SYSTEM-WIDE — darker box/panel edges in light mode
+   ========================================================= */
+html body.glass-light :is(
+  .page-container.light-theme,
+  .financial-container.light-theme,
+  .dashboard-container.light-theme,
+  .dashboard-container,
+  .machinery-management-page.light-theme,
+  .farmer-table-page.light-theme,
+  .financial-overview-container.light-theme,
+  .members-summary-page.light-theme,
+  .officer-loans-page.light-theme,
+  .farmer-income-page.light-theme,
+  .farmer-income-hub-page.light-theme,
+  .income-hub-subpage.light-theme,
+  .share-capital-page.light-theme,
+  .blockchain-audit-page.light-theme,
+  .modal-overlay.light-theme,
+  .farmer-income-page-modal.light-theme,
+  .farmer-income-hub-modal.light-theme,
+  .officer-loan-modal.light-theme,
+  .loan-notice-modal.light-theme,
+  .loan-delete-confirm-modal.light-theme,
+  .officer-loan-modal-backdrop,
+  .loan-notice-backdrop
+) :is(
+  .page-header,
+  .card,
+  .stat-card,
+  .form-section,
+  .summary-section,
+  .record-card,
+  .assistance-card,
+  .assistance-summary,
+  .summary-box,
+  .filters-bar,
+  .chart-card,
+  .financial-table-section,
+  .filter-panel,
+  .glass-chart-card,
+  .dashboard-header,
+  .header-time-card,
+  .analytics-section,
+  .modal-container,
+  .loan-card,
+  .member-shares-card,
+  .tab-nav,
+  .edit-banner,
+  .detail-cell,
+  .expense-row,
+  .financial-item,
+  .edit-amount-summary,
+  .loan-notice-details,
+  .foundation-panel,
+  .table-wrap,
+  .summary-card,
+  .info-card,
+  .panel-card,
+  .content-card,
+  .glass-panel,
+  .form-wrapper,
+  .history-wrapper,
+  .assistance-wrapper
+) {
+  border-color: var(--senior-edge) !important;
+}
+
+html body.glass-light :is(
+  .page-container.light-theme,
+  .financial-container.light-theme,
+  .dashboard-container.light-theme,
+  .dashboard-container,
+  .machinery-management-page.light-theme,
+  .farmer-table-page.light-theme,
+  .financial-overview-container.light-theme,
+  .members-summary-page.light-theme,
+  .officer-loans-page.light-theme,
+  .farmer-income-page.light-theme,
+  .share-capital-page.light-theme,
+  .farmer-income-page-modal.light-theme,
+  .farmer-income-hub-modal.light-theme,
+  .officer-loan-modal.light-theme,
+  .loan-notice-modal.light-theme,
+  .loan-delete-confirm-modal.light-theme
+) :is(
+  .detail-cell,
+  .expense-row,
+  .financial-item,
+  .summary-item,
+  .edit-amount-summary,
+  .loan-notice-details,
+  .notes-section,
+  .detail-table,
+  .dynamic-table,
+  .labor-total-box,
+  .grand-row,
+  .income-row,
+  .expense-summary-row,
+  .net-profit-row,
+  .net-loss-row,
+  .summary-detail-section
+) {
+  border-color: var(--senior-edge-soft) !important;
+}
+
+html body.glass-light :is(
+  .page-container.light-theme,
+  .financial-container.light-theme,
+  .farmer-income-page.light-theme,
+  .officer-loans-page.light-theme,
+  .share-capital-page.light-theme,
+  .farmer-income-page-modal.light-theme,
+  .farmer-income-hub-modal.light-theme,
+  .officer-loan-modal.light-theme,
+  .loan-notice-modal.light-theme,
+  .loan-delete-confirm-modal.light-theme
+) :is(
+  .record-header,
+  .record-financials,
+  .detail-section,
+  .modal-footer,
+  .section-title,
+  .record-card .record-header,
+  .record-card .record-financials
+) {
+  border-top-color: var(--senior-divider) !important;
+  border-bottom-color: var(--senior-divider) !important;
+}
+
+html body.glass-light :is(
+  .page-container.light-theme,
+  .financial-container.light-theme,
+  .financial-overview-container.light-theme,
+  .farmer-table-page.light-theme,
+  .members-summary-page.light-theme,
+  .share-capital-page.light-theme,
+  .farmer-income-page.light-theme,
+  .farmer-income-page-modal.light-theme,
+  .farmer-income-hub-modal.light-theme
+) :is(
+  .financial-table th,
+  .financial-table td,
+  .detail-table th,
+  .detail-table td,
+  .dynamic-table th,
+  .dynamic-table td,
+  .data-table th,
+  .data-table td,
+  table th,
+  table td
+) {
+  border-color: var(--senior-edge-soft) !important;
+}
+
+html body.glass-light :is(
+  .sidebar.light-theme,
+  .top-header
+) {
+  border-color: var(--senior-edge-strong) !important;
 }
