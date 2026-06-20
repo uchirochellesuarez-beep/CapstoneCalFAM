@@ -24,7 +24,7 @@
 }
 
 body.glass-dark {
-  --glass-border: rgba(4, 14, 10, 0.52);
+  --glass-border: rgba(4, 14, 10, 0.62);
 }
 
 body.glass-dark:not(.farmer-user) {
@@ -33,7 +33,7 @@ body.glass-dark:not(.farmer-user) {
   --glass-bg-end: #1a4d35;
   --glass-surface: rgba(30, 66, 52, 0.88);
   --glass-surface-strong: rgba(37, 82, 65, 0.94);
-  --glass-border: rgba(4, 14, 10, 0.52);
+  --glass-border: rgba(4, 14, 10, 0.62);
   --glass-text: #ecfdf5;
   --glass-text-soft: #b8dcc6;
   --glass-shadow: 0 10px 28px rgba(4, 18, 12, 0.35);
@@ -46,7 +46,7 @@ body.glass-light {
   --glass-bg-end: #9edfb0;
   --glass-surface: rgba(255, 254, 248, 0.92);
   --glass-surface-strong: #fffef8;
-  --glass-border: rgba(22, 101, 52, 0.32);
+  --glass-border: rgba(22, 101, 52, 0.44);
   --glass-text: #000000;
   --glass-text-soft: #000000;
   --glass-shadow: 0 10px 28px rgba(22, 101, 52, 0.14);
@@ -1471,7 +1471,7 @@ canvas {
    ------------------------------------------------------------------ */
 
 /* Beat global :is(..., .form-title, h2) gradient + transparent text */
-.login-page.glass-auth-page .form-title {
+.login-page.glass-auth-page:not(.light-theme) .form-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1479,16 +1479,16 @@ canvas {
   -webkit-text-fill-color: currentColor !important;
 }
 
-.login-page.glass-auth-page .form-subtitle {
+.login-page.glass-auth-page:not(.light-theme) .form-subtitle {
   color: rgba(215, 207, 191, 0.92) !important;
 }
 
 /* Beat global :is(..., p, label) color !important on hero + form chrome */
-.login-page.glass-auth-page .identity-badge {
+.login-page.glass-auth-page:not(.light-theme) .identity-badge {
   color: #ffd966 !important;
 }
 
-.login-page.glass-auth-page .identity-title {
+.login-page.glass-auth-page:not(.light-theme) .identity-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1496,36 +1496,36 @@ canvas {
   -webkit-text-fill-color: currentColor !important;
 }
 
-.login-page.glass-auth-page .identity-caption {
+.login-page.glass-auth-page:not(.light-theme) .identity-caption {
   color: rgba(249, 244, 231, 0.94) !important;
 }
 
-.login-page.glass-auth-page .form-label {
+.login-page.glass-auth-page:not(.light-theme) .form-label {
   color: rgba(238, 232, 218, 0.95) !important;
 }
 
-.login-page.glass-auth-page .auth-divider,
-.login-page.glass-auth-page .auth-divider-text {
+.login-page.glass-auth-page:not(.light-theme) .auth-divider,
+.login-page.glass-auth-page:not(.light-theme) .auth-divider-text {
   color: rgba(211, 218, 206, 0.88) !important;
 }
 
-.login-page.glass-auth-page .form-footer,
-.login-page.glass-auth-page .form-footer .footer-text {
+.login-page.glass-auth-page:not(.light-theme) .form-footer,
+.login-page.glass-auth-page:not(.light-theme) .form-footer .footer-text {
   color: rgba(227, 255, 238, 0.92) !important;
 }
 
-.login-page.glass-auth-page .auth-form .form-input,
-.login-page.glass-auth-page .auth-form select.form-input,
-.login-page.glass-auth-page .auth-form textarea.form-input {
+.login-page.glass-auth-page.light-theme .auth-form .form-input,
+.login-page.glass-auth-page.light-theme .auth-form select.form-input,
+.login-page.glass-auth-page.light-theme .auth-form textarea.form-input {
   background: #ffffff !important;
   color: #111111 !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
 }
 
-.login-page.glass-auth-page .auth-form .form-input:focus,
-.login-page.glass-auth-page .auth-form select.form-input:focus,
-.login-page.glass-auth-page .auth-form textarea.form-input:focus {
+.login-page.glass-auth-page.light-theme .auth-form .form-input:focus,
+.login-page.glass-auth-page.light-theme .auth-form select.form-input:focus,
+.login-page.glass-auth-page.light-theme .auth-form textarea.form-input:focus {
   outline: none !important;
   border-color: rgba(107, 191, 89, 0.88) !important;
   background: #ffffff !important;
@@ -1535,62 +1535,84 @@ canvas {
     0 0 8px rgba(249, 115, 22, 0.12) !important;
 }
 
-.login-page.glass-auth-page .auth-form .form-input::placeholder,
-.login-page.glass-auth-page .auth-form textarea::placeholder {
+.login-page.glass-auth-page.light-theme .auth-form .form-input::placeholder,
+.login-page.glass-auth-page.light-theme .auth-form textarea::placeholder {
   color: #6b7280 !important;
 }
 
-.login-page.glass-auth-page .link-btn {
+.login-page.glass-auth-page:not(.light-theme) .auth-form .form-input,
+.login-page.glass-auth-page:not(.light-theme) .auth-form select.form-input,
+.login-page.glass-auth-page:not(.light-theme) .auth-form textarea.form-input {
+  background: #0f2419 !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  caret-color: #ecfdf5 !important;
+}
+
+.login-page.glass-auth-page:not(.light-theme) .auth-form .form-input:focus,
+.login-page.glass-auth-page:not(.light-theme) .auth-form select.form-input:focus,
+.login-page.glass-auth-page:not(.light-theme) .auth-form textarea.form-input:focus {
+  outline: none !important;
+  border-color: rgba(74, 222, 128, 0.75) !important;
+  background: rgba(10, 36, 22, 0.92) !important;
+  box-shadow:
+    0 0 0 3px rgba(74, 222, 128, 0.22),
+    0 0 16px rgba(52, 211, 153, 0.18) !important;
+}
+
+.login-page.glass-auth-page:not(.light-theme) .auth-form .form-input::placeholder,
+.login-page.glass-auth-page:not(.light-theme) .auth-form textarea::placeholder {
+  color: rgba(187, 247, 208, 0.55) !important;
+}
+
+.login-page.glass-auth-page:not(.light-theme) .link-btn {
   border-radius: 999px !important;
-  border: 1px solid rgba(134, 239, 172, 0.5) !important;
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.2) 50%,
-    rgba(74, 222, 128, 0.22) 100%
-  ) !important;
-  color: rgba(220, 255, 235, 0.96) !important;
+  border: 2px solid rgba(110, 231, 183, 0.55) !important;
+  background: rgba(15, 46, 31, 0.72) !important;
+  color: #d1fae5 !important;
   font-size: 0.8rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em !important;
   box-shadow:
-    0 4px 18px rgba(74, 222, 128, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+    0 4px 14px rgba(4, 18, 12, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   transform: none !important;
   filter: none !important;
 }
 
-.login-page.glass-auth-page .link-btn:hover {
+.login-page.glass-auth-page:not(.light-theme) .link-btn:hover {
   background: linear-gradient(
     128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%
+    rgba(20, 83, 45, 0.95) 0%,
+    rgba(22, 101, 52, 0.92) 50%,
+    rgba(34, 197, 94, 0.88) 100%
   ) !important;
   border-color: rgba(134, 239, 172, 0.72) !important;
-  color: #fff !important;
-  transform: translateY(-2px) scale(1.03) !important;
+  color: #ecfdf5 !important;
+  transform: translateY(-2px) scale(1.02) !important;
   box-shadow:
-    0 8px 28px rgba(74, 222, 128, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    0 8px 24px rgba(4, 18, 12, 0.35),
+    0 0 20px rgba(52, 211, 153, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   filter: none !important;
 }
 
-.login-page.glass-auth-page .submit-btn {
+.login-page.glass-auth-page:not(.light-theme) .submit-btn {
   position: relative !important;
   overflow: hidden !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(255, 220, 100, 0.48) !important;
+  border: 2px solid rgba(110, 231, 183, 0.5) !important;
   background: linear-gradient(
     128deg,
-    rgba(200, 58, 8, 0.88) 0%,
-    rgba(234, 110, 14, 0.84) 30%,
-    rgba(245, 168, 16, 0.82) 60%,
-    rgba(96, 160, 14, 0.86) 100%
+    #1a4d32 0%,
+    #1f5c3a 42%,
+    #247647 100%
   ) !important;
-  color: #fff !important;
+  color: #f0fdf4 !important;
   font-weight: 700 !important;
   font-size: 0.86rem !important;
   letter-spacing: 0.03em !important;
@@ -1603,8 +1625,9 @@ canvas {
   justify-content: center !important;
   cursor: pointer !important;
   box-shadow:
-    0 10px 30px rgba(100, 30, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36) !important;
+    0 10px 28px rgba(4, 18, 12, 0.38),
+    0 0 20px rgba(52, 211, 153, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   transform: none !important;
   filter: none !important;
   transition:
@@ -1614,39 +1637,38 @@ canvas {
     filter 0.22s ease !important;
 }
 
-.login-page.glass-auth-page .submit-btn:hover:not(:disabled) {
+.login-page.glass-auth-page:not(.light-theme) .submit-btn:hover:not(:disabled) {
   background: linear-gradient(
     128deg,
-    rgba(224, 72, 12, 0.96) 0%,
-    rgba(249, 130, 18, 0.92) 30%,
-    rgba(252, 196, 24, 0.9) 60%,
-    rgba(120, 190, 18, 0.94) 100%
+    #1f5c3a 0%,
+    #247647 45%,
+    #2d9160 100%
   ) !important;
-  transform: translateY(-3px) scale(1.028) !important;
+  transform: translateY(-2px) scale(1.02) !important;
   box-shadow:
-    0 18px 42px rgba(100, 30, 0, 0.36),
-    0 0 36px rgba(234, 100, 20, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
-  filter: saturate(1.05) brightness(1.03) !important;
+    0 14px 32px rgba(4, 18, 12, 0.42),
+    0 0 22px rgba(52, 211, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  filter: brightness(1.05) !important;
 }
 
-.login-page.glass-auth-page .submit-btn:focus-visible {
+.login-page.glass-auth-page:not(.light-theme) .submit-btn:focus-visible {
   outline: none !important;
   box-shadow:
-    0 0 0 3px rgba(252, 200, 40, 0.46),
-    0 12px 36px rgba(100, 30, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
+    0 0 0 3px rgba(74, 222, 128, 0.38),
+    0 12px 32px rgba(4, 18, 12, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
-.login-page.glass-auth-page .submit-btn:disabled {
+.login-page.glass-auth-page:not(.light-theme) .submit-btn:disabled {
   opacity: 0.65 !important;
   cursor: not-allowed !important;
   transform: none !important;
   filter: none !important;
 }
 
-/* FarmerSignup.vue: same typography / global fixes as Login (gradient title, paragraph overrides) */
-.signup-page.glass-auth-page .form-title {
+/* FarmerSignup.vue: same typography / global fixes as Login */
+.signup-page.glass-auth-page:not(.light-theme) .form-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1654,15 +1676,15 @@ canvas {
   -webkit-text-fill-color: currentColor !important;
 }
 
-.signup-page.glass-auth-page .form-subtitle {
+.signup-page.glass-auth-page:not(.light-theme) .form-subtitle {
   color: rgba(215, 207, 191, 0.92) !important;
 }
 
-.signup-page.glass-auth-page .identity-badge {
+.signup-page.glass-auth-page:not(.light-theme) .identity-badge {
   color: #ffd966 !important;
 }
 
-.signup-page.glass-auth-page .identity-title {
+.signup-page.glass-auth-page:not(.light-theme) .identity-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1670,102 +1692,117 @@ canvas {
   -webkit-text-fill-color: currentColor !important;
 }
 
-.signup-page.glass-auth-page .identity-caption {
+.signup-page.glass-auth-page:not(.light-theme) .identity-caption {
   color: rgba(249, 244, 231, 0.94) !important;
 }
 
-.signup-page.glass-auth-page .form-label {
+.signup-page.glass-auth-page:not(.light-theme) .form-label {
   color: rgba(238, 232, 218, 0.95) !important;
 }
 
-.signup-page.glass-auth-page .auth-divider,
-.signup-page.glass-auth-page .auth-divider-text {
-  color: rgba(211, 218, 206, 0.88) !important;
-}
-
-.signup-page.glass-auth-page .form-footer,
-.signup-page.glass-auth-page .form-footer .footer-text {
+.signup-page.glass-auth-page:not(.light-theme) .form-footer,
+.signup-page.glass-auth-page:not(.light-theme) .form-footer .footer-text {
   color: rgba(227, 255, 238, 0.92) !important;
 }
 
-/* FarmerSignup.vue: match Login glass auth (beat global dark :is(...) on .registration-form) */
-.signup-page.glass-auth-page .registration-form .form-input,
-.signup-page.glass-auth-page .registration-form select.form-input,
-.signup-page.glass-auth-page .registration-form textarea.form-input {
+.signup-page.glass-auth-page.light-theme .registration-form .form-input,
+.signup-page.glass-auth-page.light-theme .registration-form select.form-input,
+.signup-page.glass-auth-page.light-theme .registration-form textarea.form-input {
   background: #ffffff !important;
   color: #111111 !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
 }
 
-.signup-page.glass-auth-page .registration-form .form-input:focus,
-.signup-page.glass-auth-page .registration-form select.form-input:focus,
-.signup-page.glass-auth-page .registration-form textarea.form-input:focus {
+.signup-page.glass-auth-page.light-theme .registration-form .form-input:focus,
+.signup-page.glass-auth-page.light-theme .registration-form select.form-input:focus,
+.signup-page.glass-auth-page.light-theme .registration-form textarea.form-input:focus {
   outline: none !important;
   border-color: rgba(107, 191, 89, 0.88) !important;
   background: #ffffff !important;
   box-shadow:
     0 0 0 3px rgba(74, 222, 128, 0.22),
-    0 0 18px rgba(74, 222, 128, 0.16),
-    0 0 8px rgba(249, 115, 22, 0.12) !important;
+    0 0 18px rgba(74, 222, 128, 0.16) !important;
 }
 
-.signup-page.glass-auth-page .registration-form .form-input::placeholder,
-.signup-page.glass-auth-page .registration-form textarea::placeholder {
+.signup-page.glass-auth-page.light-theme .registration-form .form-input::placeholder,
+.signup-page.glass-auth-page.light-theme .registration-form textarea::placeholder {
   color: #6b7280 !important;
 }
 
-.signup-page.glass-auth-page .link-btn {
+.signup-page.glass-auth-page:not(.light-theme) .registration-form .form-input,
+.signup-page.glass-auth-page:not(.light-theme) .registration-form select.form-input,
+.signup-page.glass-auth-page:not(.light-theme) .registration-form textarea.form-input {
+  background: #0f2419 !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  caret-color: #ecfdf5 !important;
+}
+
+.signup-page.glass-auth-page:not(.light-theme) .registration-form .form-input:focus,
+.signup-page.glass-auth-page:not(.light-theme) .registration-form select.form-input:focus,
+.signup-page.glass-auth-page:not(.light-theme) .registration-form textarea.form-input:focus {
+  outline: none !important;
+  border-color: rgba(134, 239, 172, 0.72) !important;
+  background: #122b1e !important;
+  box-shadow:
+    0 0 0 3px rgba(74, 222, 128, 0.2),
+    0 0 16px rgba(52, 211, 153, 0.18) !important;
+}
+
+.signup-page.glass-auth-page:not(.light-theme) .registration-form .form-input::placeholder,
+.signup-page.glass-auth-page:not(.light-theme) .registration-form textarea::placeholder {
+  color: rgba(167, 243, 208, 0.5) !important;
+}
+
+.signup-page.glass-auth-page:not(.light-theme) .link-btn {
   border-radius: 999px !important;
-  border: 1px solid rgba(134, 239, 172, 0.5) !important;
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.2) 50%,
-    rgba(74, 222, 128, 0.22) 100%
-  ) !important;
-  color: rgba(220, 255, 235, 0.96) !important;
+  border: 2px solid rgba(110, 231, 183, 0.55) !important;
+  background: rgba(15, 46, 31, 0.72) !important;
+  color: #d1fae5 !important;
   font-size: 0.8rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em !important;
   box-shadow:
-    0 4px 18px rgba(74, 222, 128, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+    0 4px 14px rgba(4, 18, 12, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   transform: none !important;
   filter: none !important;
 }
 
-.signup-page.glass-auth-page .link-btn:hover {
+.signup-page.glass-auth-page:not(.light-theme) .link-btn:hover {
   background: linear-gradient(
     128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%
+    rgba(20, 83, 45, 0.95) 0%,
+    rgba(22, 101, 52, 0.92) 50%,
+    rgba(34, 197, 94, 0.88) 100%
   ) !important;
   border-color: rgba(134, 239, 172, 0.72) !important;
-  color: #fff !important;
-  transform: translateY(-2px) scale(1.03) !important;
+  color: #ecfdf5 !important;
+  transform: translateY(-2px) scale(1.02) !important;
   box-shadow:
-    0 8px 28px rgba(74, 222, 128, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    0 8px 24px rgba(4, 18, 12, 0.35),
+    0 0 20px rgba(52, 211, 153, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   filter: none !important;
 }
 
-.signup-page.glass-auth-page .submit-btn {
+.signup-page.glass-auth-page:not(.light-theme) .submit-btn {
   position: relative !important;
   overflow: hidden !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(255, 220, 100, 0.48) !important;
+  border: 2px solid rgba(110, 231, 183, 0.5) !important;
   background: linear-gradient(
     128deg,
-    rgba(200, 58, 8, 0.88) 0%,
-    rgba(234, 110, 14, 0.84) 30%,
-    rgba(245, 168, 16, 0.82) 60%,
-    rgba(96, 160, 14, 0.86) 100%
+    #1a4d32 0%,
+    #1f5c3a 42%,
+    #247647 100%
   ) !important;
-  color: #fff !important;
+  color: #f0fdf4 !important;
   font-weight: 700 !important;
   font-size: 0.86rem !important;
   letter-spacing: 0.03em !important;
@@ -1779,39 +1816,33 @@ canvas {
   justify-content: center !important;
   cursor: pointer !important;
   box-shadow:
-    0 10px 30px rgba(100, 30, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36) !important;
+    0 8px 22px rgba(4, 18, 12, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
   transform: none !important;
   filter: none !important;
-  transition:
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.22s ease,
-    background 0.3s ease,
-    filter 0.22s ease !important;
 }
 
-.signup-page.glass-auth-page .submit-btn:hover:not(:disabled) {
+.signup-page.glass-auth-page:not(.light-theme) .submit-btn:hover:not(:disabled) {
   background: linear-gradient(
     128deg,
-    rgba(224, 72, 12, 0.96) 0%,
-    rgba(249, 130, 18, 0.92) 30%,
-    rgba(252, 196, 24, 0.9) 60%,
-    rgba(120, 190, 18, 0.94) 100%
+    #1f5c3a 0%,
+    #247647 45%,
+    #2d9160 100%
   ) !important;
-  transform: translateY(-3px) scale(1.028) !important;
+  transform: translateY(-2px) scale(1.02) !important;
   box-shadow:
-    0 18px 42px rgba(100, 30, 0, 0.36),
-    0 0 36px rgba(234, 100, 20, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
-  filter: saturate(1.05) brightness(1.03) !important;
+    0 14px 32px rgba(4, 18, 12, 0.42),
+    0 0 22px rgba(52, 211, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  filter: brightness(1.05) !important;
 }
 
-.signup-page.glass-auth-page .submit-btn:focus-visible {
+.signup-page.glass-auth-page:not(.light-theme) .submit-btn:focus-visible {
   outline: none !important;
   box-shadow:
-    0 0 0 3px rgba(252, 200, 40, 0.46),
-    0 12px 36px rgba(100, 30, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
+    0 0 0 3px rgba(74, 222, 128, 0.38),
+    0 12px 32px rgba(4, 18, 12, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .signup-page.glass-auth-page .submit-btn:disabled {

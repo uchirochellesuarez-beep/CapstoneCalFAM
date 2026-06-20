@@ -1,5 +1,5 @@
 <template>
-  <div class="login-page glass-auth-page">
+  <div class="login-page glass-auth-page" :class="{ 'light-theme': isLight }">
     <div class="page-top-controls">
       <ThemeToggle variant="floating" />
       <div class="page-language-toggle" role="group" aria-label="Language selector">
@@ -44,14 +44,6 @@
           </div>
           <div v-if="errorMessage" class="message error-message">
             {{ errorMessage }}
-          </div>
-
-          <GoogleSignInButton class="login-google-block" />
-
-          <div class="auth-divider" aria-hidden="true">
-            <span class="auth-divider-line"></span>
-            <span class="auth-divider-text">{{ language === 'tl' ? 'o mag-sign in gamit ang reference number' : 'or sign in with your reference number' }}</span>
-            <span class="auth-divider-line"></span>
           </div>
 
           <form @submit.prevent="submitLogin" class="auth-form">
@@ -169,14 +161,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
-import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const language = ref('en')
 const showPassword = ref(false)
@@ -349,16 +343,16 @@ const goToSignUp = () => {
   position: relative;
   overflow: hidden;
   border-radius: 26px;
-  border: 1px solid rgba(116, 150, 128, 0.38) !important;
+  border: 2px solid rgba(74, 222, 128, 0.32) !important;
   background: linear-gradient(155deg,
-    rgba(24, 34, 29, 0.96) 0%,
-    rgba(22, 31, 27, 0.94) 45%,
-    rgba(19, 28, 24, 0.96) 100%) !important;
+    rgba(13, 28, 21, 0.97) 0%,
+    rgba(11, 24, 18, 0.96) 45%,
+    rgba(9, 20, 15, 0.98) 100%) !important;
   box-shadow:
-    16px 16px 34px rgba(6, 10, 8, 0.65),
-    -12px -12px 24px rgba(53, 72, 61, 0.34),
-    inset 1px 1px 0 rgba(152, 186, 164, 0.12),
-    inset -1px -1px 0 rgba(6, 10, 8, 0.6) !important;
+    16px 16px 34px rgba(4, 10, 7, 0.72),
+    -8px -8px 20px rgba(34, 60, 45, 0.18),
+    inset 0 1px 0 rgba(134, 239, 172, 0.1),
+    inset 0 0 0 1px rgba(74, 222, 128, 0.08) !important;
   backdrop-filter: blur(14px) saturate(125%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
 }
@@ -369,10 +363,9 @@ const goToSignUp = () => {
   inset: 0;
   border-radius: inherit;
   background: linear-gradient(135deg,
-    rgba(174, 204, 186, 0.08) 0%,
-    rgba(107, 191, 89, 0.06) 38%,
-    rgba(255, 145, 77, 0.04) 68%,
-    transparent 100%);
+    rgba(134, 239, 172, 0.06) 0%,
+    rgba(74, 222, 128, 0.05) 45%,
+    rgba(52, 211, 153, 0.03) 100%);
   pointer-events: none;
 }
 
@@ -383,26 +376,6 @@ const goToSignUp = () => {
   border-radius: 20px;
   border: 1px solid rgba(152, 186, 164, 0.12);
   pointer-events: none;
-}
-
-.auth-form .form-input {
-  background: #ffffff !important;
-  color: #111111 !important;
-  border-color: #cbd5e1 !important;
-}
-
-.auth-form .form-input::placeholder {
-  color: #6b7280 !important;
-}
-
-.auth-form .form-input:focus {
-  outline: none !important;
-  border-color: rgba(107, 191, 89, 0.88) !important;
-  background: #ffffff !important;
-  animation: none;
-  box-shadow:
-    0 0 0 3px rgba(74, 222, 128, 0.18),
-    0 6px 20px rgba(22, 47, 31, 0.12) !important;
 }
 
 .tagline-panel {
@@ -594,20 +567,12 @@ const goToSignUp = () => {
   }
 }
 
-.login-google-block {
-  flex-shrink: 0;
-}
-
-:deep(.login-google-block) {
-  margin: 0;
-}
-
 .auth-form {
-  margin-top: 0.22rem;
+  margin-top: 0.35rem;
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 0.42rem;
+  gap: 0.52rem;
   width: 100%;
 }
 
@@ -725,17 +690,14 @@ const goToSignUp = () => {
   justify-content: center;
   padding: 0.42rem 0.96rem;
   border-radius: 999px;
-  border: 1px solid rgba(134, 239, 172, 0.5);
-  background: linear-gradient(128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.20) 50%,
-    rgba(74, 222, 128, 0.22) 100%);
-  color: rgba(220, 255, 235, 0.96);
+  border: 2px solid rgba(110, 231, 183, 0.55);
+  background: rgba(15, 46, 31, 0.72);
+  color: #d1fae5;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(74, 222, 128, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(4, 18, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: all 0.22s;
@@ -743,25 +705,24 @@ const goToSignUp = () => {
 
 .link-btn:hover {
   background: linear-gradient(128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%);
+    rgba(20, 83, 45, 0.95) 0%,
+    rgba(22, 101, 52, 0.92) 50%,
+    rgba(34, 197, 94, 0.88) 100%);
   border-color: rgba(134, 239, 172, 0.72);
-  color: #fff;
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 28px rgba(74, 222, 128, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #ecfdf5;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(4, 18, 12, 0.35), 0 0 20px rgba(52, 211, 153, 0.2);
 }
 
 .submit-btn {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 220, 100, 0.48);
+  border: 2px solid rgba(110, 231, 183, 0.5);
   background: linear-gradient(128deg,
-    rgba(200, 58, 8, 0.88) 0%,
-    rgba(234, 110, 14, 0.84) 30%,
-    rgba(245, 168, 16, 0.82) 60%,
-    rgba(96, 160, 14, 0.86) 100%);
-  color: #fff;
+    #1a4d32 0%,
+    #1f5c3a 42%,
+    #247647 100%);
+  color: #f0fdf4;
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.86rem;
@@ -775,8 +736,9 @@ const goToSignUp = () => {
   justify-content: center;
   cursor: pointer;
   box-shadow:
-    0 10px 30px rgba(100, 30, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+    0 10px 28px rgba(4, 18, 12, 0.38),
+    0 0 20px rgba(52, 211, 153, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transition:
     transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.22s ease,
@@ -801,16 +763,15 @@ const goToSignUp = () => {
 
 .submit-btn:hover:not(:disabled) {
   background: linear-gradient(128deg,
-    rgba(224, 72, 12, 0.96) 0%,
-    rgba(249, 130, 18, 0.92) 30%,
-    rgba(252, 196, 24, 0.9) 60%,
-    rgba(120, 190, 18, 0.94) 100%);
-  transform: translateY(-3px) scale(1.028);
+    #1f5c3a 0%,
+    #247647 45%,
+    #2d9160 100%);
+  transform: translateY(-2px) scale(1.02);
   box-shadow:
-    0 18px 42px rgba(100, 30, 0, 0.36),
-    0 0 36px rgba(234, 100, 20, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44);
-  filter: saturate(1.05) brightness(1.03);
+    0 14px 32px rgba(4, 18, 12, 0.42),
+    0 0 22px rgba(52, 211, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  filter: brightness(1.05);
 }
 
 .submit-btn:hover:not(:disabled)::before {
@@ -820,9 +781,9 @@ const goToSignUp = () => {
 .submit-btn:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 3px rgba(252, 200, 40, 0.46),
-    0 12px 36px rgba(100, 30, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44);
+    0 0 0 3px rgba(74, 222, 128, 0.38),
+    0 12px 32px rgba(4, 18, 12, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .submit-btn:disabled {
@@ -897,14 +858,12 @@ const goToSignUp = () => {
   100% {
     box-shadow:
       0 0 0 3px rgba(74, 222, 128, 0.22),
-      0 0 18px rgba(74, 222, 128, 0.16),
-      0 0 8px rgba(249, 115, 22, 0.12);
+      0 0 18px rgba(74, 222, 128, 0.16);
   }
   50% {
     box-shadow:
       0 0 0 3px rgba(74, 222, 128, 0.48),
-      0 0 32px rgba(74, 222, 128, 0.28),
-      0 0 16px rgba(249, 115, 22, 0.22);
+      0 0 32px rgba(74, 222, 128, 0.28);
   }
 }
 
@@ -912,6 +871,288 @@ const goToSignUp = () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Dark mode — cohesive farm-green palette */
+.login-page:not(.light-theme) .login-card {
+  border: 2px solid rgba(110, 231, 183, 0.38) !important;
+}
+
+.login-page:not(.light-theme) .login-card::after {
+  border: 1.5px solid rgba(74, 222, 128, 0.22) !important;
+}
+
+.login-page:not(.light-theme) .form-header {
+  padding-bottom: 0.55rem !important;
+  margin-bottom: 0.55rem !important;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.28) !important;
+}
+
+.login-page:not(.light-theme) .form-subtitle {
+  color: rgba(187, 247, 208, 0.88) !important;
+}
+
+.login-page:not(.light-theme) .auth-form .form-input,
+.login-page:not(.light-theme) .auth-form input.form-input {
+  background: #0f2419 !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+  caret-color: #ecfdf5 !important;
+}
+
+.login-page:not(.light-theme) .auth-form .form-input::placeholder {
+  color: rgba(167, 243, 208, 0.5) !important;
+  -webkit-text-fill-color: rgba(167, 243, 208, 0.5) !important;
+}
+
+.login-page:not(.light-theme) .auth-form .form-input:focus {
+  border-color: rgba(134, 239, 172, 0.72) !important;
+  background: #122b1e !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2) !important;
+  animation: none !important;
+}
+
+.login-page:not(.light-theme) .auth-form .form-input:-webkit-autofill,
+.login-page:not(.light-theme) .auth-form .form-input:-webkit-autofill:hover,
+.login-page:not(.light-theme) .auth-form .form-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #0f2419 inset !important;
+  box-shadow: 0 0 0 1000px #0f2419 inset !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  caret-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+}
+
+.login-page:not(.light-theme) .field-icon {
+  color: rgba(134, 239, 172, 0.85) !important;
+}
+
+.login-page:not(.light-theme) .auth-form .password-toggle {
+  color: rgba(187, 247, 208, 0.85) !important;
+}
+
+.login-page:not(.light-theme) .auth-form .password-toggle:hover {
+  color: #ecfdf5 !important;
+}
+
+.login-page:not(.light-theme) .form-footer {
+  border-top: 2px solid rgba(74, 222, 128, 0.32) !important;
+  background: linear-gradient(140deg,
+    rgba(12, 36, 24, 0.55) 0%,
+    rgba(15, 46, 31, 0.45) 52%,
+    rgba(10, 30, 20, 0.5) 100%) !important;
+}
+
+.login-page:not(.light-theme) .submit-btn {
+  background: linear-gradient(128deg, #1a4d32 0%, #1f5c3a 42%, #247647 100%) !important;
+  border-color: rgba(110, 231, 183, 0.5) !important;
+  color: #f0fdf4 !important;
+  box-shadow:
+    0 8px 22px rgba(4, 18, 12, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+.login-page:not(.light-theme) .submit-btn:hover:not(:disabled) {
+  background: linear-gradient(128deg, #1f5c3a 0%, #247647 45%, #2d9160 100%) !important;
+}
+
+.login-page:not(.light-theme) .submit-btn :is(span, svg, svg *) {
+  color: #f0fdf4 !important;
+  -webkit-text-fill-color: #f0fdf4 !important;
+}
+
+/* Light mode — component-scoped so it wins over dark defaults below */
+.login-page.light-theme .login-card {
+  background: linear-gradient(155deg, #ffffff 0%, #f8fdf9 48%, #f0fdf4 100%) !important;
+  border: 2.5px solid #14532d !important;
+  box-shadow:
+    0 20px 48px rgba(22, 101, 52, 0.14),
+    0 4px 14px rgba(22, 101, 52, 0.08),
+    inset 0 0 0 1px rgba(22, 101, 52, 0.12) !important;
+}
+
+.login-page.light-theme .login-card::before {
+  background: linear-gradient(
+    135deg,
+    rgba(220, 252, 231, 0.55) 0%,
+    rgba(187, 247, 208, 0.35) 45%,
+    rgba(254, 243, 199, 0.2) 100%
+  ) !important;
+}
+
+.login-page.light-theme .login-card::after {
+  border: 1.5px solid rgba(21, 128, 61, 0.55) !important;
+}
+
+.login-page.light-theme .form-header {
+  padding-bottom: 0.55rem !important;
+  margin-bottom: 0.55rem !important;
+  border-bottom: 2px solid rgba(21, 128, 61, 0.45) !important;
+}
+
+.login-page.light-theme .form-title {
+  color: #052e16 !important;
+}
+
+.login-page.light-theme .form-subtitle {
+  color: #14532d !important;
+  font-weight: 600 !important;
+}
+
+.login-page.light-theme .form-label {
+  color: #052e16 !important;
+}
+
+.login-page.light-theme :is(.auth-divider, .auth-divider-text) {
+  color: #052e16 !important;
+  font-weight: 600 !important;
+}
+
+.login-page.light-theme .auth-divider-line {
+  height: 2px !important;
+  background: linear-gradient(
+    90deg,
+    rgba(21, 128, 61, 0.2),
+    #15803d 35%,
+    #166534 50%,
+    #15803d 65%,
+    rgba(21, 128, 61, 0.2)
+  ) !important;
+}
+
+.login-page.light-theme .auth-form .form-input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2.5px solid #166534 !important;
+  box-shadow:
+    inset 0 1px 2px rgba(22, 101, 52, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.login-page.light-theme .auth-form .form-input::placeholder {
+  color: #4b5563 !important;
+}
+
+.login-page.light-theme .auth-form .form-input:focus {
+  border-color: #14532d !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 0 0 3px rgba(74, 222, 128, 0.28),
+    inset 0 0 0 1px rgba(21, 128, 61, 0.2) !important;
+  animation: none !important;
+}
+
+.login-page.light-theme .auth-form .form-input:-webkit-autofill,
+.login-page.light-theme .auth-form .form-input:-webkit-autofill:hover,
+.login-page.light-theme .auth-form .form-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #000000 !important;
+  caret-color: #000000;
+  border: 2.5px solid #166534 !important;
+}
+
+.login-page.light-theme .field-icon {
+  color: #166534 !important;
+}
+
+.login-page.light-theme .password-toggle {
+  color: #374151 !important;
+}
+
+.login-page.light-theme .password-toggle:hover {
+  color: #052e16 !important;
+}
+
+.login-page.light-theme .submit-btn {
+  background: linear-gradient(
+    128deg,
+    #ea580c 0%,
+    #f59e0b 32%,
+    #fbbf24 58%,
+    #16a34a 100%
+  ) !important;
+  color: #ffffff !important;
+  border: 2.5px solid #14532d !important;
+  box-shadow:
+    0 10px 28px rgba(180, 60, 10, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(20, 83, 45, 0.25) !important;
+}
+
+.login-page.light-theme .submit-btn:hover:not(:disabled) {
+  background: linear-gradient(
+    128deg,
+    #f97316 0%,
+    #fbbf24 35%,
+    #fde047 58%,
+    #22c55e 100%
+  ) !important;
+  color: #ffffff !important;
+  border-color: #166534 !important;
+}
+
+.login-page.light-theme .submit-btn :is(span, svg, svg *) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.login-page.light-theme .link-btn {
+  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
+  border: 2.5px solid #14532d !important;
+  color: #14532d !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+}
+
+.login-page.light-theme .link-btn:hover {
+  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 45%, #22c55e 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+}
+
+.login-page.light-theme .form-footer {
+  background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
+  border-top: 2.5px solid #166534 !important;
+  color: #052e16 !important;
+}
+
+.login-page.light-theme .footer-text {
+  color: #052e16 !important;
+}
+
+.login-page.light-theme .success-message {
+  background: #dcfce7 !important;
+  border: 2px solid #86efac !important;
+  color: #14532d !important;
+}
+
+.login-page.light-theme .error-message {
+  background: #fef2f2 !important;
+  border: 2px solid #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.login-page.light-theme .page-language-toggle {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 2.5px solid #166534 !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
+}
+
+.login-page.light-theme .lang-btn {
+  color: #166534 !important;
+  border: 1.5px solid transparent !important;
+}
+
+.login-page.light-theme .lang-btn:hover {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+  border-color: rgba(21, 128, 61, 0.45) !important;
+}
+
+.login-page.light-theme .lang-btn.active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  border: 1.5px solid #14532d !important;
 }
 
 @media (min-width: 920px) {

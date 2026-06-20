@@ -133,7 +133,7 @@ const notifications = ref([
     timestamp: new Date('2025-01-19T14:20:00'),
     user: 'System',
     actionType: 'review',
-    actionRoute: '/loan'
+    actionRoute: '/officer-loans'
   }
 ])
 

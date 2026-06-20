@@ -1,5 +1,5 @@
 <template>
-  <div class="signup-page glass-auth-page">
+  <div class="signup-page glass-auth-page" :class="{ 'light-theme': isLight }">
     <div class="page-top-controls">
       <ThemeToggle variant="floating" />
       <div class="page-language-toggle" role="group" aria-label="Language selector">
@@ -47,14 +47,6 @@
 
           <div v-if="success" class="message success-message">{{ ui.successMessage }}</div>
           <div v-if="error" class="message error-message">{{ error }}</div>
-
-          <GoogleSignInButton class="signup-google-block" />
-
-          <div class="auth-divider" aria-hidden="true">
-            <span class="auth-divider-line"></span>
-            <span class="auth-divider-text">{{ ui.dividerForm }}</span>
-            <span class="auth-divider-line"></span>
-          </div>
 
         <form @submit.prevent="register" class="registration-form">
           <div class="form-row">
@@ -358,10 +350,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 const language = ref('en')
 
 const labels = {
@@ -784,18 +778,18 @@ const register = async () => {
   overflow-x: hidden;
   padding: 0.72rem 0.82rem;
   border-radius: 26px;
-  border: 1px solid rgba(116, 150, 128, 0.38) !important;
+  border: 2px solid rgba(74, 222, 128, 0.32) !important;
   background: linear-gradient(
     155deg,
-    rgba(24, 34, 29, 0.96) 0%,
-    rgba(22, 31, 27, 0.94) 45%,
-    rgba(19, 28, 24, 0.96) 100%
+    rgba(13, 28, 21, 0.97) 0%,
+    rgba(11, 24, 18, 0.96) 45%,
+    rgba(9, 20, 15, 0.98) 100%
   ) !important;
   box-shadow:
-    16px 16px 34px rgba(6, 10, 8, 0.65),
-    -12px -12px 24px rgba(53, 72, 61, 0.34),
-    inset 1px 1px 0 rgba(152, 186, 164, 0.12),
-    inset -1px -1px 0 rgba(6, 10, 8, 0.6) !important;
+    16px 16px 34px rgba(4, 10, 7, 0.72),
+    -8px -8px 20px rgba(34, 60, 45, 0.18),
+    inset 0 1px 0 rgba(134, 239, 172, 0.1),
+    inset 0 0 0 1px rgba(74, 222, 128, 0.08) !important;
   backdrop-filter: blur(14px) saturate(125%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
   animation: cardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -820,10 +814,9 @@ const register = async () => {
   border-radius: inherit;
   background: linear-gradient(
     135deg,
-    rgba(174, 204, 186, 0.08) 0%,
-    rgba(107, 191, 89, 0.06) 38%,
-    rgba(255, 145, 77, 0.04) 68%,
-    transparent 100%
+    rgba(134, 239, 172, 0.06) 0%,
+    rgba(74, 222, 128, 0.05) 45%,
+    rgba(52, 211, 153, 0.03) 100%
   );
   pointer-events: none;
   z-index: 0;
@@ -1009,14 +1002,6 @@ const register = async () => {
   color: rgba(215, 207, 191, 0.92);
 }
 
-.signup-google-block {
-  flex-shrink: 0;
-}
-
-:deep(.signup-google-block) {
-  margin: 0;
-}
-
 .auth-divider {
   margin: 0.75rem 0 0.2rem;
   display: flex;
@@ -1072,6 +1057,7 @@ const register = async () => {
   min-height: 0;
   overflow: visible;
   padding-right: 0.35rem;
+  margin-top: 0.35rem;
 }
 
 .form-row {
@@ -1233,15 +1219,9 @@ const register = async () => {
 .submit-btn {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 220, 100, 0.48);
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.88) 0%,
-    rgba(234, 110, 14, 0.84) 30%,
-    rgba(245, 168, 16, 0.82) 60%,
-    rgba(96, 160, 14, 0.86) 100%
-  );
-  color: #fff;
+  border: 2px solid rgba(110, 231, 183, 0.5);
+  background: linear-gradient(128deg, #1a4d32 0%, #1f5c3a 42%, #247647 100%);
+  color: #f0fdf4;
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.86rem;
@@ -1256,8 +1236,8 @@ const register = async () => {
   justify-content: center;
   cursor: pointer;
   box-shadow:
-    0 10px 30px rgba(100, 30, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+    0 8px 22px rgba(4, 18, 12, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition:
     transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.22s ease,
@@ -1283,19 +1263,13 @@ const register = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(
-    128deg,
-    rgba(224, 72, 12, 0.96) 0%,
-    rgba(249, 130, 18, 0.92) 30%,
-    rgba(252, 196, 24, 0.9) 60%,
-    rgba(120, 190, 18, 0.94) 100%
-  );
-  transform: translateY(-3px) scale(1.028);
+  background: linear-gradient(128deg, #1f5c3a 0%, #247647 45%, #2d9160 100%);
+  transform: translateY(-2px) scale(1.02);
   box-shadow:
-    0 18px 42px rgba(100, 30, 0, 0.36),
-    0 0 36px rgba(234, 100, 20, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44);
-  filter: saturate(1.05) brightness(1.03);
+    0 14px 32px rgba(4, 18, 12, 0.42),
+    0 0 22px rgba(52, 211, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  filter: brightness(1.05);
 }
 
 .submit-btn:hover:not(:disabled)::before {
@@ -1305,9 +1279,9 @@ const register = async () => {
 .submit-btn:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 3px rgba(252, 200, 40, 0.46),
-    0 12px 36px rgba(100, 30, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44);
+    0 0 0 3px rgba(74, 222, 128, 0.38),
+    0 12px 32px rgba(4, 18, 12, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .submit-btn:disabled {
@@ -1388,36 +1362,29 @@ const register = async () => {
   justify-content: center;
   padding: 0.42rem 0.96rem;
   border-radius: 999px;
-  border: 1px solid rgba(134, 239, 172, 0.5);
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.2) 50%,
-    rgba(74, 222, 128, 0.22) 100%
-  );
-  color: rgba(220, 255, 235, 0.96);
+  border: 2px solid rgba(110, 231, 183, 0.55);
+  background: rgba(15, 46, 31, 0.72);
+  color: #d1fae5;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(74, 222, 128, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(4, 18, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: all 0.22s;
 }
 
 .link-btn:hover {
-  background: linear-gradient(
-    128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%
-  );
+  background: linear-gradient(128deg,
+    rgba(20, 83, 45, 0.95) 0%,
+    rgba(22, 101, 52, 0.92) 50%,
+    rgba(34, 197, 94, 0.88) 100%);
   border-color: rgba(134, 239, 172, 0.72);
-  color: #fff;
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 28px rgba(74, 222, 128, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #ecfdf5;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(4, 18, 12, 0.35), 0 0 20px rgba(52, 211, 153, 0.2);
 }
 
 .info-card {
@@ -1499,14 +1466,154 @@ const register = async () => {
   0%,
   100% {
     box-shadow:
-      0 0 0 3px rgba(252, 200, 40, 0.26),
-      0 0 16px rgba(234, 100, 20, 0.18);
+      0 0 0 3px rgba(74, 222, 128, 0.22),
+      0 0 16px rgba(52, 211, 153, 0.16);
   }
   50% {
     box-shadow:
-      0 0 0 3px rgba(252, 200, 40, 0.55),
-      0 0 30px rgba(234, 100, 20, 0.38);
+      0 0 0 3px rgba(74, 222, 128, 0.48),
+      0 0 30px rgba(52, 211, 153, 0.28);
   }
+}
+
+/* Dark mode — farm-green palette */
+.signup-page:not(.light-theme) .signup-card::after {
+  border: 1.5px solid rgba(74, 222, 128, 0.22) !important;
+}
+
+.signup-page:not(.light-theme) .form-header {
+  padding-bottom: 0.55rem !important;
+  margin-bottom: 0.55rem !important;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.28) !important;
+}
+
+.signup-page:not(.light-theme) .form-subtitle {
+  color: rgba(187, 247, 208, 0.88) !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .form-input,
+.signup-page:not(.light-theme) .registration-form select.form-input,
+.signup-page:not(.light-theme) .registration-form textarea.form-input {
+  background: #0f2419 !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+  caret-color: #ecfdf5 !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .form-input::placeholder {
+  color: rgba(167, 243, 208, 0.5) !important;
+  -webkit-text-fill-color: rgba(167, 243, 208, 0.5) !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .form-input:focus,
+.signup-page:not(.light-theme) .registration-form select.form-input:focus {
+  border-color: rgba(134, 239, 172, 0.72) !important;
+  background: #122b1e !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2) !important;
+  animation: none !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .form-input:-webkit-autofill,
+.signup-page:not(.light-theme) .registration-form .form-input:-webkit-autofill:hover,
+.signup-page:not(.light-theme) .registration-form .form-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #0f2419 inset !important;
+  box-shadow: 0 0 0 1000px #0f2419 inset !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 2px solid rgba(110, 231, 183, 0.45) !important;
+}
+
+.signup-page:not(.light-theme) .field-icon {
+  color: rgba(134, 239, 172, 0.85) !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .password-toggle,
+.signup-page:not(.light-theme) .registration-form .password-toggle svg {
+  color: rgba(187, 247, 208, 0.85) !important;
+  stroke: currentColor !important;
+}
+
+.signup-page:not(.light-theme) .registration-form .password-toggle:hover,
+.signup-page:not(.light-theme) .registration-form .password-toggle:hover svg {
+  color: #ecfdf5 !important;
+}
+
+.signup-page:not(.light-theme) .form-hint {
+  color: rgba(167, 243, 208, 0.62) !important;
+}
+
+.signup-page:not(.light-theme) .form-footer {
+  border-top: 2px solid rgba(74, 222, 128, 0.32) !important;
+}
+
+.signup-page:not(.light-theme) .submit-btn {
+  background: linear-gradient(128deg, #1a4d32 0%, #1f5c3a 42%, #247647 100%) !important;
+  border-color: rgba(110, 231, 183, 0.5) !important;
+  color: #f0fdf4 !important;
+}
+
+.signup-page:not(.light-theme) .submit-btn:hover:not(:disabled) {
+  background: linear-gradient(128deg, #1f5c3a 0%, #247647 45%, #2d9160 100%) !important;
+}
+
+.signup-page:not(.light-theme) .submit-btn :is(span, svg, svg *) {
+  color: #f0fdf4 !important;
+  -webkit-text-fill-color: #f0fdf4 !important;
+}
+
+/* Light mode */
+.signup-page.light-theme .signup-card {
+  background: linear-gradient(155deg, #ffffff 0%, #f8fdf9 48%, #f0fdf4 100%) !important;
+  border: 2.5px solid #14532d !important;
+  box-shadow:
+    0 20px 48px rgba(22, 101, 52, 0.14),
+    0 4px 14px rgba(22, 101, 52, 0.08),
+    inset 0 0 0 1px rgba(22, 101, 52, 0.12) !important;
+}
+
+.signup-page.light-theme .form-title,
+.signup-page.light-theme .form-label {
+  color: #052e16 !important;
+}
+
+.signup-page.light-theme .form-subtitle {
+  color: #14532d !important;
+  font-weight: 600 !important;
+}
+
+.signup-page.light-theme .registration-form .form-input,
+.signup-page.light-theme .registration-form select.form-input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2.5px solid #166534 !important;
+}
+
+.signup-page.light-theme .registration-form .form-input:focus,
+.signup-page.light-theme .registration-form select.form-input:focus {
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.28) !important;
+  animation: none !important;
+}
+
+.signup-page.light-theme .submit-btn {
+  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 32%, #fbbf24 58%, #16a34a 100%) !important;
+  border: 2.5px solid #14532d !important;
+  color: #ffffff !important;
+}
+
+.signup-page.light-theme .link-btn {
+  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
+  border: 2.5px solid #14532d !important;
+  color: #14532d !important;
+}
+
+.signup-page.light-theme .form-footer {
+  background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
+  border-top: 2.5px solid #166534 !important;
+}
+
+.signup-page.light-theme .form-footer :is(.footer-text, p) {
+  color: #052e16 !important;
 }
 
 @media (min-width: 920px) {

@@ -64,7 +64,7 @@ const actionCards = [
     title: 'Loans',
     description: 'Apply for agricultural loans and manage your loan applications',
     icon: '💰',
-    route: '/loan',
+    route: '/officer-loans',
     gradient: 'gradient-blue'
   },
   {
