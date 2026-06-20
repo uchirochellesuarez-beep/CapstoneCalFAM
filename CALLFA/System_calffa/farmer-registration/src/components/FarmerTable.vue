@@ -367,11 +367,28 @@
 
             <div class="edit-field">
               <label class="edit-label">Date of Birth *</label>
-              <input
-                v-model="editForm.date_of_birth"
-                type="date"
-                class="edit-input edit-input-modal"
-              />
+              <div class="edit-date-field">
+                <input
+                  v-model="editForm.date_of_birth"
+                  type="date"
+                  class="edit-input edit-input-modal edit-input-date"
+                />
+                <svg
+                  class="edit-date-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#052e16"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
             </div>
 
             <div class="edit-field">
@@ -1433,6 +1450,45 @@ onMounted(async () => {
   color: #f8fafc;
 }
 
+.edit-date-field {
+  position: relative;
+  width: 100%;
+}
+
+.edit-input-date {
+  padding-right: 3.25rem !important;
+  color-scheme: light;
+}
+
+.edit-input-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3.25rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.edit-date-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+  box-sizing: content-box;
+  color: #052e16;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .edit-hint {
   font-size: 11px;
   color: rgba(220, 252, 231, 0.62);
@@ -1499,5 +1555,62 @@ onMounted(async () => {
   color: #000000 !important;
   border: 1.5px solid #cbd5e1 !important;
   font-size: 0.875rem !important;
+}
+
+:global(.farmer-table-page.light-theme) .edit-input-modal[type="date"],
+:global(.farmer-table-page.light-theme) .edit-input-date {
+  color-scheme: light;
+}
+
+:global(.farmer-table-page.light-theme) .edit-date-icon {
+  color: #052e16 !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+/* Member Details modal — lively light mode */
+:global(.farmer-table-page.light-theme) .modal-overlay {
+  background: rgba(236, 253, 245, 0.55) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+:global(.farmer-table-page.light-theme) .modal-content {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%) !important;
+  border: 2px solid #166534 !important;
+  border-radius: 20px !important;
+  color: #000000 !important;
+  box-shadow:
+    0 24px 48px rgba(22, 101, 52, 0.16),
+    0 8px 20px rgba(22, 101, 52, 0.08) !important;
+}
+
+:global(.farmer-table-page.light-theme) .modal-header {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
+  border-bottom: 2px solid #166534 !important;
+}
+
+:global(.farmer-table-page.light-theme) .modal-title,
+:global(.farmer-table-page.light-theme) .member-name,
+:global(.farmer-table-page.light-theme) .detail-label,
+:global(.farmer-table-page.light-theme) .detail-value {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+:global(.farmer-table-page.light-theme) .detail-item {
+  background: #ffffff !important;
+  border: 2px solid rgba(22, 101, 52, 0.35) !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 0.9rem !important;
+}
+
+:global(.farmer-table-page.light-theme) .btn-secondary {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #15803d !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
 }
 </style>

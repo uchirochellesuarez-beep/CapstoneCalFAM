@@ -23,13 +23,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useAuthStore } from './stores/authStore'
 import { useBackdropTheme } from './composables/useBackdropTheme'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const authStore = useAuthStore()
-const { initTheme, watchSystemTheme } = useBackdropTheme()
+const { initTheme, watchSystemTheme, syncThemeForUser } = useBackdropTheme()
 
 const isAuthenticated = computed(() => !!authStore.currentUser)
 
@@ -37,6 +37,12 @@ onMounted(() => {
   initTheme()
   watchSystemTheme()
 })
+
+watch(
+  () => authStore.currentUser,
+  (user) => syncThemeForUser(user),
+  { immediate: true }
+)
 </script>
 
 <style>

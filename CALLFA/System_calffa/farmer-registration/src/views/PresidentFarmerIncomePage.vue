@@ -1,7 +1,15 @@
 <template>
-  <div class="page-container income-hub-subpage">
+  <div class="page-container income-hub-subpage" :class="{ 'light-theme': isLight }">
     <div class="page-header">
-      <h1 class="page-title">🔍 Pagsusuri ng Kita ng mga Magsasaka</h1>
+      <h1 class="page-title">
+        <span class="title-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </span>
+        Pagsusuri ng Kita ng mga Magsasaka
+      </h1>
       <p class="page-subtitle">Suriin at ipahayag kung ang nasiyang talaan ay tunay at karapat-dapat</p>
     </div>
 
@@ -23,7 +31,12 @@
     <!-- Filter and Search -->
     <div class="filter-bar" v-if="records.length > 0">
       <div class="search-box">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </span>
         <input
           type="text"
           v-model="searchQuery"
@@ -36,7 +49,12 @@
     <!-- Stats -->
     <div class="stats-container" v-if="records.length > 0">
       <div class="stat-item">
-        <div class="stat-icon">⏳</div>
+        <div class="stat-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
         <div class="stat-content">
           <div class="stat-value">{{ pendingRecords.length }}</div>
           <div class="stat-label">Naghihintay ng Pagsusuri</div>
@@ -52,15 +70,24 @@
 
     <!-- Empty State -->
     <div v-else-if="records.length === 0 && currentUser?.barangay_id" class="empty-state">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-6l-2 3H10l-2-3H4" />
+          <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
+        </svg>
+      </div>
       <p>Walang naihintay na pagsusuri sa iyong barangay.</p>
     </div>
 
     <!-- Records List -->
     <div v-else class="records-list">
-      <div v-if="filteredRecords.length === 0" class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <p>Walang nahanap na talaan para sa "{{ searchQuery }}"</p>
+      <div v-if="filteredRecords.length === 0 && searchQuery.trim()" class="empty-state empty-state--search" aria-label="Walang tumugmang talaan">
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </div>
       </div>
       <div
         v-for="record in filteredRecords"
@@ -69,12 +96,44 @@
       >
         <div class="record-header">
           <div class="farmer-info">
-            <span class="farmer-name">👨‍🌾 {{ record.farmer_name }}</span>
-            <span class="record-date">📅 {{ formatDate(record.created_at) }}</span>
+            <span class="farmer-name">
+              <span class="inline-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              {{ record.farmer_name }}
+            </span>
+            <span class="record-date">
+              <span class="inline-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              </span>
+              {{ formatDate(record.created_at) }}
+            </span>
           </div>
           <div class="header-actions">
-            <span class="status-badge pending-badge">⏳ Naghihintay</span>
-            <button class="view-btn" @click="openRecordDetail(record)">👁️ Tingnan</button>
+            <span class="status-badge pending-badge">
+              <span class="inline-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+              </span>
+              Naghihintay
+            </span>
+            <button class="view-btn" @click="openRecordDetail(record)">
+              <span class="inline-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </span>
+              Tingnan
+            </button>
           </div>
         </div>
 
@@ -106,14 +165,14 @@
             @click="approveRecord(record)"
             :disabled="approvingRecordId === record.id"
           >
-            {{ approvingRecordId === record.id ? '⏳ Pinoproseso...' : '✅ Ipahayag bilang Tunay (Eligible)' }}
+            {{ approvingRecordId === record.id ? 'Pinoproseso...' : 'Ipahayag bilang Tunay (Eligible)' }}
           </button>
           <button 
             class="btn-reject" 
             @click="openRejectModal(record)"
             :disabled="approvingRecordId === record.id"
           >
-            ❌ I-uri-urong
+            I-uri-urong
           </button>
         </div>
       </div>
@@ -121,7 +180,7 @@
 
     <!-- REJECT MODAL -->
     <Teleport to="body">
-      <div v-if="showRejectModal" class="modal-overlay farmer-income-hub-modal" @click.self="closeRejectModal">
+      <div v-if="showRejectModal" class="modal-overlay farmer-income-hub-modal" :class="{ 'light-theme': isLight }" @click.self="closeRejectModal">
         <div class="modal-container">
           <div class="modal-header">
             <h2>I-uri-urong ang Talaan</h2>
@@ -151,7 +210,7 @@
 
     <!-- VIEW DETAIL MODAL -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" @click.self="closeDetailModal">
+      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" :class="{ 'light-theme': isLight }" @click.self="closeDetailModal">
         <div class="modal-container modal-lg">
           <div class="modal-header">
             <div class="modal-title-with-status">
@@ -352,6 +411,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
+
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
@@ -588,7 +651,21 @@ onMounted(() => {
 }
 
 .stat-icon {
-  font-size: 1.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(234, 179, 8, 0.12));
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  color: #fbbf24;
+}
+
+.stat-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .stat-content {
@@ -625,8 +702,16 @@ onMounted(() => {
 }
 
 .search-icon {
-  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   color: #6b7280;
+}
+
+.search-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .search-input {
@@ -664,8 +749,70 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 18px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  color: #4ade80;
+}
+
+.empty-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.empty-state--search {
+  padding: 1.5rem;
+}
+
+.title-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.22), rgba(34, 197, 94, 0.14));
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  color: #86efac;
+}
+
+.title-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inline-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.farmer-name,
+.record-date,
+.pending-badge,
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 /* RECORDS LIST */
@@ -1218,6 +1365,59 @@ onMounted(() => {
   }
 }
 
+/* Light shell when embedded under FarmerIncomeHubPage */
+.income-hub-subpage.light-theme .page-header {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: #ffffff;
+  border: 2px solid #86efac;
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.income-hub-subpage.light-theme .page-title {
+  margin-bottom: 0.5rem;
+}
+
+.income-hub-subpage.light-theme .page-subtitle {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.income-hub-subpage.light-theme .search-box {
+  padding: 12px 16px;
+  gap: 10px;
+  border-radius: 12px;
+}
+
+.income-hub-subpage.light-theme .search-input {
+  padding: 4px 2px;
+}
+
+.income-hub-subpage.light-theme .stat-item {
+  padding: 1.25rem 1.5rem;
+  gap: 1rem;
+  border-radius: 16px;
+}
+
+.income-hub-subpage.light-theme .record-card {
+  padding: 1.75rem 1.85rem;
+  border-radius: 16px;
+}
+
+.income-hub-subpage.light-theme .record-header {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.income-hub-subpage.light-theme .record-financials {
+  padding-top: 1.25rem;
+}
+
+.income-hub-subpage.light-theme .empty-state {
+  padding: 2.5rem 2rem;
+}
+
 /* Dark shell when embedded under FarmerIncomeHubPage (Teleport modals use .farmer-income-hub-modal) */
 .income-hub-subpage.page-container {
   max-width: 1400px;
@@ -1226,7 +1426,7 @@ onMounted(() => {
   background: transparent;
 }
 
-.income-hub-subpage .page-header {
+.income-hub-subpage:not(.light-theme) .page-header {
   margin-bottom: 1.25rem;
   padding: 1.25rem 1.35rem;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.96), rgba(14, 33, 23, 0.95));
@@ -1235,283 +1435,366 @@ onMounted(() => {
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
 
-.income-hub-subpage .page-title {
-  color: #4ade80;
+.income-hub-subpage:not(.light-theme) .page-title {
+  color: #ffffff;
   font-size: clamp(1.35rem, 2vw, 1.85rem);
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
-.income-hub-subpage .page-subtitle {
-  color: rgba(220, 252, 231, 0.76);
+.income-hub-subpage:not(.light-theme) .title-icon {
+  color: #ffffff;
+  border-color: rgba(134, 239, 172, 0.4);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(34, 197, 94, 0.16));
 }
 
-.income-hub-subpage .alert-error {
+.income-hub-subpage:not(.light-theme) .page-subtitle {
+  color: #ffffff;
+}
+
+.income-hub-subpage:not(.light-theme) .alert-error {
   background: rgba(127, 29, 29, 0.4);
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.45);
 }
 
-.income-hub-subpage .alert-success {
+.income-hub-subpage:not(.light-theme) .alert-success {
   background: rgba(21, 128, 61, 0.35);
   color: #bbf7d0;
   border-color: rgba(74, 222, 128, 0.45);
 }
 
-.income-hub-subpage .alert-warning {
+.income-hub-subpage:not(.light-theme) .alert-warning {
   background: rgba(146, 64, 14, 0.35);
   color: #fde68a;
   border-color: rgba(250, 204, 21, 0.4);
 }
 
-.income-hub-subpage .stat-item {
+.income-hub-subpage:not(.light-theme) .stat-item {
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.94), rgba(14, 33, 23, 0.92));
   border: 1px solid rgba(126, 184, 145, 0.22);
   box-shadow: 0 12px 28px rgba(5, 12, 8, 0.18);
 }
 
-.income-hub-subpage .stat-value {
-  color: #ecfdf5;
+.income-hub-subpage:not(.light-theme) .stat-value {
+  color: #ffffff;
 }
 
-.income-hub-subpage .stat-label {
-  color: rgba(220, 252, 231, 0.65);
+.income-hub-subpage:not(.light-theme) .stat-label {
+  color: #ffffff;
 }
 
-.income-hub-subpage .search-box {
+.income-hub-subpage:not(.light-theme) .search-box {
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(126, 184, 145, 0.35);
 }
 
-.income-hub-subpage .search-icon {
-  color: rgba(186, 240, 200, 0.55);
+.income-hub-subpage:not(.light-theme) .search-icon {
+  color: #ffffff;
 }
 
-.income-hub-subpage .search-input {
-  color: #ecfdf5;
+.income-hub-subpage:not(.light-theme) .search-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
-.income-hub-subpage .search-input::placeholder {
-  color: rgba(220, 252, 231, 0.45);
+.income-hub-subpage:not(.light-theme) .stat-icon {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(234, 179, 8, 0.12));
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  color: #fde68a;
 }
 
-.income-hub-subpage .loading-state {
-  color: rgba(220, 252, 231, 0.8);
+.income-hub-subpage:not(.light-theme) .search-input {
+  color: #ffffff;
 }
 
-.income-hub-subpage .spinner {
+.income-hub-subpage:not(.light-theme) .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.income-hub-subpage:not(.light-theme) .loading-state {
+  color: #ffffff;
+}
+
+.income-hub-subpage:not(.light-theme) .spinner {
   border-color: rgba(255, 255, 255, 0.15);
   border-top-color: #4ade80;
 }
 
-.income-hub-subpage .empty-state {
-  color: rgba(220, 252, 231, 0.78);
+.income-hub-subpage:not(.light-theme) .empty-state {
+  color: #ffffff;
   padding: 2rem 1.25rem;
   border-radius: 22px;
   background: linear-gradient(145deg, rgba(18, 43, 29, 0.82), rgba(14, 33, 23, 0.8));
   border: 1px solid rgba(126, 184, 145, 0.2);
 }
 
-.income-hub-subpage .record-card {
+.income-hub-subpage:not(.light-theme) .record-card {
   background: linear-gradient(145deg, rgba(24, 48, 34, 0.96), rgba(14, 33, 23, 0.94));
   border: 1px solid rgba(126, 184, 145, 0.22);
   box-shadow: 0 14px 32px rgba(5, 12, 8, 0.22);
 }
 
-.income-hub-subpage .record-card:hover {
+.income-hub-subpage:not(.light-theme) .record-card:hover {
   box-shadow: 0 18px 40px rgba(5, 12, 8, 0.28);
 }
 
-.income-hub-subpage .record-header {
+.income-hub-subpage:not(.light-theme) .record-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .farmer-name {
-  color: #86efac;
+.income-hub-subpage:not(.light-theme) .farmer-name {
+  color: #ffffff;
 }
 
-.income-hub-subpage .record-date {
-  color: rgba(220, 252, 231, 0.62);
+.income-hub-subpage:not(.light-theme) .record-date {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .pending-badge {
-  background: rgba(250, 204, 21, 0.16);
-  color: #fde68a;
-  border: 1px solid rgba(250, 204, 21, 0.35);
+.income-hub-subpage:not(.light-theme) .pending-badge {
+  background: rgba(146, 64, 14, 0.55);
+  color: #ffffff;
+  border: 1px solid rgba(250, 204, 21, 0.45);
 }
 
-.income-hub-subpage .detail-label {
-  color: rgba(220, 252, 231, 0.55);
+.income-hub-subpage:not(.light-theme) .detail-label {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .record-detail span:last-child {
-  color: rgba(236, 253, 245, 0.92);
+.income-hub-subpage:not(.light-theme) .record-detail span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .record-financials {
+.income-hub-subpage:not(.light-theme) .record-financials {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .financial-item > span:first-child {
-  color: rgba(220, 252, 231, 0.55);
+.income-hub-subpage:not(.light-theme) .financial-item > span:first-child {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.income-hub-subpage .financial-item.income > span:last-child {
-  color: #93c5fd;
+.income-hub-subpage:not(.light-theme) .financial-item.income > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .financial-item.expense > span:last-child {
-  color: #fca5a5;
+.income-hub-subpage:not(.light-theme) .financial-item.expense > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .financial-item.profit > span:last-child {
-  color: #86efac;
+.income-hub-subpage:not(.light-theme) .financial-item.profit > span:last-child {
+  color: #ffffff;
 }
 
-.income-hub-subpage .record-actions {
+.income-hub-subpage:not(.light-theme) .record-actions {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.income-hub-subpage .btn-approve {
+.income-hub-subpage:not(.light-theme) .btn-approve {
   background: rgba(74, 222, 128, 0.2);
   color: #bbf7d0;
   border-color: rgba(74, 222, 128, 0.45);
 }
 
-.income-hub-subpage .btn-approve:hover:not(:disabled) {
+.income-hub-subpage:not(.light-theme) .btn-approve:hover:not(:disabled) {
   background: rgba(74, 222, 128, 0.3);
 }
 
-.income-hub-subpage .btn-reject {
+.income-hub-subpage:not(.light-theme) .btn-reject {
   background: rgba(239, 68, 68, 0.2);
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.45);
 }
 
-.income-hub-subpage .btn-reject:hover:not(:disabled) {
+.income-hub-subpage:not(.light-theme) .btn-reject:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.32);
 }
 
 /* Teleported modals (not under .income-hub-subpage in DOM) */
-.farmer-income-hub-modal.modal-overlay {
+.farmer-income-hub-modal:not(.light-theme).modal-overlay {
   background: rgba(6, 12, 9, 0.78);
   backdrop-filter: blur(8px);
 }
 
-.farmer-income-hub-modal .modal-container {
+.farmer-income-hub-modal:not(.light-theme) .modal-container {
   background: linear-gradient(145deg, rgba(22, 44, 32, 0.99), rgba(14, 33, 23, 0.99));
   border: 1px solid rgba(126, 184, 145, 0.28);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
 }
 
-.farmer-income-hub-modal .modal-header {
+.farmer-income-hub-modal:not(.light-theme) .modal-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.farmer-income-hub-modal .modal-header h2 {
+.farmer-income-hub-modal:not(.light-theme) .modal-header h2 {
   color: #ecfdf5;
 }
 
-.farmer-income-hub-modal .modal-close {
+.farmer-income-hub-modal:not(.light-theme) .modal-close {
   color: rgba(220, 252, 231, 0.7);
 }
 
-.farmer-income-hub-modal .modal-close:hover {
+.farmer-income-hub-modal:not(.light-theme) .modal-close:hover {
   color: #fff;
 }
 
-.farmer-income-hub-modal .modal-body {
+.farmer-income-hub-modal:not(.light-theme) .modal-body {
   color: rgba(226, 234, 229, 0.92);
 }
 
-.farmer-income-hub-modal .modal-text {
+.farmer-income-hub-modal:not(.light-theme) .modal-text {
   color: rgba(226, 234, 229, 0.88);
 }
 
-.farmer-income-hub-modal .reject-textarea {
+.farmer-income-hub-modal:not(.light-theme) .reject-textarea {
   background: rgba(0, 0, 0, 0.32);
   border-color: rgba(126, 184, 145, 0.35);
   color: #ecfdf5;
 }
 
-.farmer-income-hub-modal .modal-footer {
+.farmer-income-hub-modal:not(.light-theme) .modal-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-.farmer-income-hub-modal .btn-cancel {
+.farmer-income-hub-modal:not(.light-theme) .btn-cancel {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(236, 253, 245, 0.9);
 }
 
-.farmer-income-hub-modal .btn-cancel:hover {
+.farmer-income-hub-modal:not(.light-theme) .btn-cancel:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.farmer-income-hub-modal .btn-confirm-reject {
+.farmer-income-hub-modal:not(.light-theme) .btn-confirm-reject {
   background: rgba(127, 29, 29, 0.45);
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.5);
 }
 
-.farmer-income-hub-modal .detail-section-title {
+.farmer-income-hub-modal:not(.light-theme) .detail-section-title {
   color: #bbf7d0;
   border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
-.farmer-income-hub-modal .cell-label {
+.farmer-income-hub-modal:not(.light-theme) .cell-label {
   color: rgba(220, 252, 231, 0.55);
 }
 
-.farmer-income-hub-modal .cell-value {
+.farmer-income-hub-modal:not(.light-theme) .cell-value {
   color: #ecfdf5;
 }
 
-.farmer-income-hub-modal .detail-table thead {
+.farmer-income-hub-modal:not(.light-theme) .detail-table thead {
   background: rgba(0, 0, 0, 0.28);
 }
 
-.farmer-income-hub-modal .detail-table th {
+.farmer-income-hub-modal:not(.light-theme) .detail-table th {
   color: rgba(236, 253, 245, 0.92);
   border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
-.farmer-income-hub-modal .detail-table td {
+.farmer-income-hub-modal:not(.light-theme) .detail-table td {
   color: rgba(226, 234, 229, 0.9);
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.farmer-income-hub-modal .detail-table tfoot tr {
+.farmer-income-hub-modal:not(.light-theme) .detail-table tfoot tr {
   background: rgba(0, 0, 0, 0.22);
 }
 
-.farmer-income-hub-modal .foot-value {
+.farmer-income-hub-modal:not(.light-theme) .foot-value {
   color: #86efac;
 }
 
-.farmer-income-hub-modal .no-data {
+.farmer-income-hub-modal:not(.light-theme) .no-data {
   color: rgba(220, 252, 231, 0.6);
 }
 
-.farmer-income-hub-modal .expense-row {
+.farmer-income-hub-modal:not(.light-theme) .expense-row {
   border-bottom-color: rgba(255, 255, 255, 0.06);
   color: rgba(226, 234, 229, 0.88);
 }
 
-.farmer-income-hub-modal .expense-row.total-row {
+.farmer-income-hub-modal:not(.light-theme) .expense-row.total-row {
   background: rgba(0, 0, 0, 0.25);
   color: #ecfdf5;
 }
 
-.farmer-income-hub-modal .summary-detail-section {
+.farmer-income-hub-modal:not(.light-theme) .summary-detail-section {
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(126, 184, 145, 0.25);
 }
 
-.farmer-income-hub-modal .btn-close-modal {
+.farmer-income-hub-modal:not(.light-theme) .btn-close-modal {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(236, 253, 245, 0.92);
 }
 
-.farmer-income-hub-modal .btn-close-modal:hover {
+.farmer-income-hub-modal:not(.light-theme) .btn-close-modal:hover {
   background: rgba(255, 255, 255, 0.18);
+}
+
+/* Dark mode — ensure all SVG icons stay visible */
+.income-hub-subpage:not(.light-theme) :is(
+  .title-icon,
+  .search-icon,
+  .empty-icon,
+  .stat-icon,
+  .inline-icon,
+  .tab-btn-icon,
+  .section-title-icon,
+  .modal-title-icon,
+  .banner-icon
+) svg,
+.income-hub-subpage:not(.light-theme) :is(
+  .title-icon,
+  .search-icon,
+  .empty-icon,
+  .stat-icon,
+  .inline-icon,
+  .tab-btn-icon,
+  .section-title-icon,
+  .modal-title-icon,
+  .banner-icon
+) svg * {
+  stroke: currentColor;
+}
+
+.income-hub-subpage:not(.light-theme) .empty-icon {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(134, 239, 172, 0.32);
+}
+
+.income-hub-subpage:not(.light-theme) .farmer-name .inline-icon {
+  color: #bbf7d0;
+}
+
+.income-hub-subpage:not(.light-theme) .record-date .inline-icon {
+  color: rgba(220, 252, 231, 0.78);
+}
+
+.income-hub-subpage:not(.light-theme) .pending-badge .inline-icon {
+  color: #fde68a;
+}
+
+.income-hub-subpage:not(.light-theme) .view-btn .inline-icon {
+  color: #ffffff;
+}
+
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) {
+  color: #86efac;
+  background: rgba(74, 222, 128, 0.16);
+  border: 1px solid rgba(134, 239, 172, 0.32);
+}
+
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) svg,
+.farmer-income-hub-modal:not(.light-theme) :is(.section-title-icon, .modal-title-icon, .banner-icon) svg * {
+  stroke: currentColor;
+}
+
+.farmer-income-hub-modal:not(.light-theme) .detail-section-title {
+  color: #bbf7d0;
 }
 </style>

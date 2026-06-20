@@ -7,35 +7,36 @@
     :aria-pressed="isDark"
     @click="toggleTheme"
   >
-    <!-- Sun = light mode active, Moon = dark mode active -->
+    <!-- Sun = light mode, Moon = dark mode -->
     <svg
       v-if="!isDark"
-      class="theme-icon"
+      class="theme-icon theme-icon-sun"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="4.25" stroke="currentColor" stroke-width="1.9" />
+      <circle class="sun-core" cx="12" cy="12" r="4.25" stroke="currentColor" stroke-width="2" />
       <path
         d="M12 2.75V5.25M12 18.75V21.25M4.75 12H2.25M21.75 12H19.25M5.64 5.64L7.46 7.46M16.54 16.54L18.36 18.36M5.64 18.36L7.46 16.54M16.54 7.46L18.36 5.64"
         stroke="currentColor"
-        stroke-width="1.9"
+        stroke-width="2"
         stroke-linecap="round"
       />
     </svg>
     <svg
       v-else
-      class="theme-icon"
+      class="theme-icon theme-icon-moon"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
       <path
-        d="M21 14.5A7.5 7.5 0 0 1 9.5 3a6.5 6.5 0 1 0 11.5 11.5Z"
+        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
+        fill="currentColor"
         stroke="currentColor"
-        stroke-width="1.9"
+        stroke-width="1.5"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
@@ -60,7 +61,7 @@ const props = defineProps({
   }
 })
 
-const { isDark, toggleTheme } = useBackdropTheme()
+const { isDark, toggleTheme, canToggleDarkMode } = useBackdropTheme()
 
 const buttonClass = computed(() => ({
   'icon-btn': props.variant === 'header',
@@ -74,6 +75,20 @@ const buttonClass = computed(() => ({
   width: 21px;
   height: 21px;
   flex-shrink: 0;
+  display: block;
+}
+
+.theme-icon-moon {
+  transform: translateX(1px);
+}
+
+.theme-icon-sun .sun-core {
+  fill: currentColor;
+  fill-opacity: 0.35;
+}
+
+.theme-icon-sun path {
+  stroke: currentColor;
 }
 
 .theme-label {
@@ -119,10 +134,29 @@ const buttonClass = computed(() => ({
 
 :global(body.glass-light) .theme-toggle-floating,
 :global(body.glass-light) .theme-toggle-inline {
-  border-color: rgba(22, 101, 52, 0.22);
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(240, 253, 244, 0.92));
-  color: #b45309;
-  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.12);
+  border: 2px solid #f59e0b;
+  background: linear-gradient(140deg, #fff7ed 0%, #ffedd5 100%);
+  color: #ea580c;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.16);
+}
+
+:global(body.glass-light) .theme-toggle-floating:hover,
+:global(body.glass-light) .theme-toggle-inline:hover {
+  border-color: #ea580c;
+  color: #c2410c;
+  box-shadow: 0 8px 22px rgba(234, 88, 12, 0.22);
+}
+
+:global(body.glass-light) .theme-toggle-floating .theme-icon-sun .sun-core,
+:global(body.glass-light) .theme-toggle-inline .theme-icon-sun .sun-core {
+  fill: #fbbf24;
+  fill-opacity: 1;
+  stroke: #ea580c;
+}
+
+:global(body.glass-light) .theme-toggle-floating .theme-icon-sun path,
+:global(body.glass-light) .theme-toggle-inline .theme-icon-sun path {
+  stroke: #ea580c;
 }
 
 @media (max-width: 768px) {

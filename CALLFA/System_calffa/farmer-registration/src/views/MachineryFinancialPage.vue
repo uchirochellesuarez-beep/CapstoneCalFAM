@@ -10,7 +10,12 @@
     <!-- Access Denied Message -->
     <div v-if="!hasAccess" class="access-denied">
       <div class="denied-content">
-        <p class="denied-icon">🔒</p>
+        <p class="denied-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+          </svg>
+        </p>
         <p class="denied-text">Access Denied</p>
         <p class="denied-reason">Only Admin, President, Treasurer, and Auditor can access this section.</p>
       </div>
@@ -19,10 +24,23 @@
     <div v-else>
       <!-- Barangay Context Display -->
       <div v-if="!isDuesOnlyView && !isAdmin" class="barangay-context">
-        <span class="context-badge">📍 {{ userRole === 'treasurer' ? 'Managing' : 'Viewing' }} financial data for your assigned barangay</span>
+        <span class="context-badge">
+          <svg class="context-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s7-4.438 7-10.5a7 7 0 1 0-14 0C5 16.562 12 21 12 21z" />
+            <circle cx="12" cy="10.5" r="2.5" />
+          </svg>
+          {{ userRole === 'treasurer' ? 'Managing' : 'Viewing' }} financial data for your assigned barangay
+        </span>
       </div>
       <div v-else-if="!isDuesOnlyView" class="barangay-context admin-context">
-        <span class="context-badge">🌐 Admin View</span>
+        <span class="context-badge">
+          <svg class="context-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18" />
+            <path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z" />
+          </svg>
+          Admin View
+        </span>
         <div class="admin-filter">
           <label for="barangay-select">Filter by Barangay:</label>
           <select id="barangay-select" v-model="selectedBarangayId" class="barangay-select">
@@ -35,18 +53,36 @@
       <!-- Financial Summary Cards -->
       <div v-if="!isDuesOnlyView" class="summary-cards">
         <div class="summary-card income-card">
+          <div class="card-icon icon-income" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+          </div>
           <div class="card-content">
             <span class="card-label">Total Income</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.total_income) }}</span>
           </div>
         </div>
         <div class="summary-card expense-card">
+          <div class="card-icon icon-expense" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+              <polyline points="17 18 23 18 23 12" />
+            </svg>
+          </div>
           <div class="card-content">
             <span class="card-label">Total Expenses</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.total_expenses) }}</span>
           </div>
         </div>
         <div class="summary-card profit-card" :class="{ negative: profitSummary.net_profit < 0 }">
+          <div class="card-icon icon-profit" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18" />
+              <path d="M7 16l4-4 4 4 5-6" />
+            </svg>
+          </div>
           <div class="card-content">
             <span class="card-label">Net Profit</span>
             <span class="card-amount">₱{{ formatNumber(profitSummary.net_profit) }}</span>
@@ -105,7 +141,13 @@
         <div class="section-header">
           <h2>Expense Management</h2>
           <button v-if="canManage" @click="showExpenseForm = true" class="btn-primary">+ Record Expense</button>
-          <span v-else class="view-only-badge">👁️ View Only</span>
+          <span v-else class="view-only-badge">
+            <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            View Only
+          </span>
         </div>
 
         <!-- Expense Filters -->
@@ -129,11 +171,27 @@
           </div>
           <div class="filter-group">
             <label class="filter-label">Start Date:</label>
-            <input v-model="filters.start_date" type="date" class="filter-input" />
+            <div class="mf-date-field">
+              <input v-model="filters.start_date" type="date" class="filter-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
           <div class="filter-group">
             <label class="filter-label">End Date:</label>
-            <input v-model="filters.end_date" type="date" class="filter-input" />
+            <div class="mf-date-field">
+              <input v-model="filters.end_date" type="date" class="filter-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
           <div class="filter-actions">
             <button @click="loadExpenses" class="btn-secondary">Filter</button>
@@ -178,8 +236,20 @@
                 <td>₱{{ formatNumber(expense.sundries) }}</td>
                 <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
                 <td v-if="canManage" class="actions-cell">
-                  <button @click="editExpense(expense)" class="btn-edit" title="Edit">✏️</button>
-                  <button @click="deleteExpense(expense.id)" class="btn-delete" title="Delete">🗑️</button>
+                  <button @click="editExpense(expense)" class="btn-edit btn-icon-action" title="Edit" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    </svg>
+                  </button>
+                  <button @click="deleteExpense(expense.id)" class="btn-delete btn-icon-action" title="Delete" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -208,11 +278,27 @@
           </div>
           <div class="filter-group">
             <label class="filter-label">Start Date:</label>
-            <input v-model="filters.start_date" type="date" class="filter-input" />
+            <div class="mf-date-field">
+              <input v-model="filters.start_date" type="date" class="filter-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
           <div class="filter-group">
             <label class="filter-label">End Date:</label>
-            <input v-model="filters.end_date" type="date" class="filter-input" />
+            <div class="mf-date-field">
+              <input v-model="filters.end_date" type="date" class="filter-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
           <div class="filter-actions">
             <button @click="loadIncome" class="btn-secondary">Filter</button>
@@ -220,7 +306,14 @@
           </div>
         </div>
 
-        <p class="info-text">💡 Income is automatically generated from machinery collections and association dues.</p>
+        <p class="info-text">
+          <svg class="info-text-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
+          </svg>
+          Income is automatically generated from machinery collections and association dues.
+        </p>
 
         <div class="card" style="margin-bottom: 12px;">
           <div class="card-header">
@@ -296,7 +389,16 @@
       <!-- TAB 2: MONTHLY DUES COLLECTION -->
       <div v-if="activeTab === 'dues'" class="tab-content">
         <div class="page-header">
-          <h1 class="page-title">💰 Association Dues Transactions</h1>
+          <h1 class="page-title page-title-with-icon">
+            <span class="page-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 8v8" />
+                <path d="M9 10.5c0-1.38 1.34-2.5 3-2.5s3 1.12 3 2.5c0 1.38-1.34 1.5-3 2.5-1.66 1-3 1.12-3 2.5" />
+              </svg>
+            </span>
+            Association Dues Transactions
+          </h1>
           <p class="page-subtitle">
             ₱120 every 6 months for all registered members (farmers and barangay officers) • President and Treasurer only
           </p>
@@ -323,7 +425,7 @@
         </div>
 
         <!-- Two Column Layout -->
-        <div class="grid-2">
+        <div class="grid-2 dues-layout">
           <!-- Left Column: Farmers List -->
           <div class="card">
             <div class="card-header">
@@ -393,7 +495,7 @@
               <div class="empty-text">Choose a farmer from the list to view and record six-month dues transactions.</div>
             </div>
 
-            <div v-else>
+            <div v-else class="dues-detail-panel">
               <div class="farmer-summary">
                 <div class="farmer-name">{{ selectedFarmer.full_name }}</div>
                 <div class="farmer-meta">
@@ -401,7 +503,7 @@
                 </div>
               </div>
 
-              <div class="stats-grid compact">
+              <div class="dues-stats-grid">
                 <div class="stat-card">
                   <div class="stat-label">Dues Amount</div>
                   <div class="stat-value">₱120</div>
@@ -412,37 +514,59 @@
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Last Paid</div>
-                  <div class="stat-value">{{ selectedFarmer.last_payment_date ? formatDate(selectedFarmer.last_payment_date) : '—' }}</div>
+                  <div class="stat-value stat-value-sm">{{ selectedFarmer.last_payment_date ? formatDate(selectedFarmer.last_payment_date) : '—' }}</div>
                 </div>
               </div>
 
               <!-- Dues Collection Form -->
-              <div v-if="canCollectDues" class="action-row">
-                <div class="form-inline">
-                  <label class="inline-label">Collection Date</label>
-                  <input class="input" type="date" v-model="duesForm.collection_date" />
-                  <label class="inline-label">Amount</label>
-                  <input class="input" type="number" :value="120" disabled />
-                  <label class="inline-label">Payment Method</label>
-                  <select class="input" v-model="duesForm.payment_method">
-                    <option value="Cash">Cash</option>
-                    <option value="GCash">GCash</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Check">Check</option>
-                  </select>
-                  <button class="btn btn-success" @click="collectMonthlyDues" :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid)">
-                    Record Dues
-                  </button>
+              <div v-if="canCollectDues" class="dues-form-section">
+                <div class="dues-form-grid">
+                  <div class="dues-field">
+                    <label class="inline-label" for="dues-collection-date">Collection Date</label>
+                    <div class="mf-date-field">
+                      <input id="dues-collection-date" class="input mf-date-input" type="date" v-model="duesForm.collection_date" />
+                      <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="dues-field">
+                    <label class="inline-label" for="dues-amount">Amount</label>
+                    <input id="dues-amount" class="input" type="number" :value="120" disabled />
+                  </div>
+                  <div class="dues-field dues-field-full">
+                    <label class="inline-label" for="dues-payment-method">Payment Method</label>
+                    <select id="dues-payment-method" class="input" v-model="duesForm.payment_method">
+                      <option value="Cash">Cash</option>
+                      <option value="GCash">GCash</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Check">Check</option>
+                    </select>
+                  </div>
+                  <div class="dues-field dues-field-full">
+                    <button
+                      type="button"
+                      class="btn btn-success dues-record-btn"
+                      @click="collectMonthlyDues"
+                      :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid)"
+                    >
+                      Record Dues
+                    </button>
+                  </div>
                 </div>
-                <div class="stat-card">
-                  <div class="stat-label">Lifetime Total Paid</div>
-                  <div class="stat-value">PHP {{ formatNumber(selectedFarmerTotalPaid) }}</div>
-                </div>
-              </div>
 
-              <div v-if="canCollectDues" class="form-group dues-remarks-group">
-                <label class="inline-label">Remarks</label>
-                <textarea v-model="duesForm.remarks" class="input dues-remarks-input" placeholder="Optional notes about this dues transaction..."></textarea>
+                <div class="stat-card dues-lifetime-card">
+                  <div class="stat-label">Lifetime Total Paid</div>
+                  <div class="stat-value">₱{{ formatNumber(selectedFarmerTotalPaid) }}</div>
+                </div>
+
+                <div class="form-group dues-remarks-group">
+                  <label class="inline-label" for="dues-remarks">Remarks</label>
+                  <textarea id="dues-remarks" v-model="duesForm.remarks" class="input dues-remarks-input" placeholder="Optional notes about this dues transaction..."></textarea>
+                </div>
               </div>
 
               <div v-if="Number(selectedFarmer?.dues_paid)" class="info-text">
@@ -493,21 +617,38 @@
         <!-- A/R Summary Cards -->
         <div class="summary-container">
           <div class="summary-card ar-card">
-            <div class="card-icon icon-receivables">📈</div>
+            <div class="card-icon icon-receivables" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </div>
             <div class="card-content">
               <span class="card-label">Total Receivables</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_receivables) }}</span>
             </div>
           </div>
           <div class="summary-card collected-card">
-            <div class="card-icon icon-collected">💵</div>
+            <div class="card-icon icon-collected" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2.5" />
+                <path d="M6 10h.01M18 10h.01" />
+              </svg>
+            </div>
             <div class="card-content">
               <span class="card-label">Total Collected</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_collected) }}</span>
             </div>
           </div>
           <div class="summary-card balance-card">
-            <div class="card-icon icon-balance">⚠️</div>
+            <div class="card-icon icon-balance" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              </svg>
+            </div>
             <div class="card-content">
               <span class="card-label">Outstanding Balance</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_balance) }}</span>
@@ -535,8 +676,24 @@
         <!-- A/R List -->
         <div class="ar-section">
           <div class="section-subheader">
-            <h3>📑 List of Collectibles (Accounts Receivable)</h3>
-            <span v-if="isViewOnly" class="view-only-badge">👁️ View Only</span>
+            <h3 class="section-subheader-title">
+              <span class="mf-section-icon icon-teal" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </span>
+              List of Collectibles (Accounts Receivable)
+            </h3>
+            <span v-if="isViewOnly" class="view-only-badge">
+              <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              View Only
+            </span>
           </div>
           <div class="table-container">
             <table class="ar-table">
@@ -562,7 +719,12 @@
                     ₱{{ formatNumber(ar.total_price - (ar.amount_collected || 0)) }}
                   </td>
                   <td v-if="canManage" class="actions-cell">
-                    <button @click="recordCollection(ar)" class="btn-primary-small" title="Record Payment">💳</button>
+                    <button @click="recordCollection(ar)" class="btn-primary-small btn-icon-action" title="Record Payment" type="button">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -576,7 +738,16 @@
         <!-- Collections Transactions -->
         <div class="collections-section">
           <div class="section-subheader">
-            <h3>💵 Collections Transactions</h3>
+            <h3 class="section-subheader-title">
+              <span class="mf-section-icon icon-green" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2.5" />
+                  <path d="M6 10h.01M18 10h.01" />
+                </svg>
+              </span>
+              Collections Transactions
+            </h3>
             <small class="auto-interest-note">Auto Interest: 2% is added once on first partial payment (based on full booking amount).</small>
           </div>
           <div class="table-container">
@@ -597,7 +768,7 @@
                   <td>{{ col.farmer_name }}</td>
                   <td>{{ col.machinery_name }}</td>
                   <td class="amount-cell">₱{{ formatNumber(col.collection_amount) }}</td>
-                  <td>{{ col.receipt_number || '-' }}</td>
+                  <td><span class="receipt-ref">{{ col.receipt_number || '-' }}</span></td>
                   <td>{{ col.remarks || '-' }}</td>
                   <!-- Delete button removed to prevent income data inconsistencies -->
                 </tr>
@@ -777,8 +948,15 @@
           <p>No profit to distribute (Income = Expenses)</p>
         </div>
 
-        <div v-else class="empty-state">
-          <p>⚠️ Loss detected (Expenses > Income)</p>
+        <div v-else class="empty-state empty-state-warning">
+          <p class="inline-notice warning">
+            <svg class="inline-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+            Loss detected (Expenses &gt; Income)
+          </p>
         </div>
       </div>
 
@@ -816,11 +994,27 @@
               <div v-if="reportFilters.customDateRange" class="custom-date-inputs">
                 <div class="date-input-group">
                   <label>From:</label>
-                  <input type="date" v-model="reportFilters.startDate" class="form-input-sm" />
+                  <div class="mf-date-field">
+                    <input type="date" v-model="reportFilters.startDate" class="form-input-sm mf-date-input" />
+                    <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
                 </div>
                 <div class="date-input-group">
                   <label>To:</label>
-                  <input type="date" v-model="reportFilters.endDate" class="form-input-sm" />
+                  <div class="mf-date-field">
+                    <input type="date" v-model="reportFilters.endDate" class="form-input-sm mf-date-input" />
+                    <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
                 </div>
                 <button @click="generateReportCustom" class="btn-generate" :disabled="reportLoading || !reportFilters.startDate || !reportFilters.endDate">
                   {{ reportLoading ? 'Generating...' : 'Generate' }}
@@ -1453,7 +1647,14 @@
           <!-- All Transactions Table -->
           <div v-if="reportFilters.showAllTransactions" class="report-transactions report-section-card">
             <div class="section-title">
-              <span class="section-icon">📝</span>
+              <span class="section-icon icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </span>
               <h4>All Transactions</h4>
               <span class="section-count">{{ reportData.transactions.all.length }} records</span>
             </div>
@@ -1495,7 +1696,13 @@
           <!-- Detailed Expenses Table -->
           <div v-if="reportFilters.showExpenses && reportData.transactions.expenses.length > 0" class="report-section report-section-card">
             <div class="section-title">
-              <span class="section-icon">📤</span>
+              <span class="section-icon icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+              </span>
               <h4>Expense Details</h4>
               <span class="section-count">{{ reportData.transactions.expenses.length }} records</span>
             </div>
@@ -1542,7 +1749,14 @@
           <!-- Bookings Summary -->
           <div v-if="reportFilters.showBookings && reportData.transactions.bookings.length > 0" class="report-section report-section-card">
             <div class="section-title">
-              <span class="section-icon">📅</span>
+              <span class="section-icon icon-teal" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </span>
               <h4>Bookings Summary</h4>
               <span class="section-count">{{ reportData.transactions.bookings.length }} bookings</span>
             </div>
@@ -1613,7 +1827,15 @@
 
           <div class="form-group">
             <label>Date of Expense *</label>
-            <input v-model="expenseForm.date_of_expense" type="date" class="form-input" />
+            <div class="mf-date-field">
+              <input v-model="expenseForm.date_of_expense" type="date" class="form-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
 
           <div class="form-row">
@@ -1686,7 +1908,15 @@
         <div class="modal-body">
           <div class="form-group">
             <label>Date of Income *</label>
-            <input v-model="incomeForm.date_of_income" type="date" class="form-input" />
+            <div class="mf-date-field">
+              <input v-model="incomeForm.date_of_income" type="date" class="form-input mf-date-input" />
+              <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
           </div>
 
           <div class="form-row">
@@ -1722,7 +1952,15 @@
     <div v-if="showCollectionForm" class="modal-overlay" @click.self="showCollectionForm = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>💳 Record Payment / Collection</h2>
+          <h2 class="modal-title-with-icon">
+            <span class="modal-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+            </span>
+            Record Payment / Collection
+          </h2>
           <button @click="showCollectionForm = false" class="btn-close">×</button>
         </div>
         <div class="modal-body" v-if="editingCollection">
@@ -1736,7 +1974,14 @@
               <div v-if="editingCollection.pending_interest > 0"><strong>Includes Interest:</strong> ₱{{ formatNumber(editingCollection.pending_interest) }}</div>
               <div><strong>Already Collected:</strong> ₱{{ formatNumber(editingCollection.amount_collected || 0) }}</div>
               <div><strong>Current Balance:</strong> ₱{{ formatNumber(editingCollection.total_price - (editingCollection.amount_collected || 0)) }}</div>
-              <div><strong>Due Date:</strong> {{ formatDate(getDueDate(editingCollection.booking_date)) }} <span v-if="isOverdue" style="color: #ef4444; font-weight: bold;">⚠️ OVERDUE</span></div>
+              <div><strong>Due Date:</strong> {{ formatDate(getDueDate(editingCollection.booking_date)) }} <span v-if="isOverdue" class="overdue-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                </svg>
+                OVERDUE
+              </span></div>
             </div>
           </div>
 
@@ -1770,16 +2015,32 @@
                 @input="validatePaymentAmount"
                 :readonly="collectionForm.paymentType === 'full'"
               />
-              <small v-if="collectionForm.paymentType === 'full'" class="info-text" style="color: #059669; font-weight: 600;">
-                ✓ Auto-filled with full balance: ₱{{ formatNumber(remainingBalance) }}
+              <small v-if="collectionForm.paymentType === 'full'" class="inline-notice success">
+                <svg class="inline-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Auto-filled with full balance: ₱{{ formatNumber(remainingBalance) }}
               </small>
-              <small v-if="showPartialWarning" class="warning-text">
-                ⚠️ This amount equals the remaining balance. Consider using Full Payment instead.
+              <small v-if="showPartialWarning" class="warning-text inline-notice warning">
+                <svg class="inline-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                </svg>
+                This amount equals the remaining balance. Consider using Full Payment instead.
               </small>
             </div>
             <div class="form-group">
               <label>Collection Date *</label>
-              <input v-model="collectionForm.collectionDate" type="date" class="form-input" />
+              <div class="mf-date-field">
+                <input v-model="collectionForm.collectionDate" type="date" class="form-input mf-date-input" />
+                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -1837,7 +2098,16 @@
     <div v-if="showDuesForm" class="modal-overlay" @click.self="showDuesForm = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>💰 Collect Monthly Dues</h2>
+          <h2 class="modal-title-with-icon">
+            <span class="modal-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 8v8" />
+                <path d="M9 10.5c0-1.38 1.34-2.5 3-2.5s3 1.12 3 2.5c0 1.38-1.34 1.5-3 2.5-1.66 1-3 1.12-3 2.5" />
+              </svg>
+            </span>
+            Collect Monthly Dues
+          </h2>
           <button @click="showDuesForm = false" class="btn-close">×</button>
         </div>
         <div class="modal-body">
@@ -1849,8 +2119,19 @@
                 <div class="farmer-info">
                   <strong>{{ selectedFarmer.full_name }}</strong>
                   <small>{{ selectedFarmer.phone_number }}</small>
-                  <span v-if="selectedFarmer.dues_paid" class="status-paid">✅ Paid for current period</span>
-                  <span v-else class="status-unpaid">❌ Not paid for current period</span>
+                  <span v-if="selectedFarmer.dues_paid" class="status-paid status-with-icon">
+                    <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Paid for current period
+                  </span>
+                  <span v-else class="status-unpaid status-with-icon">
+                    <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                    Not paid for current period
+                  </span>
                 </div>
                 <button @click="selectedFarmer = null; duesForm.farmer_id = ''" class="btn-change">Change</button>
               </div>
@@ -1868,8 +2149,19 @@
                     <div class="farmer-info">
                       <strong>{{ farmer.full_name }}</strong>
                       <small>{{ farmer.phone_number }}</small>
-                      <span v-if="farmer.dues_paid" class="status-badge paid">✅ Paid</span>
-                      <span v-else class="status-badge unpaid">❌ Unpaid</span>
+                      <span v-if="farmer.dues_paid" class="status-badge paid status-with-icon">
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Paid
+                      </span>
+                      <span v-else class="status-badge unpaid status-with-icon">
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Unpaid
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1881,7 +2173,15 @@
           <div v-if="selectedFarmer" class="form-row">
             <div class="form-group">
               <label>Collection Date *</label>
-              <input v-model="duesForm.collection_date" type="date" class="form-input" />
+              <div class="mf-date-field">
+                <input v-model="duesForm.collection_date" type="date" class="form-input mf-date-input" />
+                <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
             </div>
             <div class="form-group">
               <label>Payment Method</label>
@@ -4067,8 +4367,22 @@ onBeforeUnmount(() => {
 }
 
 .denied-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.22), rgba(239, 68, 68, 0.16));
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.denied-icon svg {
+  width: 36px;
+  height: 36px;
+  display: block;
 }
 
 .denied-text {
@@ -4170,15 +4484,42 @@ onBeforeUnmount(() => {
 }
 
 .card-icon {
-  font-size: 42px;
   width: 58px;
   height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(22, 163, 74, 0.22));
   flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 220ms ease, box-shadow 240ms ease, filter 220ms ease;
+}
+
+.card-icon svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.card-icon.icon-income {
+  color: #86efac;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.32), rgba(22, 163, 74, 0.24));
+}
+
+.card-icon.icon-expense {
+  color: #fdba74;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.32), rgba(234, 88, 12, 0.24));
+}
+
+.card-icon.icon-profit {
+  color: #5eead4;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.32), rgba(16, 185, 129, 0.24));
+}
+
+.summary-card:hover .card-icon {
+  transform: translateY(-1px) scale(1.04);
+  filter: saturate(1.08);
 }
 
 .card-content {
@@ -4187,7 +4528,7 @@ onBeforeUnmount(() => {
 }
 
 .card-label {
-  color: #111;
+  color: #d1fae5;
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 1.1px;
@@ -4201,7 +4542,7 @@ onBeforeUnmount(() => {
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.7px;
-  color: #1a5c2a;
+  color: #ecfdf5;
   text-shadow: none;
 }
 
@@ -4370,6 +4711,66 @@ onBeforeUnmount(() => {
   box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.34), 0 0 0 3px rgba(74, 222, 128, 0.1);
 }
 
+.mf-date-field {
+  position: relative;
+  width: 100%;
+}
+
+.mf-date-field-inline {
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
+.mf-date-input {
+  position: relative;
+  width: 100%;
+  padding-right: 2.85rem !important;
+  color-scheme: light;
+}
+
+.mf-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.85rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.mf-date-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+  box-sizing: content-box;
+  color: #86efac;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.42), rgba(22, 163, 74, 0.32));
+  border: 1px solid rgba(134, 239, 172, 0.5);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.financial-container.light-theme .mf-date-icon {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #16a34a;
+}
+
+.financial-container:not(.light-theme) .mf-date-icon {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62));
+  border-color: rgba(134, 239, 172, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
@@ -4511,6 +4912,78 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
+.section-subheader-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.mf-section-icon,
+.section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mf-section-icon svg,
+.section-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.mf-section-icon.icon-teal,
+.section-icon.icon-teal {
+  color: #5eead4;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.28), rgba(13, 148, 136, 0.22));
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.mf-section-icon.icon-green,
+.section-icon.icon-green {
+  color: #86efac;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(22, 163, 74, 0.22));
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.section-icon.icon-blue {
+  color: #93c5fd;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.28), rgba(37, 99, 235, 0.22));
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.section-icon.icon-amber {
+  color: #fcd34d;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.28), rgba(217, 119, 6, 0.22));
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #d1fae5;
+}
+
+.context-badge-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: block;
+}
+
 .ar-card {
   background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(22, 163, 74, 0.12));
   border: 1px solid rgba(74, 222, 128, 0.24);
@@ -4585,11 +5058,15 @@ onBeforeUnmount(() => {
 .summary-container > .summary-card .card-icon {
   width: 52px;
   height: 52px;
-  font-size: 30px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.26);
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transition: transform 220ms ease, box-shadow 240ms ease, filter 220ms ease;
+}
+
+.summary-container > .summary-card .card-icon svg {
+  width: 26px;
+  height: 26px;
 }
 
 .summary-container > .summary-card:hover .card-icon {
@@ -4599,18 +5076,19 @@ onBeforeUnmount(() => {
 }
 
 .summary-container .ar-card .card-icon.icon-receivables {
+  color: #86efac;
   background: linear-gradient(135deg, rgba(134, 239, 172, 0.42), rgba(34, 197, 94, 0.28));
 }
 
 .summary-container .collected-card .card-icon.icon-collected {
+  color: #6ee7b7;
   background: linear-gradient(135deg, rgba(187, 247, 208, 0.4), rgba(16, 185, 129, 0.28));
 }
 
 .summary-container .balance-card .card-icon.icon-balance {
+  color: #fca5a5;
   background: linear-gradient(135deg, rgba(254, 202, 202, 0.75), rgba(248, 113, 113, 0.55));
   border-color: rgba(239, 68, 68, 0.45);
-  color: #7f1d1d;
-  font-size: 32px;
   box-shadow: 0 12px 22px rgba(127, 29, 29, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
@@ -4722,18 +5200,53 @@ onBeforeUnmount(() => {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
   transition: all 0.2s;
   color: var(--green);
 }
 
+.btn-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  background: rgba(74, 222, 128, 0.12);
+}
+
+.btn-icon-action svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.btn-primary-small.btn-icon-action {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.btn-primary-small.btn-icon-action svg {
+  width: 18px;
+  height: 18px;
+}
+
 .btn-edit:hover {
   opacity: 0.9;
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.btn-delete {
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.12);
 }
 
 .btn-delete:hover {
   opacity: 0.9;
-  color: var(--red);
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.2);
 }
 
 .empty-state {
@@ -4743,6 +5256,9 @@ onBeforeUnmount(() => {
 }
 
 .info-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   padding: 12px 16px;
   background: rgba(34, 197, 94, 0.12);
   border-left: 4px solid var(--green);
@@ -4751,6 +5267,14 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
   font-size: 14px;
   font-weight: 500;
+}
+
+.info-text-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #86efac;
 }
 
 .profit-breakdown {
@@ -5483,6 +6007,136 @@ onBeforeUnmount(() => {
   font-size: 13px;
   font-weight: 500;
   margin-top: 4px;
+}
+
+.inline-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inline-notice-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.inline-notice.success {
+  color: #34d399;
+}
+
+.inline-notice.warning {
+  color: #fbbf24;
+}
+
+.overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.overdue-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.modal-title-with-icon,
+.page-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-icon,
+.page-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #86efac;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(22, 163, 74, 0.22));
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  flex-shrink: 0;
+}
+
+.modal-title-icon svg,
+.page-title-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.status-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.receipt-ref {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.03em;
+  background: rgba(74, 222, 128, 0.14);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+}
+
+.report-display .report-section-card {
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.96), rgba(24, 36, 28, 0.94));
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 12px 12px 24px rgba(8, 13, 10, 0.38);
+}
+
+.report-display .report-section-card .section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.report-display .report-section-card .section-title h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.report-display .report-section-card .section-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 /* Report Styles */
@@ -7066,7 +7720,18 @@ onBeforeUnmount(() => {
 }
 
 #printable-report .section-icon {
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+#printable-report .section-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 #printable-report .section-title h4 {
@@ -7188,8 +7853,13 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
-  font-size: 12px;
-  line-height: 1;
+  flex-shrink: 0;
+}
+
+.view-only-badge .badge-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
 }
 
 /* Barangay Context Styles */
@@ -7211,31 +7881,25 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-.context-badge {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #d1fae5;
-}
-
 .admin-context .context-badge {
   color: var(--green);
 }
 
-/* Main KPI row: stacked label (subtitle) + amount, no icons */
+/* Main KPI row: icon + label + amount */
 .summary-cards > .summary-card {
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: flex-start;
   align-items: center;
-  text-align: center;
-  gap: 6px;
+  text-align: left;
+  gap: 16px;
 }
 
 .summary-cards > .summary-card .card-content {
-  align-items: center;
+  align-items: flex-start;
 }
 
 .summary-cards > .summary-card .card-label {
-  color: #111827;
+  color: #d1fae5;
   font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -7244,7 +7908,7 @@ onBeforeUnmount(() => {
 }
 
 .summary-cards > .summary-card .card-amount {
-  color: #111827;
+  color: #ecfdf5;
   font-size: clamp(1.85rem, 4.2vw, 2.25rem);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -7616,11 +8280,93 @@ onBeforeUnmount(() => {
 }
 
 .farmer-summary {
-  margin-bottom: 16px;
-  padding: 14px 16px;
+  margin-bottom: 0;
+  padding: 16px 18px;
   border-radius: 12px;
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(74, 222, 128, 0.22);
+}
+
+.dues-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 20px 22px;
+}
+
+.dues-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.dues-stats-grid .stat-card {
+  padding: 14px 16px;
+}
+
+.dues-stats-grid .stat-value {
+  font-size: 1.35rem;
+}
+
+.dues-stats-grid .stat-value-sm {
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.dues-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dues-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.dues-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dues-field-full {
+  grid-column: 1 / -1;
+}
+
+.dues-field .input,
+.dues-field .mf-date-field,
+.dues-field select {
+  width: 100%;
+}
+
+.dues-record-btn {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 15px;
+}
+
+.dues-lifetime-card {
+  padding: 18px 20px;
+}
+
+.dues-lifetime-card .stat-value {
+  font-size: 1.55rem;
+  margin-top: 2px;
+}
+
+.grid-2.dues-layout {
+  gap: 22px;
+  align-items: start;
+}
+
+@media (min-width: 640px) {
+  .dues-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+  }
 }
 
 .farmer-name {
@@ -7639,32 +8385,28 @@ onBeforeUnmount(() => {
   margin: 14px 0 18px;
 }
 
-.form-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  align-items: flex-end;
-}
-
-.inline-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-soft);
-  margin-bottom: 4px;
-}
-
 .dues-remarks-group {
-  margin-top: 14px;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .dues-remarks-input {
   width: 100%;
-  min-height: 80px;
+  min-height: 96px;
   resize: vertical;
-  margin-top: 4px;
+  margin-top: 0;
+}
+
+.inline-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft);
+  margin-bottom: 0;
 }
 
 .usage-leaders-card {
@@ -7851,41 +8593,121 @@ tr.selected {
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #16a34a !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+  background: linear-gradient(155deg, rgba(28, 48, 38, 0.94), rgba(18, 34, 26, 0.97)) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border: 1px solid rgba(134, 239, 172, 0.28) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab .tab-icon,
 .financial-container:not(.light-theme) .tabs-container .tab .tab-label {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab:hover {
-  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  background: linear-gradient(155deg, rgba(36, 68, 52, 0.96), rgba(24, 48, 36, 0.98)) !important;
+  border-color: rgba(74, 222, 128, 0.42) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab.active {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  border-color: #15803d !important;
-  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(167, 243, 208, 0.55) !important;
+  box-shadow: 0 8px 22px rgba(6, 78, 35, 0.45), inset 0 1px 0 rgba(220, 252, 231, 0.18) !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab.active .tab-icon,
 .financial-container:not(.light-theme) .tabs-container .tab.active .tab-label {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container:not(.light-theme) .tab-content h2 {
   color: #ffffff !important;
+}
+
+/* Dues tab & shared tab panels — white text in dark mode */
+.financial-container:not(.light-theme) :is(
+  .page-title,
+  .page-title-with-icon,
+  .page-subtitle,
+  .card-title,
+  .stat-label,
+  .stat-value,
+  .stat-value-sm,
+  .farmer-name,
+  .farmer-meta,
+  .inline-label,
+  .section-title,
+  .empty-title,
+  .empty-text,
+  .empty-message,
+  .info-text,
+  .name,
+  .filter-label
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .page-header :is(.page-title, h1) {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tab-content .data-table :is(th, td) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tab-content table.data-table tbody td.amount {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) :is(.input, .filter-input, textarea.input, select.input) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .mf-date-input {
+  color-scheme: dark;
+}
+
+.financial-container:not(.light-theme) :is(.input, .filter-input, textarea.input)::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.financial-container:not(.light-theme) .stats-grid .stat-card,
+.financial-container:not(.light-theme) .dues-stats-grid .stat-card,
+.financial-container:not(.light-theme) .dues-lifetime-card {
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88)) !important;
+  border-color: rgba(4, 14, 10, 0.58) !important;
+}
+
+.financial-container:not(.light-theme) .farmer-summary {
+  background: rgba(18, 32, 24, 0.88) !important;
+  border-color: rgba(4, 14, 10, 0.58) !important;
+}
+
+.financial-container:not(.light-theme) .info-text {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: rgba(18, 32, 24, 0.72) !important;
+}
+
+.financial-container:not(.light-theme) .stat-value {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container:not(.light-theme) .report-generator-panel,
@@ -7922,20 +8744,125 @@ tr.selected {
 }
 
 .financial-container:not(.light-theme) :is(
-  .summary-cards > .summary-card .card-amount,
-  .summary-container > .summary-card .card-amount,
-  .card-amount,
-  .income-card .card-amount,
-  .expense-card .card-amount,
-  .profit-card .card-amount,
-  .profit-card.negative .card-amount,
-  .ar-card .card-amount,
-  .collected-card .card-amount,
-  .balance-card .card-amount
+  .card-label,
+  .summary-cards > .summary-card .card-label,
+  .summary-container > .summary-card .card-label,
+  .section-subheader-title
 ) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  text-shadow: none !important;
+  color: #d1fae5 !important;
+  -webkit-text-fill-color: #d1fae5 !important;
+}
+
+.financial-container:not(.light-theme) .income-card .card-amount,
+.financial-container:not(.light-theme) .summary-cards > .summary-card.income-card .card-amount,
+.financial-container:not(.light-theme) .summary-container .ar-card .card-amount {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+.financial-container:not(.light-theme) .expense-card .card-amount,
+.financial-container:not(.light-theme) .summary-cards > .summary-card.expense-card .card-amount {
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
+}
+
+.financial-container:not(.light-theme) .profit-card .card-amount,
+.financial-container:not(.light-theme) .summary-cards > .summary-card.profit-card .card-amount {
+  color: #5eead4 !important;
+  -webkit-text-fill-color: #5eead4 !important;
+}
+
+.financial-container:not(.light-theme) .profit-card.negative .card-amount,
+.financial-container:not(.light-theme) .summary-cards > .summary-card.profit-card.negative .card-amount {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+.financial-container:not(.light-theme) .summary-container .collected-card .card-amount {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+.financial-container:not(.light-theme) .summary-container .balance-card .card-amount {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+.financial-container:not(.light-theme) .card-icon.icon-income,
+.financial-container:not(.light-theme) .summary-container .ar-card .card-icon.icon-receivables {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.68), rgba(21, 128, 61, 0.58));
+  border-color: rgba(134, 239, 172, 0.55);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.financial-container:not(.light-theme) .card-icon.icon-expense {
+  color: #fff7ed;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.68), rgba(234, 88, 12, 0.58));
+  border-color: rgba(253, 186, 116, 0.55);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.financial-container:not(.light-theme) .card-icon.icon-profit,
+.financial-container:not(.light-theme) .summary-container .collected-card .card-icon.icon-collected {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.65), rgba(13, 148, 136, 0.55));
+  border-color: rgba(94, 234, 212, 0.52);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.financial-container:not(.light-theme) .summary-container .balance-card .card-icon.icon-balance {
+  color: #fff1f2;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.68), rgba(185, 28, 28, 0.58));
+  border-color: rgba(252, 165, 165, 0.55);
+  box-shadow: 0 8px 18px rgba(127, 29, 29, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.financial-container:not(.light-theme) .mf-section-icon.icon-teal {
+  color: #ccfbf1;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.45), rgba(13, 148, 136, 0.38));
+  border-color: rgba(94, 234, 212, 0.45);
+}
+
+.financial-container:not(.light-theme) .mf-section-icon.icon-green {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.45), rgba(22, 163, 74, 0.38));
+  border-color: rgba(134, 239, 172, 0.45);
+}
+
+.financial-container:not(.light-theme) .auto-interest-indicator {
+  color: #d1fae5;
+  background: rgba(22, 163, 74, 0.18);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.financial-container:not(.light-theme) .auto-interest-indicator strong {
+  color: #86efac;
+}
+
+.financial-container:not(.light-theme) .auto-interest-note {
+  color: #bbf7d0;
+}
+
+.financial-container:not(.light-theme) .receipt-ref {
+  background: rgba(34, 197, 94, 0.22);
+  color: #ecfdf5;
+  border-color: rgba(134, 239, 172, 0.4);
+}
+
+.financial-container:not(.light-theme) .view-only-badge {
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.75), rgba(21, 128, 61, 0.85));
+  border-color: rgba(187, 247, 208, 0.45);
+}
+
+.financial-container:not(.light-theme) .view-only-badge .badge-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ecfdf5;
 }
 
 .financial-container.light-theme .denied-content {
@@ -7953,6 +8880,26 @@ tr.selected {
 .financial-container.light-theme .summary-card:hover {
   border-color: #4ade80;
   box-shadow: 0 12px 28px rgba(22, 101, 52, 0.14);
+}
+
+.financial-container.light-theme .summary-cards > .summary-card .card-label {
+  color: #166534;
+}
+
+.financial-container.light-theme .summary-cards > .summary-card.income-card .card-amount {
+  color: #15803d;
+}
+
+.financial-container.light-theme .summary-cards > .summary-card.expense-card .card-amount {
+  color: #c2410c;
+}
+
+.financial-container.light-theme .summary-cards > .summary-card.profit-card .card-amount {
+  color: #065f46;
+}
+
+.financial-container.light-theme .summary-cards > .summary-card.profit-card.negative .card-amount {
+  color: #b91c1c;
 }
 
 .financial-container.light-theme .card-label {
@@ -8335,6 +9282,11 @@ tr.selected {
   border: 1px solid #fbbf24;
 }
 
+.financial-container.light-theme .view-only-badge .badge-icon {
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+}
+
 /* Expense breakdown — force dark readable text (beats nth-child dark rules) */
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item {
   padding: 8px 0;
@@ -8489,6 +9441,140 @@ tr.selected {
 
 .financial-container.light-theme .expense-item.total span:last-child {
   color: #065f46 !important;
+}
+
+/* Icon theme — light mode */
+.financial-container.light-theme .denied-icon {
+  color: #b91c1c;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #fca5a5;
+}
+
+.financial-container.light-theme .card-icon.icon-income {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .card-icon.icon-expense {
+  color: #c2410c;
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  border-color: #fdba74;
+}
+
+.financial-container.light-theme .card-icon.icon-profit {
+  color: #0f766e;
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  border-color: #5eead4;
+}
+
+.financial-container.light-theme .summary-container .ar-card .card-icon.icon-receivables {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+}
+
+.financial-container.light-theme .summary-container .collected-card .card-icon.icon-collected {
+  color: #047857;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+}
+
+.financial-container.light-theme .summary-container .balance-card .card-icon.icon-balance {
+  color: #b91c1c;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #fca5a5;
+}
+
+.financial-container.light-theme .mf-section-icon.icon-teal,
+.financial-container.light-theme .section-icon.icon-teal {
+  color: #0f766e;
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  border-color: #5eead4;
+}
+
+.financial-container.light-theme .mf-section-icon.icon-green,
+.financial-container.light-theme .section-icon.icon-green {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .section-icon.icon-blue {
+  color: #1d4ed8;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-color: #93c5fd;
+}
+
+.financial-container.light-theme .section-icon.icon-amber {
+  color: #b45309;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #fcd34d;
+}
+
+.financial-container.light-theme .info-text {
+  color: #14532d;
+  background: #ecfdf5;
+  border-left-color: #22c55e;
+}
+
+.financial-container.light-theme .info-text-icon {
+  color: #15803d;
+}
+
+.financial-container.light-theme .receipt-ref {
+  background: #dcfce7;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .btn-icon-action {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.financial-container.light-theme .btn-delete.btn-icon-action {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.financial-container.light-theme .modal-title-icon,
+.financial-container.light-theme .page-title-icon {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .inline-notice.success {
+  color: #15803d;
+}
+
+.financial-container.light-theme .inline-notice.warning {
+  color: #b45309;
+}
+
+.financial-container.light-theme .overdue-badge {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.financial-container.light-theme .report-display .report-section-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+}
+
+.financial-container.light-theme .report-display .report-section-card .section-title {
+  border-bottom-color: #bbf7d0;
+}
+
+.financial-container.light-theme .report-display .report-section-card .section-title h4 {
+  color: #052e16;
+}
+
+.financial-container.light-theme .section-subheader-title {
+  color: #052e16;
 }
 
 </style>

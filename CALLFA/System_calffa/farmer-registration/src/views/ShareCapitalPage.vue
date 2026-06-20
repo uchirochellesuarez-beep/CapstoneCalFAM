@@ -218,7 +218,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card member-shares-card">
             <div class="card-header">
               <h2 class="card-title">Member Shares</h2>
             </div>
@@ -253,7 +253,15 @@
               <div v-if="canEdit" class="action-row">
                 <div class="form-inline">
                   <label class="inline-label">Contribution Date</label>
-                  <input class="input" type="date" v-model="newContributionDate" />
+                  <div class="mf-date-field sc-date-field">
+                    <input class="input mf-date-input" type="date" v-model="newContributionDate" />
+                    <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
                   <label class="inline-label">6-Month Share</label>
                   <input class="input" type="number" :value="100" disabled />
                   <button class="btn" @click="recordContribution" :disabled="loading">Record</button>
@@ -266,7 +274,7 @@
 
               <div class="section-title">Contributions</div>
               <div class="table-container">
-                <table class="data-table">
+                <table class="data-table contributions-table">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -278,27 +286,38 @@
                   </thead>
                   <tbody>
                     <tr v-if="loadingFarmer">
-                      <td colspan="5">Loading...</td>
+                      <td :colspan="canEdit ? 5 : 4">Loading...</td>
                     </tr>
                     <tr v-else-if="selectedContributions.length === 0">
-                      <td colspan="5">No contributions recorded</td>
+                      <td :colspan="canEdit ? 5 : 4">No contributions recorded</td>
                     </tr>
-                    <tr v-else v-for="c in selectedContributions" :key="c.id">
-                      <td>
+                    <tr
+                      v-else
+                      v-for="c in selectedContributions"
+                      :key="c.id"
+                      :class="{ 'contribution-edit-row': editingId === c.id && canEditContribution(c) }"
+                    >
+                      <td class="col-date">
                         <template v-if="editingId === c.id && canEditContribution(c)">
-                          <input class="input" type="date" v-model="editDate" />
+                          <div class="mf-date-field mf-date-field--cell">
+                            <input class="input mf-date-input" type="date" v-model="editDate" />
+                            <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <rect x="3" y="4" width="18" height="18" rx="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                          </div>
                         </template>
-                        <template v-else>
-                          {{ formatDate(c.contribution_date) }}
-                        </template>
+                        <template v-else>{{ formatDate(c.contribution_date) }}</template>
                       </td>
-                      <td>{{ formatContributionKind(c.contribution_kind) }}</td>
+                      <td class="col-type">{{ formatContributionKind(c.contribution_kind) }}</td>
                       <td class="amount">₱{{ formatMoney(c.amount) }}</td>
-                      <td>
+                      <td class="col-status">
                         <template v-if="editingId === c.id && canEditContribution(c)">
-                          <select class="input" v-model="editStatus">
-                            <option value="confirmed">confirmed</option>
-                            <option value="cancelled">cancelled</option>
+                          <select class="input sc-status-select" v-model="editStatus">
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
                           </select>
                         </template>
                         <template v-else>
@@ -307,8 +326,10 @@
                       </td>
                       <td v-if="canEdit" class="actions">
                         <template v-if="editingId === c.id && canEditContribution(c)">
-                          <button class="btn btn-small" @click="saveEdit(c.id)" :disabled="loading">Save</button>
-                          <button class="btn btn-small btn-muted" @click="cancelEdit" :disabled="loading">Cancel</button>
+                          <div class="sc-row-actions">
+                            <button class="btn btn-small btn-success" @click="saveEdit(c.id)" :disabled="loading">Save</button>
+                            <button class="btn btn-small btn-muted" @click="cancelEdit" :disabled="loading">Cancel</button>
+                          </div>
                         </template>
                         <template v-else>
                           <button v-if="canEditContribution(c)" class="btn btn-small" @click="startEdit(c)">Edit</button>
@@ -704,9 +725,9 @@ onMounted(async () => {
   --glass-panel: rgba(31, 48, 36, 0.94);
   --glass-line: rgba(255, 255, 255, 0.1);
   --glass-line-strong: rgba(255, 255, 255, 0.18);
-  --text-main: #eefde6;
-  --text-muted: rgba(220, 238, 211, 0.78);
-  --text-soft: rgba(220, 238, 211, 0.62);
+  --text-main: #ffffff;
+  --text-muted: #f0fdf4;
+  --text-soft: #e2e8f0;
   --green: #34d399;
   --lime: #a3e635;
   --red: #f87171;
@@ -793,6 +814,7 @@ onMounted(async () => {
     inset -1px -1px 0 rgba(0, 0, 0, 0.34);
   position: relative;
   overflow: hidden;
+  text-align: left;
 }
 
 .header-content {
@@ -800,7 +822,12 @@ onMounted(async () => {
   flex-direction: column;
   gap: 12px;
   max-width: 760px;
-  align-items: flex-start;
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  padding: 0 !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
   text-align: left;
 }
 
@@ -832,6 +859,8 @@ onMounted(async () => {
   line-height: 1.05;
   letter-spacing: -0.9px;
   margin: 0;
+  text-align: left;
+  width: 100%;
   background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -844,6 +873,8 @@ onMounted(async () => {
   font-size: 16px;
   line-height: 1.45;
   font-weight: 500;
+  text-align: left;
+  width: 100%;
 }
 
 .hero-subtitle {
@@ -960,7 +991,7 @@ onMounted(async () => {
 .stat-value {
   font-size: 1.65rem;
   font-weight: 900;
-  color: #bbf7d0;
+  color: #ffffff;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
@@ -969,6 +1000,12 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  align-items: start;
+}
+
+.member-shares-card {
+  height: fit-content;
+  align-self: start;
 }
 
 @media (max-width: 1024px) {
@@ -1108,7 +1145,7 @@ onMounted(async () => {
 .tab-content table.data-table tbody td.amount {
   font-size: 15px;
   font-weight: 800;
-  color: #b7f7c8;
+  color: #ffffff;
   font-family: ui-monospace, 'Courier New', monospace;
   line-height: 1.25;
 }
@@ -1229,13 +1266,13 @@ onMounted(async () => {
 
 .badge-success {
   background: rgba(74, 222, 128, 0.16);
-  color: #bbf7d0;
+  color: #ffffff;
   border-color: rgba(74, 222, 128, 0.35);
 }
 
 .badge-muted {
   background: rgba(255, 255, 255, 0.06);
-  color: var(--text-soft);
+  color: #e2e8f0;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -1279,7 +1316,7 @@ onMounted(async () => {
 .farmer-name {
   font-weight: 900;
   font-size: 1.08rem;
-  color: #ecfdf5;
+  color: #ffffff;
   margin-bottom: 4px;
 }
 
@@ -1292,7 +1329,7 @@ onMounted(async () => {
   margin: 16px 0 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #b6f7cb;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1351,6 +1388,130 @@ select.input {
   cursor: pointer;
 }
 
+.mf-date-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.sc-date-field {
+  flex: 0 1 190px;
+  max-width: 220px;
+  display: inline-block;
+}
+
+.mf-date-field--cell {
+  min-width: 132px;
+  max-width: 168px;
+}
+
+.mf-date-input {
+  width: 100%;
+  padding-right: 2.85rem !important;
+  color-scheme: light;
+}
+
+.mf-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.85rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.mf-date-icon {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  padding: 3px;
+  box-sizing: content-box;
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.72), rgba(21, 128, 61, 0.62));
+  border: 1px solid rgba(134, 239, 172, 0.5);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.contributions-table td {
+  vertical-align: middle;
+}
+
+.contributions-table .actions {
+  width: 84px;
+  min-width: 84px;
+}
+
+.contributions-table .col-date {
+  min-width: 132px;
+  width: 22%;
+}
+
+.contributions-table .col-type {
+  min-width: 88px;
+  width: 18%;
+}
+
+.contributions-table .col-status {
+  min-width: 118px;
+  width: 20%;
+}
+
+.contributions-table .contribution-edit-row td {
+  vertical-align: middle;
+  background: rgba(74, 222, 128, 0.08) !important;
+}
+
+.contributions-table .contribution-edit-row .input {
+  min-height: 36px;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.82rem;
+}
+
+.contributions-table .contribution-edit-row .mf-date-input {
+  padding-right: 2.35rem !important;
+  font-size: 0.82rem;
+}
+
+.sc-status-select {
+  width: 100%;
+  min-width: 108px;
+  max-width: 140px;
+}
+
+.sc-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 72px;
+}
+
+.sc-row-actions .btn-small {
+  width: 100%;
+  justify-content: center;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+/* Dark mode — solid white title (hindi gradient na maputla) */
+.financial-container.share-capital-page:not(.light-theme) .page-header h1 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
 /* ===== LIGHT MODE — Senior-friendly bright theme ===== */
 .financial-container.share-capital-page.light-theme {
   --glass-bg: #fffef9;
@@ -1387,6 +1548,16 @@ select.input {
 
 .financial-container.share-capital-page.light-theme .page-subtitle {
   color: #166534 !important;
+}
+
+.financial-container.share-capital-page.light-theme .mf-date-icon {
+  color: #15803d;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #16a34a;
+}
+
+.financial-container.share-capital-page.light-theme .contributions-table .contribution-edit-row td {
+  background: #f0fdf4 !important;
 }
 
 .financial-container.share-capital-page.light-theme .tab-content {
