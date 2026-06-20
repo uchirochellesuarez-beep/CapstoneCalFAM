@@ -315,23 +315,43 @@ const fetchStats = async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
+.farmer-income-hub-page:not(.light-theme) .tab-badge {
+  background: #2563eb;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border: 1px solid rgba(191, 219, 254, 0.35);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+}
+
+.farmer-income-hub-page:not(.light-theme) .tab-btn.active .tab-badge {
+  background: #1e3a8a;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border-color: rgba(219, 234, 254, 0.45);
+}
+
 .tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(59, 130, 246, 0.88);
-  color: #eff6ff;
+  background: #2563eb;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border: 1px solid rgba(191, 219, 254, 0.35);
   border-radius: 999px;
   padding: 3px 9px;
   font-size: 0.82em;
   font-weight: 800;
   min-width: 20px;
   text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
 }
 
 .tab-btn.active .tab-badge {
-  background: rgba(30, 64, 175, 0.9);
-  color: #e0e7ff;
+  background: #1e3a8a;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border-color: rgba(219, 234, 254, 0.45);
 }
 
 .tab-content {

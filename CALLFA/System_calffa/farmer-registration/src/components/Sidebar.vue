@@ -313,9 +313,9 @@ const canViewMembersSummary = computed(() => {
   return role === 'agriculturist';
 });
 const canManageLoans = computed(() => {
-  // Admin, Treasurer, and President can manage loans
+  // Admin, Treasurer, President, and operations officers can manage member loans
   const role = currentUser.value?.role;
-  return ['admin', 'treasurer', 'president'].includes(role);
+  return ['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(role);
 });
 const canCollectMonthlyDues = computed(() => {
   // President and Treasurer can record association dues
@@ -410,10 +410,8 @@ const communityItems = computed(() => {
   const role = currentUser.value?.role;
   const items = [];
   
-  // Loans - different route for officers vs farmers
-  if (role === 'farmer') {
-    items.push({ text: "Loans", route: "/loan", icon: LoanIcon });
-  } else if (canApplyOfficerLoan(role)) {
+  // Loans — same modern UI for farmers and officers
+  if (['farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role)) {
     items.push({ text: "Loans", route: "/officer-loans", icon: LoanIcon });
   }
   
