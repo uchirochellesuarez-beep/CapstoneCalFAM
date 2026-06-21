@@ -3,6 +3,15 @@ const router = express.Router();
 const pool = require('../db');
 const { verifyToken, authorizeRoles, verifyLoanBarangayAccess } = require('../middleware/auth');
 const { buildBarangayFilter } = require('../utils/barangayHelpers');
+const { getRequestUser, canAccessBarangay, getScopedBarangayId, assertFarmerAccess, isAdmin } = require('../utils/requestUser');
+const { generateReceiptNumber, recordPaymentReceipt } = require('../services/receipt-service');
+const {
+  getTodayDateString,
+  getManilaReferenceDate,
+  addMonths,
+  normalizeDateString,
+  daysBetween
+} = require('../utils/philippinesTime');
 
 // Loan type limits
 const LOAN_LIMITS = {
@@ -29,35 +38,10 @@ const calculatePenalty = (principalAmount, daysOverdue) => {
   };
 };
 
-// Helper function to get today's date as a string in YYYY-MM-DD format (local time, no timezone conversion)
-// Accepts optional deviceDate from frontend for accurate date-change detection
-const getTodayDateString = (deviceDate = null) => {
-  if (deviceDate && /^\d{4}-\d{2}-\d{2}$/.test(deviceDate)) {
-    return deviceDate;
-  }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return String(today.getFullYear()).padStart(4, '0') + '-' + 
-         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-         String(today.getDate()).padStart(2, '0');
-};
-
-// Helper function to get reference Date object from deviceDate or current date
-const parseReferenceDate = (deviceDate = null) => {
-  if (deviceDate && /^\d{4}-\d{2}-\d{2}$/.test(deviceDate)) {
-    const [year, month, day] = deviceDate.split('-').map(Number);
-    return new Date(year, month - 1, day, 0, 0, 0, 0);
-  }
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
 // Helper function to apply and persist penalty to database for overdue loans
-const applyPenaltyForOverdueLoans = async (deviceDate = null) => {
+const applyPenaltyForOverdueLoans = async () => {
   try {
-    const today = parseReferenceDate(deviceDate);
-    const todayStr = getTodayDateString(deviceDate);
+    const todayStr = getTodayDateString();
 
     // Find all overdue loans with unpaid balance
     const [overdueLoans] = await pool.execute(
@@ -74,23 +58,10 @@ const applyPenaltyForOverdueLoans = async (deviceDate = null) => {
 
     for (const loan of overdueLoans) {
       try {
-        // Parse due_date from YYYY-MM-DD string using local time (NO timezone conversion)
-        let dueDateStr;
-        if (typeof loan.due_date === 'string') {
-          dueDateStr = loan.due_date.split('T')[0];
-        } else if (loan.due_date instanceof Date) {
-          const year = loan.due_date.getFullYear();
-          const month = String(loan.due_date.getMonth() + 1).padStart(2, '0');
-          const day = String(loan.due_date.getDate()).padStart(2, '0');
-          dueDateStr = `${year}-${month}-${day}`;
-        } else {
-          dueDateStr = loan.due_date;
-        }
-        
-        const parts = dueDateStr.split('-');
-        const dueDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        dueDate.setHours(0, 0, 0, 0);
-        const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+        const dueDateStr = normalizeDateString(loan.due_date);
+        if (!dueDateStr) continue;
+
+        const daysOverdue = daysBetween(dueDateStr, todayStr);
 
         // Only apply penalty if at least 1 day overdue
         if (daysOverdue < 1) continue;
@@ -133,9 +104,9 @@ const applyPenaltyForOverdueLoans = async (deviceDate = null) => {
 };
 
 // Helper function to revert loans from overdue status if due date is now in the future
-const revertNonOverdueLoans = async (deviceDate = null) => {
+const revertNonOverdueLoans = async () => {
   try {
-    const todayStr = getTodayDateString(deviceDate);
+    const todayStr = getTodayDateString();
 
     // Find all loans that should NOT be overdue but still have overdue status or orphaned penalty data
     const [nonOverdueLoans] = await pool.execute(
@@ -180,20 +151,13 @@ const revertNonOverdueLoans = async (deviceDate = null) => {
   }
 };
 
-// Helper function to calculate due date (6 months from approval) - using local date
-const calculateDueDate = (approvalDate) => {
-  const date = new Date(approvalDate);
-  date.setMonth(date.getMonth() + 6);
-  // Return date in YYYY-MM-DD format using local time (no timezone conversion)
-  return String(date.getFullYear()).padStart(4, '0') + '-' + 
-         String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-         String(date.getDate()).padStart(2, '0');
-};
+// Helper function to calculate due date (6 months from approval) in Metro Manila calendar
+const calculateDueDate = (approvalDate) => addMonths(approvalDate, PAYMENT_TERM_MONTHS);
 
 // Helper function to mark loans as overdue based on due date (independent of penalty)
-const markLoansAsOverdueByDueDate = async (deviceDate = null) => {
+const markLoansAsOverdueByDueDate = async () => {
   try {
-    const todayStr = getTodayDateString(deviceDate);
+    const todayStr = getTodayDateString();
 
     console.log(`📋 [markLoansAsOverdueByDueDate] Checking loans for overdue status. Today's date: ${todayStr}`);
 
@@ -331,30 +295,17 @@ const getFarmerBarangay = async (farmerId) => {
 // GET /api/loans - Get all loans with barangay filtering
 router.get('/', async (req, res) => {
   try {
-    const { farmer_id, status, start_date, end_date, limit = 100, barangay_id, deviceDate } = req.query;
+    const { farmer_id, status, start_date, end_date, limit = 100, barangay_id } = req.query;
+
+    const user = await getRequestUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
 
     // Apply penalties to overdue loans before fetching (using device date for accurate detection)
-    await applyPenaltyForOverdueLoans(deviceDate);
-    // Mark loans as overdue based on due date (independent of penalty)
-    await markLoansAsOverdueByDueDate(deviceDate);
-    // Revert loans that are no longer overdue due to system date change
-    await revertNonOverdueLoans(deviceDate);
-    
-    // Check if user token is provided for barangay context
-    let userBarangayId = null;
-    let userRole = 'guest';
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (token) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        userBarangayId = decoded.barangay_id;
-        userRole = decoded.role || 'guest';
-      } catch (err) {
-        // Token invalid, proceed without filtering
-      }
-    }
+    await applyPenaltyForOverdueLoans();
+    await markLoansAsOverdueByDueDate();
+    await revertNonOverdueLoans();
 
     let query = `
       SELECT 
@@ -368,7 +319,7 @@ router.get('/', async (req, res) => {
       FROM loans l
       JOIN farmers f ON l.farmer_id = f.id
       LEFT JOIN farmers a ON l.approved_by = a.id
-      LEFT JOIN barangays b ON f.barangay_id = b.id
+      LEFT JOIN barangays b ON l.barangay_id = b.id
       WHERE 1=1`;
     const params = [];
     
@@ -392,15 +343,17 @@ router.get('/', async (req, res) => {
       params.push(end_date);
     }
 
-    // Barangay filtering
-    // Admin may optionally filter by barangay_id; officers are scoped to their barangay
-    const targetBarangayId = barangay_id || userBarangayId;
-    if (userRole === 'admin' && barangay_id) {
-      query += ' AND f.barangay_id = ?';
-      params.push(barangay_id);
-    } else if (userRole !== 'admin' && targetBarangayId) {
-      query += ' AND f.barangay_id = ?';
-      params.push(targetBarangayId);
+    if (user.role === 'farmer') {
+      query += ' AND l.farmer_id = ?';
+      params.push(user.id);
+    } else {
+      const scopedBarangayId = getScopedBarangayId(user, barangay_id);
+      if (scopedBarangayId) {
+        query += ' AND l.barangay_id = ?';
+        params.push(scopedBarangayId);
+      } else if (!isAdmin(user)) {
+        query += ' AND 1=0';
+      }
     }
     
     query += ' ORDER BY l.application_date DESC LIMIT ?';
@@ -409,7 +362,8 @@ router.get('/', async (req, res) => {
     const [loans] = await pool.execute(query, params);
     
     // Fetch payments for each loan and calculate total including penalties
-    const today = parseReferenceDate(deviceDate);
+    const today = getManilaReferenceDate();
+    const todayStr = getTodayDateString();
     
     for (let loan of loans) {
       try {
@@ -489,16 +443,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/loans/update-overdue - Update loans to overdue status if past due date
-router.post('/update-overdue', async (req, res) => {
+// POST /api/loans/update-overdue - Admin/officers only
+router.post('/update-overdue', verifyToken, async (req, res) => {
   try {
-    const deviceDate = req.query.deviceDate || req.body?.deviceDate;
+    if (!['admin', 'treasurer', 'president'].includes(req.user?.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
     // Apply penalties to overdue loans first
-    await applyPenaltyForOverdueLoans(deviceDate);
+    await applyPenaltyForOverdueLoans();
     // Mark loans as overdue based on due date (independent of penalty)
-    await markLoansAsOverdueByDueDate(deviceDate);
+    await markLoansAsOverdueByDueDate();
     // Revert loans that are no longer overdue due to system date change
-    await revertNonOverdueLoans(deviceDate);
+    await revertNonOverdueLoans();
 
     res.json({ 
       success: true, 
@@ -515,8 +471,12 @@ router.post('/update-overdue', async (req, res) => {
 router.get('/eligibility/:farmerId', async (req, res) => {
   try {
     const { farmerId } = req.params;
+    const user = await getRequestUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    if (!(await assertFarmerAccess(user, farmerId, res))) return;
     
-    // Get farmer's barangay
     const barangayId = await getFarmerBarangay(farmerId);
     
     const eligibility = await canApplyForLoan(farmerId);
@@ -531,12 +491,17 @@ router.get('/eligibility/:farmerId', async (req, res) => {
 router.get('/farmer/:farmerId', async (req, res) => {
   try {
     const { farmerId } = req.params;
-    const { deviceDate } = req.query;
+
+    const user = await getRequestUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    if (!(await assertFarmerAccess(user, farmerId, res))) return;
     
     // Apply any pending penalties for overdue loans before fetching
-    await applyPenaltyForOverdueLoans(deviceDate);
+    await applyPenaltyForOverdueLoans();
     // Mark loans as overdue based on due date
-    await markLoansAsOverdueByDueDate(deviceDate);
+    await markLoansAsOverdueByDueDate();
     
     const [loans] = await pool.execute(
       `SELECT l.*, b.name as barangay_name
@@ -549,7 +514,8 @@ router.get('/farmer/:farmerId', async (req, res) => {
     
     // Calculate penalty information for each loan
     // Note: remaining_balance already includes pending_penalty
-    const today = parseReferenceDate(deviceDate);
+    const today = getManilaReferenceDate();
+    const todayStr = getTodayDateString();
     
     const loansWithPenalty = loans.map(loan => {
       // Parse due date properly
@@ -618,12 +584,16 @@ router.get('/farmer/:farmerId', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { deviceDate } = req.query; // Get optional device date parameter
+
+    const user = await getRequestUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
     
     // Apply any pending penalties for overdue loans before fetching
-    await applyPenaltyForOverdueLoans(deviceDate);
+    await applyPenaltyForOverdueLoans();
     // Mark loans as overdue based on due date
-    await markLoansAsOverdueByDueDate(deviceDate);
+    await markLoansAsOverdueByDueDate();
     
     const [loans] = await pool.execute(
       `SELECT 
@@ -644,11 +614,23 @@ router.get('/:id', async (req, res) => {
     if (loans.length === 0) {
       return res.status(404).json({ success: false, message: 'Loan not found' });
     }
+
+    const loanRow = loans[0];
+    if (!canAccessBarangay(user, loanRow.barangay_id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only access loans from your assigned barangay.'
+      });
+    }
+    if (user.role === 'farmer' && parseInt(loanRow.farmer_id, 10) !== parseInt(user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
     
-    let loan = loans[0];
+    let loan = loanRow;
     
     // Determine which date to use (device date or server date)
-    const referenceDate = parseReferenceDate(deviceDate);
+    const referenceDate = getManilaReferenceDate();
+    const todayStr = getTodayDateString();
     
     // Parse due date properly
     let dueDateStr;
@@ -721,7 +703,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/loans - Create new loan application with barangay context
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
     const { 
       farmer_id, 
@@ -730,11 +712,29 @@ router.post('/', async (req, res) => {
       loan_purpose,
       remarks 
     } = req.body;
+
+    const targetFarmerId = farmer_id || req.user.id;
+    if (req.user.role === 'agriculturist') {
+      return res.status(403).json({
+        success: false,
+        message: 'Agriculturists are not permitted to apply for loans.'
+      });
+    }
+    if (req.user.role === 'farmer' && parseInt(targetFarmerId, 10) !== parseInt(req.user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only apply for loans on your own account.' });
+    }
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'farmer' &&
+      parseInt(targetFarmerId, 10) !== parseInt(req.user.id, 10)
+    ) {
+      return res.status(403).json({ success: false, message: 'You can only apply for loans on your own account.' });
+    }
     
     console.log('Received loan application:', req.body);
     
     // Validate required fields
-    if (!farmer_id || !loan_amount || !loan_type) {
+    if (!targetFarmerId || !loan_amount || !loan_type) {
       return res.status(400).json({ 
         success: false, 
         message: 'Missing required fields: farmer_id, loan_amount, loan_type' 
@@ -758,7 +758,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check eligibility
-    const eligibility = await canApplyForLoan(farmer_id);
+    const eligibility = await canApplyForLoan(targetFarmerId);
     if (!eligibility.allowed) {
       return res.status(400).json({ 
         success: false, 
@@ -767,11 +767,18 @@ router.post('/', async (req, res) => {
     }
 
     // Get farmer's barangay
-    const barangayId = await getFarmerBarangay(farmer_id);
+    const barangayId = await getFarmerBarangay(targetFarmerId);
     if (!barangayId) {
       return res.status(400).json({ 
         success: false, 
         message: 'Farmer barangay assignment is required to apply for loans' 
+      });
+    }
+
+    if (!canAccessBarangay(req.user, barangayId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only create loan applications for farmers in your assigned barangay.'
       });
     }
     
@@ -788,7 +795,7 @@ router.post('/', async (req, res) => {
         total_paid, remaining_balance, payment_term, remarks, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
       [
-        farmer_id, 
+        targetFarmerId, 
         barangayId,
         totalAmount, // Store total amount (principal + interest)
         principal, // Store original principal separately
@@ -805,12 +812,12 @@ router.post('/', async (req, res) => {
     
     // Log activity with barangay context
     try {
-      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [farmer_id]);
+      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [targetFarmerId]);
       await pool.execute(
         `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
          VALUES (?, ?, 'loan_application', ?, ?)`,
         [
-          farmer_id,
+          targetFarmerId,
           barangayId,
           `${farmer[0]?.full_name || 'Farmer'} applied for ${loan_type} loan of ₱${loan_amount}`,
           JSON.stringify({ loan_id: result.insertId, loan_type, loan_amount })
@@ -820,7 +827,7 @@ router.post('/', async (req, res) => {
       console.error('Error logging loan application:', logErr);
     }
     
-    console.log(`✓ Loan application created: ID ${result.insertId} for farmer ${farmer_id}`);
+    console.log(`✓ Loan application created: ID ${result.insertId} for farmer ${targetFarmerId}`);
     
     res.json({ 
       success: true, 
@@ -842,12 +849,14 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/loans/:id/approve - Approve loan (Treasurer, President, or Admin based on barangay)
-// For officer loans: Treasurer and President approve each other
-// For farmer loans: Treasurer or President approves
-router.put('/:id/approve', async (req, res) => {
+router.put('/:id/approve', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const { approved_by, remarks } = req.body;
+    const actorId = approved_by || req.user.id;
+    if (parseInt(actorId, 10) !== parseInt(req.user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only approve loans as yourself.' });
+    }
 
     // Get loan and applicant info
     const [loans] = await pool.execute(
@@ -873,10 +882,10 @@ router.put('/:id/approve', async (req, res) => {
     }
 
     // Get approver info for authorization
-    if (approved_by) {
+    {
       const [approvers] = await pool.execute(
         'SELECT id, role, barangay_id FROM farmers WHERE id = ?',
-        [approved_by]
+        [actorId]
       );
 
       if (approvers.length === 0) {
@@ -958,7 +967,7 @@ router.put('/:id/approve', async (req, res) => {
       `UPDATE loans 
        SET status = 'approved', approved_by = ?, approval_date = ?, due_date = ?, remarks = ?
        WHERE id = ?`,
-      [approved_by || null, approval_date, due_date, remarks || null, id]
+      [actorId, approval_date, due_date, remarks || null, id]
     );
 
     if (result.affectedRows === 0) {
@@ -968,7 +977,7 @@ router.put('/:id/approve', async (req, res) => {
     // Log approval activity
     try {
       const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [loan.farmer_id]);
-      const [approverInfo] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [approved_by]);
+      const [approverInfo] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [actorId]);
       
       await pool.execute(
         `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
@@ -977,7 +986,7 @@ router.put('/:id/approve', async (req, res) => {
           loan.farmer_id,
           loan.barangay_id,
           `${farmer[0]?.full_name || 'User'} loan approved by ${approverInfo[0]?.full_name || 'Admin'}`,
-          JSON.stringify({ loan_id: id, approved_by, approval_date })
+          JSON.stringify({ loan_id: id, approved_by: actorId, approval_date })
         ]
       );
     } catch (logErr) {
@@ -998,10 +1007,14 @@ router.put('/:id/approve', async (req, res) => {
 });
 
 // PUT /api/loans/:id/reject - Reject loan (Treasurer, President, or Admin based on barangay)
-router.put('/:id/reject', async (req, res) => {
+router.put('/:id/reject', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const { rejected_by, rejection_reason } = req.body;
+    const actorId = rejected_by || req.user.id;
+    if (parseInt(actorId, 10) !== parseInt(req.user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only reject loans as yourself.' });
+    }
 
     // Get loan and applicant info
     const [loans] = await pool.execute(
@@ -1027,10 +1040,10 @@ router.put('/:id/reject', async (req, res) => {
     }
 
     // Get rejector info for authorization
-    if (rejected_by) {
+    {
       const [rejecters] = await pool.execute(
         'SELECT id, role, barangay_id FROM farmers WHERE id = ?',
-        [rejected_by]
+        [actorId]
       );
 
       if (rejecters.length === 0) {
@@ -1099,7 +1112,7 @@ router.put('/:id/reject', async (req, res) => {
       `UPDATE loans 
        SET status = 'rejected', rejected_by = ?, rejection_date = ?, rejection_reason = ?
        WHERE id = ?`,
-      [rejected_by || null, rejected_date, rejection_reason || null, id]
+      [actorId, rejected_date, rejection_reason || null, id]
     );
 
     if (result.affectedRows === 0) {
@@ -1116,7 +1129,7 @@ router.put('/:id/reject', async (req, res) => {
           loan.farmer_id,
           loan.barangay_id,
           `${farmer[0]?.full_name || 'User'} loan rejected`,
-          JSON.stringify({ loan_id: id, rejected_by, reason: rejection_reason })
+          JSON.stringify({ loan_id: id, rejected_by: actorId, reason: rejection_reason })
         ]
       );
     } catch (logErr) {
@@ -1136,7 +1149,7 @@ router.put('/:id/reject', async (req, res) => {
 });
 
 // PUT /api/loans/:id - Update loan (generic updates with barangay validation)
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -1262,8 +1275,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/loans/:id - Delete loan (Admin only, or pending loans from own barangay)
-router.delete('/:id', async (req, res) => {
+// DELETE /api/loans/:id - Delete loan (pending only, same barangay)
+router.delete('/:id', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -1302,10 +1315,14 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/loans/:id/payment - Record loan payment
-router.post('/:id/payment', async (req, res) => {
+router.post('/:id/payment', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const { amount, payment_date, payment_method, remarks, recorded_by, reference_number } = req.body;
+    const actorId = recorded_by || req.user.id;
+    if (parseInt(actorId, 10) !== parseInt(req.user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only record payments as yourself.' });
+    }
 
     // Validate inputs
     if (!amount || parseFloat(amount) <= 0) {
@@ -1317,13 +1334,14 @@ router.post('/:id/payment', async (req, res) => {
     }
 
     if (!reference_number || reference_number.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Receipt number is required' });
+      // Auto-generate official receipt number when not supplied
     }
 
     // Get loan details with applicant role
     const [loans] = await pool.execute(
-      `SELECT l.id, l.farmer_id, l.barangay_id, l.status, l.loan_amount, l.total_paid, l.remaining_balance, l.due_date, l.pending_penalty, l.principal_amount,
-              f.role as applicant_role
+      `SELECT l.id, l.farmer_id, l.barangay_id, l.status, l.loan_amount, l.loan_type,
+              l.total_paid, l.remaining_balance, l.due_date, l.pending_penalty, l.principal_amount,
+              f.role as applicant_role, f.full_name as farmer_name
        FROM loans l
        JOIN farmers f ON l.farmer_id = f.id
        WHERE l.id = ?`,
@@ -1337,15 +1355,15 @@ router.post('/:id/payment', async (req, res) => {
     const loan = loans[0];
 
     // Apply any pending penalties for overdue loans before processing payment
-    const paymentDeviceDate = req.query.deviceDate || req.body?.deviceDate || null;
-    await applyPenaltyForOverdueLoans(paymentDeviceDate);
+    await applyPenaltyForOverdueLoans();
     // Mark loans as overdue based on due date (independent of penalty)
-    await markLoansAsOverdueByDueDate(paymentDeviceDate);
+    await markLoansAsOverdueByDueDate();
     
     // Refresh loan data to get updated penalty and status if overdue
     const [refreshedLoans] = await pool.execute(
-      `SELECT l.id, l.farmer_id, l.barangay_id, l.status, l.loan_amount, l.total_paid, l.remaining_balance, l.due_date, l.pending_penalty, l.principal_amount,
-              f.role as applicant_role
+      `SELECT l.id, l.farmer_id, l.barangay_id, l.status, l.loan_amount, l.loan_type,
+              l.total_paid, l.remaining_balance, l.due_date, l.pending_penalty, l.principal_amount,
+              f.role as applicant_role, f.full_name as farmer_name
        FROM loans l
        JOIN farmers f ON l.farmer_id = f.id
        WHERE l.id = ?`,
@@ -1375,11 +1393,11 @@ router.post('/:id/payment', async (req, res) => {
       });
     }
 
-    // Check authorization - verify the recorded_by user is authorized
-    if (recorded_by) {
+    // Check authorization - verify the recorder is authorized
+    {
       const [recorders] = await pool.execute(
         'SELECT role, barangay_id FROM farmers WHERE id = ?',
-        [recorded_by]
+        [actorId]
       );
 
       if (recorders.length === 0) {
@@ -1421,7 +1439,7 @@ router.post('/:id/payment', async (req, res) => {
       const isOfficerLoan = ['treasurer', 'president'].includes(loan.applicant_role);
       if (isOfficerLoan) {
         // Officers cannot record payments on their own loans
-        if (recorded_by === loan.farmer_id) {
+        if (parseInt(actorId, 10) === parseInt(loan.farmer_id, 10)) {
           const applicantName = loan.applicant_role === 'treasurer' ? 'Treasurer' : 'President';
           const approverRole = loan.applicant_role === 'treasurer' ? 'President' : 'Treasurer';
           return res.status(403).json({ 
@@ -1458,10 +1476,16 @@ router.post('/:id/payment', async (req, res) => {
     }
 
     // Record the payment
+    const receiptNum =
+      (reference_number && String(reference_number).trim()) || (await generateReceiptNumber(pool));
+    const normalizedMethod = ['gcash', 'g-cash'].includes(String(payment_method || '').toLowerCase())
+      ? 'GCash'
+      : 'Cash';
+
     const [paymentResult] = await pool.execute(
       `INSERT INTO loan_payments (loan_id, amount, payment_date, payment_method, reference_number, remarks, recorded_by, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, parseFloat(amount), payment_date, payment_method || 'cash', reference_number.trim(), remarks || null, recorded_by || null]
+      [id, parseFloat(amount), payment_date, normalizedMethod, receiptNum, remarks || null, actorId]
     );
 
     if (paymentResult.affectedRows === 0) {
@@ -1534,7 +1558,7 @@ router.post('/:id/payment', async (req, res) => {
     // Log payment activity
     try {
       const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [loan.farmer_id]);
-      const [recorder] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [recorded_by]);
+      const [recorder] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [actorId]);
       
       await pool.execute(
         `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
@@ -1547,7 +1571,7 @@ router.post('/:id/payment', async (req, res) => {
             loan_id: id, 
             payment_amount: parseFloat(amount),
             new_balance: newRemainingBalance,
-            recorded_by,
+            recorded_by: actorId,
             payment_date
           })
         ]
@@ -1556,10 +1580,27 @@ router.post('/:id/payment', async (req, res) => {
       console.error('Error logging payment:', logErr);
     }
 
+    const loanTypeLabel = (loan.loan_type || 'Loan').charAt(0).toUpperCase() + (loan.loan_type || 'loan').slice(1);
+    await recordPaymentReceipt(pool, {
+      receiptNumber: receiptNum,
+      module: 'admin_loan',
+      referenceId: parseInt(id, 10),
+      referenceType: 'loan',
+      clientName: loan.farmer_name,
+      amountPaid: paymentAmount,
+      remainingBalance: newRemainingBalance,
+      paymentMethod: normalizedMethod,
+      paymentDate: payment_date,
+      collectedBy: actorId,
+      barangayId: loan.barangay_id,
+      remarks: remarks || `${loanTypeLabel} loan payment — Loan #${id}`
+    });
+
     res.json({ 
       success: true, 
       message: isPaidOff ? 'Loan paid in full!' : 'Payment recorded successfully',
       payment_id: paymentResult.insertId,
+      receipt_number: receiptNum,
       loan_id: id,
       total_paid: newTotalPaid,
       remaining_balance: newRemainingBalance,

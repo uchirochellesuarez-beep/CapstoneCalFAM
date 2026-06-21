@@ -568,11 +568,12 @@ const approveAllPending = async () => {
   }
 
   .members-table {
-    font-size: 12px;
+    font-size: 0.625rem;
   }
 
-  th, td {
-    padding: 8px;
+  :deep(.members-table th),
+  :deep(.members-table td) {
+    padding: 0.24rem 0.22rem;
   }
 
   .action-buttons {

@@ -2,34 +2,196 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { generateOperatorIncomeForBooking } = require('../services/operator-income-service');
+const { generateReceiptNumber, recordPaymentReceipt, ensureReceiptTables } = require('../services/receipt-service');
+const { REFUNDED_BOOKING_NOT_EXISTS_SQL } = require('../services/refund-service');
+const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
+const { getRequestUser, isAdmin } = require('../utils/requestUser');
+const { buildExpenseReceiptLineItems } = require('../services/expense-receipt-lines');
+
+const EXPENSE_SELECT_BASE = `
+  SELECT 
+    me.*,
+    mi.machinery_name,
+    mi.machinery_type,
+    mi.barangay_id,
+    b.name AS barangay_name,
+    op.full_name AS operator_name,
+    op.reference_number AS operator_ref,
+    op.address AS operator_address,
+    op.phone_number AS operator_phone,
+    mb.booking_date,
+    mb.service_location,
+    mb.area_size,
+    mb.area_unit,
+    mb.total_price AS booking_total,
+    mb.status AS booking_status,
+    f.full_name AS farmer_name,
+    f.reference_number AS farmer_ref
+  FROM machinery_expenses me
+  LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+  LEFT JOIN barangays b ON mi.barangay_id = b.id
+  LEFT JOIN farmers op ON me.operator_id = op.id
+  LEFT JOIN machinery_bookings mb ON me.booking_id = mb.id
+  LEFT JOIN farmers f ON mb.farmer_id = f.id
+  LEFT JOIN payment_receipts pr
+    ON pr.module = 'machinery_expense'
+    AND pr.reference_type = 'machinery_expense'
+    AND pr.reference_id = me.id
+`;
+
+const RECORDED_EXPENSE_FILTER = ` AND me.expense_status = 'Recorded'`;
+
+async function issueExpenseReceipt(pool, expenseRow, { paymentMethod = 'Cash', recordedBy }) {
+  await ensureReceiptTables(pool);
+  const receiptNum = await generateReceiptNumber(pool);
+  const paymentFor = String(expenseRow.particulars || '').trim() || expenseRow.machinery_name || 'Machinery expense';
+
+  const lineItems = buildExpenseReceiptLineItems(expenseRow);
+
+  let treasurerName = 'Treasurer';
+  let treasurerAddress = expenseRow.barangay_name ? `${expenseRow.barangay_name} Chapter` : '';
+  let treasurerPhone = '';
+
+  if (recordedBy) {
+    const [treasurerRows] = await pool.execute(
+      'SELECT full_name, address, phone_number FROM farmers WHERE id = ?',
+      [recordedBy]
+    );
+    if (treasurerRows.length > 0) {
+      treasurerName = treasurerRows[0].full_name || treasurerName;
+      treasurerAddress = treasurerRows[0].address || treasurerAddress;
+      treasurerPhone = treasurerRows[0].phone_number || '';
+    }
+  }
+
+  await recordPaymentReceipt(pool, {
+    receiptNumber: receiptNum,
+    module: 'machinery_expense',
+    referenceId: expenseRow.id,
+    referenceType: 'machinery_expense',
+    clientName: treasurerName,
+    amountPaid: expenseRow.total_amount,
+    remainingBalance: 0,
+    paymentMethod: paymentMethod || 'Cash',
+    paymentDate: expenseRow.date_of_expense,
+    collectedBy: recordedBy,
+    barangayId: expenseRow.barangay_id,
+    remarks: paymentFor,
+    metadata: {
+      machinery_id: expenseRow.machinery_id || null,
+      machinery_name: expenseRow.machinery_name || null,
+      operator_name: expenseRow.operator_name || null,
+      expense_source: expenseRow.expense_source || null,
+      expense_breakdown: {
+        fuel_and_oil: expenseRow.fuel_and_oil,
+        labor_cost: expenseRow.labor_cost,
+        per_diem: expenseRow.per_diem,
+        repair_and_maintenance: expenseRow.repair_and_maintenance,
+        office_supply: expenseRow.office_supply,
+        communication_expense: expenseRow.communication_expense,
+        utilities_expense: expenseRow.utilities_expense,
+        sundries: expenseRow.sundries,
+        total_amount: expenseRow.total_amount,
+        booking_id: expenseRow.booking_id,
+        operator_id: expenseRow.operator_id
+      },
+      payee_name: treasurerName,
+      payee_address: treasurerAddress,
+      payee_phone: treasurerPhone,
+      payee_role: 'Treasurer',
+      line_items: lineItems
+    }
+  });
+
+  await pool.execute(
+    'UPDATE machinery_expenses SET reference_number = ? WHERE id = ?',
+    [receiptNum, expenseRow.id]
+  );
+
+  return receiptNum;
+}
+
+async function fetchExpenseRow(pool, expenseId) {
+  const [rows] = await pool.execute(`${EXPENSE_SELECT_BASE} WHERE me.id = ?`, [expenseId]);
+  return rows[0] || null;
+}
+
+async function finalizeExpenseAndIncome(expenseId, { laborCost, transactionDate, bookingId }) {
+  if (!bookingId || !(parseFloat(laborCost) > 0)) return null;
+  return generateOperatorIncomeForBooking(bookingId, {
+    expenseId: parseInt(expenseId, 10),
+    laborCost,
+    transactionDate
+  });
+}
+
+async function resolveFinancialUser(req, res) {
+  const user = await getRequestUser(req);
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      message: 'Authentication required. Please log in with a valid token.'
+    });
+    return null;
+  }
+
+  const claimedId = req.query.user_id || req.body.user_id;
+  if (claimedId && parseInt(claimedId, 10) !== parseInt(user.id, 10)) {
+    res.status(403).json({ success: false, message: 'User identity mismatch' });
+    return null;
+  }
+
+  return user;
+}
+
+async function assertMachineryInUserBarangay(req, res, machineryId) {
+  const [rows] = await pool.execute(
+    'SELECT barangay_id FROM machinery_inventory WHERE id = ?',
+    [machineryId]
+  );
+  if (!rows.length) {
+    res.status(404).json({ success: false, message: 'Machinery not found' });
+    return false;
+  }
+  if (!isAdmin({ role: req.userRole }) && req.userBarangayId) {
+    if (parseInt(rows[0].barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+      res.status(403).json({
+        success: false,
+        message: 'You can only manage financial records for machinery in your barangay.'
+      });
+      return false;
+    }
+  }
+  return rows[0].barangay_id;
+}
 
 // Middleware to verify financial access and get user's barangay
-// Admin: can view all (but only profit/reports tabs in frontend)
-// President, Auditor: can view their barangay's data (read-only)
-// Treasurer: can view and manage their barangay's data
+// Admin: can view all (optional ?barangay_id= filter)
+// President, Auditor: read-only for their barangay
+// Treasurer: manage their barangay
 const verifyFinancialAccess = async (req, res, next) => {
   try {
-    const userId = req.query.user_id || req.body.user_id;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'User not authenticated' });
-    }
+    const user = await resolveFinancialUser(req, res);
+    if (!user) return;
 
-    const [user] = await pool.execute(
-      'SELECT role, barangay_id FROM farmers WHERE id = ?',
-      [userId]
-    );
-
-    if (user.length === 0 || !['admin', 'president', 'treasurer', 'auditor'].includes(user[0].role)) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only admin, president, treasurer, and auditor can access financial management' 
+    if (!['admin', 'president', 'treasurer', 'auditor'].includes(user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admin, president, treasurer, and auditor can access financial management'
       });
     }
 
-    // Attach user info to request for barangay filtering
-    req.userRole = user[0].role;
-    req.userBarangayId = user[0].barangay_id;
-    
+    if (!isAdmin(user) && !user.barangay_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not assigned to a barangay.'
+      });
+    }
+
+    req.userRole = user.role;
+    req.userBarangayId = user.barangay_id;
+    req.user = user;
     next();
   } catch (error) {
     console.error('Auth error:', error);
@@ -40,26 +202,26 @@ const verifyFinancialAccess = async (req, res, next) => {
 // Middleware to verify treasurer-only access for write operations
 const verifyTreasurerAccess = async (req, res, next) => {
   try {
-    const userId = req.query.user_id || req.body.user_id;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'User not authenticated' });
-    }
+    const user = await resolveFinancialUser(req, res);
+    if (!user) return;
 
-    const [user] = await pool.execute(
-      'SELECT role, barangay_id FROM farmers WHERE id = ?',
-      [userId]
-    );
-
-    if (user.length === 0 || user[0].role !== 'treasurer') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only treasurers can manage financial records' 
+    if (user.role !== 'treasurer' && user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only treasurers can manage financial records'
       });
     }
 
-    req.userRole = user[0].role;
-    req.userBarangayId = user[0].barangay_id;
-    
+    if (!isAdmin(user) && !user.barangay_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not assigned to a barangay.'
+      });
+    }
+
+    req.userRole = user.role;
+    req.userBarangayId = user.barangay_id;
+    req.user = user;
     next();
   } catch (error) {
     console.error('Auth error:', error);
@@ -72,23 +234,23 @@ const verifyTreasurerAccess = async (req, res, next) => {
 // GET machinery expenses with filters (barangay-based)
 router.get('/expenses', verifyFinancialAccess, async (req, res) => {
   try {
-    const { machinery_id, start_date, end_date, limit = 100, barangay_id } = req.query;
+    const {
+      machinery_id,
+      start_date,
+      end_date,
+      limit = 200,
+      barangay_id,
+      expense_status,
+      expense_source,
+      operator_id,
+      booking_id
+    } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
     
-    let query = `SELECT 
-      me.*,
-      mi.machinery_name,
-      mi.machinery_type,
-      mi.barangay_id,
-      b.name as barangay_name
-    FROM machinery_expenses me
-    LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-    LEFT JOIN barangays b ON mi.barangay_id = b.id
-    WHERE 1=1`;
+    let query = `${EXPENSE_SELECT_BASE} WHERE 1=1`;
     const params = [];
     
-    // Filter by barangay: admin can filter by selected barangay, others see their own barangay
     if (userRole === 'admin' && barangay_id) {
       query += ' AND mi.barangay_id = ?';
       params.push(barangay_id);
@@ -99,7 +261,27 @@ router.get('/expenses', verifyFinancialAccess, async (req, res) => {
     
     if (machinery_id && machinery_id !== '') {
       query += ' AND me.machinery_id = ?';
-      params.push(parseInt(machinery_id));
+      params.push(parseInt(machinery_id, 10));
+    }
+
+    if (expense_status) {
+      query += ' AND me.expense_status = ?';
+      params.push(expense_status);
+    }
+
+    if (expense_source) {
+      query += ' AND me.expense_source = ?';
+      params.push(expense_source);
+    }
+
+    if (operator_id) {
+      query += ' AND me.operator_id = ?';
+      params.push(parseInt(operator_id, 10));
+    }
+
+    if (booking_id) {
+      query += ' AND me.booking_id = ?';
+      params.push(parseInt(booking_id, 10));
     }
     
     if (start_date) {
@@ -112,23 +294,54 @@ router.get('/expenses', verifyFinancialAccess, async (req, res) => {
       params.push(end_date);
     }
     
-    query += ' ORDER BY me.date_of_expense DESC LIMIT ?';
-    params.push(parseInt(limit));
+    query += ` ORDER BY
+      CASE WHEN me.expense_status = 'Pending' THEN 0 ELSE 1 END,
+      me.date_of_expense DESC,
+      me.created_at DESC
+      LIMIT ?`;
+    params.push(parseInt(limit, 10));
     
     const [expenses] = await pool.execute(query, params);
-    res.json({ success: true, expenses, userRole, userBarangayId });
+
+    let summaryQuery = `
+      SELECT
+        SUM(CASE WHEN me.expense_status = 'Pending' THEN 1 ELSE 0 END) AS pending_count,
+        SUM(CASE WHEN me.expense_status = 'Recorded' AND me.expense_source = 'booking' THEN 1 ELSE 0 END) AS recorded_booking_count,
+        SUM(CASE WHEN me.expense_status = 'Recorded' AND me.expense_source = 'manual' THEN 1 ELSE 0 END) AS manual_count
+      FROM machinery_expenses me
+      LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+      WHERE 1=1`;
+    const summaryParams = [];
+
+    if (userRole === 'admin' && barangay_id) {
+      summaryQuery += ' AND mi.barangay_id = ?';
+      summaryParams.push(barangay_id);
+    } else if (userRole !== 'admin' && userBarangayId) {
+      summaryQuery += ' AND mi.barangay_id = ?';
+      summaryParams.push(userBarangayId);
+    }
+
+    const [summaryRows] = await pool.execute(summaryQuery, summaryParams);
+
+    res.json({
+      success: true,
+      expenses,
+      summary: summaryRows[0] || { pending_count: 0, recorded_booking_count: 0, manual_count: 0 },
+      userRole,
+      userBarangayId
+    });
   } catch (error) {
     console.error('Error fetching expenses:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch expenses' });
   }
 });
 
-// GET single expense
+// GET single expense with booking context
 router.get('/expenses/:id', verifyFinancialAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const [expense] = await pool.execute(
-      'SELECT * FROM machinery_expenses WHERE id = ?',
+      `${EXPENSE_SELECT_BASE} WHERE me.id = ?`,
       [id]
     );
     
@@ -148,9 +361,9 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
   try {
     const {
       machinery_id,
+      booking_id = null,
       date_of_expense,
       particulars,
-      reference_number,
       total_amount,
       fuel_and_oil = 0,
       labor_cost = 0,
@@ -160,6 +373,7 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       communication_expense = 0,
       utilities_expense = 0,
       sundries = 0,
+      payment_method = 'Cash',
       user_id
     } = req.body;
     
@@ -170,28 +384,64 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       });
     }
 
-    if (!reference_number || reference_number.trim() === '') {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Receipt/Reference number is required' 
+    if (parseFloat(total_amount) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Total amount must be greater than 0'
       });
     }
+
+    const machineryBarangayId = await assertMachineryInUserBarangay(req, res, machinery_id);
+    if (!machineryBarangayId) return;
     
     const [result] = await pool.execute(
       `INSERT INTO machinery_expenses 
-       (machinery_id, date_of_expense, particulars, reference_number, total_amount, 
+       (machinery_id, barangay_id, booking_id, operator_id, date_of_expense, particulars, reference_number, total_amount, 
         fuel_and_oil, labor_cost, per_diem, repair_and_maintenance, office_supply,
-        communication_expense, utilities_expense, sundries, record_created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [machinery_id, date_of_expense, particulars, reference_number.trim(), total_amount,
-       fuel_and_oil, labor_cost, per_diem, repair_and_maintenance, office_supply,
-       communication_expense, utilities_expense, sundries, user_id]
+        communication_expense, utilities_expense, sundries, record_created_by, expense_status, expense_source)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Recorded', 'manual')`,
+      [
+        machinery_id,
+        machineryBarangayId,
+        booking_id || null,
+        null,
+        date_of_expense,
+        particulars,
+        total_amount,
+        fuel_and_oil,
+        labor_cost,
+        per_diem,
+        repair_and_maintenance,
+        office_supply,
+        communication_expense,
+        utilities_expense,
+        sundries,
+        user_id
+      ]
     );
+
+    if (booking_id && parseFloat(labor_cost) > 0) {
+      await finalizeExpenseAndIncome(result.insertId, {
+        laborCost: labor_cost,
+        transactionDate: date_of_expense,
+        bookingId: booking_id
+      });
+    }
+
+    const expenseRow = await fetchExpenseRow(pool, result.insertId);
+    let receiptNum = null;
+    if (expenseRow) {
+      receiptNum = await issueExpenseReceipt(pool, expenseRow, {
+        paymentMethod: payment_method,
+        recordedBy: user_id
+      });
+    }
 
     res.json({ 
       success: true, 
       message: 'Expense recorded successfully',
-      expense_id: result.insertId 
+      expense_id: result.insertId,
+      receipt_number: receiptNum
     });
   } catch (error) {
     console.error('Error creating expense:', error);
@@ -215,32 +465,92 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
       office_supply,
       communication_expense,
       utilities_expense,
-      sundries
+      sundries,
+      booking_id = null,
+      payment_method = 'Cash',
+      user_id
     } = req.body;
 
-    if (!reference_number || reference_number.trim() === '') {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Receipt/Reference number is required' 
-      });
+    const [existingRows] = await pool.execute(
+      'SELECT id, expense_status, expense_source, booking_id, operator_id, machinery_id FROM machinery_expenses WHERE id = ?',
+      [id]
+    );
+    if (existingRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Expense not found' });
+    }
+    const existing = existingRows[0];
+    const isCompletingPending = existing.expense_status === 'Pending';
+
+    if (isCompletingPending) {
+      if (!total_amount || parseFloat(total_amount) <= 0) {
+        return res.status(400).json({ success: false, message: 'Total amount must be greater than 0 to record expenses' });
+      }
     }
     
     const [result] = await pool.execute(
       `UPDATE machinery_expenses 
        SET date_of_expense = ?, particulars = ?, reference_number = ?, total_amount = ?,
            fuel_and_oil = ?, labor_cost = ?, per_diem = ?, repair_and_maintenance = ?,
-           office_supply = ?, communication_expense = ?, utilities_expense = ?, sundries = ?
+           office_supply = ?, communication_expense = ?, utilities_expense = ?, sundries = ?,
+           booking_id = COALESCE(?, booking_id),
+           expense_status = ?,
+           record_created_by = COALESCE(record_created_by, ?)
        WHERE id = ?`,
-      [date_of_expense, particulars, reference_number.trim(), total_amount,
-       fuel_and_oil, labor_cost, per_diem, repair_and_maintenance,
-       office_supply, communication_expense, utilities_expense, sundries, id]
+      [
+        date_of_expense,
+        particulars,
+        isCompletingPending ? null : (reference_number ? reference_number.trim() : null),
+        total_amount,
+        fuel_and_oil,
+        labor_cost,
+        per_diem,
+        repair_and_maintenance,
+        office_supply,
+        communication_expense,
+        utilities_expense,
+        sundries,
+        booking_id,
+        isCompletingPending ? 'Recorded' : existing.expense_status,
+        user_id || null,
+        id
+      ]
     );
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Expense not found' });
     }
+
+    const linkedBookingId = booking_id || existing.booking_id;
+    const shouldGenerateIncome =
+      (isCompletingPending || existing.expense_status === 'Recorded') &&
+      linkedBookingId &&
+      parseFloat(labor_cost) > 0;
+
+    if (shouldGenerateIncome) {
+      await finalizeExpenseAndIncome(id, {
+        laborCost: labor_cost,
+        transactionDate: date_of_expense,
+        bookingId: linkedBookingId
+      });
+    }
+
+    let receiptNum = null;
+    if (isCompletingPending) {
+      const expenseRow = await fetchExpenseRow(pool, id);
+      if (expenseRow) {
+        receiptNum = await issueExpenseReceipt(pool, expenseRow, {
+          paymentMethod: payment_method,
+          recordedBy: user_id
+        });
+      }
+    }
     
-    res.json({ success: true, message: 'Expense updated successfully' });
+    res.json({
+      success: true,
+      message: isCompletingPending ? 'Expense recorded successfully' : 'Expense updated successfully',
+      expense_status: isCompletingPending ? 'Recorded' : existing.expense_status,
+      receipt_number: receiptNum
+    });
   } catch (error) {
     console.error('Error updating expense:', error);
     res.status(500).json({ success: false, message: 'Failed to update expense' });
@@ -272,7 +582,7 @@ router.delete('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
 // GET machinery income (barangay-based)
 router.get('/income', verifyFinancialAccess, async (req, res) => {
   try {
-    const { machinery_id, start_date, end_date, limit = 100, income_source = 'all' } = req.query;
+    const { machinery_id, start_date, end_date, limit = 100, income_source = 'all', barangay_id } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
 
@@ -312,6 +622,9 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
         LEFT JOIN farmers f ON mb.farmer_id = f.id
         LEFT JOIN barangays b ON COALESCE(f.barangay_id, mi.barangay_id) = b.id
+        WHERE COALESCE(mbp.payment_type, '') <> 'refund'
+          AND mbp.amount > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
 
         UNION ALL
 
@@ -361,7 +674,7 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           mb.booking_date,
           mb.total_price as original_amount,
           COALESCE(mb.total_paid, 0) as income_amount,
-          COALESCE(mb.payment_date, mb.updated_at) as date_of_income,
+          COALESCE(mb.last_payment_date, mb.payment_date, mb.updated_at) as date_of_income,
           CASE
             WHEN COALESCE(mb.total_paid, 0) >= COALESCE(mb.total_price, 0) AND COALESCE(mb.total_price, 0) > 0 THEN 'Full Payment'
             WHEN COALESCE(mb.total_paid, 0) > 0 THEN 'Partial Payment'
@@ -378,6 +691,7 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
         LEFT JOIN farmers f ON mb.farmer_id = f.id
         LEFT JOIN barangays b ON COALESCE(f.barangay_id, mi.barangay_id) = b.id
         WHERE COALESCE(mb.total_paid, 0) > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
           AND NOT EXISTS (
             SELECT 1
             FROM machinery_booking_payments mbp3
@@ -424,13 +738,17 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           FROM machinery_booking_payments mbp2
           WHERE mbp2.booking_id = minc.booking_id
         )
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
       ) combined_income
       WHERE 1=1
     `;
     const params = [];
 
-    // Filter by barangay for non-admin users
-    if (userRole !== 'admin' && userBarangayId) {
+    // Filter by barangay for non-admin users; admin may pass ?barangay_id=
+    if (userRole === 'admin' && barangay_id) {
+      query += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
+      params.push(parseInt(barangay_id, 10), parseInt(barangay_id, 10), parseInt(barangay_id, 10));
+    } else if (userRole !== 'admin' && userBarangayId) {
       query += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
       params.push(userBarangayId, userBarangayId, userBarangayId);
     }
@@ -526,11 +844,12 @@ router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
       SELECT COALESCE(SUM(income_amount), 0) as total_income FROM (
         SELECT
           COALESCE(mb.total_paid, 0) as income_amount,
-          COALESCE(mb.payment_date, mb.updated_at) as date_of_income,
+          COALESCE(mb.last_payment_date, mb.payment_date, mb.updated_at) as date_of_income,
           mi.barangay_id
         FROM machinery_bookings mb
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
         WHERE COALESCE(mb.total_paid, 0) > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
         UNION ALL
         SELECT md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id
         FROM monthly_dues md
@@ -543,7 +862,7 @@ router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
       SELECT COALESCE(SUM(me.total_amount), 0) as total_expenses 
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-      WHERE 1=1
+      WHERE me.expense_status = 'Recorded'
     `;
     
     const incomeParams = [];
@@ -619,7 +938,7 @@ router.get('/expenses-breakdown', verifyFinancialAccess, async (req, res) => {
         SUM(me.total_amount) as total
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-      WHERE 1=1
+      WHERE me.expense_status = 'Recorded'
     `;
     const params = [];
     
@@ -751,17 +1070,26 @@ router.get('/ar', verifyFinancialAccess, async (req, res) => {
         b.name as barangay_name,
         mb.booking_date,
         mb.total_price,
-        COALESCE(mb.total_paid, 0) as amount_collected,
-        (mb.total_price - COALESCE(mb.total_paid, 0)) as remaining_balance,
+        COALESCE(mb.receivable_amount, mb.total_price - COALESCE(mb.total_paid, 0)) as accounts_receivable,
+        COALESCE(mb.receivable_amount, mb.total_price - COALESCE(mb.total_paid, 0)) - COALESCE(mb.remaining_balance, 0) as amount_collected,
+        COALESCE(mb.remaining_balance, mb.total_price - COALESCE(mb.total_paid, 0)) as remaining_balance,
         COALESCE(mb.pending_interest, 0) as pending_interest,
         mb.interest_applied_date,
         mb.status as booking_status,
-        mb.payment_status
+        mb.payment_status,
+        mb.last_payment_date,
+        (
+          SELECT mbp.receipt_number FROM machinery_booking_payments mbp
+          WHERE mbp.booking_id = mb.id AND mbp.receipt_number IS NOT NULL
+          ORDER BY mbp.payment_date DESC, mbp.id DESC LIMIT 1
+        ) as last_receipt_number
       FROM machinery_bookings mb
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN barangays b ON mi.barangay_id = b.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
-      WHERE mb.status = 'Completed' AND (mb.total_price - COALESCE(mb.total_paid, 0)) > 0
+      WHERE mb.status = 'Completed'
+        AND COALESCE(mb.remaining_balance, mb.total_price - COALESCE(mb.total_paid, 0)) > 0
+        AND COALESCE(mb.machine_used, 0) = 1
     `;
     const params = [];
     
@@ -788,7 +1116,7 @@ router.get('/ar', verifyFinancialAccess, async (req, res) => {
     };
     
     arList.forEach(item => {
-      summary.total_receivables += parseFloat(item.total_price) || 0;
+      summary.total_receivables += parseFloat(item.accounts_receivable) || 0;
       summary.total_collected += parseFloat(item.amount_collected) || 0;
       summary.total_balance += parseFloat(item.remaining_balance) || 0;
     });
@@ -870,13 +1198,15 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
-    if (!receipt_number || receipt_number.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Receipt number is required' });
-    }
+    const receiptNum = (receipt_number && receipt_number.trim()) || (await generateReceiptNumber(pool));
     
     // Get booking details
     const [booking] = await pool.execute(
-      'SELECT total_price, total_paid, booking_date, pending_interest FROM machinery_bookings WHERE id = ?',
+      `SELECT mb.total_price, mb.total_paid, mb.booking_date, mb.pending_interest, mb.remaining_balance,
+              f.full_name AS farmer_name
+       FROM machinery_bookings mb
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
+       WHERE mb.id = ?`,
       [booking_id]
     );
     
@@ -930,7 +1260,7 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       `INSERT INTO machinery_booking_payments 
        (booking_id, payment_date, amount, payment_method, receipt_number, remarks, recorded_by, payment_type, interest_amount, interest_applied, interest_season)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [booking_id, collection_date, collection_amount, payment_method, receipt_number.trim(), remarks, user_id, finalPaymentType, actualInterestAmount, actualInterestApplied, actualInterestSeason]
+      [booking_id, collection_date, collection_amount, payment_method, receiptNum, remarks, user_id, finalPaymentType, actualInterestAmount, actualInterestApplied, actualInterestSeason]
     );
     
     // Update booking with new total_paid and payment_date
@@ -942,6 +1272,7 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
     }
     
     const newRemainingBalance = totalPrice - newTotalPaid;
+    const bookingStatusUpdate = paymentStatus === 'Paid' ? ", status = 'Completed'" : '';
     
     await pool.execute(
       `UPDATE machinery_bookings 
@@ -949,9 +1280,10 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
            remaining_balance = ?,
            payment_status = ?,
            payment_date = ?,
-           last_payment_date = ?
+           last_payment_date = ?,
+           receipt_number = ?${bookingStatusUpdate}
        WHERE id = ?`,
-      [newTotalPaid, newRemainingBalance, paymentStatus, collection_date, collection_date, booking_id]
+      [newTotalPaid, newRemainingBalance, paymentStatus, collection_date, collection_date, receiptNum, booking_id]
     );
 
     // Update income entry: delete old and insert fresh with cumulative total_paid
@@ -975,10 +1307,29 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       [booking_id]
     );
 
-    res.json({ 
+    await recordPaymentReceipt(pool, {
+      receiptNumber: receiptNum,
+      module: 'machinery_collection',
+      referenceId: booking_id,
+      referenceType: 'machinery_booking',
+      clientName: booking[0].farmer_name,
+      amountPaid: collectionAmt,
+      remainingBalance: newRemainingBalance,
+      paymentMethod: payment_method,
+      paymentDate: collection_date,
+      collectedBy: user_id,
+      barangayId: booking[0].barangay_id,
+      remarks: remarks || `Collection — Booking #${booking_id}`,
+      metadata: { payment_id: result.insertId }
+    });
+
+    await createPendingExpenseForBooking(booking_id);
+
+    res.json({
       success: true, 
       message: 'Collection recorded successfully and moved to income',
       payment_id: result.insertId,
+      receipt_number: receiptNum,
       payment_type: finalPaymentType,
       interest_season: actualInterestSeason,
       interest_applied: actualInterestApplied === 1,
@@ -1004,11 +1355,12 @@ router.post('/profit-distribution/generate', verifyTreasurerAccess, async (req, 
       FROM (
         SELECT
           COALESCE(mb.total_paid, 0) as income_amount,
-          COALESCE(mb.payment_date, mb.updated_at) as date_of_income,
+          COALESCE(mb.last_payment_date, mb.payment_date, mb.updated_at) as date_of_income,
           mi.barangay_id
         FROM machinery_bookings mb
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
         WHERE COALESCE(mb.total_paid, 0) > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
         UNION ALL
         SELECT md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id
         FROM monthly_dues md
@@ -1020,7 +1372,7 @@ router.post('/profit-distribution/generate', verifyTreasurerAccess, async (req, 
       SELECT COALESCE(SUM(me.total_amount), 0) AS total_expenses
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-      WHERE 1=1
+      WHERE me.expense_status = 'Recorded'
     `;
 
     const incomeParams = [];
@@ -1234,7 +1586,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         NULL as booking_id
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
-      WHERE me.date_of_expense BETWEEN ? AND ?${barangayFilter}${machineryFilterExpense}
+      WHERE me.expense_status = 'Recorded' AND me.date_of_expense BETWEEN ? AND ?${barangayFilter}${machineryFilterExpense}
       ORDER BY me.date_of_expense DESC
     `;
     const expenseParams = [dateStart, dateEnd];
@@ -1274,6 +1626,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         LEFT JOIN farmers f ON mb.farmer_id = f.id
         WHERE minc.date_of_income BETWEEN ? AND ?
           AND minc.machinery_id = ?${effectiveBarangayId ? ' AND mi.barangay_id = ?' : ''}
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
         ORDER BY date DESC
       `;
       incomeParams.push(dateStart, dateEnd, machineryId);
@@ -1306,6 +1659,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         LEFT JOIN machinery_bookings mb ON minc.booking_id = mb.id
         LEFT JOIN farmers f ON mb.farmer_id = f.id
         WHERE minc.date_of_income BETWEEN ? AND ?
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
 
         UNION ALL
 
@@ -1379,6 +1733,9 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
       WHERE mbp.payment_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
+        AND COALESCE(mbp.payment_type, '') <> 'refund'
+        AND mbp.amount > 0
+        AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
       ORDER BY mbp.payment_date DESC
     `;
     const collectionParams = [dateStart, dateEnd];
@@ -1515,6 +1872,12 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN farmers f ON mb.farmer_id = f.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       WHERE mb.status = 'Completed'
+        AND COALESCE(mb.machine_used, 0) = 1
+        AND GREATEST(
+          0,
+          mb.total_price - COALESCE(mb.total_paid, 0) +
+          CASE WHEN mb.payment_status = 'Partial' THEN COALESCE(mb.pending_interest, 0) ELSE 0 END
+        ) > 0
         AND mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
       ORDER BY f.full_name ASC, mb.booking_date ASC, mb.id ASC
     `;
@@ -1641,6 +2004,7 @@ const verifyDuesCollectorAccess = async (req, res, next) => {
 // GET monthly dues collection records (president/treasurer only)
 router.get('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
   try {
+    await ensureReceiptTables(pool);
     const { start_date, end_date, farmer_id } = req.query;
     const userBarangayId = req.userBarangayId;
 
@@ -1650,11 +2014,16 @@ router.get('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
         f.full_name as farmer_name,
         f.phone_number,
         b.name as barangay_name,
-        fc.full_name as collected_by_name
+        fc.full_name as collected_by_name,
+        pr.receipt_number
       FROM monthly_dues md
       LEFT JOIN farmers f ON md.farmer_id = f.id
       LEFT JOIN barangays b ON md.barangay_id = b.id
       LEFT JOIN farmers fc ON md.collected_by = fc.id
+      LEFT JOIN payment_receipts pr
+        ON pr.module = 'association_dues'
+        AND pr.reference_type = 'monthly_dues'
+        AND pr.reference_id = md.id
       WHERE md.barangay_id = ?
     `;
     const params = [userBarangayId];
@@ -1822,10 +2191,27 @@ router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
       ]
     );
 
+    const receiptNum = await generateReceiptNumber(pool);
+    await recordPaymentReceipt(pool, {
+      receiptNumber: receiptNum,
+      module: 'association_dues',
+      referenceId: result.insertId,
+      referenceType: 'monthly_dues',
+      clientName: farmer[0].full_name,
+      amountPaid: 120,
+      remainingBalance: 0,
+      paymentMethod: payment_method || 'Cash',
+      paymentDate: collection_date,
+      collectedBy: user_id,
+      barangayId: userBarangayId,
+      remarks: remarks || 'Association dues'
+    });
+
     res.json({
       success: true,
       message: 'Association dues recorded successfully',
       dues_id: result.insertId,
+      receipt_number: receiptNum,
       farmer_name: farmer[0].full_name,
       amount: 120.00,
       period: `${periodStart.toISOString().split('T')[0]} to ${periodEnd.toISOString().split('T')[0]}`

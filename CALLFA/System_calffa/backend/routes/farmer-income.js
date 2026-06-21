@@ -1578,15 +1578,25 @@ router.get('/distribution/completed/:farmerId', async (req, res) => {
   }
 });
 
-// GET /api/farmer-income/distribution/completed/all - Get all completed assistance (admin only)
+// GET /api/farmer-income/distribution/completed/all - Admin: all barangays; officers: own barangay
 router.get('/distribution/completed/all', async (req, res) => {
   try {
+    const { getRequestUser, buildListBarangayScope } = require('../utils/requestUser');
+    const user = await getRequestUser(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    const { barangay_id } = req.query;
+    const scope = buildListBarangayScope(user, barangay_id, 'f');
+
     const [distributions] = await pool.execute(
-      `SELECT d.*, f.full_name as farmer_name
+      `SELECT d.*, f.full_name as farmer_name, f.barangay_id
        FROM income_assistance_distributions d
        JOIN farmers f ON d.farmer_id = f.id
        WHERE d.status IN ('Distributed', 'Confirmed Received')
-       ORDER BY d.created_at DESC`
+       ${scope.clause}
+       ORDER BY d.created_at DESC`,
+      scope.params
     );
 
     res.json(distributions);

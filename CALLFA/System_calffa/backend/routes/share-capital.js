@@ -7,6 +7,7 @@ const {
   authorizeRoles,
   verifyFarmerBarangayAccess
 } = require('../middleware/auth');
+const { generateReceiptNumber, recordPaymentReceipt } = require('../services/receipt-service');
 
 const SHARE_CONTRIBUTION_AMOUNT = 100;
 const ASSISTANCE_PER_SACK_PHP = 50;
@@ -191,12 +192,17 @@ router.get(
 
       const [contributions] = await pool.execute(
         `
-        SELECT id, contribution_date, amount, status,
-               contribution_kind, sack_count, per_sack_amount, source_distribution_id,
-               created_by, updated_by, created_at, updated_at
-        FROM share_capital_contributions
-        WHERE farmer_id = ?
-        ORDER BY contribution_date DESC, id DESC
+        SELECT c.id, c.contribution_date, c.amount, c.status,
+               c.contribution_kind, c.sack_count, c.per_sack_amount, c.source_distribution_id,
+               c.created_by, c.updated_by, c.created_at, c.updated_at,
+               pr.receipt_number
+        FROM share_capital_contributions c
+        LEFT JOIN payment_receipts pr
+          ON pr.module = 'share_capital'
+          AND pr.reference_type = 'share_capital_contribution'
+          AND pr.reference_id = c.id
+        WHERE c.farmer_id = ?
+        ORDER BY c.contribution_date DESC, c.id DESC
         `,
         [farmerId]
       );
@@ -261,12 +267,17 @@ router.get('/me', verifyToken, async (req, res) => {
 
     const [contributions] = await pool.execute(
       `
-      SELECT id, contribution_date, amount, status,
-             contribution_kind, sack_count, per_sack_amount, source_distribution_id,
-             created_at, updated_at
-      FROM share_capital_contributions
-      WHERE farmer_id = ?
-      ORDER BY contribution_date DESC, id DESC
+      SELECT c.id, c.contribution_date, c.amount, c.status,
+             c.contribution_kind, c.sack_count, c.per_sack_amount, c.source_distribution_id,
+             c.created_at, c.updated_at,
+             pr.receipt_number
+      FROM share_capital_contributions c
+      LEFT JOIN payment_receipts pr
+        ON pr.module = 'share_capital'
+        AND pr.reference_type = 'share_capital_contribution'
+        AND pr.reference_id = c.id
+      WHERE c.farmer_id = ?
+      ORDER BY c.contribution_date DESC, c.id DESC
       `,
       [farmerId]
     );
@@ -330,7 +341,7 @@ router.post(
   verifyFarmerBarangayAccess('farmerId'),
   async (req, res) => {
     try {
-      const { farmer_id, contribution_date, amount } = req.body;
+      const { farmer_id, contribution_date, amount, payment_method } = req.body;
 
       if (!farmer_id || !contribution_date) {
         return res.status(400).json({ success: false, message: 'Missing required fields: farmer_id, contribution_date' });
@@ -421,7 +432,36 @@ router.post(
         console.error('Error logging share capital contribution activity:', logErr);
       }
 
-      res.json({ success: true, id: result.insertId, message: 'Share contribution recorded successfully' });
+      const [[farmerInfo]] = await pool.execute(
+        'SELECT full_name FROM farmers WHERE id = ?',
+        [farmer_id]
+      );
+      const receiptNum = await generateReceiptNumber(pool);
+      const normalizedMethod = ['gcash', 'g-cash'].includes(String(payment_method || '').toLowerCase())
+        ? 'GCash'
+        : 'Cash';
+
+      await recordPaymentReceipt(pool, {
+        receiptNumber: receiptNum,
+        module: 'share_capital',
+        referenceId: result.insertId,
+        referenceType: 'share_capital_contribution',
+        clientName: farmerInfo?.full_name,
+        amountPaid: amt,
+        remainingBalance: 0,
+        paymentMethod: normalizedMethod,
+        paymentDate: contribution_date,
+        collectedBy: req.user?.id || null,
+        barangayId: barangayId,
+        remarks: `6-month share capital contribution (${periodStart} to ${periodEnd})`
+      });
+
+      res.json({
+        success: true,
+        id: result.insertId,
+        receipt_number: receiptNum,
+        message: 'Share contribution recorded successfully'
+      });
     } catch (error) {
       console.error('Error recording share capital contribution:', error.message, error.code);
       if (error.code === 'ER_NO_REFERENCED_TABLE' || error.code === 'ER_BAD_TABLE_ERROR') {

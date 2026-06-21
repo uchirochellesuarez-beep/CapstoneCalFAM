@@ -1,25 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { verifyToken } = require('../middleware/auth');
+const { buildListBarangayScope } = require('../utils/requestUser');
 
 // Get payment history with barangay filtering
-router.get('/history', async (req, res) => {
+router.get('/history', verifyToken, async (req, res) => {
   try {
-    // Check if user token is provided for barangay context
-    let userBarangayId = null;
-    let userRole = 'guest';
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (token) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        userBarangayId = decoded.barangay_id;
-        userRole = decoded.role || 'guest';
-      } catch (err) {
-        // Token invalid, proceed without filtering
-      }
-    }
+    const { barangay_id } = req.query;
+    const scope = buildListBarangayScope(req.user, barangay_id, 'f');
 
     let query = `
       SELECT 
@@ -39,20 +28,22 @@ router.get('/history', async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
-    
-    // Barangay filtering - Officers can only see payments from their barangay
-    if (userRole !== 'admin' && userBarangayId) {
-      query += ' AND f.barangay_id = ?';
-      params.push(userBarangayId);
+
+    if (req.user.role === 'farmer') {
+      query += ' AND l.farmer_id = ?';
+      params.push(req.user.id);
+    } else {
+      query += ` ${scope.clause}`;
+      params.push(...scope.params);
     }
-    
+
     query += ` ORDER BY lp.payment_date DESC`;
-    
+
     const [payments] = await pool.execute(query, params);
-    
-    res.json({ 
-      success: true, 
-      payments: payments || [] 
+
+    res.json({
+      success: true,
+      payments: payments || []
     });
   } catch (error) {
     console.error('Error fetching payment history:', error);

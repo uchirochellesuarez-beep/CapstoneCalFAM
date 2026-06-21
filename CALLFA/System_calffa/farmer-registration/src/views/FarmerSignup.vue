@@ -21,7 +21,7 @@
     </div>
 
     <main class="layout-shell">
-      <section class="tagline-panel" aria-label="Platform highlight">
+      <section class="tagline-panel tagline-panel--desktop" aria-label="Platform highlight">
         <div class="tagline-content">
           <div class="identity-block">
             <span class="identity-badge">{{ language === 'tl' ? 'Portal ng Magsasaka' : 'Farmer Portal' }}</span>
@@ -42,7 +42,6 @@
           <div class="signup-card-inner">
           <div class="form-header">
             <h2 class="form-title">{{ ui.title }}</h2>
-            <p class="form-subtitle">{{ ui.subtitle }}</p>
           </div>
 
           <div v-if="success" class="message success-message">{{ ui.successMessage }}</div>
@@ -81,12 +80,15 @@
             <div class="form-group">
               <label class="form-label">{{ ui.barangay }}</label>
               <select
-                v-model="form.address"
+                v-model="form.barangay_id"
                 required
                 class="form-input"
+                :disabled="barangaysLoading"
               >
-                <option value="" disabled>{{ ui.selectBarangay }}</option>
-                <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.name">
+                <option value="" disabled>
+                  {{ barangaysLoading ? (language === 'tl' ? 'Naglo-load...' : 'Loading...') : ui.selectBarangay }}
+                </option>
+                <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
                   {{ barangay.name }}
                 </option>
               </select>
@@ -96,16 +98,11 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">{{ ui.landArea }}</label>
-              <input
+              <TypedNumberInput
                 v-model="form.land_area"
-                type="number"
-                required
-                min="0.01"
-                step="0.01"
-                class="form-input"
+                :min="0.01"
                 :placeholder="ui.landAreaPlaceholder"
               />
-              <p class="form-hint">{{ ui.landAreaHint }}</p>
             </div>
           </div>
 
@@ -143,29 +140,11 @@
                 <option value="College Graduate">{{ ui.collegeGraduate }}</option>
                 <option value="Post Graduate">{{ ui.postGraduate }}</option>
               </select>
-              <p class="form-hint">{{ ui.educationHint }}</p>
             </div>
           </div>
 
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">{{ ui.role }}</label>
-              <select v-model="form.role" required class="form-input">
-                <option value="farmer">👨‍🌾 {{ ui.roleFarmer }}</option>
-                <option value="president">👔 {{ ui.rolePresident }}</option>
-                <option value="treasurer">💰 {{ ui.roleTreasurer }}</option>
-                <option value="auditor">📊 {{ ui.roleAuditor }}</option>
-                <option value="operator">⚙️ {{ ui.roleOperator }}</option>
-                <option value="operation_manager">🛠️ {{ ui.roleOperationManager }}</option>
-                <option value="business_manager">💼 {{ ui.roleBusinessManager }}</option>
-                <option value="agriculturist">🌱 {{ ui.roleAgriculturist }}</option>
-              </select>
-              <p class="form-hint">{{ ui.roleHint }}</p>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
+            <div class="form-group form-group-full">
               <label class="form-label">{{ ui.referenceNumber }}</label>
               <div class="field-input-wrapper">
                 <span class="field-icon" aria-hidden="true">
@@ -316,7 +295,11 @@
             </div>
           </div>
 
-          <div class="form-actions">
+          <div class="form-row form-row-legal">
+            <RegistrationLegalNotice v-model:agreed="agreedToTerms" :language="language" />
+          </div>
+
+          <div class="form-row form-row-actions">
             <button
               type="submit"
               :disabled="loading"
@@ -326,20 +309,15 @@
             </button>
           </div>
 
-          <div class="form-footer">
-            <div class="footer-cta">
-              <p class="footer-text">{{ ui.alreadyHaveAccount }}</p>
-              <router-link to="/login" class="link-btn">{{ ui.signIn }}</router-link>
+          <div class="form-row form-row-footer">
+            <div class="form-footer">
+              <div class="footer-cta">
+                <p class="footer-text">{{ ui.alreadyHaveAccount }}</p>
+                <router-link to="/login" class="link-btn">{{ ui.signIn }}</router-link>
+              </div>
             </div>
           </div>
         </form>
-
-        <div class="info-card" role="note" aria-live="polite">
-          <div class="info-card-header">
-            <h3 class="info-title">{{ ui.dailyTip }}</h3>
-          </div>
-          <p class="info-content">{{ dailyTip }}</p>
-        </div>
           </div>
         </div>
       </section>
@@ -348,9 +326,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const router = useRouter()
@@ -362,7 +342,7 @@ const labels = {
   en: {
     title: 'Farmer Registration',
     subtitle: 'Begin your journey',
-    dividerForm: 'or complete registration using the form below',
+    dividerForm: 'or use the form below',
     fullName: 'Full Name',
     fullNamePlaceholder: 'Enter your full name',
     birthDate: 'Date of Birth',
@@ -385,16 +365,6 @@ const labels = {
     collegeGraduate: 'College Graduate',
     postGraduate: 'Post Graduate',
     educationHint: 'Select your highest educational attainment',
-    role: 'Account Type / Role',
-    roleFarmer: 'Farmer',
-    rolePresident: 'President',
-    roleTreasurer: 'Treasurer',
-    roleAuditor: 'Auditor',
-    roleOperator: 'Operator',
-    roleOperationManager: 'Operation Manager',
-    roleBusinessManager: 'Business Manager',
-    roleAgriculturist: 'Agriculturist',
-    roleHint: 'Select your role in the cooperative',
     referenceNumber: 'Reference Number',
     referencePlaceholder: '00-00-00-000-000000',
     password: 'Password',
@@ -406,15 +376,15 @@ const labels = {
     alreadyHaveAccount: 'Already have an account?',
     signIn: 'Sign In',
     successMessage: 'Registration successful! Please login with your credentials.',
-    dailyTip: 'Daily Tip',
     referenceFormatError: 'Reference number must follow 00-00-00-000-000000 format.',
     landAreaError: 'Farm area (hectares) must be a number greater than 0.',
-    registerError: 'An error occurred during registration'
+    registerError: 'An error occurred during registration',
+    agreeRequired: 'You must agree to the terms and conditions and data privacy policy before registering.'
   },
   tl: {
     title: 'Pagrehistro ng Magsasaka',
     subtitle: 'Magsimula ng iyong paglalakbay',
-    dividerForm: 'o kumpletuhin ang pagrehistro gamit ang form sa ibaba',
+    dividerForm: 'o gamitin ang form sa ibaba',
     fullName: 'Buong Pangalan',
     fullNamePlaceholder: 'Ilagay ang iyong buong pangalan',
     birthDate: 'Petsa ng Kapanganakan',
@@ -437,16 +407,6 @@ const labels = {
     collegeGraduate: 'Kolehiyo (Tapos)',
     postGraduate: 'Post Graduate',
     educationHint: 'Piliin ang pinakamataas na antas ng edukasyon',
-    role: 'Uri ng Account / Tungkulin',
-    roleFarmer: 'Magsasaka',
-    rolePresident: 'Presidente',
-    roleTreasurer: 'Ingat-Yaman',
-    roleAuditor: 'Auditor',
-    roleOperator: 'Operator',
-    roleOperationManager: 'Operation Manager',
-    roleBusinessManager: 'Business Manager',
-    roleAgriculturist: 'Agriculturist',
-    roleHint: 'Piliin ang iyong tungkulin sa kooperatiba',
     referenceNumber: 'Reference Number',
     referencePlaceholder: '00-00-00-000-000000',
     password: 'Password',
@@ -458,37 +418,19 @@ const labels = {
     alreadyHaveAccount: 'Mayroon nang account?',
     signIn: 'Mag-login',
     successMessage: 'Matagumpay ang pagrehistro! Paki-login gamit ang inyong credentials.',
-    dailyTip: 'Pang-araw-araw na Tip',
     referenceFormatError: 'Ang reference number ay dapat sumunod sa format na 00-00-00-000-000000.',
     landAreaError: 'Ang lawak ng sakahan (ektarya) ay dapat na numero na mas mataas sa 0.',
-    registerError: 'May error sa pagrehistro'
+    registerError: 'May error sa pagrehistro',
+    agreeRequired: 'Dapat sumang-ayon sa mga tuntunin at data privacy policy bago magrehistro.'
   }
 }
 
 const ui = computed(() => labels[language.value])
 
-const dailyTips = {
-  en: [
-    'Water crops early in the morning for better absorption.',
-    'Rotate crops regularly to keep soil nutrients balanced.',
-    'Use organic matter to improve long-term soil structure.',
-    'Inspect leaves weekly to catch pests before outbreaks.'
-  ],
-  tl: [
-    'Diligan ang pananim sa umaga para sa mas mahusay na pagsipsip.',
-    'Mag-rotate ng pananim para mapanatiling may sustansya ang lupa.',
-    'Gumamit ng organikong materyal para sa mas malusog na lupa.',
-    'Suriin lingguhan ang dahon upang maagapan ang peste.'
-  ]
-}
-
-const dailyTip = ref('')
-
 const form = ref({
-  role: 'farmer',
   full_name: '',
   date_of_birth: '',
-  address: '',
+  barangay_id: '',
   land_area: '',
   phone_number: '',
   educational_status: '',
@@ -497,18 +439,8 @@ const form = ref({
   confirmPassword: ''
 })
 
-const barangays = ref([
-  {
-    id: 1,
-    name: 'Camansihan',
-    description: 'Primary operational barangay with active transactions'
-  },
-  {
-    id: 2,
-    name: 'Managpi',
-    description: 'Sample barangay for demonstration'
-  }
-])
+const barangays = ref([])
+const barangaysLoading = ref(true)
 
 const loading = ref(false)
 const error = ref('')
@@ -516,6 +448,7 @@ const success = ref(false)
 const passwordError = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const agreedToTerms = ref(false)
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
 
 const formatReferenceNumberInput = (value = '') => {
@@ -536,23 +469,33 @@ const handleReferenceInput = () => {
   form.value.reference_number = formatReferenceNumberInput(form.value.reference_number)
 }
 
-const setDailyTip = () => {
-  const tips = dailyTips[language.value]
-  dailyTip.value = tips[Math.floor(Math.random() * tips.length)]
-}
-
 const getMaxDateOfBirth = () => {
   const today = new Date()
   const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
   return maxDate.toISOString().split('T')[0]
 }
 
-onMounted(() => {
-  setDailyTip()
-})
+const loadBarangays = async () => {
+  barangaysLoading.value = true
+  try {
+    const response = await fetch('/api/barangays')
+    const data = await response.json()
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to load barangays')
+    }
+    barangays.value = data.barangays || []
+  } catch (err) {
+    console.error('Failed to load barangays:', err)
+    error.value = language.value === 'tl'
+      ? 'Hindi ma-load ang listahan ng barangay. Paki-refresh ang pahina.'
+      : 'Could not load barangay list. Please refresh the page.'
+  } finally {
+    barangaysLoading.value = false
+  }
+}
 
-watch(language, () => {
-  setDailyTip()
+onMounted(() => {
+  loadBarangays()
 })
 
 const calculateAge = (birthDate) => {
@@ -675,12 +618,26 @@ const register = async () => {
     return
   }
 
+  if (!agreedToTerms.value) {
+    error.value = ui.value.agreeRequired
+    return
+  }
+
   loading.value = true
   error.value = ''
   success.value = false
 
   try {
-    const barangayMatch = barangays.value.find((b) => b.name === form.value.address)
+    const selectedBarangay = barangays.value.find(
+      (b) => String(b.id) === String(form.value.barangay_id)
+    )
+    if (!selectedBarangay) {
+      error.value = language.value === 'tl'
+        ? 'Pumili ng wastong barangay.'
+        : 'Please select a valid barangay.'
+      loading.value = false
+      return
+    }
 
     const response = await fetch('/api/farmers/register', {
       method: 'POST',
@@ -690,13 +647,12 @@ const register = async () => {
       body: JSON.stringify({
         full_name: form.value.full_name,
         date_of_birth: form.value.date_of_birth,
-        address: form.value.address,
+        address: selectedBarangay.name,
         phone_number: form.value.phone_number,
         educational_status: form.value.educational_status,
         reference_number: form.value.reference_number,
         password: form.value.password,
-        role: form.value.role,
-        barangay_id: barangayMatch?.id ?? null,
+        barangay_id: selectedBarangay.id,
         land_area: landHa
       })
     })
@@ -710,10 +666,9 @@ const register = async () => {
 
     success.value = true
     form.value = {
-      role: 'farmer',
       full_name: '',
       date_of_birth: '',
-      address: '',
+      barangay_id: '',
       land_area: '',
       phone_number: '',
       educational_status: '',

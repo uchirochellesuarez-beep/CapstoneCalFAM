@@ -13,6 +13,7 @@ const pool = require('../db');
 // Import authentication middleware and helpers
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getUserBarangayContext, getBarangayOfficers, getBarangayFarmers } = require('../utils/barangayHelpers');
+const { buildListBarangayScope, canAccessBarangay, assertFarmerAccess } = require('../utils/requestUser');
 const { hasFarmersEmailColumn } = require('../utils/googleAuth');
 const REFERENCE_NUMBER_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/;
 
@@ -50,11 +51,10 @@ const upload = multer({
 // -----------------------------
 // REGISTER FARMER OR ADMIN
 // -----------------------------
-// REGISTER FARMER OR ADMIN
-// For officers (president, treasurer, etc.), barangay_id is required
+// REGISTER FARMER (self-service — role is always farmer; admin/president assign roles later)
 router.post('/register', async (req, res) => {
   try {
-    const { reference_number, full_name, date_of_birth, address, phone_number, educational_status, password, role, barangay_id, land_area } = req.body;
+    const { reference_number, full_name, date_of_birth, address, phone_number, educational_status, password, barangay_id, land_area } = req.body;
     const normalizedReferenceNumber = String(reference_number || '').trim();
 
     // Validate required fields
@@ -123,24 +123,8 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Default role is farmer
-    const userRole = role || 'farmer';
-    const validRoles = ['farmer', 'admin', 'president', 'treasurer', 'auditor', 'operator', 'agriculturist', 'operation_manager', 'business_manager'];
-    if (!validRoles.includes(userRole)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Invalid role. Must be one of: ${validRoles.join(', ')}` 
-      });
-    }
-
-    // Officer roles (non-farmer) require barangay assignment
-    const officerRoles = ['president', 'treasurer', 'auditor', 'operator', 'agriculturist', 'operation_manager', 'business_manager'];
-    if (officerRoles.includes(userRole) && !barangay_id) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Officer roles require barangay_id to be specified` 
-      });
-    }
+    // Self-registration is always farmer; officer roles are assigned by admin/president on approval
+    const userRole = 'farmer';
 
     // If barangay_id is provided, verify it exists
     if (barangay_id) {
@@ -166,7 +150,7 @@ router.post('/register', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: `${userRole === 'admin' ? 'Admin' : userRole === 'farmer' ? 'Farmer' : 'Officer'} registered successfully! ${userRole === 'farmer' ? 'Pending approval from admin.' : 'Pending assignment and approval.'}`, 
+      message: 'Farmer registered successfully! Pending approval from admin.',
       farmerId: result.insertId
     });
 
@@ -346,30 +330,11 @@ router.get('/pending', async (req, res) => {
 });
 
 // -----------------------------
-// GET ALL FARMERS (ADMIN DASHBOARD)
-// Admins see all farmers, officers see only farmers from their barangay
-router.get('/', async (req, res) => {
+// GET ALL FARMERS — admin: all barangays; officers: own barangay only
+router.get('/', verifyToken, async (req, res) => {
   try {
-    // Check if user provided a token for barangay filtering
-    const token = req.headers.authorization?.split(' ')[1];
-    let userBarangayId = null;
-    let userRole = 'guest';
-
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        userBarangayId = decoded.barangay_id;
-        userRole = decoded.role || 'guest';
-
-        // Get full user info
-        const [users] = await pool.execute('SELECT role FROM farmers WHERE id = ?', [decoded.id]);
-        if (users.length > 0) {
-          userRole = users[0].role;
-        }
-      } catch (err) {
-        // Token invalid, proceed without filtering
-      }
-    }
+    const { barangay_id: queryBarangayId } = req.query;
+    const scope = buildListBarangayScope(req.user, queryBarangayId, 'f');
 
     let query = `
       SELECT 
@@ -395,11 +360,8 @@ router.get('/', async (req, res) => {
     `;
     const params = [];
 
-    // Officers can only see farmers from their barangay
-    if (userRole !== 'admin' && userBarangayId) {
-      query += ' AND f.barangay_id = ?';
-      params.push(userBarangayId);
-    }
+    query += ` ${scope.clause}`;
+    params.push(...scope.params);
 
     query += ' ORDER BY f.registered_on DESC';
 
@@ -416,13 +378,15 @@ router.get('/', async (req, res) => {
 // Returns complete farmer profile including barangay information
 // Used by Settings page to display full profile data
 // -----------------------------
-router.get('/:id/profile', async (req, res) => {
+router.get('/:id/profile', verifyToken, async (req, res) => {
   try {
     const farmerId = parseInt(req.params.id);
 
     if (!farmerId) {
       return res.status(400).json({ success: false, message: 'Invalid farmer ID' });
     }
+
+    if (!(await assertFarmerAccess(req.user, farmerId, res))) return;
 
     // Check if email column exists
     const hasEmailColumn = await hasFarmersEmailColumn(pool);
@@ -456,12 +420,16 @@ router.get('/:id/profile', async (req, res) => {
 // -----------------------------
 // UPDATE FARMER PROFILE
 // -----------------------------
-router.put('/:id/profile', async (req, res) => {
+router.put('/:id/profile', verifyToken, async (req, res) => {
   try {
     const farmerId = parseInt(req.params.id);
-    const { full_name, address, phone_number, date_of_birth, educational_status, land_area, farm_location, reference_number } = req.body;
+    const { full_name, address, phone_number, date_of_birth, educational_status, land_area, farm_location, reference_number, barangay_id } = req.body;
 
     if (!farmerId) return res.status(400).json({ success: false, message: 'Invalid farmer ID' });
+
+    if (!(await assertFarmerAccess(req.user, farmerId, res))) return;
+
+    const requesterIsAdmin = req.user.role === 'admin';
 
     // Build update query dynamically based on provided fields
     const updates = [];
@@ -488,9 +456,40 @@ router.put('/:id/profile', async (req, res) => {
       updates.push('reference_number = ?');
       values.push(normalizedReferenceNumber);
     }
-    if (address) {
+
+    if (barangay_id !== undefined && barangay_id !== null && barangay_id !== '') {
+      const nextBarangayId = parseInt(barangay_id, 10);
+      if (!Number.isFinite(nextBarangayId)) {
+        return res.status(400).json({ success: false, message: 'Invalid barangay_id.' });
+      }
+
+      if (!requesterIsAdmin) {
+        const requesterBarangayId = parseInt(req.user.barangay_id, 10);
+        if (!Number.isFinite(requesterBarangayId) || requesterBarangayId !== nextBarangayId) {
+          return res.status(403).json({
+            success: false,
+            message: 'Only admin can assign a member to a different barangay.'
+          });
+        }
+      }
+
+      const [barangayRows] = await pool.execute('SELECT id, name FROM barangays WHERE id = ?', [nextBarangayId]);
+      if (!barangayRows.length) {
+        return res.status(400).json({ success: false, message: 'Invalid barangay_id. Barangay does not exist.' });
+      }
+
+      updates.push('barangay_id = ?');
+      values.push(nextBarangayId);
+
+      if (address === undefined || address === null || String(address).trim() === '') {
+        updates.push('address = ?');
+        values.push(barangayRows[0].name);
+      }
+    }
+
+    if (address !== undefined && address !== null && String(address).trim() !== '') {
       updates.push('address = ?');
-      values.push(address);
+      values.push(String(address).trim());
     }
     if (phone_number) {
       updates.push('phone_number = ?');

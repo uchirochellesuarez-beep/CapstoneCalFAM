@@ -189,6 +189,8 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { getManilaReferenceDateString } from '../utils/philippineTime'
+import { useBarangayScope } from '../composables/useBarangayScope'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -235,6 +237,9 @@ const filterBarangay = ref('')
 const filterStatus = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
+const federationStats = ref(null)
+
+const { authHeaders, appendBarangayParams } = useBarangayScope(filterBarangay)
 const barangaySortDesc = ref(true)
 // Applied filter values (committed on "Apply")
 const appliedBarangay = ref('')
@@ -361,12 +366,26 @@ const allOutstandingLoans = computed(() => [
 // Methods
 const loadAllFarmers = async () => {
   try {
-    const response = await fetch('/api/farmers')
+    const params = appendBarangayParams()
+    const response = await fetch(`/api/farmers?${params}`, { headers: authHeaders() })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const data = await response.json()
     allFarmers.value = data.farmers || data || []
   } catch (err) {
     console.error('Error loading farmers:', err)
+  }
+}
+
+const loadFederationStats = async () => {
+  if (!isAdmin.value) return
+  try {
+    const response = await fetch('/api/barangays/stats/summary', { headers: authHeaders() })
+    if (response.ok) {
+      const data = await response.json()
+      federationStats.value = data.stats || null
+    }
+  } catch (err) {
+    console.error('Error loading federation stats:', err)
   }
 }
 
@@ -381,15 +400,12 @@ const loadBarangays = async () => {
   }
 }
 
-// Helper to get device date string for API calls
-const getDeviceDate = () => {
-  const d = new Date()
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
-}
+const getDeviceDate = () => getManilaReferenceDateString()
 
 const loadApprovedLoans = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/loans?status=approved&deviceDate=${getDeviceDate()}`)
+    const params = appendBarangayParams({ status: 'approved', deviceDate: getDeviceDate() })
+    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allApprovedLoans.value = data.loans || []
@@ -401,7 +417,8 @@ const loadApprovedLoans = async () => {
 
 const loadActiveLoans = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/loans?status=active&deviceDate=${getDeviceDate()}`)
+    const params = appendBarangayParams({ status: 'active', deviceDate: getDeviceDate() })
+    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allActiveLoans.value = data.loans || []
@@ -413,7 +430,8 @@ const loadActiveLoans = async () => {
 
 const loadOverdueLoans = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/loans?status=overdue&deviceDate=${getDeviceDate()}`)
+    const params = appendBarangayParams({ status: 'overdue', deviceDate: getDeviceDate() })
+    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allOverdueLoans.value = data.loans || []
@@ -451,8 +469,8 @@ const loadFarmerFinancialData = async () => {
 
     // Shares come from the Share Capital module (NOT generic contributions)
     try {
-      const sharesResponse = await fetch('http://localhost:3000/api/share-capital/me', {
-        headers: { 'Authorization': `Bearer ${authStore.token}` }
+      const sharesResponse = await fetch('/api/share-capital/me', {
+        headers: authHeaders()
       })
       if (sharesResponse.ok) {
         const sharesData = await sharesResponse.json()
@@ -466,7 +484,9 @@ const loadFarmerFinancialData = async () => {
     }
 
     // Outstanding loans from the Loans module (only unpaid ones)
-    const loansResponse = await fetch(`http://localhost:3000/api/loans?farmer_id=${userId}&deviceDate=${getDeviceDate()}`)
+    const loansResponse = await fetch(`/api/loans?farmer_id=${userId}&deviceDate=${getDeviceDate()}`, {
+      headers: authHeaders()
+    })
     if (loansResponse.ok) {
       const loansData = await loansResponse.json()
       if (loansData.success && loansData.loans) {
@@ -856,7 +876,7 @@ onMounted(async () => {
 
   if (isAdmin.value) {
     // Admin needs aggregate loan data per barangay
-    tasks.push(loadApprovedLoans(), loadActiveLoans(), loadOverdueLoans())
+    tasks.push(loadApprovedLoans(), loadActiveLoans(), loadOverdueLoans(), loadFederationStats())
   } else {
     // Non-admin needs their service places and personal financial data
     tasks.push(loadServicePlaces(), loadFarmerFinancialData())
