@@ -163,7 +163,7 @@
                 <span>{{ formatDate(farmer.date_of_birth) }}</span>
               </td>
               <td class="members-cell">
-                <span>{{ formatMemberAddress(farmer) }}</span>
+                <span>{{ farmer.barangay_name || farmer.address }}</span>
               </td>
               <td class="members-cell">
                 <span>{{ farmer.phone_number }}</span>
@@ -275,7 +275,7 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Address:</span>
-              <span class="detail-value">{{ formatMemberAddress(selectedFarmer) }}</span>
+              <span class="detail-value">{{ selectedFarmer.address }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Phone Number:</span>
@@ -402,28 +402,17 @@
             </div>
 
             <div class="edit-field">
-              <label class="edit-label">Barangay *</label>
+              <label class="edit-label">Address (Barangay) *</label>
               <select
                 v-model.number="editForm.barangay_id"
                 class="edit-input edit-input-modal"
-                :disabled="!isAdmin && Boolean(userBarangayId)"
                 @change="onBarangayChange"
               >
                 <option :value="null" disabled>Select Barangay</option>
-                <option v-for="barangay in editableBarangays" :key="barangay.id" :value="barangay.id">
+                <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
                   {{ barangay.name }}
                 </option>
               </select>
-            </div>
-
-            <div class="edit-field edit-field-full">
-              <label class="edit-label">Home Address</label>
-              <input
-                v-model="editForm.address"
-                type="text"
-                class="edit-input edit-input-modal"
-                placeholder="Street, purok, sitio, or full address"
-              />
             </div>
 
             <div class="edit-field">
@@ -665,21 +654,6 @@ const displayError = computed(() => {
   return props.error || internalError.value
 })
 
-const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
-
-const userBarangayId = computed(() => {
-  const id = props.userBarangayId ?? authStore.currentUser?.barangay_id
-  return id != null && id !== '' ? Number(id) : null
-})
-
-const editableBarangays = computed(() => {
-  if (isAdmin.value) return barangays.value
-  if (props.userBarangayId) {
-    return barangays.value.filter((b) => Number(b.id) === Number(props.userBarangayId))
-  }
-  return barangays.value
-})
-
 const farmersByRole = computed(() => {
   return {
     farmer: displayFarmers.value.filter(f => f.role === 'farmer'),
@@ -704,35 +678,23 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const formatMemberAddress = (farmer) => {
-  const barangay = farmer.barangay_name || ''
-  const home = farmer.address || ''
-  if (barangay && home && home !== barangay) return `${home}, ${barangay}`
-  return barangay || home || 'N/A'
-}
-
 const startEdit = (farmer) => {
   editingId.value = farmer.id
   editingFarmer.value = farmer
   showEditMemberModal.value = true
-  const barangayLabel = farmer.barangay_name || ''
-  const storedAddress = farmer.address || ''
-  const homeAddress =
-    storedAddress && storedAddress !== barangayLabel ? storedAddress : ''
-
   editForm.value = {
     reference_number: farmer.reference_number || '',
     full_name: farmer.full_name,
     date_of_birth: farmer.date_of_birth?.split('T')[0] || '',
-    address: homeAddress,
-    barangay_name: barangayLabel,
+    address: farmer.address,
+    barangay_name: farmer.barangay_name || farmer.address || '',
     phone_number: farmer.phone_number,
     educational_status: farmer.educational_status || '',
     land_area: farmer.land_area || '',
     farm_location: farmer.farm_location || '',
     role: farmer.role,
     membership_status: farmer.membership_status || 'member',
-    barangay_id: farmer.barangay_id ? Number(farmer.barangay_id) : null
+    barangay_id: farmer.barangay_id || null
   }
   loadFarmLocationOptions(farmer.barangay_id, farmer.farm_location || '')
 }
@@ -824,53 +786,39 @@ const saveEdit = async (farmer) => {
   }
 
   try {
-    if (!isAdmin.value && userBarangayId.value) {
-      editForm.value.barangay_id = userBarangayId.value
-    }
-
-    const selectedBarangay = barangays.value.find(
-      (b) => Number(b.id) === Number(editForm.value.barangay_id)
-    )
-    const barangayName = selectedBarangay?.name || editForm.value.barangay_name || ''
-    const homeAddress = String(editForm.value.address || '').trim()
+    // Find the selected barangay name
+    const selectedBarangay = barangays.value.find(b => b.id === editForm.value.barangay_id)
+    const barangayName = selectedBarangay ? selectedBarangay.name : editForm.value.address
 
     const updateData = {
       reference_number: editForm.value.reference_number,
       full_name: editForm.value.full_name,
       date_of_birth: editForm.value.date_of_birth,
-      address: homeAddress || barangayName,
+      address: barangayName,
       phone_number: editForm.value.phone_number,
       educational_status: editForm.value.educational_status,
       land_area: editForm.value.land_area,
       farm_location: editForm.value.farm_location
     }
 
-    if (editForm.value.barangay_id != null) {
-      updateData.barangay_id = Number(editForm.value.barangay_id)
-    }
-
-    const token = authStore.token
-    const authHeaders = {
-      'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : ''
-    }
-
+    // Update basic info
     const response = await fetch(`/api/farmers/${farmer.id}/profile`, {
       method: 'PUT',
-      headers: authHeaders,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updateData)
     })
 
+    if (!response.ok) throw new Error('Failed to update profile')
     const profileResp = await response.json().catch(() => null)
-    if (!response.ok || profileResp?.success === false) {
-      throw new Error(profileResp?.message || 'Failed to update profile')
+    if (profileResp && profileResp.success === false) {
+      throw new Error(profileResp.message || 'Failed to update profile')
     }
 
     // Update role if changed and not admin
     if (editForm.value.role !== farmer.role && farmer.role !== 'admin') {
       const roleResponse = await fetch(`/api/farmers/${farmer.id}/role`, {
         method: 'PUT',
-        headers: authHeaders,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: editForm.value.role })
       })
       
@@ -879,9 +827,13 @@ const saveEdit = async (farmer) => {
 
     // Update membership status if changed
     if (editForm.value.membership_status !== farmer.membership_status) {
+      const token = authStore.token
       const statusResponse = await fetch(`/api/farmers/${farmer.id}/membership-status`, {
         method: 'PUT',
-        headers: authHeaders,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ membership_status: editForm.value.membership_status })
       })
       
@@ -889,7 +841,6 @@ const saveEdit = async (farmer) => {
     }
 
     // Update local data
-    const updatedFarmer = profileResp?.farmer
     const index = internalFarmers.value.findIndex(f => f.id === farmer.id)
     if (index !== -1) {
       internalFarmers.value[index] = {
@@ -897,9 +848,8 @@ const saveEdit = async (farmer) => {
         ...updateData,
         role: editForm.value.role,
         membership_status: editForm.value.membership_status,
-        barangay_id: updatedFarmer?.barangay_id ?? editForm.value.barangay_id,
-        barangay_name: updatedFarmer?.barangay_name ?? barangayName,
-        address: updatedFarmer?.address ?? updateData.address
+        barangay_id: editForm.value.barangay_id,
+        barangay_name: barangayName
       }
     }
 
@@ -1041,7 +991,7 @@ onMounted(async () => {
       const response = await fetch('/api/barangays')
       if (response.ok) {
         const barangayData = await response.json()
-        barangays.value = barangayData.barangays || barangayData.data || (Array.isArray(barangayData) ? barangayData : [])
+        barangays.value = barangayData.barangays || []
       }
     } catch (err) {
       internalError.value = err.message || 'Failed to load members'
@@ -1054,7 +1004,7 @@ onMounted(async () => {
       const response = await fetch('/api/barangays')
       if (response.ok) {
         const barangayData = await response.json()
-        barangays.value = barangayData.barangays || barangayData.data || (Array.isArray(barangayData) ? barangayData : [])
+        barangays.value = barangayData.barangays || []
       }
     } catch (err) {
       // Barangay loading is not critical

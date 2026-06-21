@@ -91,6 +91,7 @@
                 <button
                   type="button"
                   class="password-toggle"
+                  @mousedown.prevent
                   @click="showPassword = !showPassword"
                   :aria-label="
                     language === 'tl'
@@ -226,8 +227,11 @@ const submitLogin = async () => {
 
   if (result.success) {
     const userRole = authStore.currentUser?.role
+    const userBarangayId = authStore.currentUser?.barangay_id
 
-    if (userRole === 'admin') {
+    if (userBarangayId === 2) {
+      router.push('/barangay-notice')
+    } else if (userRole === 'admin') {
       router.push('/admin')
     } else {
       router.push('/welcome')
@@ -644,27 +648,42 @@ const goToSignUp = () => {
   right: 0.62rem;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 3;
   width: 2.2rem;
   height: 2.2rem;
   padding: 0;
   margin: 0;
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   color: #374151;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .password-toggle-svg {
   display: block;
   flex-shrink: 0;
+  pointer-events: none;
 }
 
 .password-toggle:hover {
   color: #111827;
+}
+
+.password-toggle:focus,
+.password-toggle:active {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: translateY(-50%);
 }
 
 .password-toggle:focus-visible {
@@ -673,12 +692,16 @@ const goToSignUp = () => {
   border-radius: 6px;
 }
 
-.auth-form .password-toggle {
-  color: #111111;
+.auth-form .password-toggle,
+.auth-form .password-toggle .password-toggle-svg {
+  color: #374151;
+  stroke: currentColor;
+  -webkit-text-fill-color: currentColor;
 }
 
-.auth-form .password-toggle:hover {
-  color: #000000;
+.auth-form .password-toggle:hover,
+.auth-form .password-toggle:hover .password-toggle-svg {
+  color: #111827;
 }
 
 .link-btn {
@@ -924,12 +947,24 @@ const goToSignUp = () => {
   color: rgba(134, 239, 172, 0.85) !important;
 }
 
-.login-page:not(.light-theme) .auth-form .password-toggle {
-  color: rgba(187, 247, 208, 0.85) !important;
+.login-page:not(.light-theme) .auth-form .password-toggle,
+.login-page:not(.light-theme) .auth-form .password-toggle .password-toggle-svg,
+.login-page:not(.light-theme) .auth-form .password-toggle :is(path, circle, line) {
+  color: rgba(187, 247, 208, 0.92) !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
-.login-page:not(.light-theme) .auth-form .password-toggle:hover {
+.login-page:not(.light-theme) .auth-form .password-toggle:hover,
+.login-page:not(.light-theme) .auth-form .password-toggle:hover .password-toggle-svg,
+.login-page:not(.light-theme) .auth-form .password-toggle:focus,
+.login-page:not(.light-theme) .auth-form .password-toggle:active,
+.login-page:not(.light-theme) .auth-form .password-toggle[aria-pressed='true'] {
   color: #ecfdf5 !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .login-page:not(.light-theme) .form-footer {
@@ -1053,11 +1088,15 @@ const goToSignUp = () => {
   color: #166534 !important;
 }
 
-.login-page.light-theme .password-toggle {
+.login-page.light-theme .password-toggle,
+.login-page.light-theme .password-toggle .password-toggle-svg {
   color: #374151 !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
-.login-page.light-theme .password-toggle:hover {
+.login-page.light-theme .password-toggle:hover,
+.login-page.light-theme .password-toggle:hover .password-toggle-svg {
   color: #052e16 !important;
 }
 

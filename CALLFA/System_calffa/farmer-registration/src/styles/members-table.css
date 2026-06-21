@@ -5,16 +5,16 @@
   border-radius: 10px;
 }
 
-/* Senior-friendly typography scale — compact for dense data tables */
+/* Senior-friendly typography scale */
 .farmer-table-page {
   --members-font-title: 1.375rem;
   --members-font-tab: 1rem;
   --members-font-label: 1rem;
   --members-font-body: 0.9375rem;
   --members-font-small: 0.875rem;
-  --members-font-table-head: 0.58rem;
-  --members-font-table-cell: 0.625rem;
-  --members-font-chip: 0.55rem;
+  --members-font-table-head: 0.8125rem;
+  --members-font-table-cell: 0.9375rem;
+  --members-font-chip: 0.8125rem;
 }
 
 .members-table-container {
@@ -24,31 +24,27 @@
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  --members-font-table-head: 0.58rem;
-  --members-font-table-cell: 0.625rem;
-  --members-font-chip: 0.55rem;
 }
 
 .members-table {
   width: 100%;
-  min-width: 960px;
-  table-layout: fixed;
+  min-width: 1320px;
+  table-layout: auto;
   border-collapse: collapse;
-  font-size: var(--members-font-table-cell);
 }
 
-.members-table col.members-col-photo { width: 44px; }
-.members-table col.members-col-ref { width: 100px; }
-.members-table col.members-col-name { width: 110px; }
-.members-table col.members-col-dob { width: 84px; }
-.members-table col.members-col-address { width: 120px; }
-.members-table col.members-col-phone { width: 92px; }
-.members-table col.members-col-edu { width: 108px; }
-.members-table col.members-col-role { width: 100px; }
-.members-table col.members-col-member { width: 84px; }
-.members-table col.members-col-reg { width: 84px; }
-.members-table col.members-col-status { width: 76px; }
-.members-table col.members-col-actions { width: 108px; }
+.members-table col.members-col-photo { width: 80px; }
+.members-table col.members-col-ref { width: 118px; }
+.members-table col.members-col-name { width: 128px; }
+.members-table col.members-col-dob { width: 100px; }
+.members-table col.members-col-address { width: 140px; }
+.members-table col.members-col-phone { width: 108px; }
+.members-table col.members-col-edu { width: 128px; }
+.members-table col.members-col-role { width: 124px; }
+.members-table col.members-col-member { width: 100px; }
+.members-table col.members-col-reg { width: 100px; }
+.members-table col.members-col-status { width: 92px; }
+.members-table col.members-col-actions { width: 140px; }
 
 .members-empty-row {
   padding: 2rem 1rem !important;
@@ -64,35 +60,34 @@
 }
 
 .members-th-actions {
-  min-width: 108px;
-  width: 108px;
+  min-width: 140px;
+  width: 140px;
   white-space: nowrap !important;
 }
 
 .members-td-ref {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  line-height: 1.12;
-  font-size: 0.6rem !important;
+  line-height: 1.35;
+  font-size: 0.875rem !important;
 }
 
 .members-td-name {
-  font-weight: 500 !important;
+  font-weight: 700 !important;
 }
 
 .member-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.18rem 0.4rem;
-  border-radius: 8px;
+  padding: 0.28rem 0.55rem;
+  border-radius: 10px;
   font-size: var(--members-font-chip);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: capitalize;
   border: 1px solid rgba(190, 235, 203, 0.35);
   background: transparent;
   color: rgba(226, 234, 229, 0.95);
-  line-height: 1.15;
 }
 
 .member-chip-member {
@@ -110,12 +105,12 @@
   align-items: center;
   justify-content: center;
   min-width: 0;
-  padding: 0.16rem 0.36rem;
+  padding: 0.24rem 0.45rem;
   border-radius: 6px;
   font-size: var(--members-font-chip);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: capitalize;
-  line-height: 1.1;
+  line-height: 1;
   background: transparent !important;
   border: 1px solid rgba(190, 235, 203, 0.35);
 }
@@ -139,15 +134,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 56px;
+  min-height: 56px;
 }
 
 .member-avatar {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center center;
@@ -188,22 +183,21 @@ img.member-avatar {
 
 .members-table th:first-child,
 .members-table td:first-child {
-  width: 44px;
-  min-width: 44px;
-  max-width: 44px;
-  padding: 0.26rem 0.2rem !important;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  padding: 0.65rem 0.35rem !important;
 }
 
 .members-table th,
 .members-table td {
   text-align: center !important;
-  padding: 0.26rem 0.28rem !important;
+  padding: 0.55rem 0.45rem !important;
   white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
   vertical-align: middle !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  line-height: 1.12;
+  border-bottom: 1.5px solid #94a3b8 !important;
 }
 
 .members-table th:not(:last-child),
@@ -213,20 +207,19 @@ img.member-avatar {
 
 .members-table th {
   font-size: var(--members-font-table-head) !important;
-  font-weight: 600 !important;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+  font-weight: 700 !important;
+  line-height: 1.3;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: rgba(248, 250, 248, 0.96) !important;
-  white-space: normal !important;
+  white-space: nowrap !important;
   background: rgba(32, 86, 58, 0.98) !important;
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
 .members-table td {
   font-size: var(--members-font-table-cell) !important;
-  line-height: 1.12;
-  font-weight: 500 !important;
+  line-height: 1.4;
   color: rgba(226, 234, 229, 0.93) !important;
   background: transparent !important;
 }
@@ -234,7 +227,7 @@ img.member-avatar {
 .members-table .member-chip,
 .members-table .status-chip {
   font-size: var(--members-font-chip) !important;
-  padding: 0.12rem 0.32rem !important;
+  padding: 0.3rem 0.5rem !important;
   white-space: nowrap !important;
 }
 
@@ -254,8 +247,8 @@ img.member-avatar {
 
 .members-table .members-th-role,
 .members-table .members-td-role {
-  min-width: 96px;
-  width: 96px;
+  min-width: 124px;
+  width: 124px;
 }
 
 .members-table .role-badge {
@@ -266,9 +259,9 @@ img.member-avatar {
   word-break: keep-all !important;
   overflow-wrap: normal !important;
   text-transform: none !important;
-  font-size: 0.58rem !important;
-  padding: 0.16rem 0.36rem !important;
-  line-height: 1.08;
+  font-size: 0.75rem !important;
+  padding: 0.32rem 0.62rem !important;
+  line-height: 1.2;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -285,19 +278,17 @@ img.member-avatar {
 
 .members-table .table-select {
   width: 100%;
-  padding: 0.12rem 0.2rem !important;
-  font-size: 0.58rem !important;
+  padding: 6px 8px !important;
+  font-size: var(--members-font-table-cell) !important;
   border: 1px solid rgba(190, 235, 203, 0.28);
   border-radius: 5px;
   font-weight: 600;
-  line-height: 1.15;
   background: rgba(0, 0, 0, 0.28);
   color: rgba(226, 234, 229, 0.95);
   cursor: pointer;
   text-transform: capitalize;
   max-width: 100%;
   box-sizing: border-box;
-  min-height: 1.6rem;
 }
 
 .members-table .table-select:hover:not(:disabled) {
@@ -334,10 +325,10 @@ img.member-avatar {
 
 .members-actions-cell {
   vertical-align: middle !important;
-  width: 108px;
-  min-width: 108px;
-  max-width: 108px;
-  padding: 0.32rem 0.25rem !important;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  padding: 0.55rem 0.35rem !important;
   white-space: nowrap !important;
 }
 
@@ -347,7 +338,7 @@ img.member-avatar {
   flex-wrap: nowrap !important;
   align-items: center;
   justify-content: center !important;
-  gap: 0.25rem !important;
+  gap: 0.35rem !important;
   width: 100%;
   max-width: 100%;
 }
@@ -355,16 +346,16 @@ img.member-avatar {
 .members-action-row .table-action-btn,
 .members-action-row .table-action-protected {
   flex: 0 0 auto !important;
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  min-height: 24px !important;
-  border-radius: 5px !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  border-radius: 8px !important;
 }
 
 .members-action-row .table-action-btn svg {
-  width: 11px !important;
-  height: 11px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
 /* ===== Light mode (senior-friendly) — under Members Management page ===== */
@@ -394,7 +385,7 @@ img.member-avatar {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
   font-size: var(--members-font-table-head) !important;
-  font-weight: 600 !important;
+  font-weight: 800 !important;
   border-bottom: 1px solid #86efac !important;
 }
 
@@ -406,13 +397,13 @@ img.member-avatar {
 .farmer-table-page.light-theme .members-table td {
   color: #000000 !important;
   font-size: var(--members-font-table-cell) !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .farmer-table-page.light-theme .members-td-name {
   color: #000000 !important;
-  font-weight: 500 !important;
+  font-weight: 700 !important;
 }
 
 .farmer-table-page.light-theme .members-table tbody tr.members-data-row {

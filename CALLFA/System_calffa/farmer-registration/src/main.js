@@ -9,7 +9,6 @@ import './styles/glass-unified-theme.css'
 import './styles/light-mode-senior.css'
 import './styles/dark-mode-farm.css'
 import './styles/table-action-buttons.css'
-import './styles/compact-data-table.css'
 import 'leaflet/dist/leaflet.css'
 
 

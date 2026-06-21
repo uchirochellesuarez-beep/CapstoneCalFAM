@@ -121,7 +121,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import DashboardHeader from '../components/DashboardHeader.vue'
 import { useAuthStore } from '../stores/authStore'
-import { getManilaTodayString } from '../utils/philippineTime'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -153,7 +152,7 @@ const loadFinancialData = async () => {
   loading.value = true
   try {
     // Load loans
-    const loansRes = await fetch(`http://localhost:3000/api/loans?deviceDate=${getManilaTodayString()}`)
+    const loansRes = await fetch(`http://localhost:3000/api/loans?deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`)
     if (loansRes.ok) {
       const loansData = await loansRes.json()
       loans.value = loansData.loans || []

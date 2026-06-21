@@ -200,7 +200,6 @@
           <colgroup>
             <col class="col-name" />
             <col class="col-type" />
-            <col class="col-operator" />
             <col class="col-pricing" />
             <col class="col-status" />
             <col class="col-actions" />
@@ -209,7 +208,6 @@
             <tr>
               <th>Name</th>
               <th>Type</th>
-              <th>Assigned Operator</th>
               <th>Pricing</th>
               <th>Status</th>
               <th>Actions</th>
@@ -222,14 +220,6 @@
                 <span :class="['badge', `badge-${getMachineryTypeClass(machine.machinery_type)}`]">
                   {{ machine.machinery_type }}
                 </span>
-              </td>
-              <td class="operator-cell">
-                <div v-if="machine.assigned_operator_name" class="operator-assigned">
-                  <strong>{{ machine.assigned_operator_name }}</strong>
-                  <small v-if="machine.assignment_date">Since {{ formatDate(machine.assignment_date) }}</small>
-                  <small v-if="machine.assigned_by_name">by {{ machine.assigned_by_name }}</small>
-                </div>
-                <span v-else class="operator-missing">Not assigned</span>
               </td>
               <td class="pricing-cell">
                 <div class="price-stack">
@@ -256,11 +246,6 @@
               </td>
               <td class="actions-cell">
                 <div class="action-buttons">
-                  <button type="button" @click="openAssignOperatorModal(machine)" class="machinery-action-btn machinery-action-assign" title="Assign Operator" aria-label="Assign Operator">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-                    </svg>
-                  </button>
                   <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -843,41 +828,6 @@
       </div>
     </div>
 
-    <!-- Assign Operator Modal -->
-    <div v-if="showAssignOperatorModal" class="modal-overlay" @click.self="closeAssignOperatorModal">
-      <div class="modal-content modal-medium" @click.stop>
-        <div class="modal-header">
-          <h2>Assign Operator</h2>
-          <button type="button" @click="closeAssignOperatorModal" class="close-btn">×</button>
-        </div>
-        <div class="modal-body">
-          <p class="modal-subtitle">
-            Machinery: <strong>{{ machineryToAssign?.machinery_name }}</strong>
-          </p>
-          <div class="form-group">
-            <label>Operator *</label>
-            <select v-model="assignOperatorForm.operator_id" class="form-input" required>
-              <option value="">Select operator...</option>
-              <option v-for="op in eligibleOperators" :key="op.id" :value="op.id">
-                {{ op.full_name }} ({{ op.reference_number }})
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Assignment Date</label>
-            <input v-model="assignOperatorForm.assignment_date" type="date" class="form-input" />
-          </div>
-          <p v-if="assignOperatorError" class="validation-error">{{ assignOperatorError }}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="closeAssignOperatorModal">Cancel</button>
-          <button type="button" class="btn-primary" @click="saveOperatorAssignment" :disabled="assigningOperator">
-            {{ assigningOperator ? 'Saving...' : 'Assign Operator' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
@@ -923,19 +873,21 @@
       </div>
     </div>
 
-    <!-- Alerts -->
-    <div v-if="validationError" class="alert alert-warning">
-      {{ validationError }}
-      <button @click="validationError = ''" class="alert-close">✕</button>
-    </div>
-    <div v-if="error" class="alert alert-error">
-      {{ error }}
-      <button @click="clearError" class="alert-close">✕</button>
-    </div>
-    <div v-if="successMessage" class="alert alert-success">
-      {{ successMessage }}
-      <button @click="successMessage = ''" class="alert-close">✕</button>
-    </div>
+    <!-- Alerts (teleported so they appear above fixed header) -->
+    <Teleport to="body">
+      <div v-if="validationError" class="alert alert-warning">
+        {{ validationError }}
+        <button @click="validationError = ''" class="alert-close">✕</button>
+      </div>
+      <div v-if="error" class="alert alert-error">
+        {{ error }}
+        <button @click="clearError" class="alert-close">✕</button>
+      </div>
+      <div v-if="successMessage" class="alert alert-success">
+        {{ successMessage }}
+        <button @click="successMessage = ''" class="alert-close">✕</button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -958,18 +910,18 @@ export default {
     const showEditMachineryModal = ref(false)
     const showViewBookingModal = ref(false)
     const showDeleteModal = ref(false)
-    const showAssignOperatorModal = ref(false)
-    const machineryToAssign = ref(null)
-    const eligibleOperators = ref([])
-    const assignOperatorError = ref('')
-    const assigningOperator = ref(false)
-    const assignOperatorForm = ref({
-      operator_id: '',
-      assignment_date: new Date().toISOString().split('T')[0]
-    })
     const machineryToDelete = ref(null)
     const deleteInProgress = ref(false)
     const successMessage = ref('')
+    let successToastTimer = null
+
+    const showSuccessToast = (message) => {
+      successMessage.value = message
+      if (successToastTimer) clearTimeout(successToastTimer)
+      successToastTimer = setTimeout(() => {
+        successMessage.value = ''
+      }, 4000)
+    }
     const validationError = ref('')
     const filters = ref({ status: '', machinery_type: '' })
 
@@ -1013,7 +965,6 @@ export default {
     const bookings = computed(() => machineryStore.bookings)
     const loading = computed(() => machineryStore.loading)
     const error = computed(() => machineryStore.error)
-    const stats = computed(() => machineryStore.stats)
     const selectedBooking = computed(() => machineryStore.selectedBooking)
     const distinctMachineryTypes = computed(() => machineryStore.distinctMachineryTypes)
     const barangays = computed(() => machineryStore.barangays)
@@ -1097,7 +1048,6 @@ export default {
         await Promise.all([
           machineryStore.fetchInventory(),
           machineryStore.fetchBookings(filters.value),
-          machineryStore.fetchStats(),
           machineryStore.fetchBarangays()
         ])
       } catch (error) {
@@ -1158,7 +1108,8 @@ export default {
           await uploadMachineryPicture(machineId)
         }
         
-        successMessage.value = 'Machinery added successfully!'
+        machineryStore.clearError()
+        showSuccessToast('Machinery added successfully!')
         closeModals()
         resetForm()
         await loadData()
@@ -1227,7 +1178,8 @@ export default {
           await uploadMachineryPicture(machineryForm.value.id)
         }
         
-        successMessage.value = 'Machinery updated successfully!'
+        machineryStore.clearError()
+        showSuccessToast('Machinery updated successfully!')
         closeModals()
         resetForm()
         await loadData()
@@ -1243,50 +1195,6 @@ export default {
       showInventoryModal.value = false
     }
 
-    const openAssignOperatorModal = async (machine) => {
-      machineryToAssign.value = machine
-      assignOperatorError.value = ''
-      assignOperatorForm.value = {
-        operator_id: machine.assigned_operator_id || '',
-        assignment_date: machine.assignment_date || new Date().toISOString().split('T')[0]
-      }
-      try {
-        const barangayId = machine.barangay_id || userBarangayId.value
-        eligibleOperators.value = await machineryStore.fetchEligibleOperators(barangayId)
-        showAssignOperatorModal.value = true
-      } catch (err) {
-        assignOperatorError.value = err.message || 'Failed to load operators'
-      }
-    }
-
-    const closeAssignOperatorModal = () => {
-      showAssignOperatorModal.value = false
-      machineryToAssign.value = null
-      assignOperatorError.value = ''
-    }
-
-    const saveOperatorAssignment = async () => {
-      if (!assignOperatorForm.value.operator_id) {
-        assignOperatorError.value = 'Please select an operator'
-        return
-      }
-      assigningOperator.value = true
-      assignOperatorError.value = ''
-      try {
-        await machineryStore.assignOperatorToMachinery(machineryToAssign.value.id, {
-          operator_id: parseInt(assignOperatorForm.value.operator_id, 10),
-          assigned_by: authStore.currentUser.id,
-          assignment_date: assignOperatorForm.value.assignment_date
-        })
-        successMessage.value = `Operator assigned to ${machineryToAssign.value.machinery_name}`
-        closeAssignOperatorModal()
-      } catch (err) {
-        assignOperatorError.value = err.message || 'Failed to assign operator'
-      } finally {
-        assigningOperator.value = false
-      }
-    }
-
     const closeDeleteModal = () => {
       if (deleteInProgress.value) return
       showDeleteModal.value = false
@@ -1298,7 +1206,8 @@ export default {
       deleteInProgress.value = true
       try {
         await machineryStore.deleteMachinery(machineryToDelete.value.id)
-        successMessage.value = 'Machinery deleted successfully!'
+        machineryStore.clearError()
+        showSuccessToast('Machinery deleted successfully!')
         closeDeleteModal()
         closeModals()
         await loadData()
@@ -1445,8 +1354,7 @@ export default {
         console.log('✅ Upload successful:', uploadResult);
         
         currentPictureFile.value = null;
-        successMessage.value = 'Picture uploaded successfully!'
-        setTimeout(() => successMessage.value = '', 3000);
+        showSuccessToast('Picture uploaded successfully!')
         return true;
       } catch (error) {
         console.error('❌ Error uploading picture:', error);
@@ -1495,7 +1403,10 @@ export default {
       return barangay ? barangay.name : ''
     }
 
-    onMounted(() => loadData())
+    onMounted(() => {
+      machineryStore.clearError()
+      loadData()
+    })
 
     // Auto-set barangay for president when opening add modal
     watch(showAddMachineryModal, (isOpen) => {
@@ -1507,9 +1418,7 @@ export default {
     return {
       isLight,
       showInventoryModal, showAddMachineryModal, showEditMachineryModal,
-      showViewBookingModal, showDeleteModal, showAssignOperatorModal, machineryToDelete, machineryToAssign,
-      eligibleOperators, assignOperatorForm, assignOperatorError, assigningOperator,
-      openAssignOperatorModal, closeAssignOperatorModal, saveOperatorAssignment,
+      showViewBookingModal, showDeleteModal, machineryToDelete,
       successMessage, validationError, filters, adminFilters, machineryForm, inventory, bookings,
       loading, error, selectedBooking, distinctMachineryTypes,
       totalMachinery, availableMachinery, barangays, isAdminRole, isAdminOnly,
@@ -2506,13 +2415,6 @@ export default {
 .inventory-table-admin col.col-status { width: auto; }
 .inventory-table-admin col.col-actions { width: auto; }
 
-.inventory-table-president col.col-operator { width: auto; }
-.operator-cell { min-width: 9rem; }
-.operator-assigned { display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.85rem; }
-.operator-assigned small { color: var(--text-soft, #8fb89e); font-size: 0.75rem; }
-.operator-missing { color: #e65100; font-size: 0.85rem; font-weight: 600; }
-.machinery-action-assign { color: #1565c0; }
-
 .inventory-table-president col.col-name { width: auto; }
 .inventory-table-president col.col-type { width: auto; }
 .inventory-table-president col.col-pricing { width: auto; }
@@ -3288,9 +3190,9 @@ export default {
 
 .alert {
   position: fixed;
-  top: 20px;
+  top: 5.25rem;
   right: 20px;
-  z-index: 2000;
+  z-index: 10050;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3531,6 +3433,7 @@ export default {
   }
 
   .alert {
+    top: 5rem;
     left: 14px;
     right: 14px;
     min-width: auto;
