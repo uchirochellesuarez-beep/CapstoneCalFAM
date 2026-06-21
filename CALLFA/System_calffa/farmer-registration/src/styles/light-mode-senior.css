@@ -311,37 +311,6 @@ body.glass-light .financial-container.light-theme .tab-content .data-table :is(t
   color: var(--senior-text-body) !important;
 }
 
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) :is(th, td) {
-  font-weight: 500 !important;
-}
-
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) th {
-  font-size: 0.58rem !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-}
-
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) td {
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-}
-
 body.glass-light .financial-container.light-theme .tab-content .data-table thead {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
 }
@@ -418,6 +387,8 @@ body.glass-light .farmer-table-page.light-theme .filter-select {
 }
 
 body.glass-light .farmer-table-page.light-theme :is(
+  .members-table th,
+  .members-table td,
   .filter-label,
   .filter-hint,
   .tab-btn,
@@ -427,19 +398,13 @@ body.glass-light .farmer-table-page.light-theme :is(
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table th {
-  font-size: 0.58rem !important;
+  font-size: 0.8125rem !important;
   text-transform: uppercase;
-  white-space: normal !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-  line-height: 1.12 !important;
+  white-space: nowrap !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td {
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-  line-height: 1.15 !important;
+  font-size: 0.9375rem !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .registered-members-title {
@@ -593,24 +558,23 @@ body.glass-light .farmer-table-page.light-theme :is(
 body.glass-light .farmer-table-page.light-theme .members-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
-  font-weight: 600 !important;
+  font-weight: 800 !important;
   border-bottom: 1px solid #86efac !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td {
   color: #000000 !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   background: #ffffff !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td :is(span, strong) {
   color: #000000 !important;
-  font-weight: 500 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-td-name {
   color: #000000 !important;
-  font-weight: 500 !important;
+  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table tbody tr:nth-child(even) td,
@@ -1282,11 +1246,9 @@ body.glass-light .page-container.admin-loans-page.light-theme .payment-history-t
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: var(--senior-text) !important;
-  font-size: 0.52rem !important;
-  font-weight: 600 !important;
-  padding: 0.22rem 0.24rem !important;
-  line-height: 1.08 !important;
+  color: #000000 !important;
+  font-size: 1rem !important;
+  border-bottom: 2px solid #16a34a !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th):not(:last-child),
@@ -1297,25 +1259,20 @@ body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table t
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
   color: #000000 !important;
   background: #ffffff !important;
-  font-size: 0.58rem !important;
-  font-weight: 500 !important;
-  padding: 0.2rem 0.22rem !important;
-  line-height: 1.12 !important;
+  font-size: 1.0625rem !important;
+  border-bottom: 1.5px solid #94a3b8 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .status-badge {
-  font-size: 0.52rem !important;
-  font-weight: 600 !important;
+  font-size: 0.875rem !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.btn, .btn-view, .btn-approve, .btn-reject, .btn-payment) {
-  font-size: 0.5rem !important;
-  font-weight: 600 !important;
+  font-size: 0.875rem !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.payer-badge, .credit-score-compact) {
-  font-size: 0.5rem !important;
-  font-weight: 500 !important;
+  font-size: 0.8125rem !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .btn-cancel {
@@ -2051,18 +2008,12 @@ body.glass-light .share-capital-page.light-theme .admin-filter-label {
 body.glass-light .share-capital-page.light-theme .tab-content .data-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #000000 !important;
-  font-size: 0.58rem !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-  line-height: 1.12 !important;
+  font-size: 0.9375rem !important;
 }
 
 body.glass-light .share-capital-page.light-theme .tab-content .data-table td {
   color: #000000 !important;
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-  line-height: 1.15 !important;
+  font-size: 1rem !important;
 }
 
 body.glass-light .share-capital-page.light-theme .input::placeholder {
@@ -2421,29 +2372,6 @@ body.glass-light .signup-page.glass-auth-page .lang-btn.active {
   background: #dcfce7 !important;
   color: #14532d !important;
   border-color: #16a34a !important;
-}
-
-body.glass-light .signup-page.glass-auth-page .registration-legal-toggle-action {
-  color: #15803d !important;
-}
-
-body.glass-light .signup-page.glass-auth-page .registration-legal {
-  background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-  border: 2px solid #86efac !important;
-  color: #000000 !important;
-}
-
-body.glass-light .signup-page.glass-auth-page .registration-legal-title {
-  color: #14532d !important;
-}
-
-body.glass-light .signup-page.glass-auth-page .registration-legal-section h4 {
-  color: #000000 !important;
-}
-
-body.glass-light .signup-page.glass-auth-page .registration-legal-agree,
-body.glass-light .signup-page.glass-auth-page .registration-legal-summary {
-  color: #000000 !important;
 }
 
 /* Auth inputs — darker borders + comfortable padding (light mode) */

@@ -676,9 +676,15 @@ body::after {
 .chart-card,
 .glass-chart-card,
 .charts-section,
-.chart-container,
-canvas {
+.chart-container {
   animation: glass-grow-fade 460ms ease both;
+}
+
+/* Chart.js canvases break when transform/opacity animations run on the canvas itself */
+.dashboard-container .donut-wrap canvas,
+.dashboard-container .glass-chart-card > canvas {
+  animation: none !important;
+  transform: none !important;
 }
 
 @keyframes glass-grow-fade {
@@ -759,11 +765,12 @@ canvas {
 }
 
 .dashboard-container .header-time-card {
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  background: #25382b !important;
+  border: 2px solid #4ade80 !important;
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 52%, #bbf7d0 100%) !important;
   box-shadow:
-    10px 10px 18px rgba(8, 14, 10, 0.58),
-    -8px -8px 16px rgba(44, 63, 48, 0.5) !important;
+    0 10px 28px rgba(74, 222, 128, 0.28),
+    0 0 0 1px rgba(134, 239, 172, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -1567,6 +1574,35 @@ canvas {
   color: rgba(187, 247, 208, 0.55) !important;
 }
 
+.login-page.glass-auth-page .auth-form .password-toggle {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+  filter: none !important;
+}
+
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle,
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle .password-toggle-svg,
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle :is(path, circle, line) {
+  color: rgba(187, 247, 208, 0.92) !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle:hover,
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle:focus,
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle:active,
+.login-page.glass-auth-page:not(.light-theme) .auth-form .password-toggle[aria-pressed='true'] {
+  color: #ecfdf5 !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+  filter: none !important;
+}
+
 .login-page.glass-auth-page:not(.light-theme) .link-btn {
   border-radius: 999px !important;
   border: 2px solid rgba(110, 231, 183, 0.55) !important;
@@ -1705,20 +1741,6 @@ canvas {
   color: rgba(227, 255, 238, 0.92) !important;
 }
 
-/* FarmerSignup.vue: match Login glass auth (beat global dark :is(...) on .registration-form) */
-.signup-page.glass-auth-page .registration-form .form-group {
-  gap: 0.1rem !important;
-}
-
-.signup-page.glass-auth-page .registration-form .form-label {
-  font-size: 0.68rem !important;
-  line-height: 1.1 !important;
-  margin: 0 !important;
-}
-
-.signup-page.glass-auth-page .registration-form .form-input,
-.signup-page.glass-auth-page .registration-form select.form-input,
-.signup-page.glass-auth-page .registration-form textarea.form-input,
 .signup-page.glass-auth-page.light-theme .registration-form .form-input,
 .signup-page.glass-auth-page.light-theme .registration-form select.form-input,
 .signup-page.glass-auth-page.light-theme .registration-form textarea.form-input {
@@ -1726,21 +1748,6 @@ canvas {
   color: #111111 !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
-  border-radius: 8px !important;
-  padding: 0.3rem 0.5rem !important;
-  font-size: 0.78rem !important;
-  line-height: 1.15 !important;
-  min-height: 0 !important;
-  height: 1.9rem !important;
-  box-sizing: border-box !important;
-}
-
-.signup-page.glass-auth-page .registration-form .field-input-wrapper .form-input {
-  padding-left: 1.75rem !important;
-}
-
-.signup-page.glass-auth-page .registration-form .password-input-wrapper.field-input-wrapper .form-input {
-  padding-right: 2.15rem !important;
 }
 
 .signup-page.glass-auth-page.light-theme .registration-form .form-input:focus,

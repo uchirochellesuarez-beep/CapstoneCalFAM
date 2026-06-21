@@ -318,20 +318,18 @@ const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
 const userRole = computed(() => (authStore.currentUser?.role || '').toLowerCase())
 const userId = computed(() => authStore.currentUser?.id)
-const isAdmin = computed(() => userRole.value === 'admin')
 const token = computed(() => authStore.token)
 const canCreateAnnouncement = computed(() => ['president', 'admin'].includes(userRole.value))
 
 const canEditAnnouncement = (item) => {
   if (!userId.value) return false
-  if (isAdmin.value) return true
-  return Number(item.author_id) === Number(userId.value)
+  return item.author_id === userId.value
 }
 
 const canDeleteAnnouncement = (item) => {
+  if (['president', 'admin'].includes(userRole.value)) return true
   if (!userId.value) return false
-  if (isAdmin.value) return true
-  return Number(item.author_id) === Number(userId.value)
+  return item.author_id === userId.value
 }
 
 const loading = ref(false)

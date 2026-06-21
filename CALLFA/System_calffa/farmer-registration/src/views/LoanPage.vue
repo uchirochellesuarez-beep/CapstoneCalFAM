@@ -573,7 +573,6 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
-import { getManilaReferenceDateString } from '../utils/philippineTime'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -699,8 +698,11 @@ const checkEligibility = async () => {
   }
 }
 
-// Manila calendar date for loan overdue checks (backend uses Asia/Manila)
-const getDeviceDate = () => getManilaReferenceDateString()
+// Helper to get device date string for API calls
+const getDeviceDate = () => {
+  const d = new Date()
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
 
 const loadLoans = async () => {
   loading.value = true

@@ -48,14 +48,14 @@
           </div>
         </div>
 
-        <template v-if="isAdmin">
+        <template v-if="showPendingStat">
           <!-- Pending Approvals - Yellow -->
           <div class="stat-card stat-yellow">
             <div class="stat-icon-wrap stat-icon-yellow">
               <img src="https://cdn-icons-png.freepik.com/512/13366/13366070.png" alt="Pending" class="stat-icon-img" />
             </div>
             <div class="stat-body">
-              <div class="stat-label">Pending Approvals</div>
+              <div class="stat-label">{{ pendingStatLabel }}</div>
               <div class="stat-value">{{ animatedPending }}</div>
               <div class="stat-pill stat-pill-yellow">Needs review</div>
             </div>
@@ -120,21 +120,21 @@
       </transition>
 
       <!-- Glass Charts Grid -->
-      <div class="glass-charts-grid">
+      <div class="glass-charts-grid" :class="{ 'glass-charts-grid--two': !isAdmin }">
 
         <!-- Members by Status -->
         <div class="glass-chart-card">
           <div class="glass-chart-header">
             <div>
               <h3 class="glass-chart-title">Members by Status</h3>
-              <p class="glass-chart-sub">{{ filteredTotalCount }} Total Members</p>
+              <p class="glass-chart-sub">{{ statusSegmentTotal }} Total Members</p>
             </div>
             <span class="glass-chart-badge">Status</span>
           </div>
           <div class="donut-wrap">
             <canvas ref="statusChartRef" class="donut-canvas"></canvas>
             <div class="donut-center-label">
-              <span class="donut-center-num">{{ filteredTotalCount }}</span>
+              <span class="donut-center-num">{{ statusSegmentTotal }}</span>
               <span class="donut-center-text">Total</span>
             </div>
           </div>
@@ -145,12 +145,12 @@
           </div>
         </div>
 
-        <!-- Top 10 Barangays -->
+        <!-- Members by Barangay (admin) / Service Places (president) -->
         <div v-if="isAdmin" class="glass-chart-card">
           <div class="glass-chart-header">
             <div>
-              <h3 class="glass-chart-title">Top 10 Barangays</h3>
-              <p class="glass-chart-sub">By Member Count</p>
+              <h3 class="glass-chart-title">Members by Barangay</h3>
+              <p class="glass-chart-sub">{{ barangays.length }} registered barangays</p>
             </div>
             <button class="sort-toggle-btn" @click="toggleBarangaySort" :title="barangaySortDesc ? 'Sort Ascending' : 'Sort Descending'">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -161,6 +161,34 @@
             </button>
           </div>
           <canvas ref="barangayChartRef"></canvas>
+          <div v-if="barangayChartData.length" class="glass-legend" style="margin-top:16px">
+            <span v-for="row in barangayChartData" :key="row.name" class="gl-item">
+              <span class="gl-dot" style="background:#4ade80"></span>
+              {{ row.name }} <strong>{{ row.count }}</strong>
+              <span class="gl-meta">({{ row.farmers }} farmers, {{ row.officers }} officers)</span>
+            </span>
+          </div>
+        </div>
+
+        <div v-else-if="isPresident" class="glass-chart-card">
+          <div class="glass-chart-header">
+            <div>
+              <h3 class="glass-chart-title">Service Places</h3>
+              <p class="glass-chart-sub">{{ servicePlaces.length }} covered areas in your barangay</p>
+            </div>
+            <span class="glass-chart-badge">Coverage</span>
+          </div>
+          <canvas ref="servicePlacesChartRef"></canvas>
+          <div v-if="servicePlaceChartData.length" class="glass-legend" style="margin-top:16px">
+            <span
+              v-for="place in servicePlaceChartData"
+              :key="place.name"
+              class="gl-item"
+            >
+              <span class="gl-dot" :style="{ background: place.isActive ? '#4ade80' : '#94a3b8' }"></span>
+              {{ place.name }} <strong>{{ place.count }}</strong>
+            </span>
+          </div>
         </div>
 
         <!-- Financial Overview -->
@@ -168,7 +196,7 @@
           <div class="glass-chart-header">
             <div>
               <h3 class="glass-chart-title">Financial Overview</h3>
-              <p class="glass-chart-sub">{{ isAdmin ? 'All Members' : 'My Account' }}</p>
+              <p class="glass-chart-sub">{{ financialChartSub }}</p>
             </div>
             <span class="glass-chart-badge glass-chart-badge--finance">₱ Finance</span>
           </div>
@@ -189,8 +217,6 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
-import { getManilaReferenceDateString } from '../utils/philippineTime'
-import { useBarangayScope } from '../composables/useBarangayScope'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -199,6 +225,12 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+
+const authHeaders = () => {
+  const headers = { 'Content-Type': 'application/json' }
+  if (authStore.token) headers.Authorization = `Bearer ${authStore.token}`
+  return headers
+}
 
 // State
 const allFarmers = ref([])
@@ -225,10 +257,12 @@ const farmerLoans = ref(0)
 // Chart refs
 const statusChartRef = ref(null)
 const barangayChartRef = ref(null)
+const servicePlacesChartRef = ref(null)
 const financialChartRef = ref(null)
 
 let statusChart = null
 let barangayChart = null
+let servicePlacesChart = null
 let financialChart = null
 
 // Filter & Sort state
@@ -237,9 +271,6 @@ const filterBarangay = ref('')
 const filterStatus = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
-const federationStats = ref(null)
-
-const { authHeaders, appendBarangayParams } = useBarangayScope(filterBarangay)
 const barangaySortDesc = ref(true)
 // Applied filter values (committed on "Apply")
 const appliedBarangay = ref('')
@@ -258,15 +289,21 @@ const displayUserRole = computed(() => {
     .join(' ')
 })
 const isAdmin = computed(() => userRole.value === 'admin')
+const isPresident = computed(() => userRole.value === 'president')
 const isFarmer = computed(() => userRole.value === 'farmer')
+const showPendingStat = computed(() => isAdmin.value || isPresident.value)
 
 const dashboardEyebrow = computed(() => {
   if (isAdmin.value) return 'CaLFFA Admin'
+  if (isPresident.value) return 'CaLFFA President'
   if (isFarmer.value) return 'CaLFFA Farmer'
   return 'CaLFFA Operations'
 })
 
 const dashboardSubtitle = computed(() => {
+  if (isPresident.value) {
+    return 'Your barangay members, service areas, and cooperative overview'
+  }
   if (isFarmer.value) {
     return 'Your barangay snapshot, member overview, and personal finances'
   }
@@ -274,12 +311,27 @@ const dashboardSubtitle = computed(() => {
 })
 
 const farmersStatLabel = computed(() =>
-  isFarmer.value ? 'Members in Your Barangay' : 'Total Farmers'
+  isAdmin.value ? 'Total Farmers' : 'Members in Your Barangay'
+)
+
+const pendingStatLabel = computed(() =>
+  isAdmin.value ? 'Pending Approvals' : 'Pending in Your Barangay'
+)
+
+const financialChartSub = computed(() =>
+  isAdmin.value ? 'All Members' : 'My Account'
 )
 const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
 
 const MEMBER_ROLES = ['farmer', 'president', 'treasurer', 'auditor', 'operator', 'operation_manager', 'business_manager']
 const isMemberRole = (role) => MEMBER_ROLES.includes(role)
+
+const normalizeMemberStatus = (status) => {
+  const value = String(status ?? '').toLowerCase().trim()
+  if (value === 'approved') return 'approved'
+  if (value === 'rejected') return 'rejected'
+  return 'pending'
+}
 
 // Filter options for filter panel
 const barangayFilterOptions = computed(() => {
@@ -300,7 +352,9 @@ const filteredFarmers = computed(() => {
   if (isAdmin.value) {
     return allFarmers.value
   }
-  return allFarmers.value.filter(f => f.barangay_id === userBarangayId.value)
+  return allFarmers.value.filter(
+    (f) => String(f.barangay_id) === String(userBarangayId.value)
+  )
 })
 
 // Apply analytics filters on top of role-based farmer list
@@ -310,7 +364,7 @@ const filteredAnalyticsFarmers = computed(() => {
     list = list.filter(f => String(f.barangay_id) === String(appliedBarangay.value))
   }
   if (appliedStatus.value) {
-    list = list.filter(f => (f.status || 'pending') === appliedStatus.value)
+    list = list.filter(f => normalizeMemberStatus(f.status) === appliedStatus.value)
   }
   if (appliedDateFrom.value) {
     list = list.filter(f => f.created_at && f.created_at >= appliedDateFrom.value)
@@ -323,9 +377,56 @@ const filteredAnalyticsFarmers = computed(() => {
 
 // Total Members count = APPROVED farmers + officers only (excludes pending/rejected and agriculturists)
 const totalFarmersCount = computed(() => {
-  return filteredFarmers.value.filter(f =>
-    isMemberRole(f.role) && f.status === 'approved'
+  const fromMembers = filteredFarmers.value.filter(f =>
+    isMemberRole(f.role) && normalizeMemberStatus(f.status) === 'approved'
   ).length
+
+  if (fromMembers > 0 || allFarmers.value.length > 0) return fromMembers
+
+  if (isAdmin.value && barangays.value.length) {
+    return barangays.value.reduce(
+      (sum, b) => sum + (Number(b.total_farmers) || 0) + (Number(b.total_officers) || 0),
+      0
+    )
+  }
+
+  return fromMembers
+})
+
+const getBarangayDisplayName = (barangay) =>
+  barangay.name || barangay.barangay_name || barangay.barangay || 'Unnamed'
+
+const getBarangayMemberBreakdown = (barangayId, barangayRecord) => {
+  if (allFarmers.value.length > 0) {
+    const approvedInBarangay = filteredFarmers.value.filter(
+      (f) =>
+        isMemberRole(f.role) &&
+        normalizeMemberStatus(f.status) === 'approved' &&
+        String(f.barangay_id) === String(barangayId)
+    )
+    const farmers = approvedInBarangay.filter((f) => f.role === 'farmer').length
+    const officers = approvedInBarangay.filter((f) => f.role !== 'farmer').length
+    return { farmers, officers, count: farmers + officers }
+  }
+
+  const farmers = Number(barangayRecord?.total_farmers) || 0
+  const officers = Number(barangayRecord?.total_officers) || 0
+  return { farmers, officers, count: farmers + officers }
+}
+
+const barangayChartData = computed(() => {
+  const rows = barangays.value.map((b) => {
+    const id = b.id || b.barangay_id
+    const breakdown = getBarangayMemberBreakdown(id, b)
+    return {
+      name: getBarangayDisplayName(b),
+      ...breakdown
+    }
+  })
+
+  return [...rows].sort((a, b) =>
+    barangaySortDesc.value ? b.count - a.count : a.count - b.count
+  )
 })
 
 // Barangays card:
@@ -337,21 +438,47 @@ const barangaysCount = computed(() => {
 })
 const barangaysLabel = computed(() => isAdmin.value ? 'Barangays' : 'Service Places')
 
-// Filtered status counts
+// Filtered status counts (approved / pending / rejected only)
 const filteredApprovedCount = computed(() =>
-  filteredAnalyticsFarmers.value.filter(f => f.status === 'approved').length
+  filteredAnalyticsFarmers.value.filter(f => normalizeMemberStatus(f.status) === 'approved').length
 )
 const filteredPendingCount = computed(() =>
-  filteredAnalyticsFarmers.value.filter(f => !f.status || f.status === 'pending').length
+  filteredAnalyticsFarmers.value.filter(f => normalizeMemberStatus(f.status) === 'pending').length
 )
 const filteredRejectedCount = computed(() =>
-  filteredAnalyticsFarmers.value.filter(f => f.status === 'rejected').length
+  filteredAnalyticsFarmers.value.filter(f => normalizeMemberStatus(f.status) === 'rejected').length
+)
+const statusSegmentTotal = computed(() =>
+  filteredApprovedCount.value + filteredPendingCount.value + filteredRejectedCount.value
 )
 const filteredTotalCount = computed(() => filteredAnalyticsFarmers.value.length)
 
+const memberMatchesServicePlace = (member, placeName) => {
+  if (!placeName) return false
+  const needle = placeName.toLowerCase().trim()
+  const location = `${member.farm_location || ''} ${member.address || ''}`.toLowerCase()
+  if (!location.trim()) return false
+  return location.includes(needle)
+}
+
+const servicePlaceChartData = computed(() => {
+  return servicePlaces.value.map((place) => {
+    const name = place.name || 'Unnamed'
+    const count = filteredAnalyticsFarmers.value.filter((f) => {
+      if (normalizeMemberStatus(f.status) !== 'approved') return false
+      return memberMatchesServicePlace(f, name)
+    }).length
+    return {
+      name,
+      count,
+      isActive: place.is_active !== 0 && place.is_active !== false
+    }
+  })
+})
+
 // Pending counts
 const pendingCount = computed(() => filteredFarmers.value.filter(f =>
-  isMemberRole(f.role) && (f.status === 'pending' || !f.status)
+  isMemberRole(f.role) && normalizeMemberStatus(f.status) === 'pending'
 ).length)
 // Helper: outstanding amount for a loan record
 const outstandingAmount = (loan) => parseFloat(loan?.remaining_balance || 0)
@@ -366,26 +493,12 @@ const allOutstandingLoans = computed(() => [
 // Methods
 const loadAllFarmers = async () => {
   try {
-    const params = appendBarangayParams()
-    const response = await fetch(`/api/farmers?${params}`, { headers: authHeaders() })
+    const response = await fetch('/api/farmers', { headers: authHeaders() })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const data = await response.json()
     allFarmers.value = data.farmers || data || []
   } catch (err) {
     console.error('Error loading farmers:', err)
-  }
-}
-
-const loadFederationStats = async () => {
-  if (!isAdmin.value) return
-  try {
-    const response = await fetch('/api/barangays/stats/summary', { headers: authHeaders() })
-    if (response.ok) {
-      const data = await response.json()
-      federationStats.value = data.stats || null
-    }
-  } catch (err) {
-    console.error('Error loading federation stats:', err)
   }
 }
 
@@ -400,12 +513,9 @@ const loadBarangays = async () => {
   }
 }
 
-const getDeviceDate = () => getManilaReferenceDateString()
-
 const loadApprovedLoans = async () => {
   try {
-    const params = appendBarangayParams({ status: 'approved', deviceDate: getDeviceDate() })
-    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
+    const response = await fetch('/api/loans?status=approved&limit=500', { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allApprovedLoans.value = data.loans || []
@@ -417,8 +527,7 @@ const loadApprovedLoans = async () => {
 
 const loadActiveLoans = async () => {
   try {
-    const params = appendBarangayParams({ status: 'active', deviceDate: getDeviceDate() })
-    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
+    const response = await fetch('/api/loans?status=active&limit=500', { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allActiveLoans.value = data.loans || []
@@ -430,8 +539,7 @@ const loadActiveLoans = async () => {
 
 const loadOverdueLoans = async () => {
   try {
-    const params = appendBarangayParams({ status: 'overdue', deviceDate: getDeviceDate() })
-    const response = await fetch(`/api/loans?${params}`, { headers: authHeaders() })
+    const response = await fetch('/api/loans?status=overdue&limit=500', { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       allOverdueLoans.value = data.loans || []
@@ -469,13 +577,10 @@ const loadFarmerFinancialData = async () => {
 
     // Shares come from the Share Capital module (NOT generic contributions)
     try {
-      const sharesResponse = await fetch('/api/share-capital/me', {
-        headers: authHeaders()
-      })
+      const sharesResponse = await fetch('/api/share-capital/me', { headers: authHeaders() })
       if (sharesResponse.ok) {
         const sharesData = await sharesResponse.json()
         if (sharesData.success && sharesData.totals) {
-          // Use balance (contributed - withdrawn) as the member's current shares
           farmerShares.value = parseFloat(sharesData.totals.balance || 0)
         }
       }
@@ -483,10 +588,10 @@ const loadFarmerFinancialData = async () => {
       console.error('Failed to load share capital:', e)
     }
 
-    // Outstanding loans from the Loans module (only unpaid ones)
-    const loansResponse = await fetch(`/api/loans?farmer_id=${userId}&deviceDate=${getDeviceDate()}`, {
-      headers: authHeaders()
-    })
+    const loansResponse = await fetch(
+      `/api/loans?farmer_id=${userId}&limit=100`,
+      { headers: authHeaders() }
+    )
     if (loansResponse.ok) {
       const loansData = await loansResponse.json()
       if (loansData.success && loansData.loans) {
@@ -569,8 +674,8 @@ const getChartAxisStyle = () => {
   if (isLight.value) {
     return {
       tickColor: '#000000',
-      gridColor: 'rgba(0, 0, 0, 0.12)',
-      borderColor: 'rgba(0, 0, 0, 0.2)',
+      gridColor: 'rgba(0, 0, 0, 0.18)',
+      borderColor: 'rgba(0, 0, 0, 0.28)',
       doughnutBorder: '#ffffff',
       legendColor: '#000000',
       gridLineWidth: 1
@@ -578,17 +683,78 @@ const getChartAxisStyle = () => {
   }
   return {
     tickColor: '#ffffff',
-    gridColor: 'rgba(167, 211, 178, 0.42)',
-    borderColor: 'rgba(167, 211, 178, 0.5)',
+    gridColor: 'rgba(167, 211, 178, 0.55)',
+    borderColor: 'rgba(167, 211, 178, 0.65)',
     doughnutBorder: 'rgba(236, 253, 245, 0.12)',
     legendColor: '#ffffff',
     gridLineWidth: 1.5
   }
 }
 
+const niceCeil = (value) => {
+  const n = Number(value) || 0
+  if (n <= 0) return 5
+  const magnitude = Math.pow(10, Math.floor(Math.log10(n)))
+  const normalized = n / magnitude
+  if (normalized <= 1) return magnitude
+  if (normalized <= 2) return 2 * magnitude
+  if (normalized <= 5) return 5 * magnitude
+  return 10 * magnitude
+}
+
+const buildChartScales = (axis, values, { currency = false, integerSteps = true } = {}) => {
+  const maxValue = Math.max(...values.map((v) => Number(v) || 0), 0)
+  const hasData = maxValue > 0
+  const suggestedMax = hasData
+    ? (currency ? niceCeil(maxValue * 1.12) : Math.max(Math.ceil(maxValue * 1.15), 5))
+    : (currency ? 1000 : 5)
+
+  const yTicks = {
+    color: axis.tickColor,
+    font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' }
+  }
+
+  if (currency) {
+    yTicks.callback = (value) => '₱' + Number(value).toLocaleString()
+  } else if (integerSteps) {
+    yTicks.stepSize = suggestedMax <= 10 ? 1 : undefined
+    yTicks.precision = 0
+  }
+
+  return {
+    x: {
+      grid: {
+        display: true,
+        color: axis.gridColor,
+        lineWidth: axis.gridLineWidth || 1,
+        drawOnChartArea: true
+      },
+      ticks: {
+        color: axis.tickColor,
+        font: { size: 10, family: 'Inter, system-ui, sans-serif', weight: '600' },
+        maxRotation: 35
+      },
+      border: { color: axis.borderColor, width: 1.5 }
+    },
+    y: {
+      beginAtZero: true,
+      suggestedMax,
+      grid: {
+        display: true,
+        color: axis.gridColor,
+        lineWidth: axis.gridLineWidth || 1.5,
+        drawOnChartArea: true
+      },
+      ticks: yTicks,
+      border: { color: axis.borderColor, width: 1.5 }
+    }
+  }
+}
+
 const renderCharts = () => {
   renderStatusChart()
   if (isAdmin.value) renderBarangayChart()
+  else if (isPresident.value) renderServicePlacesChart()
   renderFinancialChart()
 }
 
@@ -596,24 +762,47 @@ watch(isLight, () => {
   nextTick(() => renderCharts())
 })
 
+watch(
+  [
+    filteredApprovedCount,
+    filteredPendingCount,
+    filteredRejectedCount,
+    filteredTotalCount,
+    farmerShares,
+    farmerLoans,
+    servicePlaces,
+    servicePlaceChartData,
+    barangayChartData,
+    barangays,
+    allOutstandingLoans
+  ],
+  () => nextTick(() => renderCharts()),
+  { deep: true }
+)
+
 const renderStatusChart = () => {
   if (!statusChartRef.value) return
   if (statusChart) statusChart.destroy()
 
   const axis = getChartAxisStyle()
   const ctx = statusChartRef.value.getContext('2d')
+  const approved = filteredApprovedCount.value
+  const pending = filteredPendingCount.value
+  const rejected = filteredRejectedCount.value
+  const hasData = approved + pending + rejected > 0
+
   statusChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Approved', 'Pending', 'Rejected'],
+      labels: hasData ? ['Approved', 'Pending', 'Rejected'] : ['No members yet'],
       datasets: [{
-        data: [filteredApprovedCount.value, filteredPendingCount.value, filteredRejectedCount.value],
-        backgroundColor: ['#22c55e', '#facc15', '#fb7185'],
-        hoverBackgroundColor: ['#16a34a', '#eab308', '#f43f5e'],
+        data: hasData ? [approved, pending, rejected] : [1],
+        backgroundColor: hasData ? ['#22c55e', '#facc15', '#fb7185'] : ['rgba(255,255,255,0.14)'],
+        hoverBackgroundColor: hasData ? ['#16a34a', '#eab308', '#f43f5e'] : ['rgba(255,255,255,0.18)'],
         borderWidth: 3,
         borderColor: axis.doughnutBorder,
-        hoverOffset: 10,
-        spacing: 2
+        hoverOffset: hasData ? 10 : 0,
+        spacing: hasData ? 2 : 0
       }]
     },
     options: {
@@ -653,28 +842,14 @@ const buildBarangayGradient = (ctx, chartArea) => {
   return gradient
 }
 
-// Admin only: bar chart of approved members per registered barangay
+// Admin: bar chart of approved members for each registered barangay
 const renderBarangayChart = () => {
   if (!barangayChartRef.value) return
   if (barangayChart) barangayChart.destroy()
 
-  const idToName = {}
-  barangays.value.forEach(b => {
-    idToName[b.id || b.barangay_id] = b.name || b.barangay_name || b.barangay
-  })
-
-  const counts = {}
-  filteredAnalyticsFarmers.value.forEach(farmer => {
-    if (farmer.status !== 'approved') return
-    const id = farmer.barangay_id
-    const name = farmer.barangay_name || idToName[id] || 'Unassigned'
-    counts[name] = (counts[name] || 0) + 1
-  })
-
-  const sorted = Object.entries(counts)
-    .sort((a, b) => barangaySortDesc.value ? b[1] - a[1] : a[1] - b[1])
-    .slice(0, 10)
-
+  const rows = barangayChartData.value
+  const labels = rows.length ? rows.map((r) => r.name) : ['No barangays yet']
+  const values = rows.length ? rows.map((r) => r.count) : [0]
   const axis = getChartAxisStyle()
   const ctx = barangayChartRef.value.getContext('2d')
   let gradientColor = null
@@ -682,10 +857,10 @@ const renderBarangayChart = () => {
   barangayChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: sorted.map(([name]) => name),
+      labels,
       datasets: [{
         label: 'Approved Members',
-        data: sorted.map(([, count]) => count),
+        data: values,
         backgroundColor: (context) => {
           const chart = context.chart
           const { ctx: c, chartArea } = chart
@@ -693,14 +868,16 @@ const renderBarangayChart = () => {
           if (!gradientColor) gradientColor = buildBarangayGradient(c, chartArea)
           return gradientColor
         },
-        borderRadius: 6,
+        borderRadius: 8,
         borderSkipped: false,
-        barPercentage: 0.72
+        barPercentage: rows.length <= 3 ? 0.55 : 0.72,
+        categoryPercentage: rows.length <= 3 ? 0.72 : 0.8
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: true,
+      aspectRatio: rows.length <= 3 ? 1.35 : 1.6,
       animation: {
         duration: 1100,
         easing: 'easeOutQuart',
@@ -715,31 +892,79 @@ const renderBarangayChart = () => {
           bodyFont: { size: 12, family: 'Inter, system-ui, sans-serif' },
           cornerRadius: 10,
           callbacks: {
-            label: (ctx) => ` ${ctx.parsed.y} members`
+            label: (ctx) => {
+              const row = rows[ctx.dataIndex]
+              if (!row) return ` ${ctx.parsed.y} members`
+              return ` ${row.count} members (${row.farmers} farmers, ${row.officers} officers)`
+            }
           }
         }
       },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            color: axis.tickColor,
-            font: { size: 10, family: 'Inter, system-ui, sans-serif', weight: '600' },
-            maxRotation: 35
-          },
-          border: { color: axis.borderColor }
+      scales: buildChartScales(axis, values, { integerSteps: true })
+    }
+  })
+}
+
+const renderServicePlacesChart = () => {
+  if (!servicePlacesChartRef.value) return
+  if (servicePlacesChart) servicePlacesChart.destroy()
+
+  const axis = getChartAxisStyle()
+  const ctx = servicePlacesChartRef.value.getContext('2d')
+  const rows = servicePlaceChartData.value
+  const labels = rows.length ? rows.map((r) => r.name) : ['No service places yet']
+  const values = rows.length ? rows.map((r) => r.count) : [0]
+  const barColors = rows.map((r) => (r.isActive ? '#4ade80' : '#94a3b8'))
+  let gradientColor = null
+
+  servicePlacesChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Approved Members',
+        data: values,
+        backgroundColor: (context) => {
+          const idx = context.dataIndex
+          if (rows[idx] && !rows[idx].isActive) return '#94a3b8'
+          const chart = context.chart
+          const { ctx: c, chartArea } = chart
+          if (!chartArea) return barColors[idx] || '#4ade80'
+          if (!gradientColor) gradientColor = buildBarangayGradient(c, chartArea)
+          return gradientColor
         },
-        y: {
-          beginAtZero: true,
-          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth || 1.5 },
-          ticks: {
-            stepSize: 1,
-            color: axis.tickColor,
-            font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' }
-          },
-          border: { color: axis.borderColor, width: 1.5 }
+        borderRadius: 8,
+        borderSkipped: false,
+        barPercentage: rows.length <= 3 ? 0.55 : 0.72,
+        categoryPercentage: rows.length <= 3 ? 0.72 : 0.8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: rows.length <= 3 ? 1.35 : 1.6,
+      animation: {
+        duration: 1100,
+        easing: 'easeOutQuart',
+        onProgress: () => { gradientColor = null }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.85)',
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            title: (items) => items[0]?.label || '',
+            label: (ctx) => {
+              const row = rows[ctx.dataIndex]
+              const status = row?.isActive ? 'Active area' : 'Inactive area'
+              return ` ${ctx.parsed.y} approved member${ctx.parsed.y === 1 ? '' : 's'} · ${status}`
+            }
+          }
         }
-      }
+      },
+      scales: buildChartScales(axis, values, { integerSteps: true })
     }
   })
 }
@@ -817,6 +1042,7 @@ const renderFinancialChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: true,
+      aspectRatio: 1.6,
       animation: {
         duration: 1300,
         easing: 'easeOutQuart',
@@ -831,30 +1057,11 @@ const renderFinancialChart = () => {
           bodyFont: { size: 12, family: 'Inter, system-ui, sans-serif' },
           cornerRadius: 10,
           callbacks: {
-            label: (context) => ` ₱${context.parsed.y.toLocaleString()}`
+            label: (context) => ` ₱${Number(context.parsed.y).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           }
         }
       },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            color: axis.tickColor,
-            font: { size: 12, family: 'Inter, system-ui, sans-serif', weight: '700' }
-          },
-          border: { color: axis.borderColor }
-        },
-        y: {
-          beginAtZero: true,
-          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth || 1.5 },
-          ticks: {
-            color: axis.tickColor,
-            font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' },
-            callback: (value) => '₱' + Number(value).toLocaleString()
-          },
-          border: { color: axis.borderColor, width: 1.5 }
-        }
-      }
+      scales: buildChartScales(axis, data, { currency: true, integerSteps: false })
     }
   })
 }
@@ -876,7 +1083,7 @@ onMounted(async () => {
 
   if (isAdmin.value) {
     // Admin needs aggregate loan data per barangay
-    tasks.push(loadApprovedLoans(), loadActiveLoans(), loadOverdueLoans(), loadFederationStats())
+    tasks.push(loadApprovedLoans(), loadActiveLoans(), loadOverdueLoans())
   } else {
     // Non-admin needs their service places and personal financial data
     tasks.push(loadServicePlaces(), loadFarmerFinancialData())
@@ -896,6 +1103,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval)
+  if (statusChart) statusChart.destroy()
+  if (barangayChart) barangayChart.destroy()
+  if (servicePlacesChart) servicePlacesChart.destroy()
+  if (financialChart) financialChart.destroy()
 })
 </script>
 
@@ -1016,34 +1227,34 @@ onUnmounted(() => {
 .header-left { flex: 1; }
 
 .header-time-card {
-  min-width: 180px;
-  padding: 12px 14px;
+  min-width: 190px;
+  padding: 14px 16px;
   border-radius: 14px;
-  background: #25382b;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 52%, #bbf7d0 100%);
+  border: 2px solid #4ade80;
   box-shadow:
-    10px 10px 18px rgba(8, 14, 10, 0.58),
-    -8px -8px 16px rgba(44, 63, 48, 0.5),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.34);
+    0 10px 28px rgba(74, 222, 128, 0.28),
+    0 0 0 1px rgba(134, 239, 172, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   align-items: flex-end;
 }
 
 .header-time-label {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.9px;
+  font-weight: 800;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(220, 238, 211, 0.66);
+  color: #166534;
 }
 
 .header-time-value {
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
   font-weight: 800;
-  color: #f5ffe9;
+  color: #052e16;
   letter-spacing: 0.2px;
 }
 
@@ -1051,7 +1262,7 @@ onUnmounted(() => {
 .header-time-day {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(220, 238, 211, 0.86);
+  color: #14532d;
 }
 
 .header-time-role {
@@ -1062,40 +1273,38 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.4px;
   text-transform: capitalize;
-  color: #f5ffe9;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.28) 0%, rgba(34, 197, 94, 0.18) 100%);
-  border: 1px solid rgba(134, 239, 172, 0.55);
-  box-shadow:
-    0 0 14px rgba(74, 222, 128, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #052e16;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  border: 1px solid #22c55e;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.15);
 }
 
 .header-time-role.admin {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.32) 0%, rgba(245, 158, 11, 0.2) 100%);
-  border-color: rgba(252, 211, 77, 0.6);
-  color: #fef3c7;
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  color: #92400e;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.22);
 }
 
 .header-time-role.president {
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.32) 0%, rgba(99, 102, 241, 0.2) 100%);
-  border-color: rgba(165, 180, 252, 0.6);
-  color: #e0e7ff;
-  box-shadow: 0 0 14px rgba(129, 140, 248, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-color: #6366f1;
+  color: #3730a3;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 .header-time-role.treasurer {
-  background: linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(236, 72, 153, 0.18) 100%);
-  border-color: rgba(249, 168, 212, 0.58);
-  color: #fce7f3;
-  box-shadow: 0 0 14px rgba(244, 114, 182, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  border-color: #ec4899;
+  color: #9d174d;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.18);
 }
 
 .header-time-role.farmer {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.18) 100%);
-  border-color: rgba(147, 197, 253, 0.58);
-  color: #dbeafe;
-  box-shadow: 0 0 14px rgba(59, 130, 246, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+  color: #1e40af;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.18);
 }
 
 .header-eyebrow {
@@ -1510,6 +1719,16 @@ onUnmounted(() => {
   animation: fadeIn 0.6s ease-out 0.2s backwards;
 }
 
+.glass-charts-grid--two {
+  grid-template-columns: repeat(2, minmax(340px, 1fr));
+}
+
+@media (max-width: 900px) {
+  .glass-charts-grid--two {
+    grid-template-columns: 1fr;
+  }
+}
+
 .glass-chart-card {
   background: #1f3024;
   border: 1px solid rgba(255,255,255,0.07);
@@ -1611,10 +1830,20 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   margin-bottom: 14px;
+  min-height: 220px;
+  width: 100%;
 }
 
 .donut-canvas {
+  width: min(100%, 260px) !important;
   max-height: 240px;
+  min-height: 200px;
+}
+
+.glass-chart-card > canvas {
+  width: 100% !important;
+  min-height: 220px;
+  max-height: 260px;
 }
 
 .donut-center-label {
@@ -1663,6 +1892,13 @@ onUnmounted(() => {
   font-weight: 600;
   color: #eaf9e0;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  flex-wrap: wrap;
+}
+
+.gl-meta {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(220, 238, 211, 0.68);
 }
 
 .gl-dot {
@@ -1914,6 +2150,10 @@ canvas {
 
 .dashboard-container.light-theme .gl-item strong {
   color: #052e16;
+}
+
+.dashboard-container.light-theme .gl-meta {
+  color: #166534;
 }
 
 .dashboard-container.light-theme .gl-dot {

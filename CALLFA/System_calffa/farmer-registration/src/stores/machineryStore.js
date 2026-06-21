@@ -5,18 +5,13 @@ import { useAuthStore } from './authStore'
 const API_BASE_URL = '/api/machinery'
 const API_BASE_BARANGAYS = '/api/barangays'
 
-function authJsonHeaders() {
+function authHeaders(extra = {}) {
   const authStore = useAuthStore()
-  const token = authStore.token || localStorage.getItem('token')
-  const headers = { 'Content-Type': 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
+  const headers = { ...extra }
+  if (authStore.token) {
+    headers.Authorization = `Bearer ${authStore.token}`
+  }
   return headers
-}
-
-function authHeadersOnly() {
-  const authStore = useAuthStore()
-  const token = authStore.token || localStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
 export const useMachineryStore = defineStore('machinery', {
@@ -273,14 +268,11 @@ export const useMachineryStore = defineStore('machinery', {
       this.error = null
       
       try {
-        const authStore = useAuthStore()
-        const token = authStore.token
-        const headers = { 'Content-Type': 'application/json' }
-        if (token) headers['Authorization'] = `Bearer ${token}`
-
         const response = await fetch(`${API_BASE_URL}/operators`, {
           method: 'POST',
-          headers,
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(operatorData)
         })
         
@@ -290,7 +282,7 @@ export const useMachineryStore = defineStore('machinery', {
         }
         
         const data = await response.json()
-        await Promise.all([this.fetchOperators(), this.fetchInventory()])
+        await this.fetchOperators() // Refresh operators
         return data
       } catch (error) {
         this.error = error.message
@@ -298,101 +290,6 @@ export const useMachineryStore = defineStore('machinery', {
         throw error
       } finally {
         this.loading = false
-      }
-    },
-
-    async assignOperatorToMachinery(machineryId, { operator_id, assigned_by, assignment_date }) {
-      this.loading = true
-      this.error = null
-
-      try {
-        const authStore = useAuthStore()
-        const token = authStore.token
-        if (!token) throw new Error('Authorization required')
-
-        const response = await fetch(`${API_BASE_URL}/inventory/${machineryId}/assign-operator`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ operator_id, assigned_by, assignment_date })
-        })
-
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.message || 'Failed to assign operator')
-
-        await this.fetchInventory()
-        return data
-      } catch (error) {
-        this.error = error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fetchEligibleOperators(barangayId = null) {
-      try {
-        const authStore = useAuthStore()
-        const token = authStore.token
-        const params = new URLSearchParams()
-        if (barangayId) params.set('barangay_id', barangayId)
-
-        const response = await fetch(`${API_BASE_URL}/operators/eligible?${params}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        })
-
-        if (!response.ok) throw new Error('Failed to fetch eligible operators')
-        const data = await response.json()
-        return data.operators || []
-      } catch (error) {
-        console.error('Error fetching eligible operators:', error)
-        throw error
-      }
-    },
-
-    async fetchOperatorDashboard() {
-      this.loading = true
-      this.error = null
-
-      try {
-        const authStore = useAuthStore()
-        const token = authStore.token
-        if (!token) throw new Error('Authorization required')
-
-        const response = await fetch('/api/operator-income/dashboard', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.message || 'Failed to load operator dashboard')
-        return data
-      } catch (error) {
-        this.error = error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fetchOperatorIncome(filters = {}) {
-      try {
-        const authStore = useAuthStore()
-        const token = authStore.token
-        if (!token) throw new Error('Authorization required')
-
-        const params = new URLSearchParams(filters)
-        const response = await fetch(`/api/operator-income?${params}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch operator income')
-        return data
-      } catch (error) {
-        console.error('Error fetching operator income:', error)
-        throw error
       }
     },
 
@@ -457,8 +354,17 @@ export const useMachineryStore = defineStore('machinery', {
       
       try {
         const params = new URLSearchParams(filters)
+        
+        // Get token from authStore for barangay-filtered views
+        const authStore = useAuthStore()
+        const token = authStore.token
+        const headers = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        
         const response = await fetch(`${API_BASE_URL}/bookings?${params}`, {
-          headers: authHeadersOnly()
+          headers
         })
         
         if (!response.ok) {
@@ -482,7 +388,7 @@ export const useMachineryStore = defineStore('machinery', {
       this.error = null
       
       try {
-        const response = await fetch(`${API_BASE_URL}/bookings/${id}`, { headers: authHeadersOnly() })
+        const response = await fetch(`${API_BASE_URL}/bookings/${id}`)
         
         if (!response.ok) {
           throw new Error('Failed to fetch booking details')
@@ -509,7 +415,9 @@ export const useMachineryStore = defineStore('machinery', {
         
         const response = await fetch(`${API_BASE_URL}/bookings`, {
           method: 'POST',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           credentials: 'include',
           body: JSON.stringify(bookingData)
         })
@@ -547,7 +455,9 @@ export const useMachineryStore = defineStore('machinery', {
 
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/approve`, {
           method: 'PUT',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(payload)
         })
         
@@ -575,7 +485,9 @@ export const useMachineryStore = defineStore('machinery', {
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/reject`, {
           method: 'PUT',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ 
             approved_by: approvedBy,
             rejection_reason: rejectionReason 
@@ -613,7 +525,9 @@ export const useMachineryStore = defineStore('machinery', {
 
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/complete`, {
           method: 'PUT',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             status_action: statusAction,
             operator_id: operatorId,
@@ -641,183 +555,6 @@ export const useMachineryStore = defineStore('machinery', {
       return this.completeBooking(id, 'incomplete', notes)
     },
 
-    async submitDownPayment(bookingId, formData) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/submit-down-payment`, {
-        method: 'POST',
-        headers: authHeadersOnly(),
-        body: formData
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to submit down payment')
-      await this.fetchBookings()
-      return data
-    },
-
-    async confirmBooking(id, confirmedBy) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${id}/confirm-booking`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify({ confirmed_by: confirmedBy })
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to confirm booking')
-      await this.fetchBookings()
-      return data
-    },
-
-    async verifyDownPayment(id, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${id}/verify-down-payment`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to verify payment')
-      return data
-    },
-
-    async rejectDownPayment(id, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${id}/reject-down-payment`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to reject payment')
-      return data
-    },
-
-    async fetchPendingDownPayments(_userId, barangayId = null) {
-      const params = new URLSearchParams()
-      if (barangayId) params.set('barangay_id', String(barangayId))
-      const response = await fetch(`${API_BASE_URL}/bookings/pending-down-payments?${params}`, {
-        headers: authHeadersOnly()
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to load pending payments')
-      return data.bookings || []
-    },
-
-    async fetchGcashQr() {
-      const response = await fetch(`${API_BASE_URL}/gcash-qr`)
-      const data = await response.json()
-      if (!response.ok) throw new Error('Failed to load GCash QR')
-      return data
-    },
-
-    async verifyFinalPayment(id, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${id}/verify-final-payment`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to verify final payment')
-      await this.fetchBookings()
-      return data
-    },
-
-    async submitBalancePayment(bookingId, formData) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/submit-balance-payment`, {
-        method: 'POST',
-        headers: authHeadersOnly(),
-        body: formData
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to submit balance payment')
-      await this.fetchBookings()
-      return data
-    },
-
-    async fetchPendingBalancePayments(_userId, barangayId = null) {
-      const params = new URLSearchParams()
-      if (barangayId) params.set('barangay_id', String(barangayId))
-      const response = await fetch(`${API_BASE_URL}/bookings/pending-balance-payments?${params}`, {
-        headers: authHeadersOnly()
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to load pending balance payments')
-      return data.submissions || []
-    },
-
-    async verifyBalancePaymentSubmission(submissionId, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/balance-submissions/${submissionId}/verify`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to verify payment')
-      return data
-    },
-
-    async rejectBalancePaymentSubmission(submissionId, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/balance-submissions/${submissionId}/reject`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to reject payment')
-      return data
-    },
-
-    async fetchRefundRequests(_userId, status = 'active', barangayId = null) {
-      const params = new URLSearchParams({ status })
-      if (barangayId) params.set('barangay_id', String(barangayId))
-      const response = await fetch(`${API_BASE_URL}/bookings/refund-requests?${params}`, {
-        headers: authHeadersOnly()
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to load refund requests')
-      return data.refunds || []
-    },
-
-    async requestRefund(bookingId, payload) {
-      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/request-refund`, {
-        method: 'POST',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to submit refund request')
-      await this.fetchBookings()
-      return data
-    },
-
-    async reviewRefund(refundId, payload) {
-      const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/review`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to review refund')
-      return data
-    },
-
-    async processRefund(refundId, payload) {
-      const response = await fetch(`${API_BASE_URL}/refunds/${refundId}/process`, {
-        method: 'PUT',
-        headers: authJsonHeaders(),
-        body: JSON.stringify(payload)
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to process refund')
-      return data
-    },
-
-    async fetchReceipt(receiptNumber) {
-      const authStore = useAuthStore()
-      const token = authStore.token || localStorage.getItem('token')
-      const response = await fetch(`/api/receipts/${encodeURIComponent(receiptNumber)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Receipt not found')
-      return data.receipt
-    },
-
     async recordBookingPayment(id, paymentData) {
       this.loading = true
       this.error = null
@@ -825,7 +562,9 @@ export const useMachineryStore = defineStore('machinery', {
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/payment`, {
           method: 'POST',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(paymentData)
         })
         
@@ -853,7 +592,9 @@ export const useMachineryStore = defineStore('machinery', {
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/cancel`, {
           method: 'PUT',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ farmer_id: farmerId })
         })
         
@@ -879,7 +620,9 @@ export const useMachineryStore = defineStore('machinery', {
       try {
         const response = await fetch(`${API_BASE_URL}/bookings/${id}/edit`, {
           method: 'PUT',
-          headers: authJsonHeaders(),
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(bookingData)
         })
         
@@ -926,26 +669,35 @@ export const useMachineryStore = defineStore('machinery', {
     // ========================================
     // STATISTICS ACTIONS
     // ========================================
-    async fetchStats() {
-      this.loading = true
-      this.error = null
-      
+    async fetchStats(options = {}) {
+      const { silent = false } = options
+      if (!silent) {
+        this.loading = true
+        this.error = null
+      }
+
       try {
-        const response = await fetch(`${API_BASE_URL}/stats`)
-        
+        const response = await fetch(`${API_BASE_URL}/stats`, {
+          headers: authHeaders()
+        })
+
         if (!response.ok) {
           throw new Error('Failed to fetch statistics')
         }
-        
+
         const data = await response.json()
         this.stats = data.stats
         return data.stats
       } catch (error) {
-        this.error = error.message
+        if (!silent) {
+          this.error = error.message
+        }
         console.error('Error fetching stats:', error)
         throw error
       } finally {
-        this.loading = false
+        if (!silent) {
+          this.loading = false
+        }
       }
     },
 

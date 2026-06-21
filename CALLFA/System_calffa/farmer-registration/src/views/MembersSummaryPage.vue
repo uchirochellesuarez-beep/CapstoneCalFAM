@@ -404,7 +404,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
-import { getManilaTodayString } from '../utils/philippineTime'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -523,7 +522,7 @@ const refreshSummary = async () => {
     const [assistanceRaw, shareCapitalRaw, loansRaw, machineryBalanceRaw] = await Promise.all([
       fetchJson(`/api/farmer-income/distribution/completed/${farmerId}`),
       fetchJson(`/api/share-capital/farmer/${farmerId}`),
-      fetchJson(`/api/loans/farmer/${farmerId}?deviceDate=${getManilaTodayString()}`),
+      fetchJson(`/api/loans/farmer/${farmerId}?deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`),
       fetchJson(`/api/machinery/bookings/farmer-balance/${farmerId}`)
     ])
 

@@ -527,11 +527,14 @@
 
             <div class="form-group" v-if="paymentForm.paymentType === 'partial'">
               <label>Payment Amount *</label>
-              <TypedNumberInput
+              <input
+                type="number"
                 v-model="paymentForm.amount"
                 :max="selectedLoan.remaining_balance || selectedLoan.loan_amount"
-                :min="1"
+                min="1"
+                step="0.01"
                 placeholder="Enter partial payment amount"
+                required
               />
               <small>Maximum: ₱{{ (selectedLoan.remaining_balance || selectedLoan.loan_amount)?.toLocaleString() }}</small>
             </div>
@@ -544,7 +547,7 @@
             </div>
 
             <div class="form-group">
-              <label>Collection / Payment Date *</label>
+              <label>Payment Date *</label>
               <input
                 type="date"
                 v-model="paymentForm.payment_date"
@@ -554,17 +557,13 @@
             </div>
 
             <div class="form-group">
-              <label>Payment Method *</label>
-              <select v-model="paymentForm.payment_method" class="payment-method-select" required>
-                <option value="Cash">Cash</option>
-                <option value="GCash">GCash</option>
-              </select>
-            </div>
-
-            <div class="form-group auto-receipt-note">
-              <label>Official Receipt</label>
-              <input type="text" value="Auto-generated (RCPT-YYYY-######)" disabled />
-              <small>Receipt prints automatically after payment is recorded.</small>
+              <label>Receipt Number *</label>
+              <input
+                type="text"
+                v-model="paymentForm.reference_number"
+                placeholder="Enter receipt number"
+                required
+              />
             </div>
 
             <div class="form-group">
@@ -589,17 +588,11 @@
                 Cancel
               </button>
               <button type="submit" class="btn btn-submit" :disabled="processing">
-                {{ processing ? 'Recording...' : 'Record Payment & Print Receipt' }}
+                {{ processing ? 'Recording...' : 'Record Payment' }}
               </button>
             </div>
           </form>
         </div>
-      </div>
-    </div>
-
-    <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
-      <div class="modal-content receipt-modal-content" @click.stop>
-        <PaymentReceiptPrint :receipt="lastReceipt" :auto-print="receiptAutoPrint" @close="closeReceiptModal" />
       </div>
     </div>
   </div>
@@ -609,10 +602,6 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
-import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
-import { getManilaTodayString, addMonths } from '../utils/philippineTime'
-import TypedNumberInput from '../components/TypedNumberInput.vue'
-import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 import pendingApplicationsIcon from '../assets/icon-loan-pending.svg'
 import approvedLoansIcon from '../assets/icon-loan-approved.svg'
 import partialPaidIcon from '../assets/icon-loan-partial.svg'
@@ -670,11 +659,8 @@ const paymentForm = ref({
   paymentType: '',
   amount: '',
   payment_date: new Date().toISOString().split('T')[0],
-  payment_method: 'Cash',
   remarks: ''
 })
-
-const { showReceiptModal, lastReceipt, receiptAutoPrint, showAndPrintReceipt, closeReceiptModal } = usePaymentReceipt()
 
 const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
 const canModifyLoans = computed(() => !isAdmin.value)
@@ -822,11 +808,9 @@ async function fetchLoans() {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const params = new URLSearchParams({ deviceDate: getManilaTodayString() })
-    if (isAdmin.value && filterBarangay.value) {
-      params.set('barangay_id', filterBarangay.value)
-    }
-    const response = await fetch(`/api/loans?${params}`, { headers })
+    const deviceDate = new Date();
+    const deviceDateStr = deviceDate.getFullYear() + '-' + String(deviceDate.getMonth() + 1).padStart(2, '0') + '-' + String(deviceDate.getDate()).padStart(2, '0');
+    const response = await fetch(`/api/loans?deviceDate=${deviceDateStr}`, { headers })
     const data = await response.json()
     if (data.success) {
       // Filter loans based on user role
@@ -929,8 +913,10 @@ function formatPayerStatus(classification) {
 
 function openApproveModal(loan) {
   selectedLoan.value = loan
-  const termMonths = loan.payment_term || 12
-  approvalForm.value.due_date = addMonths(getManilaTodayString(), termMonths)
+  // Set default due date based on payment term
+  const dueDate = new Date()
+  dueDate.setMonth(dueDate.getMonth() + (loan.payment_term || 12))
+  approvalForm.value.due_date = dueDate.toISOString().split('T')[0]
   approvalForm.value.remarks = ''
   showApproveModal.value = true
 }
@@ -948,7 +934,7 @@ async function viewLoanDetails(loan) {
   
   // Fetch payment history for this loan
   try {
-    const response = await fetch(`/api/loans/${loan.id}?deviceDate=${getManilaTodayString()}`, {
+    const response = await fetch(`/api/loans/${loan.id}?deviceDate=${new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0')}`, {
       headers: {
         'Authorization': `Bearer ${authStore.token}`
       }
@@ -968,7 +954,7 @@ function openPaymentModal(loan) {
     paymentType: '',
     amount: '',
     payment_date: new Date().toISOString().split('T')[0],
-    payment_method: 'Cash',
+    reference_number: '',
     remarks: ''
   }
   showPaymentModal.value = true
@@ -1108,6 +1094,11 @@ async function recordPayment() {
     return
   }
 
+  if (!paymentForm.value.reference_number || paymentForm.value.reference_number.trim() === '') {
+    alert('Receipt number is required')
+    return
+  }
+
   const remainingBalance = selectedLoan.value.remaining_balance || selectedLoan.value.loan_amount
   if (parseFloat(paymentForm.value.amount) > remainingBalance) {
     alert('Payment amount cannot exceed remaining balance')
@@ -1127,7 +1118,8 @@ async function recordPayment() {
       body: JSON.stringify({
         amount: parseFloat(paymentForm.value.amount),
         payment_date: paymentForm.value.payment_date,
-        payment_method: paymentForm.value.payment_method,
+        payment_method: 'cash',
+        reference_number: paymentForm.value.reference_number.trim(),
         remarks: paymentForm.value.remarks || null,
         recorded_by: adminId
       })
@@ -1136,11 +1128,12 @@ async function recordPayment() {
     const data = await response.json()
     
     if (data.success) {
+      const newBalance = remainingBalance - parseFloat(paymentForm.value.amount)
+      const isPaidOff = newBalance <= 0
+      
+      alert(`Payment recorded successfully!\n\nPayment: ₱${parseFloat(paymentForm.value.amount).toLocaleString()}\nNew Balance: ₱${newBalance.toLocaleString()}\nStatus: ${isPaidOff ? 'PAID' : 'ACTIVE'}`)
       closeModals()
       await fetchLoans()
-      if (data.receipt_number) {
-        await showAndPrintReceipt(data.receipt_number)
-      }
     } else {
       alert('Failed to record payment: ' + data.message)
     }
@@ -1514,13 +1507,12 @@ onUnmounted(() => {
 .loans-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 960px;
-  table-layout: fixed;
+  min-width: 1480px;
 }
 
 .loans-table th,
 .loans-table td {
-  padding: 0.22rem 0.24rem;
+  padding: 0.85rem 0.75rem;
   text-align: center;
   border-bottom: 1.5px solid #94a3b8;
   vertical-align: middle;
@@ -1533,43 +1525,38 @@ onUnmounted(() => {
 
 .loans-table th {
   background: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
   color: #475569;
-  font-size: 0.52rem;
-  letter-spacing: 0.02em;
+  font-size: 0.9375rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  line-height: 1.08;
-  white-space: normal;
-  word-break: break-word;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .loans-table td {
-  font-size: 0.58rem;
-  line-height: 1.12;
-  white-space: normal;
-  word-break: break-word;
-  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: 1.45;
 }
 
-.loans-table col.col-name { width: 118px; }
-.loans-table col.col-amount { width: 88px; }
-.loans-table col.col-purpose { width: 100px; }
-.loans-table col.col-payer { width: 108px; }
-.loans-table col.col-date { width: 78px; }
-.loans-table col.col-term { width: 52px; }
-.loans-table col.col-status { width: 82px; }
-.loans-table col.col-actions { width: 168px; }
+.loans-table col.col-name { width: 168px; }
+.loans-table col.col-amount { width: 120px; }
+.loans-table col.col-purpose { width: 132px; }
+.loans-table col.col-payer { width: 152px; }
+.loans-table col.col-date { width: 108px; }
+.loans-table col.col-term { width: 84px; }
+.loans-table col.col-status { width: 124px; }
+.loans-table col.col-actions { width: 240px; }
 
 .th-name,
 .td-name {
   text-align: left;
-  padding-left: 0.35rem !important;
-  min-width: 0;
+  padding-left: 0.85rem !important;
+  min-width: 168px;
 }
 
 .td-name {
-  font-weight: 500;
-  font-size: 0.58rem;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1577,8 +1564,7 @@ onUnmounted(() => {
 
 .td-purpose {
   text-align: center;
-  min-width: 0;
-  font-size: 0.58rem;
+  min-width: 132px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1588,12 +1574,12 @@ onUnmounted(() => {
 .td-payer,
 .th-actions,
 .td-actions {
-  padding-left: 0.28rem;
-  padding-right: 0.28rem;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
 }
 
 .td-actions {
-  min-width: 0;
+  min-width: 240px;
 }
 
 .th-date,
@@ -1607,15 +1593,14 @@ onUnmounted(() => {
 
 .th-date,
 .th-term {
-  white-space: normal;
-  line-height: 1.08;
-  font-size: 0.52rem;
+  white-space: nowrap;
+  line-height: 1.25;
+  font-size: 0.9375rem;
 }
 
 .td-date,
 .td-term {
   white-space: nowrap;
-  font-size: 0.58rem;
 }
 
 .td-status {
@@ -1627,8 +1612,7 @@ onUnmounted(() => {
 }
 
 .amount {
-  font-weight: 600;
-  font-size: 0.58rem;
+  font-weight: 800;
   color: #059669;
   white-space: nowrap;
 }
@@ -1638,12 +1622,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  padding: 0.1rem 0.32rem;
-  border-radius: 5px;
-  font-size: 0.52rem;
-  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
   text-transform: capitalize;
-  line-height: 1.08;
+  line-height: 1.2;
   white-space: nowrap;
   background: transparent !important;
   border: 1px solid rgba(190, 235, 203, 0.35);
@@ -1689,22 +1673,22 @@ onUnmounted(() => {
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .btn {
-  padding: 0.12rem 0.26rem;
+  padding: 0.45rem 0.7rem;
   border: none;
-  border-radius: 4px;
-  font-size: 0.5rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
   letter-spacing: 0;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
-  line-height: 1.08;
+  line-height: 1.2;
 }
 
 .btn-approve {
@@ -2163,33 +2147,35 @@ onUnmounted(() => {
 .payment-history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.58rem;
-  min-width: 520px;
-  table-layout: fixed;
+  font-size: 1rem;
+  min-width: 640px;
 }
 
 .payment-history-table th,
 .payment-history-table td {
-  padding: 0.22rem 0.26rem;
+  padding: 0.85rem 0.9rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-  line-height: 1.12;
+  border-bottom: 1.5px solid #94a3b8;
+}
+
+.payment-history-table th:not(:last-child),
+.payment-history-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
 }
 
 .payment-history-table th {
   background: #f8fafc;
   font-weight: 700;
   color: #475569;
-  font-size: 0.52rem;
+  font-size: 0.9375rem;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  white-space: normal;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .payment-history-table td.amount {
   color: #059669;
-  font-weight: 700;
-  font-size: 0.58rem;
+  font-weight: 800;
   white-space: nowrap;
 }
 
@@ -2236,15 +2222,15 @@ onUnmounted(() => {
 
   .loans-table th,
   .loans-table td {
-    padding: 0.22rem 0.2rem;
+    padding: 0.7rem 0.55rem;
   }
 
   .loans-table th {
-    font-size: 0.52rem;
+    font-size: 0.875rem;
   }
 
   .loans-table td {
-    font-size: 0.58rem;
+    font-size: 1rem;
   }
 
   .action-buttons {
@@ -2261,20 +2247,20 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.1rem 0.3rem;
-  border-radius: 5px;
+  gap: 0.25rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.5rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
-  line-height: 1.08;
+  line-height: 1.2;
 }
 
 .credit-score-compact {
-  font-size: 0.5rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #64748b;
-  line-height: 1.08;
+  line-height: 1.2;
 }
 
 .payer-badge.low {
@@ -2318,7 +2304,7 @@ onUnmounted(() => {
 .payer-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: 0.25rem;
   min-width: 0;
   align-items: center;
   text-align: center;
@@ -2795,8 +2781,7 @@ onUnmounted(() => {
   background: #f0fdf4 !important;
   border: 1px solid #86efac !important;
   color: #052e16 !important;
-  font-size: 0.52rem !important;
-  padding: 0.1rem 0.32rem !important;
+  font-size: 0.875rem;
 }
 
 .page-container.admin-loans-page.light-theme .status-badge.pending {
@@ -2987,6 +2972,4 @@ onUnmounted(() => {
   border: 2px solid #cbd5e1 !important;
   color: #000000 !important;
 }
-
-@import '../styles/compact-data-table.css';
 </style>

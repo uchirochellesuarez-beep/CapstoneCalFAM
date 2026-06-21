@@ -1125,27 +1125,6 @@
             <div class="loading-spinner"></div>
             <p>Ina-update ang report...</p>
           </div>
-          <!-- Report Header (CFA = Barangay scope; period from filter/API; no contact/address) -->
-          <div class="report-header">
-            <div class="report-logo">
-              <img :src="reportLogoUrl" alt="CALFFA Logo" class="report-logo-image" />
-              <div class="logo-text">
-                <p class="report-cfa-line">
-                  <strong>Name ng CFA:</strong> {{ reportBarangayNameForReport }}
-                </p>
-                <h3 class="report-doc-title">Machinery Financial Report</h3>
-              </div>
-            </div>
-            <div class="report-meta">
-              <h3>{{ reportData.type.charAt(0).toUpperCase() + reportData.type.slice(1) }} Transaction Report</h3>
-              <p class="report-period-long">
-                {{ formatReportPeriodLong(reportData.period.start, reportData.period.end) }}
-              </p>
-              <p class="report-generated">
-                Generated: {{ formatReportDate(reportData.generated_at) }}
-              </p>
-            </div>
-          </div>
 
           <!-- Farmer Clients Transaction Record (official collectibles-style sheet) -->
           <div v-if="reportFilters.showServiceLedger" class="collectibles-form-sheet farmer-clients-record-sheet">
@@ -1647,14 +1626,6 @@
           <!-- All Transactions Table -->
           <div v-if="reportFilters.showAllTransactions" class="report-transactions report-section-card">
             <div class="section-title">
-              <span class="section-icon icon-blue" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </span>
               <h4>All Transactions</h4>
               <span class="section-count">{{ reportData.transactions.all.length }} records</span>
             </div>
@@ -1696,13 +1667,6 @@
           <!-- Detailed Expenses Table -->
           <div v-if="reportFilters.showExpenses && reportData.transactions.expenses.length > 0" class="report-section report-section-card">
             <div class="section-title">
-              <span class="section-icon icon-amber" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 3v12" />
-                  <path d="m7 10 5 5 5-5" />
-                  <path d="M5 21h14" />
-                </svg>
-              </span>
               <h4>Expense Details</h4>
               <span class="section-count">{{ reportData.transactions.expenses.length }} records</span>
             </div>
@@ -1749,14 +1713,6 @@
           <!-- Bookings Summary -->
           <div v-if="reportFilters.showBookings && reportData.transactions.bookings.length > 0" class="report-section report-section-card">
             <div class="section-title">
-              <span class="section-icon icon-teal" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              </span>
               <h4>Bookings Summary</h4>
               <span class="section-count">{{ reportData.transactions.bookings.length }} bookings</span>
             </div>
@@ -2236,8 +2192,6 @@ const route = useRoute();
 const authStore = useAuthStore();
 const { isDark } = useBackdropTheme();
 const isLight = computed(() => !isDark.value);
-const reportLogoUrl = 'https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3';
-
 const highlightedBookingId = ref(null);
 
 // Get current user role
@@ -2729,7 +2683,23 @@ const duesForm = ref({
 });
 
 // Methods
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = '/api';
+
+const authHeaders = (extra = {}) => {
+  const headers = { 'Content-Type': 'application/json', ...extra };
+  if (authStore.token) {
+    headers.Authorization = `Bearer ${authStore.token}`;
+  }
+  return headers;
+};
+
+const apiFetch = (url, options = {}) => {
+  const { headers: extraHeaders, ...rest } = options;
+  return fetch(url, {
+    ...rest,
+    headers: authHeaders(extraHeaders),
+  });
+};
 
 const formatNumber = (num) => {
   if (!num) return '0.00';
@@ -2814,7 +2784,7 @@ const loadExpenses = async () => {
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/expenses?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -2829,13 +2799,7 @@ const loadExpenses = async () => {
 const loadMachinery = async () => {
   try {
     // Load machinery filtered by barangay for non-admin users
-    const token = authStore.token;
-    const response = await fetch(`${API_BASE_URL}/machinery/inventory`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
+    const response = await apiFetch(`${API_BASE_URL}/machinery/inventory`);
     const data = await response.json();
     
     if (data.success) {
@@ -2848,7 +2812,7 @@ const loadMachinery = async () => {
 
 const loadBarangays = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/barangays`);
+    const response = await apiFetch(`${API_BASE_URL}/barangays`);
     const data = await response.json();
     if (data.success) {
       barangays.value = data.barangays || [];
@@ -2861,13 +2825,7 @@ const loadBarangays = async () => {
 const loadTotalMembers = async () => {
   try {
     // Load members for the user's barangay (for non-admin)
-    const token = authStore.token;
-    const response = await fetch(`${API_BASE_URL}/farmers`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
+    const response = await apiFetch(`${API_BASE_URL}/farmers`);
     const data = await response.json();
     
     if (data.success) {
@@ -2893,7 +2851,7 @@ const loadIncome = async () => {
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/income?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -2914,7 +2872,7 @@ const loadProfitSummary = async () => {
       ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -2934,7 +2892,7 @@ const loadExpenseBreakdown = async () => {
       ...(isAdmin.value && selectedBarangayId.value && { barangay_id: selectedBarangayId.value })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -2955,7 +2913,7 @@ const loadBookingUsageStats = async () => {
       limit: '10'
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/booking-usage-stats?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/booking-usage-stats?${params}`);
     const data = await response.json();
 
     if (data.success) {
@@ -3002,9 +2960,8 @@ const saveExpense = async () => {
     
     const payloadData = normalizeNumericFields({ ...expenseForm.value });
     
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...payloadData,
         user_id: authStore.currentUser.id
@@ -3035,9 +2992,8 @@ const saveExpense = async () => {
 
 const saveIncome = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/income`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...incomeForm.value,
         user_id: authStore.currentUser.id
@@ -3072,9 +3028,8 @@ const deleteExpense = async (id) => {
   if (!confirm('Are you sure you want to delete this expense?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/expenses/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: authStore.currentUser.id })
     });
     
@@ -3098,9 +3053,8 @@ const deleteIncome = async (id) => {
   if (!confirm('Are you sure you want to delete this income record?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/income/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/income/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: authStore.currentUser.id })
     });
     
@@ -3124,7 +3078,7 @@ const loadARData = async () => {
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/ar?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/ar?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -3148,7 +3102,7 @@ const loadCollections = async () => {
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
     
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/collections?${params}`);
     const data = await response.json();
     
     if (data.success) {
@@ -3169,9 +3123,8 @@ const deleteCollection = async (id) => {
   if (!confirm('Are you sure you want to delete this collection record?')) return;
   
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/collections/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: authStore.currentUser.id })
     });
     
@@ -3257,9 +3210,8 @@ const saveCollection = async () => {
     };
     
     // Save collection to backend
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/collections`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/collections`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(collectionData)
     });
     
@@ -3321,9 +3273,8 @@ const generateProfitDistributionRecord = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-distribution/generate`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/profit-distribution/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: authStore.currentUser.id,
         start_date: filters.value.start_date || null,
@@ -3354,7 +3305,7 @@ const generateReport = async (type, options = {}) => {
   
   reportLoading.value = true;
   try {
-    const response = await fetch(buildReportApiUrl({ type }));
+    const response = await apiFetch(buildReportApiUrl({ type }));
     const data = await response.json();
     
     if (data.success) {
@@ -3494,7 +3445,7 @@ const generateReportCustom = async (options = {}) => {
   
   reportLoading.value = true;
   try {
-    const response = await fetch(
+    const response = await apiFetch(
       buildReportApiUrl({
         type: 'custom',
         startDate: reportFilters.value.startDate,
@@ -3561,6 +3512,10 @@ const buildPrintableReportHtml = (root) => {
 
   // Never print the mobile card layout — desktop table only
   clone.querySelectorAll('.fcr-mobile-list').forEach((el) => el.remove());
+  clone.querySelectorAll('.report-refresh-overlay').forEach((el) => el.remove());
+  clone.querySelectorAll(
+    '.section-icon, .mf-section-icon, .distribution-icon, .dist-icon, .card-icon, .report-logo-image'
+  ).forEach((el) => el.remove());
 
   return clone.outerHTML;
 };
@@ -3588,31 +3543,36 @@ const getMachineryReportPrintStyles = (orientation) => {
       background: #fff !important;
       width: 100%;
     }
+    #printable-report .report-refresh-overlay,
+    #printable-report .loading-spinner {
+      display: none !important;
+    }
+    #printable-report :is(
+      .section-icon,
+      .mf-section-icon,
+      .distribution-icon,
+      .dist-icon,
+      .card-icon,
+      .report-logo-image,
+      .info-text-icon,
+      .inline-notice-icon
+    ) {
+      display: none !important;
+    }
     #printable-report .report-header {
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-      color: #fff;
-      padding: 16px 20px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 12px;
+      display: none !important;
     }
-    #printable-report .report-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    #printable-report .collectibles-list-sheet .collectibles-form-title-block,
+    #printable-report .collectibles-list-sheet .collectibles-meta-box {
+      display: none !important;
     }
-    #printable-report .report-logo-image {
-      width: 52px;
-      height: 52px;
-      object-fit: contain;
+    #printable-report .collectibles-list-sheet {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      page-break-inside: auto;
     }
-    #printable-report .report-meta { text-align: right; }
-    #printable-report .report-meta h3 { margin: 0 0 6px; font-size: 1.1rem; }
-    #printable-report .report-period-long,
-    #printable-report .report-generated { margin: 4px 0; font-size: 0.85rem; opacity: 0.92; }
     #printable-report .report-footer {
       margin-top: 20px;
       padding-top: 16px;
@@ -3818,15 +3778,166 @@ const getMachineryReportPrintStyles = (orientation) => {
       page-break-inside: avoid;
       margin-bottom: 16px;
     }
+    #printable-report .report-section-card,
+    #printable-report .report-transactions,
+    #printable-report .report-plain-section.report-section-card {
+      background: #fff !important;
+      border: 2px solid #0f172a !important;
+      border-radius: 10px !important;
+      overflow: hidden !important;
+      margin: 0 0 16px !important;
+      box-shadow: none !important;
+      page-break-inside: avoid !important;
+    }
+    #printable-report .report-section-card .section-title,
+    #printable-report .report-transactions .section-title,
+    #printable-report .report-plain-section .section-title {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 10px 14px !important;
+      background: #e2e8f0 !important;
+      border-bottom: 1px solid #0f172a !important;
+    }
+    #printable-report .report-section-card .section-title h4,
+    #printable-report .report-transactions .section-title h4,
+    #printable-report .report-plain-section .section-title h4 {
+      margin: 0 !important;
+      font-size: 13px !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+    }
+    #printable-report .report-section-card .section-count,
+    #printable-report .report-transactions .section-count {
+      margin-left: auto !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      color: #475569 !important;
+      background: #f1f5f9 !important;
+      border: 1px solid #94a3b8 !important;
+      padding: 3px 8px !important;
+      border-radius: 999px !important;
+    }
+    #printable-report .report-section-card .table-container,
+    #printable-report .report-transactions .table-container,
+    #printable-report .report-plain-section .table-container {
+      padding: 0 !important;
+      border: none !important;
+      overflow: visible !important;
+      background: #fff !important;
+    }
+    #printable-report .report-section-card .data-table,
+    #printable-report .report-transactions .data-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      table-layout: fixed !important;
+      font-size: 8px !important;
+      display: table !important;
+    }
+    #printable-report .report-section-card .data-table thead,
+    #printable-report .report-transactions .data-table thead,
+    #printable-report .report-section-card .data-table tbody,
+    #printable-report .report-transactions .data-table tbody,
+    #printable-report .report-section-card .data-table tfoot,
+    #printable-report .report-transactions .data-table tfoot {
+      display: table-row-group !important;
+    }
+    #printable-report .report-section-card .data-table thead,
+    #printable-report .report-transactions .data-table thead {
+      display: table-header-group !important;
+    }
+    #printable-report .report-section-card .data-table tfoot,
+    #printable-report .report-transactions .data-table tfoot {
+      display: table-footer-group !important;
+    }
+    #printable-report .report-section-card .data-table tr,
+    #printable-report .report-transactions .data-table tr {
+      display: table-row !important;
+    }
+    #printable-report .report-section-card .data-table th,
+    #printable-report .report-section-card .data-table td,
+    #printable-report .report-transactions .data-table th,
+    #printable-report .report-transactions .data-table td {
+      display: table-cell !important;
+      border: 1px solid #334155 !important;
+      padding: 4px 3px !important;
+      vertical-align: middle !important;
+      line-height: 1.2 !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      color: #0f172a !important;
+    }
+    #printable-report .report-section-card .data-table th,
+    #printable-report .report-transactions .data-table th {
+      background: #e2e8f0 !important;
+      font-weight: 800 !important;
+      font-size: 7px !important;
+      text-align: center !important;
+    }
+    #printable-report .report-section-card .data-table td,
+    #printable-report .report-transactions .data-table td {
+      font-size: 8px !important;
+      font-weight: 600 !important;
+    }
+    #printable-report .report-section-card .data-table .text-right,
+    #printable-report .report-transactions .data-table .text-right {
+      text-align: right !important;
+    }
+    #printable-report .report-section-card .data-table tbody tr:nth-child(even),
+    #printable-report .report-transactions .data-table tbody tr:nth-child(even) {
+      background: #f8fafc !important;
+    }
+    #printable-report .report-section-card .total-row td,
+    #printable-report .report-transactions .total-row td {
+      background: #f1f5f9 !important;
+      font-weight: 800 !important;
+      border-top: 2px solid #0f172a !important;
+    }
+    #printable-report .report-section-card .badge,
+    #printable-report .report-transactions .badge {
+      display: inline-block !important;
+      padding: 2px 5px !important;
+      border-radius: 4px !important;
+      font-size: 7px !important;
+      font-weight: 800 !important;
+      border: 1px solid #94a3b8 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0 !important;
+    }
+    #printable-report .report-section-card .badge-income {
+      background: #dcfce7 !important;
+      color: #047857 !important;
+      border-color: #6ee7b7 !important;
+    }
+    #printable-report .report-section-card .badge-expense {
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+      border-color: #fecaca !important;
+    }
+    #printable-report .report-section-card .badge-collection {
+      background: #dbeafe !important;
+      color: #1d4ed8 !important;
+      border-color: #93c5fd !important;
+    }
     #printable-report .report-plain-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
     #printable-report .report-plain-table th,
     #printable-report .report-plain-table td {
-      border: 1px solid #e5e7eb;
-      padding: 8px 10px;
+      border: 1px solid #334155;
+      padding: 7px 9px;
+    }
+    #printable-report .report-plain-table th {
+      background: #e2e8f0;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    #printable-report .empty-cell {
+      text-align: center;
+      color: #64748b;
+      padding: 10px !important;
     }
     #printable-report .text-right { text-align: right; }
   `;
@@ -3944,7 +4055,7 @@ const loadMonthlyDues = async () => {
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/monthly-dues?${params}`);
     const data = await response.json();
 
     if (data.success) {
@@ -3958,7 +4069,7 @@ const loadMonthlyDues = async () => {
 
 const loadEligibleFarmers = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues/eligible-farmers?user_id=${authStore.currentUser.id}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/monthly-dues/eligible-farmers?user_id=${authStore.currentUser.id}`);
     const data = await response.json();
 
     if (data.success) {
@@ -3987,7 +4098,7 @@ const loadDuesSummary = async () => {
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues/summary?${params}`);
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/monthly-dues/summary?${params}`);
     const data = await response.json();
 
     if (data.success) {
@@ -4010,9 +4121,8 @@ const collectMonthlyDues = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/machinery-financial/monthly-dues`, {
+    const response = await apiFetch(`${API_BASE_URL}/machinery-financial/monthly-dues`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...duesForm.value,
         user_id: authStore.currentUser.id
@@ -5295,20 +5405,20 @@ onBeforeUnmount(() => {
 .breakdown-card h3 {
   margin: 0 0 14px 0;
   font-size: 16px;
-  color: #b6f7cb;
+  color: #ffffff;
   font-weight: 800;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.35);
   padding-bottom: 10px;
 }
 
 .amount {
   font-size: 29px;
   font-weight: 900;
-  color: #4ade80;
+  color: #ffffff;
   margin: 0;
-  text-shadow: 0 0 12px rgba(74, 222, 128, 0.35);
+  text-shadow: none;
 }
 
 .amount.negative {
@@ -5326,17 +5436,17 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.42);
   font-size: 15px;
 }
 
 .expense-item span:first-child {
-  color: rgba(220, 238, 211, 0.88);
+  color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
 }
 
 .expense-item span:last-child {
-  color: #86efac;
+  color: #ffffff;
   font-weight: 800;
   font-size: 15px;
   font-family: monospace;
@@ -6364,25 +6474,44 @@ onBeforeUnmount(() => {
   font-size: 1.1rem;
 }
 
+#printable-report .report-section-card .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
 #printable-report .report-section-card .data-table thead {
-  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  background: #e2e8f0;
+}
+
+#printable-report .report-section-card .data-table th,
+#printable-report .report-section-card .data-table td {
+  border: 1px solid #334155;
+  padding: 8px 6px;
+  vertical-align: middle;
+  word-wrap: break-word;
 }
 
 #printable-report .report-section-card .data-table th {
-  color: #14532d;
+  color: #0f172a;
   font-weight: 800;
-  font-size: 12px;
-  border-bottom: 1px solid #bbf7d0;
+  font-size: 11px;
+  text-align: center;
 }
 
 #printable-report .report-section-card .data-table td {
-  color: #334155;
-  font-size: 13px;
-  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  font-size: 12px;
 }
 
 #printable-report .report-section-card .data-table tbody tr:nth-child(even) {
-  background: #fafafa;
+  background: #f8fafc;
+}
+
+#printable-report .report-section-card .total-row td {
+  background: #f1f5f9 !important;
+  font-weight: 800;
+  border-top: 2px solid #0f172a !important;
 }
 
 #printable-report .report-section-card .badge {
@@ -7541,6 +7670,35 @@ onBeforeUnmount(() => {
     display: block !important;
   }
 
+  #printable-report .report-header {
+    display: none !important;
+  }
+
+  #printable-report .collectibles-list-sheet .collectibles-form-title-block,
+  #printable-report .collectibles-list-sheet .collectibles-meta-box {
+    display: none !important;
+  }
+
+  #printable-report .collectibles-list-sheet {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  #printable-report :is(
+    .section-icon,
+    .mf-section-icon,
+    .distribution-icon,
+    .dist-icon,
+    .card-icon,
+    .report-logo-image,
+    .info-text-icon,
+    .inline-notice-icon
+  ) {
+    display: none !important;
+  }
+
   .farmer-clients-record-table {
     width: 100% !important;
     table-layout: fixed !important;
@@ -7703,20 +7861,20 @@ onBeforeUnmount(() => {
 /* Report Section Cards (generated report only) */
 #printable-report .report-section-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border: 2px solid #0f172a;
+  border-radius: 10px;
   overflow: hidden;
   margin-bottom: 20px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
 }
 
 #printable-report .section-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 20px;
-  background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%);
-  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  background: #e2e8f0;
+  border-bottom: 1px solid #0f172a;
 }
 
 #printable-report .section-icon {
@@ -7921,14 +8079,14 @@ onBeforeUnmount(() => {
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
   font-weight: 800;
-  color: #effbe8;
+  color: #ffffff;
   letter-spacing: 0.2px;
 }
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
   font-weight: 900;
   font-size: 15px;
-  color: #f8fff5;
+  color: #ffffff;
 }
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
@@ -8212,7 +8370,7 @@ onBeforeUnmount(() => {
 
 .tab-content .data-table th:not(:last-child),
 .tab-content .data-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8;
+  border-right: 2px solid rgba(203, 213, 225, 0.62);
 }
 
 .tab-content .data-table thead {
@@ -8224,8 +8382,8 @@ onBeforeUnmount(() => {
   text-align: center;
   vertical-align: middle;
   font-weight: 800;
-  color: var(--text-main);
-  border-bottom: 2px solid #6ee7a8;
+  color: #ffffff;
+  border-bottom: 2px solid rgba(134, 239, 172, 0.78);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -8233,8 +8391,8 @@ onBeforeUnmount(() => {
 
 .tab-content .data-table td {
   padding: 14px 16px;
-  border-bottom: 1.5px solid #94a3b8;
-  color: var(--text-main);
+  border-bottom: 2px solid rgba(203, 213, 225, 0.55);
+  color: #ffffff;
   font-weight: 600;
   font-size: 15px;
   text-align: center;
@@ -8666,6 +8824,37 @@ tr.selected {
 .financial-container:not(.light-theme) .tab-content .data-table :is(th, td) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .usage-leaders-card .data-table :is(th, td, td small) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .profit-breakdown .breakdown-card :is(h3, .amount, .expense-item span) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tab-content .data-table th:not(:last-child),
+.financial-container:not(.light-theme) .tab-content .data-table td:not(:last-child),
+.financial-container:not(.light-theme) .usage-leaders-card .data-table th:not(:last-child),
+.financial-container:not(.light-theme) .usage-leaders-card .data-table td:not(:last-child) {
+  border-right: 2px solid rgba(203, 213, 225, 0.62);
+}
+
+.financial-container:not(.light-theme) .tab-content .data-table td,
+.financial-container:not(.light-theme) .usage-leaders-card .data-table td {
+  border-bottom: 2px solid rgba(203, 213, 225, 0.55);
+}
+
+.financial-container:not(.light-theme) .tab-content .data-table th,
+.financial-container:not(.light-theme) .usage-leaders-card .data-table th {
+  border-bottom: 2px solid rgba(134, 239, 172, 0.78);
+}
+
+.financial-container:not(.light-theme) .profit-breakdown .expense-item {
+  border-bottom: 1px solid rgba(203, 213, 225, 0.42);
 }
 
 .financial-container:not(.light-theme) .tab-content table.data-table tbody td.amount {

@@ -173,7 +173,7 @@
               <th>Inflows / Collected</th>
               <th>Outflows / Disbursed</th>
               <th>Net / Balance</th>
-              <th>Detail Page</th>
+              <th class="no-print">Detail Page</th>
             </tr>
           </thead>
           <tbody>
@@ -292,7 +292,6 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { Chart, registerables } from 'chart.js'
-import { getManilaReferenceDateString } from '../utils/philippineTime'
 
 Chart.register(...registerables)
 
@@ -493,7 +492,10 @@ const reportScope = computed(() => {
   return parts.length ? parts.join(' · ') : 'All financial modules'
 })
 
-const getDeviceDate = () => getManilaReferenceDateString()
+const getDeviceDate = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const getAuthHeaders = () => {
   const headers = { 'Content-Type': 'application/json' }
@@ -613,7 +615,339 @@ const clearFilters = () => {
   filterDateTo.value = ''
 }
 
-const printReport = () => window.print()
+let overviewPrintFrame = null
+
+const removeOverviewPrintFrame = () => {
+  if (overviewPrintFrame?.parentNode) {
+    overviewPrintFrame.parentNode.removeChild(overviewPrintFrame)
+  }
+  overviewPrintFrame = null
+}
+
+const getPrintChartAxisStyle = () => ({
+  tickColor: '#0f172a',
+  gridColor: 'rgba(15, 23, 42, 0.22)',
+  legendColor: '#0f172a',
+  doughnutBorder: '#ffffff',
+  borderColor: 'rgba(15, 23, 42, 0.4)',
+  gridLineWidth: 1
+})
+
+/** Render charts with print-safe colors (dark labels/lines on white paper). */
+const captureOverviewChartImages = () => {
+  const axis = getPrintChartAxisStyle()
+  const images = { module: '', machinery: '' }
+
+  const moduleCanvas = document.createElement('canvas')
+  moduleCanvas.width = 560
+  moduleCanvas.height = 280
+  const moduleLabels = ['Loans', 'Machinery', 'Share Capital']
+  const moduleData = [totalCollected.value, machineryIncome.value, shareCapitalContributed.value]
+  const moduleColors = ['#16a34a', '#0284c7', '#7c3aed']
+
+  const modulePrintChart = new Chart(moduleCanvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: moduleLabels,
+      datasets: [{
+        data: moduleData,
+        backgroundColor: moduleColors,
+        borderColor: axis.doughnutBorder,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      cutout: '58%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: axis.legendColor,
+            boxWidth: 12,
+            font: { size: 11, weight: '600' }
+          }
+        }
+      }
+    }
+  })
+  modulePrintChart.update('none')
+  images.module = moduleCanvas.toDataURL('image/png')
+  modulePrintChart.destroy()
+
+  const machineryCanvas = document.createElement('canvas')
+  machineryCanvas.width = 560
+  machineryCanvas.height = 280
+
+  const machineryPrintChart = new Chart(machineryCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Income', 'Expenses', 'Net'],
+      datasets: [{
+        data: [machineryIncome.value, machineryExpenses.value, machineryNet.value],
+        backgroundColor: ['#16a34a', '#dc2626', machineryNet.value >= 0 ? '#0284c7' : '#ea580c'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: { color: axis.tickColor, font: { size: 11, weight: '600' } },
+          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth },
+          border: { color: axis.borderColor, width: 1 }
+        },
+        y: {
+          ticks: {
+            color: axis.tickColor,
+            font: { size: 10, weight: '600' },
+            callback: (v) => '₱' + Number(v).toLocaleString()
+          },
+          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth },
+          border: { color: axis.borderColor, width: 1 }
+        }
+      }
+    }
+  })
+  machineryPrintChart.update('none')
+  images.machinery = machineryCanvas.toDataURL('image/png')
+  machineryPrintChart.destroy()
+
+  return images
+}
+
+const buildPrintableOverviewHtml = (root, chartImages = {}) => {
+  const clone = root.cloneNode(true)
+
+  clone.querySelectorAll('.no-print').forEach((el) => el.remove())
+  clone.querySelectorAll('.print-only').forEach((el) => {
+    el.style.display = 'block'
+    el.classList.remove('print-only')
+  })
+  clone.querySelectorAll('.stat-icon-wrap').forEach((el) => el.remove())
+
+  const chartKeys = ['module', 'machinery']
+  const cloneCanvases = clone.querySelectorAll('canvas')
+  cloneCanvases.forEach((canvas, index) => {
+    const img = document.createElement('img')
+    img.src = chartImages[chartKeys[index]] || ''
+    img.alt = index === 0 ? 'Finance by Module chart' : 'Machinery Income vs Expenses chart'
+    img.style.width = '100%'
+    img.style.maxHeight = '220px'
+    img.style.objectFit = 'contain'
+    canvas.replaceWith(img)
+  })
+
+  return clone.outerHTML
+}
+
+const getFinancialOverviewPrintStyles = () => `
+  @page { size: A4 portrait; margin: 10mm; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #0f172a;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #printable-report {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+  .report-banner {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #cbd5e1;
+  }
+  .report-banner h2 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a !important;
+  }
+  .report-banner p {
+    margin: 0;
+    font-size: 12px;
+    color: #475569 !important;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-left-width: 4px;
+    border-radius: 8px;
+    background: #fff !important;
+    break-inside: avoid;
+  }
+  .stat-card-loan-collected { border-left-color: #16a34a; }
+  .stat-card-loan-outstanding { border-left-color: #d97706; }
+  .stat-card-machinery-income { border-left-color: #2563eb; }
+  .stat-card-machinery-expense { border-left-color: #dc2626; }
+  .stat-card-machinery-net { border-left-color: #0891b2; }
+  .stat-card-share-balance { border-left-color: #7c3aed; }
+  .stat-card-share-contributed { border-left-color: #059669; }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #475569 !important;
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a !important;
+    margin-top: 4px;
+  }
+  .stat-value.collected { color: #15803d !important; }
+  .stat-value.outstanding { color: #b45309 !important; }
+  .stat-value.overdue { color: #dc2626 !important; }
+  .stat-value.expense { color: #dc2626 !important; }
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .chart-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff !important;
+    break-inside: avoid;
+  }
+  .chart-title {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    color: #0f172a !important;
+  }
+  .chart-canvas-wrap {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .financial-table-section {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+    background: #fff !important;
+    break-inside: avoid;
+  }
+  .section-title {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a !important;
+  }
+  .financial-table-wrap {
+    overflow: visible !important;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+  }
+  .financial-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 10px;
+    min-width: 0;
+  }
+  .financial-table th,
+  .financial-table td {
+    border: 1px solid #94a3b8;
+    padding: 6px 8px;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+  }
+  .financial-table th {
+    background: #e2e8f0 !important;
+    font-weight: 800;
+    text-align: left;
+  }
+  .financial-table .collected { color: #15803d !important; font-weight: 700; }
+  .financial-table .outstanding { color: #b45309 !important; font-weight: 700; }
+  .financial-table .overdue { color: #dc2626 !important; font-weight: 700; }
+  .financial-table .expense { color: #dc2626 !important; font-weight: 700; }
+  .financial-table .rate { color: #2563eb !important; font-weight: 700; }
+  .financial-table .amount { font-weight: 700; }
+  .sub-table { margin-top: 8px; }
+  .report-footer {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #cbd5e1;
+    font-size: 10px;
+    color: #64748b !important;
+    line-height: 1.45;
+  }
+`
+
+const printReport = async () => {
+  const printContents = document.getElementById('printable-report')
+  if (!printContents) return
+
+  await nextTick()
+  removeOverviewPrintFrame()
+
+  const iframe = document.createElement('iframe')
+  iframe.setAttribute('aria-hidden', 'true')
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;border:0;opacity:0;pointer-events:none;width:794px;height:1px;'
+
+  document.body.appendChild(iframe)
+  overviewPrintFrame = iframe
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+  const iframeWindow = iframe.contentWindow
+
+  if (!iframeDoc || !iframeWindow) {
+    removeOverviewPrintFrame()
+    return
+  }
+
+  const chartImages = captureOverviewChartImages()
+  const printableHtml = buildPrintableOverviewHtml(printContents, chartImages)
+  const printMarkup = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>CaLFFA Financial Overview</title>
+  <style>${getFinancialOverviewPrintStyles()}</style>
+</head>
+<body>
+  ${printableHtml}
+</body>
+</html>`
+
+  iframeDoc.open()
+  iframeDoc.write(printMarkup)
+  iframeDoc.close()
+
+  window.setTimeout(() => {
+    iframeWindow.focus()
+    iframeWindow.print()
+  }, 350)
+
+  iframeWindow.addEventListener('afterprint', removeOverviewPrintFrame, { once: true })
+  window.setTimeout(removeOverviewPrintFrame, 60000)
+}
 
 const renderCharts = () => {
   renderModuleChart()
