@@ -53,7 +53,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="!isBarangayManagpi">
+      <!-- OPERATIONS Section -->
+      <div class="nav-section" v-if="operationsItems.length">
+        <div class="section-header">
+          <span class="section-title">OPERATIONS</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in operationsItems"
@@ -75,7 +79,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canCommunity && !isBarangayManagpi">
+      <!-- Community Section (Farmers and eligible officers) -->
+      <div class="nav-section" v-if="canCommunity && communityItems.length">
+        <div class="section-header">
+          <span class="section-title">COMMUNITY</span>
+        </div>
         <ul class="nav-list">
           <li
             v-for="item in communityItems"
@@ -111,7 +119,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canManageLoans && !isAdmin && !isBarangayManagpi">
+      <!-- Loan Management Section (Treasurer and President only) -->
+      <div class="nav-section" v-if="canManageLoans && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">LOAN MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/admin-loans') }"
@@ -125,7 +137,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canCollectMonthlyDues && !isAdmin && !isBarangayManagpi">
+      <!-- Association Dues Section (President and Treasurer only) -->
+      <div class="nav-section" v-if="canCollectMonthlyDues && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">COLLECTIONS</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/seed-fertilizer-plan') }"
@@ -148,7 +164,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="isPresident && !isAdmin && !isBarangayManagpi">
+      <!-- Machinery Management Section (President only) -->
+      <div class="nav-section" v-if="isPresident && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">MACHINERY MANAGEMENT</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/machinery-management') }"
@@ -162,7 +182,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canAccessFarmerIncomeHub && !isAdmin && !isBarangayManagpi">
+      <!-- Farmer Income Section (President, Officers, Agriculturist) -->
+      <div class="nav-section" v-if="canAccessFarmerIncomeHub && !isAdmin">
+        <div class="section-header">
+          <span class="section-title">KITA NG MAGSASAKA</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/farmer-income-hub') }"
@@ -176,7 +200,11 @@
         </ul>
       </div>
 
-      <div class="nav-section" v-if="canViewMembersSummary && !isBarangayManagpi">
+      <!-- Members Summary (Agriculturist) -->
+      <div class="nav-section" v-if="canViewMembersSummary">
+        <div class="section-header">
+          <span class="section-title">MEMBERS</span>
+        </div>
         <ul class="nav-list">
           <li
             :class="{ active: isActiveRoute('/members-summary') }"
@@ -230,6 +258,7 @@
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
+import { canBookMachinery, canApplyOfficerLoan } from "../utils/roleAccess";
 import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
 import MachineryIcon from "./icons/MachineryIcon.vue";
@@ -317,14 +346,8 @@ const canAccessFarmerIncomeHub = computed(() => {
 });
 
 const canCommunity = computed(() => {
-  // Farmers and officers (except agriculturist) can see community section for loans
   const role = currentUser.value?.role;
-  return ['farmer', 'treasurer', 'president', 'operation_manager', 'business_manager', 'operator'].includes(role);
-});
-
-// Check if user is from Managpi barangay (id = 2) - transactions not available
-const isBarangayManagpi = computed(() => {
-  return currentUser.value?.barangay_id === 2;
+  return role === 'farmer' || canApplyOfficerLoan(role);
 });
 
 // Check if user is a non-member - non-members don't have sidebar access
@@ -353,14 +376,18 @@ const operationsItems = computed(() => {
   const items = [];
   const role = currentUser.value?.role;
   
-  // Machinery Booking for farmers only (and admins can see all)
-  if (!isAdmin.value && currentUser.value?.role === 'farmer') {
+  // Machinery Booking for farmers and eligible officers (not agriculturist)
+  if (!isAdmin.value && canBookMachinery(role)) {
     items.push({ text: "Machinery Booking", route: "/machinery-booking", icon: MachineryIcon });
   }
   
   // Machinery Approval for operators, operation managers, business managers, and admins
   if (canManageApprovals.value && !isAdmin.value) {
     items.push({ text: "Machinery Approval", route: "/machinery-approval", icon: ApprovalIcon });
+  }
+
+  if (isOperator.value) {
+    items.push({ text: "Operator Dashboard", route: "/operator-dashboard", icon: DashboardIcon });
   }
 
   // Machinery Financial for admin, president, and treasurer; Loan Portfolio for officers (admin has it under ADMIN)

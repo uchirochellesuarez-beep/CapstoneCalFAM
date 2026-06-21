@@ -5,31 +5,13 @@
 const { generateDueDateNotifications } = require('../routes/notifications');
 const pool = require('../db');
 const { syncExpiredMachineryBookings } = require('../services/booking-status-sync');
+const {
+  getManilaTodayString,
+  parseBookingDate
+} = require('../utils/philippinesTime');
 
 let intervalId = null;
 let lastProcessedDate = null;
-
-const formatLocalDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const parseBookingDate = (value) => {
-  if (!value) return null;
-  if (value instanceof Date) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
-  if (typeof value === 'string') {
-    const normalized = value.split('T')[0].trim();
-    const date = new Date(`${normalized}T00:00:00`);
-    return Number.isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-};
 
 /**
  * Update loans to overdue status if past due date
@@ -37,9 +19,7 @@ const parseBookingDate = (value) => {
  */
 async function updateOverdueLoans() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = formatLocalDate(today);
+    const todayStr = getManilaTodayString();
     
     // Find ALL loans (including already overdue) that are past due date with remaining balance
     const [overdueLoans] = await pool.execute(
@@ -152,9 +132,7 @@ async function updateOverdueLoans() {
  */
 async function updateOverdueMachineryBookings() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = formatLocalDate(today);
+    const todayStr = getManilaTodayString();
 
     // Find machinery bookings that are past due (30 days after booking_date) with unpaid balance
     // This only logs overdue bookings for monitoring — interest is applied manually by the treasurer
@@ -195,7 +173,7 @@ async function updateOverdueMachineryBookings() {
  * This also supports manual system date changes during testing.
  */
 async function runDailyTasksIfDateChanged(forceRun = false) {
-  const todayStr = formatLocalDate(new Date());
+  const todayStr = getManilaTodayString();
   const shouldRun = forceRun || lastProcessedDate !== todayStr;
 
   if (!shouldRun) return;

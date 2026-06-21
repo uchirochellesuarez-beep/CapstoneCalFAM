@@ -7,6 +7,7 @@ import GoogleRegistration from '../views/GoogleRegistration.vue'
 import FarmerTablePage from '../views/FarmerTablePage.vue'
 import MembersSummaryPage from '../views/MembersSummaryPage.vue'
 import { useAuthStore } from '../stores/authStore'
+import { canBookMachinery, canApplyOfficerLoan } from '../utils/roleAccess'
 
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 
@@ -49,6 +50,7 @@ const routes = [
       { path: 'machinery-management', component: () => import('../views/MachineryManagementPage.vue'), meta: { requiresMachinery: true } },
       { path: 'machinery-booking', component: () => import('../views/MachineryBookingPage.vue'), meta: { requiresFarmer: true } },
       { path: 'machinery-approval', component: () => import('../views/MachineryApprovalPage.vue'), meta: { requiresOperator: true } },
+      { path: 'operator-dashboard', component: () => import('../views/OperatorDashboardPage.vue'), meta: { requiresOperatorOnly: true } },
       { path: 'machinery-financial', component: () => import('../views/MachineryFinancialPage.vue'), meta: { requiresFinancial: true } },
       // Insights Routes
       { path: 'news', component: () => import('../views/NewsPage.vue') },
@@ -126,6 +128,13 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  const requiresOperatorOnly = to.meta.requiresOperatorOnly || (to.matched.some(record => record.meta.requiresOperatorOnly))
+  if (requiresOperatorOnly && userRole !== 'operator') {
+    alert('Access denied. This page is for machinery operators only.')
+    next('/dashboard')
+    return
+  }
+
   // Check if route requires financial access (admin, president, treasurer)
   const requiresFinancial = to.meta.requiresFinancial || (to.matched.some(record => record.meta.requiresFinancial))
   if (requiresFinancial && !['admin', 'president', 'treasurer'].includes(userRole)) {
@@ -183,8 +192,8 @@ router.beforeEach((to, from, next) => {
 
   // Check if route requires farmer role
   const requiresFarmer = to.meta.requiresFarmer || (to.matched.some(record => record.meta.requiresFarmer))
-  if (requiresFarmer && !['farmer', 'president', 'treasurer', 'auditor', 'admin'].includes(userRole)) {
-    alert('Access denied. Farmer or Officer privileges required.')
+  if (requiresFarmer && !canBookMachinery(userRole) && userRole !== 'admin') {
+    alert('Access denied. You do not have permission to book machinery.')
     next('/dashboard')
     return
   }

@@ -17,11 +17,18 @@ const machineryFinancialRoutes = require('./routes/machinery-financial');
 const notificationsRoutes = require('./routes/notifications');
 const testNotificationsRoutes = require('./routes/test-notifications');
 const farmerIncomeRoutes = require('./routes/farmer-income');
+const operatorIncomeRoutes = require('./routes/operator-income');
 const newsRoutes = require('./routes/news');
 const shareCapitalRoutes = require('./routes/share-capital');
 const seedFertilizerPlanRoutes = require('./routes/seed-fertilizer-plan');
 const { startNotificationScheduler } = require('./scheduler/notification-scheduler');
 const { ensureNotificationSchema } = require('./services/notification-service');
+const { ensureOperatorAssignmentSchema } = require('./schema/ensureOperatorAssignment');
+const { ensurePendingExpenseSchema } = require('./schema/ensurePendingExpenseSchema');
+const { ensureDownPaymentSchema } = require('./schema/ensureDownPaymentSchema');
+const { ensureBalancePaymentSchema } = require('./schema/ensureBalancePaymentSchema');
+const { ensureRefundWorkflowSchema } = require('./schema/ensureRefundWorkflowSchema');
+const { ensureBarangaySecuritySchema } = require('./schema/ensureBarangaySecuritySchema');
 const pool = require('./db');
 const { ensureBarangayServicePlaces } = require('./schema/ensureBarangayServicePlaces');
 const { runExpenseTrainingSampleSeed } = require('./services/expenseSampleSeedRunner');
@@ -61,21 +68,38 @@ app.use('/api/ml-assessments', mlAssessmentsRoutes);
 // Machinery routes
 app.use('/api/machinery', machineryRoutes);
 app.use('/api/machinery-financial', machineryFinancialRoutes);
+app.use('/api/receipts', require('./routes/receipts'));
 // Notification routes
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/test-notifications', testNotificationsRoutes);
 // Farmer income routes
 app.use('/api/farmer-income', farmerIncomeRoutes);
+// Operator income routes
+app.use('/api/operator-income', operatorIncomeRoutes);
 // News and announcement routes
 app.use('/api', newsRoutes);
 
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  Promise.all([ensureBarangayServicePlaces(pool), ensureNotificationSchema()])
+  Promise.all([
+    ensureBarangayServicePlaces(pool),
+    ensureNotificationSchema(),
+    ensureOperatorAssignmentSchema(pool),
+    ensurePendingExpenseSchema(pool),
+    ensureDownPaymentSchema(pool),
+    ensureBalancePaymentSchema(pool),
+    ensureRefundWorkflowSchema(pool),
+    ensureBarangaySecuritySchema(pool)
+  ])
     .then(async () => {
       console.log('✅ Barangay service places schema ready (table + booking link if needed).');
       console.log('✅ Notification schema ready (due_date_notifications enums).');
+      console.log('✅ Operator assignment schema ready (inventory assignment + operator_income).');
+      console.log('✅ Pending expense schema ready (machinery_expenses workflow).');
+      console.log('✅ Down payment schema ready (20% booking workflow).');
+      console.log('✅ Balance payment & receipt schema ready.');
+      console.log('✅ Refund workflow schema ready.');
 
       if (shouldRunStartupExpenseSampleSeed()) {
         try {

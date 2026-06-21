@@ -160,9 +160,7 @@ router.post('/news', verifyToken, (req, res, next) => {
 });
 
 // News edit rules:
-// - farmer: only own news
-// - president: can edit any news
-// - admin: cannot edit news
+// - author or admin only
 router.post('/news/update', verifyToken, (req, res, next) => {
   uploadNewsImage(req, res, (err) => {
     if (err) {
@@ -195,19 +193,18 @@ router.post('/news/update', verifyToken, (req, res, next) => {
     }
 
     const existing = rows[0];
-    if (role === 'admin') {
-      return res.status(403).json({ success: false, message: 'Admin cannot edit news.' });
-    }
+    const isOwner = Number(existing.author_id) === Number(req.user.id);
 
-    if (role === 'farmer') {
-      const isOwner = Number(existing.author_id) === Number(req.user.id);
+    if (role === 'admin') {
+      // Admin may edit any news post
+    } else if (role === 'farmer' || role === 'president') {
       if (!isOwner) {
         return res.status(403).json({
           success: false,
-          message: 'Farmers can only edit their own news.'
+          message: 'You can only edit your own news.'
         });
       }
-    } else if (role !== 'president') {
+    } else {
       return res.status(403).json({ success: false, message: 'You are not allowed to edit news.' });
     }
 
@@ -318,22 +315,18 @@ const deleteNewsByRules = async (req, res, newsId) => {
   }
 
   const item = rows[0];
-  if (role === 'admin') {
-    return res.status(403).json({
-      success: false,
-      message: 'Admin cannot delete news posts.'
-    });
-  }
+  const isOwner = Number(item.author_id) === Number(req.user.id);
 
-  if (role === 'farmer') {
-    const isOwner = Number(item.author_id) === Number(req.user.id);
+  if (role === 'admin') {
+    // Admin may delete any news post
+  } else if (role === 'farmer' || role === 'president') {
     if (!isOwner) {
       return res.status(403).json({
         success: false,
-        message: 'Farmers can only delete their own news.'
+        message: 'You can only delete your own news.'
       });
     }
-  } else if (role !== 'president') {
+  } else {
     return res.status(403).json({
       success: false,
       message: 'You are not allowed to delete news.'
@@ -364,9 +357,7 @@ router.post('/news/delete', verifyToken, async (req, res) => {
 });
 
 // News deletion rules:
-// - farmer: only own news
-// - president: can delete any news
-// - admin: cannot delete news
+// - author or admin only
 router.delete('/news/:id', verifyToken, async (req, res) => {
   try {
     const newsId = Number(req.params.id);
@@ -485,9 +476,10 @@ router.put('/announcements/:id', verifyToken, (req, res, next) => {
     }
 
     const announcement = rows[0];
+    const role = normalizeRole(req.user?.role);
+    const isOwner = Number(announcement.author_id) === Number(userId);
 
-    // Only the author can edit their own announcement
-    if (announcement.author_id !== userId) {
+    if (!isOwner && role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'You can only edit your own announcements.'
@@ -527,15 +519,8 @@ const deleteAnnouncementByRules = async (req, res, announcementId) => {
     return res.status(400).json({ success: false, message: 'Invalid announcement id.' });
   }
 
-  if (!['president', 'admin'].includes(role)) {
-    return res.status(403).json({
-      success: false,
-      message: 'Only President or Admin can delete announcements.'
-    });
-  }
-
   const [rows] = await pool.execute(
-    'SELECT id, image FROM announcements WHERE id = ?',
+    'SELECT id, author_id, image FROM announcements WHERE id = ?',
     [announcementId]
   );
 
@@ -544,6 +529,15 @@ const deleteAnnouncementByRules = async (req, res, announcementId) => {
   }
 
   const item = rows[0];
+  const isOwner = Number(item.author_id) === Number(req.user.id);
+
+  if (!isOwner && role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'You can only delete your own announcements.'
+    });
+  }
+
   await pool.execute('DELETE FROM announcements WHERE id = ?', [announcementId]);
 
   if (item.image && item.image.startsWith('/uploads/announcements/')) {
@@ -568,8 +562,7 @@ router.post('/announcements/delete', verifyToken, async (req, res) => {
 });
 
 // Announcement deletion rules:
-// - president/admin: can delete any announcement
-// - farmer: cannot delete announcements
+// - author or admin only
 router.delete('/announcements/:id', verifyToken, async (req, res) => {
   try {
     const announcementId = Number(req.params.id);

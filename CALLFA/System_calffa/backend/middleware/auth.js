@@ -99,7 +99,7 @@ const verifyBarangayAccess = (barangayField = 'barangay_id') => {
       }
 
       // Officer must be assigned to the target barangay
-      if (req.user?.barangay_id && req.user.barangay_id !== parseInt(targetBarangayId)) {
+      if (req.user?.barangay_id && parseInt(req.user.barangay_id, 10) !== parseInt(targetBarangayId, 10)) {
         return res.status(403).json({ 
           success: false, 
           message: 'You can only access data from your assigned barangay.' 
@@ -152,7 +152,7 @@ const verifyFarmerBarangayAccess = (farmerIdParam = 'farmerId') => {
       const farmerBarangayId = farmers[0].barangay_id;
 
       // Officer can only access farmers from their barangay
-      if (req.user?.barangay_id && req.user.barangay_id !== farmerBarangayId) {
+      if (req.user?.barangay_id && parseInt(req.user.barangay_id, 10) !== parseInt(farmerBarangayId, 10)) {
         return res.status(403).json({ 
           success: false, 
           message: 'You can only access farmers from your assigned barangay.' 
@@ -203,7 +203,7 @@ const verifyMachineryBarangayAccess = async (req, res, next) => {
     }
 
     // Officer can only access machinery from their barangay
-    if (req.user?.barangay_id && req.user.barangay_id !== machinery[0].barangay_id) {
+    if (req.user?.barangay_id && parseInt(req.user.barangay_id, 10) !== parseInt(machinery[0].barangay_id, 10)) {
       return res.status(403).json({ 
         success: false, 
         message: 'You can only access machinery from your assigned barangay.' 
@@ -252,7 +252,7 @@ const verifyLoanBarangayAccess = async (req, res, next) => {
     }
 
     // Officer can only access loans from their barangay
-    if (req.user?.barangay_id && req.user.barangay_id !== loans[0].barangay_id) {
+    if (req.user?.barangay_id && parseInt(req.user.barangay_id, 10) !== parseInt(loans[0].barangay_id, 10)) {
       return res.status(403).json({ 
         success: false, 
         message: 'You can only access loans from your assigned barangay.' 
@@ -287,9 +287,9 @@ const verifyBookingBarangayAccess = async (req, res, next) => {
       });
     }
 
-    // Get booking's barangay
+    // Booking owner may always access their booking (including cross-barangay rentals)
     const [bookings] = await pool.execute(
-      'SELECT barangay_id FROM machinery_bookings WHERE id = ?',
+      'SELECT barangay_id, farmer_id FROM machinery_bookings WHERE id = ?',
       [bookingId]
     );
 
@@ -301,9 +301,18 @@ const verifyBookingBarangayAccess = async (req, res, next) => {
     }
 
     const bookingBarangayId = bookings[0].barangay_id;
+    const bookingFarmerId = bookings[0].farmer_id;
+
+    if (
+      req.user?.id &&
+      parseInt(bookingFarmerId, 10) === parseInt(req.user.id, 10)
+    ) {
+      req.bookingBarangayId = bookingBarangayId;
+      return next();
+    }
 
     // Officer can only access bookings from their barangay
-    if (req.user?.barangay_id && req.user.barangay_id !== bookingBarangayId) {
+    if (req.user?.barangay_id && parseInt(req.user.barangay_id, 10) !== parseInt(bookingBarangayId, 10)) {
       return res.status(403).json({ 
         success: false, 
         message: 'You can only access bookings from your assigned barangay.' 
@@ -314,6 +323,87 @@ const verifyBookingBarangayAccess = async (req, res, next) => {
     next();
   } catch (err) {
     console.error('Booking barangay access verification error:', err);
+    res.status(500).json({ success: false, message: 'Access verification failed' });
+  }
+};
+
+/**
+ * Farmers may only access their own bookings; officers pass through to barangay check.
+ */
+const verifyBookingParticipantAccess = async (req, res, next) => {
+  try {
+    if (req.user?.role === 'admin') return next();
+
+    const bookingId = req.params.id;
+    if (!bookingId) return next();
+
+    const [bookings] = await pool.execute(
+      'SELECT farmer_id FROM machinery_bookings WHERE id = ?',
+      [bookingId]
+    );
+
+    if (bookings.length === 0) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (
+      req.user?.id &&
+      parseInt(bookings[0].farmer_id, 10) === parseInt(req.user.id, 10)
+    ) {
+      return next();
+    }
+
+    if (
+      req.user?.role === 'farmer' &&
+      parseInt(bookings[0].farmer_id, 10) !== parseInt(req.user.id, 10)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only access your own bookings.'
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('Booking participant access verification error:', err);
+    res.status(500).json({ success: false, message: 'Access verification failed' });
+  }
+};
+
+/**
+ * Balance payment submissions inherit barangay from parent booking.
+ */
+const verifyBalanceSubmissionBarangayAccess = async (req, res, next) => {
+  try {
+    if (req.user?.role === 'admin') return next();
+
+    const { submissionId } = req.params;
+    const [rows] = await pool.execute(
+      `SELECT mb.barangay_id
+       FROM machinery_balance_payment_submissions s
+       JOIN machinery_bookings mb ON s.booking_id = mb.id
+       WHERE s.id = ?`,
+      [submissionId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Submission not found' });
+    }
+
+    if (
+      req.user?.barangay_id &&
+      parseInt(req.user.barangay_id, 10) !== parseInt(rows[0].barangay_id, 10)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only access payment submissions from your assigned barangay.'
+      });
+    }
+
+    req.submissionBarangayId = rows[0].barangay_id;
+    next();
+  } catch (err) {
+    console.error('Balance submission barangay access error:', err);
     res.status(500).json({ success: false, message: 'Access verification failed' });
   }
 };
@@ -343,6 +433,8 @@ module.exports = {
   verifyFarmerBarangayAccess,
   verifyMachineryBarangayAccess,
   verifyBookingBarangayAccess,
+  verifyBookingParticipantAccess,
+  verifyBalanceSubmissionBarangayAccess,
   verifyLoanBarangayAccess,
   authorizeRoles
 };

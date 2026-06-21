@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const { verifyToken, authorizeRoles } = require('../middleware/auth');
 const { recordAssistancePaymentForDistribution, ASSISTANCE_PER_SACK_PHP } = require('../services/seedFertilizerPlanService');
+const { generateReceiptNumber, recordPaymentReceipt } = require('../services/receipt-service');
 
 const requireBarangayForOfficer = (req, res, next) => {
   const role = req.user?.role;
@@ -145,7 +146,7 @@ router.post(
       return res.status(400).json({ success: false, message: 'Invalid distribution id' });
     }
 
-    const { amount, contribution_date } = req.body || {};
+    const { amount, contribution_date, payment_method } = req.body || {};
     const officerId = req.user?.id ? parseInt(String(req.user.id), 10) : null;
 
     const conn = await pool.getConnection();
@@ -190,7 +191,36 @@ router.post(
       }
 
       await conn.commit();
-      res.json({ success: true, ...result });
+
+      const [[distInfo]] = await pool.execute(
+        `SELECT d.id, d.assistance_type, d.quantity, f.full_name AS farmer_name, f.barangay_id
+         FROM income_assistance_distributions d
+         JOIN farmers f ON d.farmer_id = f.id
+         WHERE d.id = ?`,
+        [distId]
+      );
+      const receiptNum = await generateReceiptNumber(pool);
+      const normalizedMethod = ['gcash', 'g-cash'].includes(String(payment_method || '').toLowerCase())
+        ? 'GCash'
+        : 'Cash';
+      const assistLabel = distInfo?.assistance_type || 'seed/fertilizer';
+
+      await recordPaymentReceipt(pool, {
+        receiptNumber: receiptNum,
+        module: 'seed_fertilizer',
+        referenceId: distId,
+        referenceType: 'income_assistance_distribution',
+        clientName: distInfo?.farmer_name,
+        amountPaid: result.amount_recorded,
+        remainingBalance: result.remaining_pesos,
+        paymentMethod: normalizedMethod,
+        paymentDate: String(contribution_date).slice(0, 10),
+        collectedBy: officerId,
+        barangayId: distInfo?.barangay_id,
+        remarks: `Seed/Fertilizer assistance payment (${assistLabel})`
+      });
+
+      res.json({ success: true, ...result, receipt_number: receiptNum });
     } catch (error) {
       await conn.rollback();
       console.error('seed-fertilizer-plan payment:', error.message);

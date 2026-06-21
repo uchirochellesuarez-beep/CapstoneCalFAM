@@ -1,8 +1,6 @@
 /**
  * Hardcoded Barangay Constants
- * CALLFA system now only operates with two fixed barangays:
- * - Camansihan: Active operations, all transaction modules enabled
- * - Managpi: Sample barangay, transactions disabled, view-only access
+ * CALLFA federation barangays — same modules per role; data is scoped by barangay_id.
  */
 
 const BARANGAYS = {
@@ -22,13 +20,13 @@ const BARANGAYS = {
     id: 2,
     name: "Managpi",
     location: "Calapan City, Mindoro Oriental",
-    status: "sample",
+    status: "active",
     population: 1800,
     total_area: 98.3,
     contact_person: "Barangay Hall",
     contact_phone: "+63-43-867-2000",
-    is_active_for_transactions: false,
-    description: "Sample barangay for demonstration - transactions not yet available"
+    is_active_for_transactions: true,
+    description: "Federation barangay with full cooperative modules"
   }
 };
 
@@ -91,10 +89,7 @@ function getBarangayStatusMessage(barangayId) {
     : getBarangayById(barangayId);
   
   if (!barangay) return "Barangay not found";
-  if (barangay.is_active_for_transactions) {
-    return `Welcome to ${barangay.name}. All transaction modules are available.`;
-  }
-  return `${barangay.name} is a sample barangay. Transaction modules are not yet available for this barangay.`;
+  return `Welcome to ${barangay.name}. Cooperative modules are available for your barangay.`;
 }
 
 /**
