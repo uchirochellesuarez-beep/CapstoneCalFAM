@@ -1,0 +1,20 @@
+# Farmer uploads / live forecast foundation (do not publish to GitHub)
+CALLFA/System_calffa/backend/uploads/
+CALLFA/System_calffa/backend/data/user_expense_historical/**
+!CALLFA/System_calffa/backend/data/user_expense_historical/.gitkeep
+
+# Environment secrets (all subprojects)
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Node
+**/node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.uiaudit/

@@ -1,6 +1,7 @@
 {
   "name": "calffa_integrated",
   "dependencies": {
+    "puppeteer-core": "^25.3.0",
     "vue3-datepicker": "^0.4.0"
   }
 }
