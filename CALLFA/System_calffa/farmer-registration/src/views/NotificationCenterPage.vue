@@ -3,10 +3,10 @@
     <div class="page-header">
       <h1 class="page-title">
         <span class="title-icon">🔔</span>
-        Notification Center
+        {{ $t('ui.notificationCenter') }}
       </h1>
-      <p class="page-subtitle">Centralized view of all pending tasks and notifications</p>
-      <button class="mark-all-read-btn" @click="markAllAsRead">✓ Mark All as Read</button>
+      <p class="page-subtitle">{{ $t('ui.notificationCenterSub') }}</p>
+      <button class="mark-all-read-btn" @click="markAllAsRead">{{ $t('common.markAllRead') }}</button>
     </div>
 
     <div class="stats-overview">
@@ -14,21 +14,21 @@
         <div class="stat-icon">⏳</div>
         <div class="stat-info">
           <div class="stat-value">{{ pendingCount }}</div>
-          <div class="stat-label">Pending Tasks</div>
+          <div class="stat-label">{{ $t('ui.pendingTasks') }}</div>
         </div>
       </div>
       <div class="stat-box">
         <div class="stat-icon">⚠️</div>
         <div class="stat-info">
           <div class="stat-value">{{ urgentCount }}</div>
-          <div class="stat-label">Urgent</div>
+          <div class="stat-label">{{ $t('ui.urgent') }}</div>
         </div>
       </div>
       <div class="stat-box">
         <div class="stat-icon">✅</div>
         <div class="stat-info">
           <div class="stat-value">{{ completedCount }}</div>
-          <div class="stat-label">Completed Today</div>
+          <div class="stat-label">{{ $t('ui.completedToday') }}</div>
         </div>
       </div>
     </div>
@@ -71,7 +71,7 @@
             v-if="!notification.read"
             class="mark-read-btn"
             @click="markAsRead(notification.id)"
-            title="Mark as read"
+            :title="$t('ui.markAsRead')"
           >
             ✓
           </button>
@@ -87,7 +87,7 @@
 
       <div v-if="filteredNotifications.length === 0" class="empty-state">
         <div class="empty-icon">🔔</div>
-        <p class="empty-text">No notifications found</p>
+        <p class="empty-text">{{ $t('ui.noNotifications') }}</p>
       </div>
     </div>
   </div>

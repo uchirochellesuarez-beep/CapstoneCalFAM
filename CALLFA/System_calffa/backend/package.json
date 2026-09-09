@@ -26,7 +26,6 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "jest --runInBand",
     "sms:test": "node test-sms.js"
   }
 }

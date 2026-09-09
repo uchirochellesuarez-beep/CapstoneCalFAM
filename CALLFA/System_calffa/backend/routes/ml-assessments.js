@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const creditAnalyzer = require('../ml/creditAnalyzer');
 const pool = require('../db');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const { verifyToken, authorizeRoles } = require('../middleware/auth');
 
 /**
@@ -50,7 +51,7 @@ router.get('/all', verifyToken, async (req, res) => {
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         userBarangayId = decoded.barangay_id;
         userRole = decoded.role || 'guest';
       } catch (err) {
@@ -170,10 +171,7 @@ router.get('/eligibility/:farmerId', async (req, res) => {
         outstandingLoans: hasOutstandingBalance,
         creditAssessment: assessment.assessment,
         creditScore: assessment.assessment.creditScore,
-        recommendation: generateLoanRecommendation(
-          !hasOutstandingBalance,
-          assessment.assessment.classification
-        ),
+        recommendation: generateLoanRecommendation(assessment.assessment.classification),
         fullAssessment: assessment
       }
     });
@@ -228,7 +226,7 @@ router.post('/recalculate/:farmerId', verifyToken, async (req, res) => {
     // Verify user has permission (admin or loan officer)
     const token = req.headers.authorization?.split(' ')[1];
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     
     if (decoded.role !== 'admin' && decoded.role !== 'loan_officer') {
       return res.status(403).json({
@@ -256,9 +254,10 @@ router.post('/recalculate/:farmerId', verifyToken, async (req, res) => {
 });
 
 /**
- * Helper function to generate loan recommendation based on eligibility and credit risk
+ * Helper function to generate loan recommendation based on credit risk.
+ * Advisory only — does not block applications or override eligibility rules.
  */
-function generateLoanRecommendation(canApply, classification) {
+function generateLoanRecommendation(classification) {
   const recommendations = {
     GOOD_PAYER: {
       tone: 'positive',
@@ -274,16 +273,13 @@ function generateLoanRecommendation(canApply, classification) {
       tone: 'negative',
       message: 'Farmer has payment issues. Recommend additional monitoring or conditions.',
       emoji: '✗'
+    },
+    NEW_BORROWER: {
+      tone: 'neutral',
+      message: 'First-time borrower with no repayment history yet. Review other eligibility rules before deciding.',
+      emoji: '?'
     }
   };
-
-  if (!canApply) {
-    return {
-      tone: 'blocked',
-      message: 'Farmer has outstanding loan balances. Cannot apply for new loan.',
-      emoji: '✗'
-    };
-  }
 
   return recommendations[classification] || {
     tone: 'neutral',

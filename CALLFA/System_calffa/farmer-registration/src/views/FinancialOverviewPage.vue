@@ -1,159 +1,143 @@
 <template>
   <div class="financial-overview-container glass-module-page" :class="{ 'light-theme': isLight }">
-    <div class="page-header no-print">
-      <div class="page-header-left">
-        <h1 class="page-title">Financial Overview</h1>
-        <p class="page-subtitle">Buod ng koleksyon, pautang, machinery, at share capital — lahat sa Philippine Peso (₱).</p>
+    <div class="page-header page-header-split no-print">
+      <div class="page-header-text">
+        <h1 class="page-title">{{ $t('ui.financialOverview') }}</h1>
+        <p class="page-subtitle">{{ $t('ui.financialOverviewSub') }}</p>
       </div>
       <div class="header-actions">
         <button type="button" class="export-btn" @click="printReport">
           <svg class="export-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
           </svg>
-          Print Report
+          {{ $t('common.print') }}
         </button>
         <button type="button" class="export-btn export-btn-secondary" @click="exportCSV">
           <svg class="export-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Download CSV
+          {{ $t('common.csv') }}
         </button>
       </div>
     </div>
 
     <div class="filters-bar no-print">
       <div v-if="isAdmin" class="filter-group">
-        <label class="filter-label" for="fin-barangay-filter">Barangay</label>
+        <label class="filter-label" for="fin-barangay-filter">{{ $t('ui.barangay') }}</label>
         <select id="fin-barangay-filter" v-model="filterBarangay" class="filter-input">
-          <option value="">All Barangays</option>
+          <option value="">{{ $t('ui.allBarangays') }}</option>
           <option v-for="b in barangayOptions" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
         </select>
       </div>
       <div class="filter-group">
-        <label class="filter-label" for="fin-date-from">From</label>
+        <label class="filter-label" for="fin-date-from">{{ $t('ui.dateFrom') }}</label>
         <div class="mf-date-field">
           <input id="fin-date-from" v-model="filterDateFrom" type="date" class="filter-input mf-date-input" />
-          <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+          <span class="mf-date-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
         </div>
       </div>
       <div class="filter-group">
-        <label class="filter-label" for="fin-date-to">To</label>
+        <label class="filter-label" for="fin-date-to">{{ $t('ui.dateTo') }}</label>
         <div class="mf-date-field">
           <input id="fin-date-to" v-model="filterDateTo" type="date" class="filter-input mf-date-input" />
-          <svg class="mf-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+          <span class="mf-date-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
         </div>
       </div>
-      <button type="button" class="filter-clear-btn" @click="clearFilters">Clear Filters</button>
+      <button type="button" class="filter-clear-btn" @click="clearFilters">{{ $t('common.clearFilters') }}</button>
     </div>
 
-    <div id="printable-report" class="printable-report">
+    <div class="filters-bar no-print transactions-module-filter">
+      <div class="filter-group">
+        <label class="filter-label" for="fin-module-filter">{{ $t('ui.module') }}</label>
+        <select id="fin-module-filter" v-model="filterModule" class="filter-input">
+          <option value="">{{ $t('ui.allModules') }}</option>
+          <option v-for="mod in moduleFilterOptions" :key="mod.value" :value="mod.value">{{ $t(mod.labelKey) }}</option>
+        </select>
+      </div>
+      <p v-if="!isTreasurer" class="read-only-note">
+        {{ $t('ui.viewOnlyFinanceHint') }}
+      </p>
+    </div>
+
+    <div id="financial-overview-display" class="printable-report">
       <div class="report-banner print-only">
-        <h2>Financial Overview — System Summary Report</h2>
+        <h2>{{ $t('ui.financialSystemReport') }}</h2>
         <p>{{ reportScope }}</p>
-        <p class="report-date">Generated: {{ reportGeneratedAt }}</p>
+        <p class="report-date">{{ $t('ui.generatedColon') }} {{ reportGeneratedAt }}</p>
       </div>
 
       <!-- System-wide KPIs -->
-      <div class="stats-grid">
+      <div class="stats-group stats-group--overview">
+        <div class="stats-grid stats-grid--overview">
         <div class="stat-card stat-card-loan-collected">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <span class="stat-icon-peso">₱</span>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Loan Collections</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.loanCollections') }}</div>
             <div class="stat-value collected">₱{{ totalCollected.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-loan-outstanding">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Loan Outstanding</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.loanOutstanding') }}</div>
             <div class="stat-value outstanding">₱{{ outstandingBalance.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-machinery-income">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-              <polyline points="17 6 23 6 23 12" />
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Machinery Income</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.machineryIncome') }}</div>
             <div class="stat-value collected">₱{{ machineryIncome.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-machinery-expense">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-              <polyline points="17 18 23 18 23 12" />
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Machinery Expenses</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.machineryExpenses') }}</div>
             <div class="stat-value expense">₱{{ machineryExpenses.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-machinery-net">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18" />
-              <path d="M7 16l4-4 4 4 5-6" />
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Machinery Net</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.machineryNet') }}</div>
             <div class="stat-value" :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-share-balance">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Share Capital Balance</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.shareCapitalBalance') }}</div>
             <div class="stat-value">₱{{ shareCapitalBalance.toLocaleString() }}</div>
           </div>
         </div>
         <div class="stat-card stat-card-share-contributed">
-          <div class="stat-icon-wrap" aria-hidden="true">
-            <span class="stat-icon-peso">₱</span>
-          </div>
-          <div class="stat-info">
-            <div class="stat-label">Share Capital Contributed</div>
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.shareCapitalContributed') }}</div>
             <div class="stat-value collected">₱{{ shareCapitalContributed.toLocaleString() }}</div>
           </div>
+        </div>
         </div>
       </div>
 
       <!-- Charts -->
       <div class="charts-row">
         <div class="chart-card">
-          <h3 class="chart-title">Finance by Module (Inflows)</h3>
+          <h3 class="chart-title">{{ $t('ui.financeByModule') }}</h3>
           <div class="chart-canvas-wrap">
             <canvas ref="moduleChartRef"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Machinery Income vs Expenses</h3>
+          <h3 class="chart-title">{{ $t('ui.machineryIncomeVsExpenses') }}</h3>
           <div class="chart-canvas-wrap">
             <canvas ref="machineryChartRef"></canvas>
           </div>
@@ -163,22 +147,29 @@
       <!-- Consolidated module summary -->
       <div class="financial-table-section">
         <div class="table-header">
-          <h3 class="section-title">Consolidated Financial Summary</h3>
+          <h3 class="section-title">{{ $t('ui.consolidatedSummary') }}</h3>
         </div>
-        <div class="financial-table-wrap">
+        <div class="financial-table-wrap fin-desktop-table fo-summary-table-wrap">
         <table class="financial-table financial-table-main">
+          <colgroup>
+            <col class="col-module" />
+            <col class="col-amount" />
+            <col class="col-amount" />
+            <col class="col-amount" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
-              <th>Module</th>
-              <th>Inflows / Collected</th>
-              <th>Outflows / Disbursed</th>
-              <th>Net / Balance</th>
-              <th class="no-print">Detail Page</th>
+              <th>{{ $t('ui.module') }}</th>
+              <th>{{ $t('ui.inflowsCollected') }}</th>
+              <th>{{ $t('ui.outflowsDisbursed') }}</th>
+              <th>{{ $t('ui.netBalance') }}</th>
+              <th class="no-print">{{ $t('ui.detailPage') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="5" class="loading-cell">Loading financial data...</td>
+              <td colspan="5" class="loading-cell">{{ $t('ui.loadingFinancialData') }}</td>
             </tr>
             <template v-else>
               <tr v-for="row in moduleSummaryRows" :key="row.key">
@@ -187,44 +178,204 @@
                 <td class="expense">₱{{ row.outflow.toLocaleString() }}</td>
                 <td :class="row.net >= 0 ? 'collected' : 'overdue'">₱{{ row.net.toLocaleString() }}</td>
                 <td class="module-link-cell no-print">
-                  <router-link :to="row.route" class="detail-link-btn">{{ row.linkLabel }}</router-link>
+                  <router-link
+                    v-if="!row.treasurerOnly || isTreasurer"
+                    :to="row.route"
+                    class="detail-link-btn"
+                  >{{ row.linkLabel }}</router-link>
+                  <span v-else class="view-only-label">{{ $t('ui.viewOnlyLower') }}</span>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
         </div>
+        <div class="fin-mobile-list no-print">
+          <div v-if="loading" class="fin-mobile-empty">{{ $t('ui.loadingFinancialData') }}</div>
+          <template v-else>
+            <div
+              v-for="row in moduleSummaryRows"
+              :key="`mod-m-${row.key}`"
+              class="fin-mobile-card"
+            >
+              <div class="fin-mobile-card-top">
+                <h4 class="fin-mobile-card-name">{{ row.label }}</h4>
+              </div>
+              <div class="fin-mobile-card-meta">
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.inflows') }}</span>
+                  <span class="collected">₱{{ row.inflow.toLocaleString() }}</span>
+                </div>
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.outflows') }}</span>
+                  <span class="expense">₱{{ row.outflow.toLocaleString() }}</span>
+                </div>
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.net') }}</span>
+                  <span :class="row.net >= 0 ? 'collected' : 'overdue'">₱{{ row.net.toLocaleString() }}</span>
+                </div>
+              </div>
+              <div class="fin-mobile-card-actions">
+                <router-link
+                  v-if="!row.treasurerOnly || isTreasurer"
+                  :to="row.route"
+                  class="detail-link-btn fin-mobile-action"
+                >{{ row.linkLabel }}</router-link>
+                <span v-else class="view-only-label">{{ $t('ui.viewOnlyLower') }}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- All transactions (consolidated ledger) -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">{{ $t('ui.allTransactions') }}</h3>
+          <span class="transaction-count-badge">{{ $t('ui.recordsCount', { n: filteredTransactions.length }) }}</span>
+        </div>
+        <p v-if="transactionsError" class="transactions-error no-print">{{ transactionsError }}</p>
+        <div class="financial-table-wrap transactions-table-wrap fin-desktop-table fo-transactions-table-wrap">
+          <table class="financial-table financial-table-transactions">
+            <colgroup>
+              <col class="col-date" />
+              <col class="col-module" />
+              <col class="col-type" />
+              <col class="col-farmer" />
+              <col class="col-desc" />
+              <col class="col-amount" />
+              <col class="col-receipt" />
+              <col v-if="isAdmin" class="col-barangay" />
+              <col class="col-actions" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>{{ $t('ui.date') }}</th>
+                <th>{{ $t('ui.module') }}</th>
+                <th>{{ $t('ui.type') }}</th>
+                <th>{{ $t('ui.farmer') }}</th>
+                <th>{{ $t('ui.description') }}</th>
+                <th class="text-right">{{ $t('ui.amount') }}</th>
+                <th>{{ $t('ui.receipt') }}</th>
+                <th v-if="isAdmin">{{ $t('ui.barangay') }}</th>
+                <th class="no-print manage-col">{{ $t('ui.source') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="transactionsLoading">
+                <td :colspan="isAdmin ? 9 : 8" class="loading-cell">{{ $t('ui.loadingTransactions') }}</td>
+              </tr>
+              <tr v-else-if="filteredTransactions.length === 0">
+                <td :colspan="isAdmin ? 9 : 8" class="loading-cell">{{ $t('ui.noTransactionsFilter') }}</td>
+              </tr>
+              <tr v-for="tx in filteredTransactions" :key="tx.id">
+                <td>{{ formatTxDate(tx.date) }}</td>
+                <td><span class="module-pill" :class="modulePillClass(tx.module)">{{ translateModule(tx.module) }}</span></td>
+                <td>{{ translateTxType(tx.type) }}</td>
+                <td>{{ tx.farmer_name || '—' }}</td>
+                <td class="tx-desc">{{ tx.description }}</td>
+                <td class="text-right" :class="txAmountClass(tx)">₱{{ formatTxAmount(tx.amount) }}</td>
+                <td>{{ tx.receipt_number || '—' }}</td>
+                <td v-if="isAdmin">{{ tx.barangay_name || '—' }}</td>
+                <td class="no-print manage-col">
+                  <router-link
+                    v-if="isTreasurer && tx.source_route"
+                    :to="tx.source_route"
+                    class="detail-link-btn detail-link-btn-sm"
+                  >{{ $t('ui.manage') }}</router-link>
+                  <span v-else class="view-only-label">{{ $t('ui.viewOnlyLower') }}</span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot v-if="!transactionsLoading && filteredTransactions.length > 0">
+              <tr class="totals-row">
+                <td :colspan="isAdmin ? 5 : 5"><strong>{{ $t('ui.totalsFiltered') }}</strong></td>
+                <td class="text-right collected"><strong>₱{{ formatTxAmount(transactionInflowTotal) }}</strong></td>
+                <td :colspan="isAdmin ? 3 : 2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="fin-mobile-list no-print">
+          <div v-if="transactionsLoading" class="fin-mobile-empty">{{ $t('ui.loadingTransactions') }}</div>
+          <div v-else-if="filteredTransactions.length === 0" class="fin-mobile-empty">{{ $t('ui.noTransactionsFilter') }}</div>
+          <template v-else>
+            <div
+              v-for="tx in filteredTransactions"
+              :key="`tx-m-${tx.id}`"
+              class="fin-mobile-card"
+            >
+              <div class="fin-mobile-card-top">
+                <h4 class="fin-mobile-card-name">{{ tx.farmer_name || translateTxType(tx.type) || $t('ui.transaction') }}</h4>
+                <div class="fin-mobile-card-top-right">
+                  <span class="fin-mobile-amount" :class="txAmountClass(tx)">₱{{ formatTxAmount(tx.amount) }}</span>
+                  <span class="fin-mobile-date">{{ formatTxDate(tx.date) }}</span>
+                </div>
+              </div>
+              <div class="fin-mobile-card-meta">
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.module') }}</span>
+                  <span class="module-pill" :class="modulePillClass(tx.module)">{{ translateModule(tx.module) }}</span>
+                </div>
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.type') }}</span>
+                  <span>{{ translateTxType(tx.type) }}</span>
+                </div>
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.receipt') }}</span>
+                  <span>{{ tx.receipt_number || '—' }}</span>
+                </div>
+                <div v-if="isAdmin" class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.barangay') }}</span>
+                  <span>{{ tx.barangay_name || '—' }}</span>
+                </div>
+              </div>
+              <div class="fin-mobile-card-actions">
+                <router-link
+                  v-if="isTreasurer && tx.source_route"
+                  :to="tx.source_route"
+                  class="detail-link-btn detail-link-btn-sm fin-mobile-action"
+                >{{ $t('ui.manage') }}</router-link>
+                <span v-else class="view-only-label">{{ $t('ui.viewOnlyLower') }}</span>
+              </div>
+            </div>
+            <div class="fin-mobile-totals">
+              <span class="fin-mobile-label">{{ $t('ui.totalsFiltered') }}</span>
+              <strong class="collected">₱{{ formatTxAmount(transactionInflowTotal) }}</strong>
+            </div>
+          </template>
+        </div>
       </div>
 
       <!-- Loans summary -->
       <div class="financial-table-section module-section">
         <div class="table-header">
-          <h3 class="section-title">Loans — Summary</h3>
-          <router-link to="/admin-loans" class="view-all-link no-print detail-link-btn">Loan Management</router-link>
+          <h3 class="section-title">{{ $t('ui.loansSummary') }}</h3>
+          <router-link to="/admin-loans" class="view-all-link no-print detail-link-btn">{{ $t('ui.loanManagement') }}</router-link>
         </div>
         <table class="financial-table">
           <thead>
             <tr>
-              <th>Metric</th>
-              <th>Value</th>
+              <th>{{ $t('ui.metric') }}</th>
+              <th>{{ $t('ui.value') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Total disbursed</td><td class="amount">₱{{ totalDisbursed.toLocaleString() }}</td></tr>
-            <tr><td>Total collected</td><td class="collected">₱{{ totalCollected.toLocaleString() }}</td></tr>
-            <tr><td>Outstanding balance</td><td class="outstanding">₱{{ outstandingBalance.toLocaleString() }}</td></tr>
-            <tr><td>Overdue ({{ overdueCount }} loans)</td><td class="overdue">₱{{ overdueAmount.toLocaleString() }}</td></tr>
-            <tr><td>Collection rate</td><td class="rate">{{ collectionRate }}%</td></tr>
-            <tr><td>Active portfolio</td><td>{{ activePortfolioCount }} loans</td></tr>
-            <tr><td>Payment transactions</td><td>{{ collectionsPerformance.paymentCount }}</td></tr>
+            <tr><td>{{ $t('ui.totalDisbursed') }}</td><td class="amount">₱{{ totalDisbursed.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.totalCollected') }}</td><td class="collected">₱{{ totalCollected.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.outstandingBalance') }}</td><td class="outstanding">₱{{ outstandingBalance.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.overdueWithCount', { n: overdueCount }) }}</td><td class="overdue">₱{{ overdueAmount.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.collectionRate') }}</td><td class="rate">{{ collectionRate }}%</td></tr>
+            <tr><td>{{ $t('ui.activePortfolio') }}</td><td>{{ $t('ui.loansCount', { n: activePortfolioCount }) }}</td></tr>
+            <tr><td>{{ $t('ui.paymentTransactions') }}</td><td>{{ collectionsPerformance.paymentCount }}</td></tr>
           </tbody>
         </table>
         <table class="financial-table sub-table">
           <thead>
             <tr>
-              <th>Status</th>
-              <th>Loans</th>
-              <th>Outstanding</th>
+              <th>{{ $t('ui.status') }}</th>
+              <th>{{ $t('ui.loans') }}</th>
+              <th>{{ $t('ui.outstanding') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -240,20 +391,20 @@
       <!-- Machinery summary -->
       <div class="financial-table-section module-section">
         <div class="table-header">
-          <h3 class="section-title">Machinery — Summary</h3>
-          <router-link to="/machinery-financial" class="view-all-link no-print detail-link-btn">Machinery Financial</router-link>
+          <h3 class="section-title">{{ $t('ui.machinerySummary') }}</h3>
+          <router-link to="/machinery-financial" class="view-all-link no-print detail-link-btn">{{ $t('nav.machineryFinancial') }}</router-link>
         </div>
         <table class="financial-table">
           <thead>
             <tr>
-              <th>Metric</th>
-              <th>Value</th>
+              <th>{{ $t('ui.metric') }}</th>
+              <th>{{ $t('ui.value') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Total income</td><td class="collected">₱{{ machineryIncome.toLocaleString() }}</td></tr>
-            <tr><td>Total expenses</td><td class="expense">₱{{ machineryExpenses.toLocaleString() }}</td></tr>
-            <tr><td>Net profit / loss</td><td :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.totalIncome') }}</td><td class="collected">₱{{ machineryIncome.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.totalExpensesLabel') }}</td><td class="expense">₱{{ machineryExpenses.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.netProfitLoss') }}</td><td :class="machineryNet >= 0 ? 'collected' : 'overdue'">₱{{ machineryNet.toLocaleString() }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -261,48 +412,163 @@
       <!-- Share capital summary -->
       <div class="financial-table-section module-section">
         <div class="table-header">
-          <h3 class="section-title">Share Capital — Summary</h3>
-          <router-link to="/share-capital" class="view-all-link no-print detail-link-btn">Share Capital</router-link>
+          <h3 class="section-title">{{ $t('ui.shareCapitalSummary') }}</h3>
+          <router-link to="/share-capital" class="view-all-link no-print detail-link-btn">{{ $t('ui.shareCapital') }}</router-link>
         </div>
         <table class="financial-table">
           <thead>
             <tr>
-              <th>Metric</th>
-              <th>Value</th>
+              <th>{{ $t('ui.metric') }}</th>
+              <th>{{ $t('ui.value') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Members with share capital</td><td>{{ shareCapitalMembers }}</td></tr>
-            <tr><td>Total contributed</td><td class="collected">₱{{ shareCapitalContributed.toLocaleString() }}</td></tr>
-            <tr><td>Total withdrawn</td><td class="expense">₱{{ shareCapitalWithdrawn.toLocaleString() }}</td></tr>
-            <tr><td>Current balance</td><td class="amount">₱{{ shareCapitalBalance.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.membersWithShareCapital') }}</td><td>{{ shareCapitalMembers }}</td></tr>
+            <tr><td>{{ $t('ui.totalContributed') }}</td><td class="collected">₱{{ shareCapitalContributed.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.totalWithdrawn') }}</td><td class="expense">₱{{ shareCapitalWithdrawn.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.currentBalance') }}</td><td class="amount">₱{{ shareCapitalBalance.toLocaleString() }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Seed & Fertilizer summary -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">{{ $t('ui.seedFertilizerSummary') }}</h3>
+          <router-link
+            v-if="isTreasurer"
+            to="/seed-fertilizer-plan"
+            class="view-all-link no-print detail-link-btn"
+          >{{ $t('ui.seedFertilizerPlan') }}</router-link>
+          <span v-else class="view-only-label no-print">{{ $t('ui.viewOnlyLower') }}</span>
+        </div>
+        <table class="financial-table">
+          <thead>
+            <tr>
+              <th>{{ $t('ui.metric') }}</th>
+              <th>{{ $t('ui.value') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>{{ $t('ui.paymentsCollected') }}</td><td class="collected">₱{{ seedFertilizerCollected.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.transactionCount') }}</td><td>{{ seedFertilizerCount }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Association Dues summary -->
+      <div class="financial-table-section module-section">
+        <div class="table-header">
+          <h3 class="section-title">{{ $t('ui.associationDuesSummary') }}</h3>
+          <router-link
+            v-if="isTreasurer"
+            to="/association-dues"
+            class="view-all-link no-print detail-link-btn"
+          >{{ $t('ui.associationDues') }}</router-link>
+          <span v-else class="view-only-label no-print">{{ $t('ui.viewOnlyLower') }}</span>
+        </div>
+        <table class="financial-table">
+          <thead>
+            <tr>
+              <th>{{ $t('ui.metric') }}</th>
+              <th>{{ $t('ui.value') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>{{ $t('ui.totalCollected') }}</td><td class="collected">₱{{ associationDuesCollected.toLocaleString() }}</td></tr>
+            <tr><td>{{ $t('ui.transactionCount') }}</td><td>{{ associationDuesCount }}</td></tr>
           </tbody>
         </table>
       </div>
 
       <p class="report-footer print-only">
-        CaLFFA Financial Overview — system summary only. Use Loan Management, Machinery Financial, and Share Capital for detailed records.
+        {{ $t('ui.financialOverviewPrintFooter') }}
       </p>
+    </div>
+
+    <!-- Print source: machinery-style sheet (filtered transactions only) -->
+    <div class="fo-print-source" aria-hidden="true">
+      <div id="printable-report">
+        <MachineryReportSheet
+          :title="$t('ui.allTransactions')"
+          :subtitle="$t('ui.financialOverview')"
+          :show-machinery-type="false"
+          :barangay-name="reportBarangayNameForReport"
+          :period-label="reportPeriodLabel"
+          :sheet-meta="reportSheetMeta"
+          sheet-class="collectibles-list-sheet"
+        >
+          <table class="collectibles-data-table collectibles-list-table fo-overview-transactions-table">
+            <thead>
+              <tr>
+                <th class="fo-col-date">{{ $t('ui.date') }}</th>
+                <th class="fo-col-module">{{ $t('ui.module') }}</th>
+                <th class="fo-col-type">{{ $t('ui.type') }}</th>
+                <th class="fo-col-member">{{ $t('ui.farmer') }}</th>
+                <th class="fo-col-desc">{{ $t('ui.description') }}</th>
+                <th class="fo-col-rcpt">{{ $t('ui.receiptNo') }}</th>
+                <th class="fo-col-amt text-right">{{ $t('ui.amount') }}</th>
+                <th v-if="isAdmin" class="fo-col-barangay">{{ $t('ui.barangay') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="tx in filteredTransactions" :key="'print-' + tx.id">
+                <td class="fo-col-date">{{ formatReportDateCompact(tx.date) }}</td>
+                <td class="fo-col-module">{{ translateModule(tx.module) }}</td>
+                <td class="fo-col-type">{{ translateTxType(tx.type) }}</td>
+                <td class="fo-col-member">{{ tx.farmer_name || '—' }}</td>
+                <td class="fo-col-desc">{{ tx.description || '—' }}</td>
+                <td class="fo-col-rcpt">{{ tx.receipt_number || '—' }}</td>
+                <td class="fo-col-amt text-right">{{ formatPrintTxAmount(tx) }}</td>
+                <td v-if="isAdmin" class="fo-col-barangay">{{ tx.barangay_name || '—' }}</td>
+              </tr>
+              <tr v-if="!transactionsLoading && filteredTransactions.length === 0">
+                <td :colspan="isAdmin ? 8 : 7" class="collectibles-empty-note">
+                  {{ $t('ui.noTransactionsFilter') }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot v-if="filteredTransactions.length > 0">
+              <tr class="fcr-total-row">
+                <td :colspan="isAdmin ? 6 : 6"><strong>{{ $t('ui.totalsFiltered') }}</strong></td>
+                <td class="fo-col-amt text-right"><strong>{{ formatReportMoneyCompact(transactionInflowTotal) }}</strong></td>
+                <td v-if="isAdmin"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </MachineryReportSheet>
+        <p class="report-footer">
+          {{ reportScope }} · {{ $t('ui.moduleColonName', { name: filterModule ? translateModule(filterModule) : $t('ui.all') }) }} · {{ $t('ui.recordsCount', { n: filteredTransactions.length }) }} · {{ $t('ui.generatedColon') }} {{ reportGeneratedAt }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { Chart, registerables } from 'chart.js'
 import { getManilaReferenceDateString } from '../utils/philippineTime'
+import MachineryReportSheet from '../components/MachineryReportSheet.vue'
+import { buildPrintableSheetHtml, getMachineryReportPrintStyles } from '../utils/machineryReportPrint'
 
 Chart.register(...registerables)
 
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
 
 const loading = ref(true)
+const transactionsLoading = ref(false)
+const transactionsError = ref('')
 const allLoans = ref([])
 const paymentHistory = ref([])
+const allTransactions = ref([])
+const apiModuleTotals = ref({})
 const barangays = ref([])
 const machinerySummary = ref({ total_income: 0, total_expenses: 0, net_profit: 0 })
 const shareCapitalTotals = ref({ total_farmers: 0, total_collected: 0, total_withdrawn: 0, total_balance: 0 })
@@ -310,6 +576,55 @@ const shareCapitalTotals = ref({ total_farmers: 0, total_collected: 0, total_wit
 const filterBarangay = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
+const filterModule = ref('')
+
+const reportSheetMeta = ref({
+  contactPerson: '',
+  croppingPeriod: '',
+  fcaAddress: '',
+  contactNumber: ''
+})
+
+const moduleFilterOptions = [
+  { value: 'Loans', labelKey: 'ui.loans' },
+  { value: 'Machinery', labelKey: 'ui.machinery' },
+  { value: 'Share Capital', labelKey: 'ui.shareCapital' },
+  { value: 'Seed & Fertilizer', labelKey: 'ui.seedFertilizer' },
+  { value: 'Association Dues', labelKey: 'ui.associationDues' }
+]
+
+const MODULE_LABEL_KEYS = {
+  Loans: 'ui.loans',
+  Machinery: 'ui.machinery',
+  'Share Capital': 'ui.shareCapital',
+  'Seed & Fertilizer': 'ui.seedFertilizer',
+  'Association Dues': 'ui.associationDues'
+}
+
+const TX_TYPE_KEYS = {
+  'Machinery Income': 'ui.machineryIncome',
+  'Machinery Expense': 'ui.machineryExpenses',
+  'Booking Collection': 'ui.bookingCollection',
+  'Share Capital Contribution': 'ui.shareCapitalContribution',
+  'Share Capital Withdrawal': 'ui.shareCapitalWithdrawal',
+  'Seed & Fertilizer Payment': 'ui.seedFertilizerPayment',
+  'Association Dues': 'ui.associationDues'
+}
+
+function translateModule(module) {
+  const key = MODULE_LABEL_KEYS[module]
+  return key ? t(key) : (module || '')
+}
+
+function translateTxType(type) {
+  if (!type) return ''
+  const key = TX_TYPE_KEYS[type]
+  if (key) return t(key)
+  if (type.startsWith('Loan payment')) {
+    return type.replace(/^Loan payment/, t('ui.loanPayment'))
+  }
+  return type
+}
 
 const moduleChartRef = ref(null)
 const machineryChartRef = ref(null)
@@ -317,19 +632,20 @@ let moduleChart = null
 let machineryChart = null
 
 const STATUS_ORDER = [
-  { key: 'pending', label: 'Pending' },
-  { key: 'approved', label: 'Approved' },
-  { key: 'active', label: 'Partial Paid' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'paid', label: 'Fully Paid' },
-  { key: 'rejected', label: 'Rejected' }
+  { key: 'pending', labelKey: 'common.pending' },
+  { key: 'approved', labelKey: 'common.approved' },
+  { key: 'active', labelKey: 'ui.partialPaid' },
+  { key: 'overdue', labelKey: 'common.overdue' },
+  { key: 'paid', labelKey: 'ui.fullyPaid' },
+  { key: 'rejected', labelKey: 'common.rejected' }
 ]
 
 const reportGeneratedAt = computed(() =>
-  new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+  new Date().toLocaleString(locale.value === 'tl' ? 'fil-PH' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })
 )
 
 const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
+const isTreasurer = computed(() => authStore.currentUser?.role === 'treasurer')
 const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
 const canViewShareCapital = computed(() => ['admin', 'president', 'treasurer'].includes(authStore.currentUser?.role))
 
@@ -340,10 +656,24 @@ const barangayOptions = computed(() =>
   }))
 )
 
+const resolveBarangayDisplayName = (barangayId) => {
+  if (barangayId == null || barangayId === '') return ''
+
+  const idStr = String(barangayId)
+  const fromList = barangays.value.find((b) => String(b.id || b.barangay_id) === idStr)
+  if (fromList?.name || fromList?.barangay_name) return fromList.name || fromList.barangay_name
+
+  const user = authStore.currentUser
+  if (user?.barangay_name && String(user.barangay_id) === idStr) {
+    return user.barangay_name
+  }
+
+  return ''
+}
+
 const userBarangayName = computed(() => {
-  if (!userBarangayId.value) return ''
-  const match = barangayOptions.value.find(b => String(b.id) === String(userBarangayId.value))
-  return match?.name || ''
+  if (!userBarangayId.value) return authStore.currentUser?.barangay_name || ''
+  return resolveBarangayDisplayName(userBarangayId.value) || authStore.currentUser?.barangay_name || ''
 })
 
 const selectedBarangayName = computed(() => {
@@ -433,33 +763,101 @@ const shareCapitalContributed = computed(() => parseFloat(shareCapitalTotals.val
 const shareCapitalWithdrawn = computed(() => parseFloat(shareCapitalTotals.value.total_withdrawn || 0))
 const shareCapitalBalance = computed(() => parseFloat(shareCapitalTotals.value.total_balance || 0))
 
+const seedFertilizerCollected = computed(() => parseFloat(apiModuleTotals.value['Seed & Fertilizer']?.inflow || 0))
+const seedFertilizerCount = computed(() => apiModuleTotals.value['Seed & Fertilizer']?.count || 0)
+const associationDuesCollected = computed(() => parseFloat(apiModuleTotals.value['Association Dues']?.inflow || 0))
+const associationDuesCount = computed(() => apiModuleTotals.value['Association Dues']?.count || 0)
+
+const filteredTransactions = computed(() => {
+  if (!filterModule.value) return allTransactions.value
+  return allTransactions.value.filter(tx => tx.module === filterModule.value)
+})
+
+const transactionInflowTotal = computed(() =>
+  filteredTransactions.value
+    .filter(tx => tx.category !== 'Expense' && tx.category !== 'Withdrawal')
+    .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0)
+)
+
+const transactionOutflowTotal = computed(() =>
+  filteredTransactions.value
+    .filter(tx => tx.category === 'Expense' || tx.category === 'Withdrawal')
+    .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0)
+)
+
+const formatTxDate = (value) => {
+  if (!value) return '—'
+  const str = String(value).slice(0, 10)
+  const [y, m, d] = str.split('-')
+  if (!y || !m || !d) return str
+  return `${m}/${d}/${y.slice(-2)}`
+}
+
+const formatTxAmount = (value) => parseFloat(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const txAmountClass = (tx) => {
+  if (tx.category === 'Expense' || tx.category === 'Withdrawal') return 'expense'
+  return 'collected'
+}
+
+const modulePillClass = (module) => {
+  const map = {
+    Loans: 'pill-loans',
+    Machinery: 'pill-machinery',
+    'Share Capital': 'pill-share',
+    'Seed & Fertilizer': 'pill-seed',
+    'Association Dues': 'pill-dues'
+  }
+  return map[module] || 'pill-default'
+}
+
 const moduleSummaryRows = computed(() => [
   {
     key: 'loans',
-    label: 'Loans',
+    label: t('ui.loans'),
     inflow: totalCollected.value,
     outflow: totalDisbursed.value,
     net: totalCollected.value - outstandingBalance.value,
     route: '/admin-loans',
-    linkLabel: 'Loan Management'
+    linkLabel: t('ui.loanManagement')
   },
   {
     key: 'machinery',
-    label: 'Machinery',
+    label: t('ui.machinery'),
     inflow: machineryIncome.value,
     outflow: machineryExpenses.value,
     net: machineryNet.value,
     route: '/machinery-financial',
-    linkLabel: 'Machinery Financial'
+    linkLabel: t('nav.machineryFinancial')
   },
   {
     key: 'share-capital',
-    label: 'Share Capital',
+    label: t('ui.shareCapital'),
     inflow: shareCapitalContributed.value,
     outflow: shareCapitalWithdrawn.value,
     net: shareCapitalBalance.value,
     route: '/share-capital',
-    linkLabel: 'Share Capital'
+    linkLabel: t('ui.shareCapital')
+  },
+  {
+    key: 'seed-fertilizer',
+    label: t('ui.seedFertilizer'),
+    inflow: seedFertilizerCollected.value,
+    outflow: 0,
+    net: seedFertilizerCollected.value,
+    route: '/seed-fertilizer-plan',
+    linkLabel: t('ui.seedFertilizerPlan'),
+    treasurerOnly: true
+  },
+  {
+    key: 'association-dues',
+    label: t('ui.associationDues'),
+    inflow: associationDuesCollected.value,
+    outflow: 0,
+    net: associationDuesCollected.value,
+    route: '/association-dues',
+    linkLabel: t('ui.associationDues'),
+    treasurerOnly: true
   }
 ])
 
@@ -474,24 +872,88 @@ const sumLoanMetrics = (loans) => {
 }
 
 const statusSummaryRows = computed(() =>
-  STATUS_ORDER.map(({ key, label }) => {
+  STATUS_ORDER.map(({ key, labelKey }) => {
     const loans = filteredLoans.value.filter(l => l.status === key)
-    return { status: key, label, ...sumLoanMetrics(loans) }
+    return { status: key, label: t(labelKey), ...sumLoanMetrics(loans) }
   }).filter(row => row.count > 0)
 )
 
 const reportScope = computed(() => {
   const parts = []
   if (isAdmin.value) {
-    parts.push(filterBarangay.value ? `Barangay: ${selectedBarangayName.value}` : 'All barangays')
+    parts.push(filterBarangay.value
+      ? t('ui.barangayColon', { name: selectedBarangayName.value })
+      : t('ui.allBarangays'))
   } else if (userBarangayName.value) {
-    parts.push(`Barangay: ${userBarangayName.value}`)
+    parts.push(t('ui.barangayColon', { name: userBarangayName.value }))
   }
   if (filterDateFrom.value || filterDateTo.value) {
-    parts.push(`Period: ${filterDateFrom.value || '…'} to ${filterDateTo.value || '…'}`)
+    parts.push(t('ui.periodRange', {
+      from: filterDateFrom.value || '…',
+      to: filterDateTo.value || '…'
+    }))
   }
-  return parts.length ? parts.join(' · ') : 'All financial modules'
+  if (filterModule.value) {
+    parts.push(t('ui.moduleColonName', { name: translateModule(filterModule.value) }))
+  }
+  return parts.length ? parts.join(' · ') : t('ui.allFinancialModules')
 })
+
+const reportEffectiveBarangayId = computed(() => {
+  if (isAdmin.value) return filterBarangay.value || ''
+  return userBarangayId.value != null && userBarangayId.value !== ''
+    ? String(userBarangayId.value)
+    : ''
+})
+
+const reportBarangayNameForReport = computed(() => {
+  const bid = reportEffectiveBarangayId.value
+  if (!bid) {
+    if (isAdmin.value) return t('ui.allBarangays')
+    return authStore.currentUser?.barangay_name || userBarangayName.value || '—'
+  }
+  return resolveBarangayDisplayName(bid) || selectedBarangayName.value || userBarangayName.value || '—'
+})
+
+const reportPeriodLabel = computed(() => {
+  if (filterDateFrom.value && filterDateTo.value) {
+    return formatReportPeriodCompact(filterDateFrom.value, filterDateTo.value)
+  }
+  if (filterDateFrom.value) return t('ui.fromDateValue', { date: formatReportDateCompact(filterDateFrom.value) })
+  if (filterDateTo.value) return t('ui.untilDateValue', { date: formatReportDateCompact(filterDateTo.value) })
+  return t('ui.allDates')
+})
+
+const formatReportDateCompact = (dateStr) => {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return '—'
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(-2)
+  return `${mm}/${dd}/${yy}`
+}
+
+const formatReportPeriodCompact = (startStr, endStr) => {
+  if (!startStr || !endStr) return '—'
+  const start = new Date(startStr)
+  const end = new Date(endStr)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—'
+  const fmt = (d) => d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+  return `${fmt(start)} – ${fmt(end)}`
+}
+
+const formatReportMoneyCompact = (num) => {
+  const x = parseFloat(num)
+  if (Number.isNaN(x)) return '—'
+  if (x === 0) return '₱0.00'
+  return `₱${x.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+const formatPrintTxAmount = (tx) => {
+  const sign = tx.category === 'Expense' || tx.category === 'Withdrawal' ? '-' : '+'
+  return `${sign}${formatReportMoneyCompact(tx.amount)}`
+}
 
 const getDeviceDate = () => getManilaReferenceDateString()
 
@@ -594,13 +1056,43 @@ const loadShareCapitalSummary = async () => {
   shareCapitalTotals.value = aggregated
 }
 
+const loadAllTransactions = async () => {
+  transactionsLoading.value = true
+  transactionsError.value = ''
+  try {
+    const params = new URLSearchParams()
+    if (filterDateFrom.value) params.set('start_date', filterDateFrom.value)
+    if (filterDateTo.value) params.set('end_date', filterDateTo.value)
+    if (isAdmin.value && filterBarangay.value) params.set('barangay_id', filterBarangay.value)
+
+    const response = await fetch(`/api/financial-overview/transactions?${params}`, { headers: getAuthHeaders() })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.success) {
+      allTransactions.value = []
+      apiModuleTotals.value = {}
+      transactionsError.value = data.message || `Hindi ma-load ang transactions (HTTP ${response.status}). I-restart ang backend server kung bagong route.`
+      return
+    }
+    allTransactions.value = data.transactions || []
+    apiModuleTotals.value = data.module_totals || {}
+  } catch (err) {
+    console.error('Error loading consolidated transactions:', err)
+    allTransactions.value = []
+    apiModuleTotals.value = {}
+    transactionsError.value = 'Hindi ma-load ang transactions. Siguraduhing tumatakbo ang backend server.'
+  } finally {
+    transactionsLoading.value = false
+  }
+}
+
 const loadAllData = async () => {
   loading.value = true
   await Promise.all([
     loadAllLoans(),
     loadPaymentHistory(),
     loadMachinerySummary(),
-    loadShareCapitalSummary()
+    loadShareCapitalSummary(),
+    loadAllTransactions()
   ])
   loading.value = false
   await nextTick()
@@ -611,303 +1103,305 @@ const clearFilters = () => {
   filterBarangay.value = ''
   filterDateFrom.value = ''
   filterDateTo.value = ''
+  filterModule.value = ''
 }
 
+// Print report — iframe print that also works on mobile Safari/Chrome
 let overviewPrintFrame = null
 
+const PRINT_PAGE_WIDTH = 794
+const PRINT_PAGE_HEIGHT = 1123
+
+const removeMobilePrintOverlay = () => {
+  const overlay = document.getElementById('fo-mobile-print-overlay')
+  if (overlay) overlay.remove()
+  document.documentElement.style.removeProperty('overflow')
+  document.body.style.removeProperty('overflow')
+}
+
 const removeOverviewPrintFrame = () => {
+  removeMobilePrintOverlay()
   if (overviewPrintFrame?.parentNode) {
     overviewPrintFrame.parentNode.removeChild(overviewPrintFrame)
   }
   overviewPrintFrame = null
 }
 
-const getPrintChartAxisStyle = () => ({
-  tickColor: '#0f172a',
-  gridColor: 'rgba(15, 23, 42, 0.22)',
-  legendColor: '#0f172a',
-  doughnutBorder: '#ffffff',
-  borderColor: 'rgba(15, 23, 42, 0.4)',
-  gridLineWidth: 1
-})
-
-/** Render charts with print-safe colors (dark labels/lines on white paper). */
-const captureOverviewChartImages = () => {
-  const axis = getPrintChartAxisStyle()
-  const images = { module: '', machinery: '' }
-
-  const moduleCanvas = document.createElement('canvas')
-  moduleCanvas.width = 560
-  moduleCanvas.height = 280
-  const moduleLabels = ['Loans', 'Machinery', 'Share Capital']
-  const moduleData = [totalCollected.value, machineryIncome.value, shareCapitalContributed.value]
-  const moduleColors = ['#16a34a', '#0284c7', '#7c3aed']
-
-  const modulePrintChart = new Chart(moduleCanvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: moduleLabels,
-      datasets: [{
-        data: moduleData,
-        backgroundColor: moduleColors,
-        borderColor: axis.doughnutBorder,
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: false,
-      animation: false,
-      cutout: '58%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: axis.legendColor,
-            boxWidth: 12,
-            font: { size: 11, weight: '600' }
-          }
-        }
-      }
-    }
-  })
-  modulePrintChart.update('none')
-  images.module = moduleCanvas.toDataURL('image/png')
-  modulePrintChart.destroy()
-
-  const machineryCanvas = document.createElement('canvas')
-  machineryCanvas.width = 560
-  machineryCanvas.height = 280
-
-  const machineryPrintChart = new Chart(machineryCanvas.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['Income', 'Expenses', 'Net'],
-      datasets: [{
-        data: [machineryIncome.value, machineryExpenses.value, machineryNet.value],
-        backgroundColor: ['#16a34a', '#dc2626', machineryNet.value >= 0 ? '#0284c7' : '#ea580c'],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: false,
-      animation: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: {
-          ticks: { color: axis.tickColor, font: { size: 11, weight: '600' } },
-          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth },
-          border: { color: axis.borderColor, width: 1 }
-        },
-        y: {
-          ticks: {
-            color: axis.tickColor,
-            font: { size: 10, weight: '600' },
-            callback: (v) => '₱' + Number(v).toLocaleString()
-          },
-          grid: { color: axis.gridColor, lineWidth: axis.gridLineWidth },
-          border: { color: axis.borderColor, width: 1 }
-        }
-      }
-    }
-  })
-  machineryPrintChart.update('none')
-  images.machinery = machineryCanvas.toDataURL('image/png')
-  machineryPrintChart.destroy()
-
-  return images
+const waitForPrintFrameAssets = (doc) => {
+  const images = Array.from(doc.images || [])
+  if (!images.length) return Promise.resolve()
+  return Promise.all(
+    images.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((resolve) => {
+            img.addEventListener('load', resolve, { once: true })
+            img.addEventListener('error', resolve, { once: true })
+          })
+    )
+  )
 }
 
-const buildPrintableOverviewHtml = (root, chartImages = {}) => {
-  const clone = root.cloneNode(true)
+const isMobilePrintDevice = () =>
+  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 0 && window.matchMedia('(max-width: 900px)').matches) ||
+  window.matchMedia('(max-width: 768px)').matches
 
-  clone.querySelectorAll('.no-print').forEach((el) => el.remove())
-  clone.querySelectorAll('.print-only').forEach((el) => {
-    el.style.display = 'block'
-    el.classList.remove('print-only')
-  })
-  clone.querySelectorAll('.stat-icon-wrap').forEach((el) => el.remove())
+const buildOverviewPrintMarkup = (printableHtml, { mobilePreview = false } = {}) => {
+  const printStyles = getMachineryReportPrintStyles('portrait')
 
-  const chartKeys = ['module', 'machinery']
-  const cloneCanvases = clone.querySelectorAll('canvas')
-  cloneCanvases.forEach((canvas, index) => {
-    const img = document.createElement('img')
-    img.src = chartImages[chartKeys[index]] || ''
-    img.alt = index === 0 ? 'Finance by Module chart' : 'Machinery Income vs Expenses chart'
-    img.style.width = '100%'
-    img.style.maxHeight = '220px'
-    img.style.objectFit = 'contain'
-    canvas.replaceWith(img)
-  })
+  const mobilePreviewStyles = mobilePreview
+    ? `
+    @media screen {
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #94a3b8 !important;
+        overflow-x: hidden !important;
+        min-height: 100% !important;
+      }
+      body { padding: 12px 0 28px !important; }
+      .mobile-print-stage {
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+      .mobile-print-page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: ${PRINT_PAGE_WIDTH}px;
+        min-height: ${PRINT_PAGE_HEIGHT}px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28);
+        border-radius: 2px;
+        transform-origin: top left;
+        overflow: hidden;
+      }
+      .mobile-print-page #printable-report {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        box-sizing: border-box !important;
+      }
+    }
+    @media print {
+      html, body { background: #fff !important; padding: 0 !important; }
+      .mobile-print-stage {
+        display: block !important;
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .mobile-print-page {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        margin: 0 !important;
+        overflow: visible !important;
+      }
+      .mobile-print-page #printable-report { padding: 0 !important; }
+    }
+  `
+    : ''
 
-  return clone.outerHTML
+  const bodyHtml = mobilePreview
+    ? `<div class="mobile-print-stage"><div class="mobile-print-page" data-orientation="portrait">${printableHtml}</div></div>`
+    : printableHtml
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>${t('ui.financialOverview')} — ${t('ui.allTransactions')}</title>
+  <style>${printStyles}${mobilePreviewStyles}</style>
+</head>
+<body>
+  ${bodyHtml}
+</body>
+</html>`
 }
 
-const getFinancialOverviewPrintStyles = () => `
-  @page { size: A4 portrait; margin: 10mm; }
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    color: #0f172a;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  #printable-report {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background: #fff !important;
-    color: #0f172a !important;
-  }
-  .report-banner {
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #cbd5e1;
-  }
-  .report-banner h2 {
-    margin: 0 0 6px;
-    font-size: 18px;
-    font-weight: 800;
-    color: #0f172a !important;
-  }
-  .report-banner p {
-    margin: 0;
-    font-size: 12px;
-    color: #475569 !important;
-  }
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .stat-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    border-left-width: 4px;
-    border-radius: 8px;
-    background: #fff !important;
-    break-inside: avoid;
-  }
-  .stat-card-loan-collected { border-left-color: #16a34a; }
-  .stat-card-loan-outstanding { border-left-color: #d97706; }
-  .stat-card-machinery-income { border-left-color: #2563eb; }
-  .stat-card-machinery-expense { border-left-color: #dc2626; }
-  .stat-card-machinery-net { border-left-color: #0891b2; }
-  .stat-card-share-balance { border-left-color: #7c3aed; }
-  .stat-card-share-contributed { border-left-color: #059669; }
-  .stat-label {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #475569 !important;
-  }
-  .stat-value {
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a !important;
-    margin-top: 4px;
-  }
-  .stat-value.collected { color: #15803d !important; }
-  .stat-value.outstanding { color: #b45309 !important; }
-  .stat-value.overdue { color: #dc2626 !important; }
-  .stat-value.expense { color: #dc2626 !important; }
-  .charts-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .chart-card {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 12px;
-    background: #fff !important;
-    break-inside: avoid;
-  }
-  .chart-title {
-    margin: 0 0 10px;
-    font-size: 13px;
-    font-weight: 800;
-    text-align: center;
-    color: #0f172a !important;
-  }
-  .chart-canvas-wrap {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .financial-table-section {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 14px;
-    background: #fff !important;
-    break-inside: avoid;
-  }
-  .section-title {
-    margin: 0 0 10px;
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a !important;
-  }
-  .financial-table-wrap {
-    overflow: visible !important;
-    border: 1px solid #94a3b8;
-    border-radius: 6px;
-  }
-  .financial-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    margin-bottom: 10px;
-    min-width: 0;
-  }
-  .financial-table th,
-  .financial-table td {
-    border: 1px solid #94a3b8;
-    padding: 6px 8px;
-    color: #0f172a !important;
-    -webkit-text-fill-color: #0f172a !important;
-  }
-  .financial-table th {
-    background: #e2e8f0 !important;
-    font-weight: 800;
-    text-align: left;
-  }
-  .financial-table .collected { color: #15803d !important; font-weight: 700; }
-  .financial-table .outstanding { color: #b45309 !important; font-weight: 700; }
-  .financial-table .overdue { color: #dc2626 !important; font-weight: 700; }
-  .financial-table .expense { color: #dc2626 !important; font-weight: 700; }
-  .financial-table .rate { color: #2563eb !important; font-weight: 700; }
-  .financial-table .amount { font-weight: 700; }
-  .sub-table { margin-top: 8px; }
-  .report-footer {
-    margin-top: 14px;
-    padding-top: 10px;
-    border-top: 1px solid #cbd5e1;
-    font-size: 10px;
-    color: #64748b !important;
-    line-height: 1.45;
-  }
-`
+const fitMobilePrintPreview = (iframe) => {
+  const doc = iframe.contentDocument
+  if (!doc) return
+  const stage = doc.querySelector('.mobile-print-stage')
+  const page = doc.querySelector('.mobile-print-page')
+  if (!stage || !page) return
+
+  const viewportW = Math.max(280, iframe.clientWidth || doc.documentElement.clientWidth || 320)
+  const available = Math.max(260, viewportW - 16)
+  const scale = Math.min(1, available / PRINT_PAGE_WIDTH)
+
+  page.style.transform = 'none'
+  const naturalHeight = Math.max(PRINT_PAGE_HEIGHT, page.scrollHeight || PRINT_PAGE_HEIGHT)
+  const left = Math.max(0, (viewportW - PRINT_PAGE_WIDTH * scale) / 2)
+
+  page.style.transformOrigin = 'top left'
+  page.style.transform = `scale(${scale})`
+  page.style.left = `${left}px`
+  page.style.top = '0'
+  stage.style.height = `${Math.ceil(naturalHeight * scale)}px`
+}
 
 const printReport = async () => {
   const printContents = document.getElementById('printable-report')
   if (!printContents) return
 
-  await nextTick()
+  const mobile = isMobilePrintDevice()
+
+  // Build sync while still in the click gesture (needed for mobile print reliability)
+  const printableHtml = buildPrintableSheetHtml(printContents, reportSheetMeta.value)
+  const printMarkup = buildOverviewPrintMarkup(printableHtml, { mobilePreview: mobile })
+
   removeOverviewPrintFrame()
 
+  // Mobile: visible same-page A4 preview (scaled) + Print/Close bar (no flashing)
+  if (mobile) {
+    const overlay = document.createElement('div')
+    overlay.id = 'fo-mobile-print-overlay'
+    overlay.setAttribute('role', 'dialog')
+    overlay.setAttribute('aria-label', 'Print preview')
+    overlay.style.cssText = [
+      'position:fixed',
+      'inset:0',
+      'z-index:2147483000',
+      'display:flex',
+      'flex-direction:column',
+      'background:#64748b',
+      'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
+      'box-sizing:border-box'
+    ].join(';')
+
+    const bar = document.createElement('div')
+    bar.style.cssText = [
+      'flex:0 0 auto',
+      'display:flex',
+      'flex-wrap:wrap',
+      'gap:8px',
+      'align-items:center',
+      'padding:10px 12px',
+      'background:#0f172a',
+      'color:#fff',
+      'font-family:Segoe UI,Arial,sans-serif',
+      'box-shadow:0 2px 10px rgba(0,0,0,0.25)'
+    ].join(';')
+
+    const titleWrap = document.createElement('div')
+    titleWrap.style.cssText = 'flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:2px'
+
+    const hint = document.createElement('span')
+    hint.textContent = 'Print preview'
+    hint.style.cssText =
+      'font-size:13px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
+
+    const sub = document.createElement('span')
+    sub.textContent = 'Portrait · Tap Print when ready'
+    sub.style.cssText = 'font-size:11px;font-weight:500;opacity:0.78;line-height:1.2'
+
+    const actions = document.createElement('div')
+    actions.style.cssText = 'display:flex;flex:0 0 auto;gap:8px;align-items:center;margin-left:auto'
+
+    const printBtn = document.createElement('button')
+    printBtn.type = 'button'
+    printBtn.textContent = 'Print'
+    printBtn.style.cssText =
+      'flex:0 0 auto;border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px;background:#16a34a;color:#fff'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.type = 'button'
+    closeBtn.textContent = 'Close'
+    closeBtn.style.cssText =
+      'flex:0 0 auto;border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px;background:#e2e8f0;color:#0f172a'
+
+    const frameWrap = document.createElement('div')
+    frameWrap.style.cssText = ['flex:1 1 auto', 'min-height:0', 'position:relative', 'background:#94a3b8'].join(';')
+
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('title', 'Financial overview report print')
+    iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;background:#94a3b8'
+
+    titleWrap.appendChild(hint)
+    titleWrap.appendChild(sub)
+    actions.appendChild(printBtn)
+    actions.appendChild(closeBtn)
+    bar.appendChild(titleWrap)
+    bar.appendChild(actions)
+    frameWrap.appendChild(iframe)
+    overlay.appendChild(bar)
+    overlay.appendChild(frameWrap)
+    document.body.appendChild(overlay)
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    overviewPrintFrame = iframe
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+    const iframeWindow = iframe.contentWindow
+    if (!iframeDoc || !iframeWindow) {
+      removeOverviewPrintFrame()
+      return
+    }
+
+    iframeDoc.open()
+    iframeDoc.write(printMarkup)
+    iframeDoc.close()
+
+    const syncFit = () => fitMobilePrintPreview(iframe)
+    syncFit()
+    window.setTimeout(syncFit, 50)
+    window.setTimeout(syncFit, 250)
+
+    const onResize = () => syncFit()
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    const stopFitListeners = () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+    }
+
+    const triggerPrint = () => {
+      try {
+        iframeWindow.focus()
+        iframeWindow.print()
+      } catch (error) {
+        console.error('Mobile print failed:', error)
+      }
+    }
+
+    printBtn.addEventListener('click', triggerPrint)
+    closeBtn.addEventListener('click', () => {
+      stopFitListeners()
+      removeOverviewPrintFrame()
+    })
+
+    return
+  }
+
+  await nextTick()
+
   const iframe = document.createElement('iframe')
+  iframe.setAttribute('title', 'Financial overview report print')
   iframe.setAttribute('aria-hidden', 'true')
-  iframe.style.cssText = 'position:fixed;right:0;bottom:0;border:0;opacity:0;pointer-events:none;width:794px;height:1px;'
+  iframe.style.cssText = [
+    'position:fixed',
+    'top:0',
+    'left:0',
+    `width:${PRINT_PAGE_WIDTH}px`,
+    `height:${PRINT_PAGE_HEIGHT}px`,
+    'border:0',
+    'opacity:0.01',
+    'z-index:-1',
+    'pointer-events:none'
+  ].join(';')
 
   document.body.appendChild(iframe)
   overviewPrintFrame = iframe
@@ -920,32 +1414,37 @@ const printReport = async () => {
     return
   }
 
-  const chartImages = captureOverviewChartImages()
-  const printableHtml = buildPrintableOverviewHtml(printContents, chartImages)
-  const printMarkup = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>CaLFFA Financial Overview</title>
-  <style>${getFinancialOverviewPrintStyles()}</style>
-</head>
-<body>
-  ${printableHtml}
-</body>
-</html>`
-
   iframeDoc.open()
   iframeDoc.write(printMarkup)
   iframeDoc.close()
 
-  window.setTimeout(() => {
+  const cleanup = () => {
+    removeOverviewPrintFrame()
+    iframeWindow.removeEventListener('afterprint', cleanup)
+  }
+  iframeWindow.addEventListener('afterprint', cleanup, { once: true })
+  window.setTimeout(cleanup, 120000)
+
+  try {
+    await waitForPrintFrameAssets(iframeDoc)
+  } catch (_) {
+    /* ignore asset wait errors */
+  }
+
+  await new Promise((resolve) => window.setTimeout(resolve, 80))
+
+  try {
     iframeWindow.focus()
     iframeWindow.print()
-  }, 350)
-
-  iframeWindow.addEventListener('afterprint', removeOverviewPrintFrame, { once: true })
-  window.setTimeout(removeOverviewPrintFrame, 60000)
+  } catch (error) {
+    console.error('Print failed:', error)
+    cleanup()
+  }
 }
+
+onBeforeUnmount(() => {
+  removeOverviewPrintFrame()
+})
 
 const renderCharts = () => {
   renderModuleChart()
@@ -978,9 +1477,21 @@ const renderModuleChart = () => {
   if (moduleChart) moduleChart.destroy()
 
   const axis = getChartAxisStyle()
-  const labels = ['Loans', 'Machinery', 'Share Capital']
-  const data = [totalCollected.value, machineryIncome.value, shareCapitalContributed.value]
-  const colors = ['#4ade80', '#38bdf8', '#a78bfa']
+  const labels = [
+    t('ui.loans'),
+    t('ui.machinery'),
+    t('ui.shareCapital'),
+    t('ui.seedFertilizer'),
+    t('ui.associationDues')
+  ]
+  const data = [
+    totalCollected.value,
+    machineryIncome.value,
+    shareCapitalContributed.value,
+    seedFertilizerCollected.value,
+    associationDuesCollected.value
+  ]
+  const colors = ['#4ade80', '#38bdf8', '#a78bfa', '#facc15', '#2dd4bf']
 
   moduleChart = new Chart(moduleChartRef.value.getContext('2d'), {
     type: 'doughnut',
@@ -1008,7 +1519,7 @@ const renderMachineryChart = () => {
   machineryChart = new Chart(machineryChartRef.value.getContext('2d'), {
     type: 'bar',
     data: {
-      labels: ['Income', 'Expenses', 'Net'],
+      labels: [t('ui.income'), t('ui.expenses'), t('ui.net')],
       datasets: [{
         data: [machineryIncome.value, machineryExpenses.value, machineryNet.value],
         backgroundColor: ['#4ade80', '#f87171', machineryNet.value >= 0 ? '#38bdf8' : '#fb923c'],
@@ -1041,48 +1552,39 @@ const csvEscape = (val) => {
 }
 
 const exportCSV = () => {
+  const headerCols = ['Date', 'Module', 'Category', 'Type', t('ui.farmer'), 'Description', 'Amount', 'Receipt', 'Barangay']
   const rows = [
-    ['Financial Overview — System Summary Report'],
+    ['Financial Overview — All Transactions'],
     ['Generated', reportGeneratedAt.value],
     ['Scope', reportScope.value],
+    ['Records', filteredTransactions.value.length],
     [],
-    ['CONSOLIDATED SUMMARY'],
-    ['Module', 'Inflows', 'Outflows', 'Net/Balance'],
-    ...moduleSummaryRows.value.map(r => [r.label, r.inflow, r.outflow, r.net]),
+    headerCols,
+    ...filteredTransactions.value.map((tx) => [
+      tx.date,
+      tx.module,
+      tx.category,
+      tx.type,
+      tx.farmer_name || '',
+      tx.description,
+      (tx.category === 'Expense' || tx.category === 'Withdrawal' ? -1 : 1) * parseFloat(tx.amount || 0),
+      tx.receipt_number || '',
+      tx.barangay_name || ''
+    ]),
     [],
-    ['LOANS'],
-    ['Total disbursed', totalDisbursed.value],
-    ['Total collected', totalCollected.value],
-    ['Outstanding', outstandingBalance.value],
-    ['Overdue amount', overdueAmount.value],
-    ['Overdue loans', overdueCount.value],
-    ['Collection rate (%)', collectionRate.value],
-    ['Active portfolio', activePortfolioCount.value],
+    ['Total inflow (filtered)', transactionInflowTotal.value],
+    ['Total outflow (filtered)', transactionOutflowTotal.value]
   ]
 
-  rows.push([], ['LOANS BY STATUS'], ['Status', 'Count', 'Outstanding'])
-  rows.push(...statusSummaryRows.value.map(r => [r.label, r.count, r.outstanding]))
-
-  rows.push(
-    [],
-    ['MACHINERY'],
-    ['Total income', machineryIncome.value],
-    ['Total expenses', machineryExpenses.value],
-    ['Net profit', machineryNet.value],
-    [],
-    ['SHARE CAPITAL'],
-    ['Members', shareCapitalMembers.value],
-    ['Contributed', shareCapitalContributed.value],
-    ['Withdrawn', shareCapitalWithdrawn.value],
-    ['Balance', shareCapitalBalance.value]
-  )
-
-  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n')
+  const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `financial-overview-${new Date().toISOString().split('T')[0]}.csv`
+  const suffix = filterModule.value
+    ? filterModule.value.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    : 'all'
+  a.download = `financial-overview-transactions-${suffix}-${new Date().toISOString().split('T')[0]}.csv`
   a.click()
   window.URL.revokeObjectURL(url)
 }
@@ -1090,9 +1592,10 @@ const exportCSV = () => {
 watch([filterBarangay, filterDateFrom, filterDateTo], () => {
   loadMachinerySummary()
   loadShareCapitalSummary()
+  loadAllTransactions()
 })
 
-watch([filteredLoans, machinerySummary, shareCapitalTotals], async () => {
+watch([filteredLoans, machinerySummary, shareCapitalTotals, apiModuleTotals], async () => {
   await nextTick()
   renderCharts()
 })
@@ -1101,8 +1604,15 @@ watch(isLight, () => {
   nextTick(() => renderCharts())
 })
 
+watch(locale, () => {
+  nextTick(() => renderCharts())
+})
+
 onMounted(async () => {
-  if (isAdmin.value) await loadBarangays()
+  const role = authStore.currentUser?.role
+  if (isAdmin.value || role === 'treasurer' || role === 'president') {
+    await loadBarangays()
+  }
   await loadAllData()
 })
 </script>
@@ -1112,42 +1622,76 @@ onMounted(async () => {
 
 .financial-overview-container {
   min-height: calc(100vh - 70px);
-  padding: 24px 18px;
+  padding: 1.25rem 1.25rem 2rem;
   max-width: none;
   width: 100%;
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
   position: relative;
   isolation: isolate;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.page-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 20px;
-  align-items: start;
-  margin-bottom: 20px;
-  padding: 22px 24px;
+.fo-print-source {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 794px;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.page-header,
+.page-header-split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1.15rem 1.25rem 1rem;
   background: white;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid #e5e7eb;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+  text-align: left;
+  max-width: none;
+  margin: 0;
 }
 
 .page-title {
-  font-size: 30px;
+  font-size: 1.75rem;
   font-weight: 800;
   color: #111827;
   margin: 0;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-align: left;
 }
 
 .page-subtitle {
-  font-size: 15px;
+  font-size: 0.9rem;
   color: #374151;
-  margin: 8px 0 0;
-  line-height: 1.5;
-  max-width: 42rem;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 600;
+  max-width: none;
+  text-align: left;
 }
 
 .page-note {
@@ -1161,31 +1705,32 @@ onMounted(async () => {
   font-weight: 700;
   color: #059669;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 0.8rem;
 }
 
 .inline-link:hover, .view-all-link:hover { text-decoration: underline; }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 0.45rem;
   flex-wrap: wrap;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .export-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
-  min-height: 48px;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  min-height: 2.4rem;
   background: linear-gradient(135deg, #166534, #14532d);
   color: #ffffff;
-  border: 2px solid #14532d;
-  border-radius: 10px;
+  border: 1px solid #14532d;
+  border-radius: 9px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.15s ease;
 }
@@ -1196,64 +1741,68 @@ onMounted(async () => {
 }
 
 .export-btn-secondary {
-  background: #ffffff;
-  color: #052e16;
-  border-color: #94a3b8;
+  background: #f0fdf4;
+  color: #14532d;
+  border-color: #166534;
 }
 
 .export-btn-icon {
-  width: 18px;
-  height: 18px;
+  width: 1rem;
+  height: 1rem;
   flex-shrink: 0;
+  display: block;
 }
 
 .filters-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 0.65rem;
   align-items: flex-end;
-  margin-bottom: 20px;
-  padding: 18px 20px;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.85rem;
   background: white;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.3rem;
   min-width: 0;
 }
 
 .filter-label {
-  font-size: 14px;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #052e16;
-  text-transform: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .filter-input {
-  padding: 12px 14px;
-  border: 1.5px solid #94a3b8;
-  border-radius: 10px;
-  font-size: 16px;
-  min-width: 160px;
-  min-height: 48px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #94a3b8;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  min-width: 140px;
+  min-height: 2.4rem;
   color: #000000;
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .mf-date-field {
   position: relative;
   width: 100%;
+  display: block;
 }
 
 .mf-date-input {
   position: relative;
   width: 100%;
   min-width: 0;
-  padding-right: 2.85rem !important;
+  padding-right: 2.6rem !important;
   color-scheme: light;
 }
 
@@ -1261,7 +1810,7 @@ onMounted(async () => {
   position: absolute;
   top: 0;
   right: 0;
-  width: 2.85rem;
+  width: 2.6rem;
   height: 100%;
   margin: 0;
   padding: 0;
@@ -1272,19 +1821,30 @@ onMounted(async () => {
 
 .mf-date-icon {
   position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  padding: 4px;
-  box-sizing: content-box;
+  right: 6px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  width: 1.65rem;
+  height: 1.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
   color: #15803d;
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border: 1px solid #16a34a;
   border-radius: 6px;
   pointer-events: none;
   z-index: 2;
+}
+
+.mf-date-icon svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  display: block;
+  margin: 0;
 }
 
 .financial-overview-container:not(.light-theme) .mf-date-icon {
@@ -1301,15 +1861,18 @@ onMounted(async () => {
 }
 
 .filter-clear-btn {
-  padding: 12px 18px;
-  min-height: 48px;
-  border: 2px solid #86efac;
-  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  min-height: 2.4rem;
+  border: 1px solid #86efac;
+  border-radius: 9px;
   background: #f0fdf4;
-  font-size: 14px;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #166534;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .print-only { display: none; }
@@ -1321,20 +1884,20 @@ onMounted(async () => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.65rem;
   background: white;
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
   border: 1px solid #e5e7eb;
-  border-left-width: 4px;
+  border-left-width: 3px;
 }
 
 .stat-card-loan-collected { border-left-color: #16a34a; }
@@ -1346,13 +1909,13 @@ onMounted(async () => {
 .stat-card-share-contributed { border-left-color: #059669; }
 
 .stat-icon-wrap {
-  width: 3rem;
-  height: 3rem;
+  width: 2.35rem;
+  height: 2.35rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid transparent;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1363,8 +1926,8 @@ onMounted(async () => {
 }
 
 .stat-icon-wrap svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.1rem;
+  height: 1.1rem;
   display: block;
 }
 
@@ -1422,19 +1985,19 @@ onMounted(async () => {
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 0.62rem;
   font-weight: 800;
   color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .stat-value {
-  font-size: 1.375rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #000000;
-  margin-top: 6px;
+  margin-top: 0.2rem;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
   word-break: break-word;
@@ -1449,9 +2012,9 @@ onMounted(async () => {
 
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .chart-card {
@@ -1476,25 +2039,25 @@ onMounted(async () => {
 
 .financial-table-section {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 18px;
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+  margin-bottom: 0.75rem;
   border: 1px solid #e5e7eb;
 }
 
-.module-section { margin-top: 4px; }
+.module-section { margin-top: 0; }
 
 .table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin-bottom: 0.55rem;
 }
 
 .section-title {
-  font-size: 1.125rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: #052e16;
   margin: 0;
@@ -1503,13 +2066,13 @@ onMounted(async () => {
 .financial-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 12px;
-  border: 2px solid #94a3b8;
+  border-radius: 10px;
+  border: 1px solid #94a3b8;
 }
 
 .financial-table-section > .financial-table {
-  border: 2px solid #94a3b8;
-  border-radius: 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -1529,26 +2092,26 @@ onMounted(async () => {
 
 .financial-table th,
 .financial-table td {
-  padding: 0.85rem 1rem;
+  padding: 0.55rem 0.7rem;
   text-align: left;
-  border-bottom: 1.5px solid #94a3b8;
-  font-size: 1.0625rem;
+  border-bottom: 1px solid #94a3b8;
+  font-size: 0.875rem;
   line-height: 1.35;
 }
 
 .financial-table th:not(:last-child),
 .financial-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8;
+  border-right: 1px solid #94a3b8;
 }
 
 .financial-table th {
   background: #f0fdf4;
   font-weight: 800;
   color: #052e16;
-  font-size: 0.9375rem;
+  font-size: 0.8rem;
   text-transform: none;
   white-space: nowrap;
-  border-bottom: 2px solid #16a34a;
+  border-bottom: 1px solid #16a34a;
 }
 
 .financial-table tbody tr:hover,
@@ -1589,6 +2152,102 @@ onMounted(async () => {
   filter: brightness(1.06);
 }
 
+.detail-link-btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.transactions-module-filter {
+  margin-top: -8px;
+  padding-top: 0;
+}
+
+.read-only-note {
+  margin: 0;
+  flex: 1;
+  align-self: center;
+  font-size: 0.85rem;
+  color: rgba(236, 253, 245, 0.85);
+  line-height: 1.4;
+}
+
+.view-only-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.transactions-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.transaction-count-badge {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #86efac;
+  background: rgba(22, 101, 52, 0.35);
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+}
+
+.transactions-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.financial-table-transactions {
+  min-width: 920px;
+}
+
+.financial-table-transactions .tx-desc {
+  max-width: 280px;
+  white-space: normal;
+  word-break: break-word;
+  font-size: 0.82rem;
+}
+
+.financial-table-transactions .text-right {
+  text-align: right;
+}
+
+.financial-table-transactions .manage-col {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.financial-table-transactions .totals-row td {
+  background: rgba(22, 101, 52, 0.15);
+  border-top: 2px solid rgba(134, 239, 172, 0.35);
+}
+
+.module-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.module-pill.pill-loans { background: #dcfce7; color: #166534; }
+.module-pill.pill-machinery { background: #dbeafe; color: #1d4ed8; }
+.module-pill.pill-share { background: #ede9fe; color: #5b21b6; }
+.module-pill.pill-seed { background: #fef9c3; color: #a16207; }
+.module-pill.pill-dues { background: #ccfbf1; color: #0f766e; }
+.module-pill.pill-default { background: #e2e8f0; color: #334155; }
+
 .financial-table .amount { font-weight: 700; }
 .financial-table .collected { color: #15803d; font-weight: 700; }
 .financial-table .outstanding { color: #b45309; font-weight: 700; }
@@ -1605,16 +2264,413 @@ onMounted(async () => {
 }
 
 @media (max-width: 900px) {
-  .page-header { grid-template-columns: 1fr; }
   .header-actions { width: 100%; }
-  .export-btn { flex: 1; min-width: 10rem; }
+  .export-btn { flex: 1; min-width: 0; }
+}
+
+/* Dual-render: desktop tables / mobile cards */
+.fin-mobile-list { display: none; }
+.fin-desktop-table { display: block; width: 100%; }
+
+.fin-mobile-empty {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.fin-mobile-card {
+  padding: 0.55rem 0.6rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 211, 178, 0.35);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.fin-mobile-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+}
+
+.fin-mobile-card-top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.fin-mobile-card-name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.fin-mobile-amount {
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.fin-mobile-date {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.fin-mobile-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.35rem;
+}
+
+.fin-mobile-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.fin-mobile-meta-row > span:last-child {
+  text-align: right;
+  word-break: break-word;
+}
+
+.fin-mobile-meta-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+}
+
+.fin-mobile-label {
+  flex-shrink: 0;
+  min-width: 4rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.fin-mobile-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.fin-mobile-action {
+  font-size: 0.72rem !important;
+  padding: 0.3rem 0.55rem !important;
+  min-height: 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fin-mobile-totals {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(134, 239, 172, 0.45);
+  background: rgba(34, 197, 94, 0.08);
+  font-size: 0.8rem;
 }
 
 @media (max-width: 768px) {
+  .financial-overview-container {
+    padding: 0.55rem 0.55rem 1.25rem;
+  }
+
+  .page-header,
+  .page-header-split {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    margin-bottom: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+  }
+
+  .page-title {
+    font-size: 1.15rem !important;
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    font-size: 0.72rem !important;
+    line-height: 1.3;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .export-btn {
+    flex: 1;
+    min-height: 2rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  .export-btn-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    margin-bottom: 0.45rem;
+    border-radius: 10px;
+  }
+
+  .filter-group {
+    width: 100%;
+    gap: 0.12rem;
+  }
+  .filter-label { font-size: 0.55rem; }
+  .filter-input,
+  .filter-clear-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .filter-clear-btn { margin-top: 0.1rem; }
+
+  .mf-date-field { height: 1.85rem; }
+  .mf-date-input {
+    height: 1.85rem;
+    padding-right: 2.15rem !important;
+  }
+  .mf-date-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    right: 0.28rem;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    transform: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mf-date-icon svg {
+    width: 0.72rem;
+    height: 0.72rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .stat-card {
+    padding: 0.5rem 0.55rem;
+    gap: 0.45rem;
+    border-radius: 10px;
+  }
+
+  .stat-icon-wrap {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 8px;
+  }
+
+  .stat-icon-wrap svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .stat-label { font-size: 0.52rem; }
+  .stat-value { font-size: 0.85rem; margin-top: 0.1rem; }
+  .stat-icon-peso { font-size: 1rem; }
+
+  .detail-link-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+    min-height: 1.85rem;
+  }
+
+  .transaction-count-badge {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  .transactions-module-filter {
+    margin-top: 0;
+  }
+
+  .charts-row {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .chart-card {
+    padding: 0.65rem;
+    border-radius: 12px;
+  }
+
+  .chart-title { font-size: 0.85rem; }
+
+  .financial-table-section {
+    padding: 0.65rem 0.7rem;
+    margin-bottom: 0.55rem;
+    border-radius: 12px;
+  }
+
+  .section-title { font-size: 0.85rem; }
+  .table-header { margin-bottom: 0.45rem; }
+
+  .fin-desktop-table { display: none !important; }
+  .fin-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  /* Defeat global style.css table→card stacking on metric summary tables */
+  :deep(.financial-table),
+  :deep(.financial-table thead),
+  :deep(.financial-table tbody),
+  :deep(.financial-table tr),
+  :deep(.financial-table th),
+  :deep(.financial-table td),
+  :deep(.sub-table),
+  :deep(.sub-table thead),
+  :deep(.sub-table tbody),
+  :deep(.sub-table tr),
+  :deep(.sub-table th),
+  :deep(.sub-table td) {
+    display: revert !important;
+    width: auto !important;
+    position: static !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.financial-table td::before),
+  :deep(.sub-table td::before) {
+    content: none !important;
+  }
+
+  :deep(.financial-table) {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .module-pill {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
+  }
+
+  /* Compact metric summary tables (Loans / Machinery / Share Capital / ...) */
+  .module-section > .financial-table,
+  .module-section > .sub-table {
+    font-size: 0.68rem;
+    margin-bottom: 0;
+    border-radius: 8px;
+  }
+
+  .module-section > .financial-table th,
+  .module-section > .sub-table th {
+    padding: 0.28rem 0.4rem;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.25;
+  }
+
+  .module-section > .financial-table td,
+  .module-section > .sub-table td {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  /* Label column wraps, value columns hug the right edge */
+  .module-section > .financial-table th:first-child,
+  .module-section > .financial-table td:first-child,
+  .module-section > .sub-table th:first-child,
+  .module-section > .sub-table td:first-child {
+    width: 55%;
+    white-space: normal;
+  }
+
+  .module-section > .financial-table th:not(:first-child),
+  .module-section > .financial-table td:not(:first-child),
+  .module-section > .sub-table th:not(:first-child),
+  .module-section > .sub-table td:not(:first-child) {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .sub-table { margin-top: 0.45rem; }
+
+  /* Section header: title + module link stay on one compact row */
+  .table-header {
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+  }
+
+  .table-header .section-title {
+    font-size: 0.78rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .table-header .detail-link-btn,
+  .table-header .view-all-link {
+    flex-shrink: 0;
+    max-width: 55%;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.62rem;
+    min-height: 1.6rem;
+    border-radius: 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .table-header .view-only-label {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+  }
+
+  .read-only-note {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 380px) {
   .stats-grid { grid-template-columns: 1fr; }
-  .filter-input { width: 100%; min-width: 0; }
-  .filters-bar { flex-direction: column; align-items: stretch; }
-  .filter-clear-btn { width: 100%; }
+  .page-title { font-size: 1.05rem !important; }
 }
 
 /* Glass theme — dark mode only */
@@ -1626,7 +2682,7 @@ onMounted(async () => {
 
 .financial-overview-container:not(.light-theme) :is(.page-header, .filters-bar, .stat-card, .financial-table-section) {
   background: rgba(28, 42, 33, 0.92) !important;
-  border: 1px solid rgba(190, 235, 203, 0.14) !important;
+  border: 1px solid rgba(2, 8, 6, 0.82) !important;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255,255,255,0.05) !important;
 }
 
@@ -1642,20 +2698,25 @@ onMounted(async () => {
 
 .financial-overview-container:not(.light-theme) .financial-table th {
   background: rgba(34, 55, 44, 0.95) !important;
-  border-bottom: 2px solid #6ee7a8 !important;
+  border-bottom: 1px solid #6ee7a8 !important;
 }
 
 .financial-overview-container:not(.light-theme) .financial-table th:not(:last-child),
 .financial-overview-container:not(.light-theme) .financial-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right: 1px solid rgba(4, 14, 10, 0.52) !important;
 }
 
 .financial-overview-container:not(.light-theme) .financial-table td {
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom: 1px solid rgba(4, 14, 10, 0.52) !important;
+  color: #ffffff !important;
 }
 
-.financial-overview-container:not(.light-theme) :is(.financial-table-wrap, .financial-table-section > .financial-table) {
-  border: 2px solid #94a3b8 !important;
+.financial-overview-container:not(.light-theme) :is(
+  .financial-table-wrap,
+  .financial-table-section > .financial-table,
+  .financial-table-section > .sub-table
+) {
+  border: 1px solid rgba(4, 14, 10, 0.52) !important;
 }
 
 .financial-overview-container:not(.light-theme) .financial-table tbody tr:hover,
@@ -1773,17 +2834,83 @@ onMounted(async () => {
   border: 1px solid rgba(190, 235, 203, 0.14) !important;
 }
 
+.financial-overview-container:not(.light-theme) .fin-mobile-card {
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(167, 211, 178, 0.22) !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-card-name,
+.financial-overview-container:not(.light-theme) .fin-mobile-meta-row {
+  color: #eefde6 !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-amount {
+  color: #eefde6 !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-amount.collected,
+.financial-overview-container:not(.light-theme) .fin-mobile-meta-row .collected {
+  color: #4ade80 !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-amount.expense,
+.financial-overview-container:not(.light-theme) .fin-mobile-amount.overdue,
+.financial-overview-container:not(.light-theme) .fin-mobile-meta-row .expense,
+.financial-overview-container:not(.light-theme) .fin-mobile-meta-row .overdue {
+  color: #f87171 !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-label,
+.financial-overview-container:not(.light-theme) .fin-mobile-date,
+.financial-overview-container:not(.light-theme) .fin-mobile-empty {
+  color: rgba(220, 238, 211, 0.62) !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-card-actions {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.financial-overview-container:not(.light-theme) .fin-mobile-totals {
+  background: rgba(74, 222, 128, 0.1) !important;
+  border-color: rgba(74, 222, 128, 0.35) !important;
+  color: #eefde6 !important;
+}
+
 .financial-overview-container:not(.light-theme) :is(
   .page-title, .page-subtitle, .section-title, .chart-title, .page-note,
   .stat-label, .stat-value,
   .filter-label, .filter-input,
   .financial-table th, .financial-table td,
-  .financial-table .collected, .financial-table .outstanding,
-  .financial-table .overdue, .financial-table .expense, .financial-table .rate,
-  .financial-table .amount, .financial-table .loading-cell,
+  .financial-table .loading-cell,
   .inline-link, .view-all-link,
-  .detail-link-btn
+  .detail-link-btn, .view-only-label, .transaction-count-badge, .tx-desc
 ) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-overview-container:not(.light-theme) .financial-table .collected {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+.financial-overview-container:not(.light-theme) .financial-table .outstanding {
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
+}
+
+.financial-overview-container:not(.light-theme) .financial-table .overdue,
+.financial-overview-container:not(.light-theme) .financial-table .expense {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+.financial-overview-container:not(.light-theme) .financial-table .rate {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+.financial-overview-container:not(.light-theme) .financial-table .amount {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -1792,7 +2919,7 @@ onMounted(async () => {
   color: rgba(255, 255, 255, 0.72) !important;
 }
 
-/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+/* ===== LIGHT MODE — colors only (geometry matches dark) ===== */
 .financial-overview-container.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: #052e16;
@@ -1801,7 +2928,8 @@ onMounted(async () => {
 
 .financial-overview-container.light-theme :is(.page-header, .filters-bar, .stat-card, .financial-table-section, .chart-card) {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
+  border-width: 1px !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
@@ -1810,8 +2938,8 @@ onMounted(async () => {
 .financial-overview-container.light-theme .chart-title {
   color: #052e16 !important;
   background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   -webkit-text-fill-color: currentColor !important;
 }
 
@@ -1821,6 +2949,62 @@ onMounted(async () => {
 
 .financial-overview-container.light-theme .page-note {
   color: #15803d !important;
+}
+
+.financial-overview-container.light-theme :is(.filter-input, .filter-clear-btn) {
+  background: #ffffff !important;
+  border-color: #94a3b8 !important;
+  border-width: 1px !important;
+  color: #052e16 !important;
+}
+
+.financial-overview-container.light-theme .filter-clear-btn {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+.financial-overview-container.light-theme .export-btn:not(.export-btn-secondary) {
+  border-width: 1px !important;
+}
+
+.financial-overview-container.light-theme .export-btn.export-btn-secondary {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border-color: #166534 !important;
+  border-width: 1px !important;
+}
+
+.financial-overview-container.light-theme :is(.financial-table-wrap, .financial-table-section > .financial-table) {
+  border-color: #94a3b8 !important;
+  border-width: 1px !important;
+}
+
+.financial-overview-container.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+.financial-overview-container.light-theme .fin-mobile-card-name,
+.financial-overview-container.light-theme .fin-mobile-meta-row {
+  color: #052e16 !important;
+}
+
+.financial-overview-container.light-theme .fin-mobile-label,
+.financial-overview-container.light-theme .fin-mobile-date,
+.financial-overview-container.light-theme .fin-mobile-empty {
+  color: #64748b !important;
+}
+
+.financial-overview-container.light-theme .fin-mobile-card-actions {
+  border-top-color: #bbf7d0 !important;
+}
+
+.financial-overview-container.light-theme .fin-mobile-totals {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
 }
 
 .financial-overview-container.light-theme .stat-value {
@@ -1844,45 +3028,31 @@ onMounted(async () => {
   color: #2563eb !important;
 }
 
-.financial-overview-container.light-theme :is(.filter-input, .filter-clear-btn) {
-  background: #ffffff !important;
-  color: #052e16 !important;
-  border: 1.5px solid #cbd5e1 !important;
-}
-
-.financial-overview-container.light-theme .filter-clear-btn {
-  background: #f0fdf4 !important;
-  border-color: #86efac !important;
-  color: #166534 !important;
-}
-
 .financial-overview-container.light-theme :is(.inline-link, .view-all-link) {
   color: #15803d !important;
 }
 
-.financial-overview-container.light-theme .export-btn {
+.financial-overview-container.light-theme .export-btn:not(.export-btn-secondary) {
   background: linear-gradient(135deg, #166534, #14532d) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  border: 2px solid #14532d !important;
+  border-color: #14532d !important;
 }
 
-.financial-overview-container.light-theme .export-btn-secondary {
-  background: #ffffff !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #94a3b8 !important;
+.financial-overview-container.light-theme .export-btn.export-btn-secondary {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border-color: #166534 !important;
+}
+
+.financial-overview-container.light-theme .export-btn.export-btn-secondary .export-btn-icon {
+  color: #14532d !important;
+  stroke: currentColor !important;
 }
 
 .financial-overview-container.light-theme .filter-label {
-  color: #000000 !important;
-  font-size: 14px !important;
-}
-
-.financial-overview-container.light-theme .filter-input {
-  font-size: 16px !important;
-  color: #000000 !important;
-  border-color: #94a3b8 !important;
+  color: #374151 !important;
 }
 
 .financial-overview-container.light-theme .stat-label {
@@ -1897,8 +3067,18 @@ onMounted(async () => {
 .financial-overview-container.light-theme .stat-card-share-balance .stat-icon-wrap { color: #6d28d9 !important; }
 .financial-overview-container.light-theme .stat-card-share-contributed .stat-icon-wrap { color: #047857 !important; }
 
-.financial-overview-container.light-theme .stat-value {
-  color: #000000 !important;
+.financial-overview-container.light-theme .read-only-note {
+  color: #475569 !important;
+}
+
+.financial-overview-container.light-theme .view-only-label {
+  color: #64748b !important;
+}
+
+.financial-overview-container.light-theme .transaction-count-badge {
+  color: #166534 !important;
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
 }
 
 .financial-overview-container.light-theme .detail-link-btn {
@@ -1909,22 +3089,18 @@ onMounted(async () => {
 .financial-overview-container.light-theme .financial-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
-  border-bottom: 2px solid #16a34a !important;
+  border-bottom-color: #16a34a !important;
 }
 
 .financial-overview-container.light-theme .financial-table th:not(:last-child),
 .financial-overview-container.light-theme .financial-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
 }
 
 .financial-overview-container.light-theme .financial-table td {
   color: #14532d !important;
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
   background: #ffffff !important;
-}
-
-.financial-overview-container.light-theme :is(.financial-table-wrap, .financial-table-section > .financial-table) {
-  border: 2px solid #94a3b8 !important;
 }
 
 .financial-overview-container.light-theme .financial-table tbody tr:nth-child(even) td {
@@ -1950,5 +3126,193 @@ onMounted(async () => {
 
 .financial-overview-container.light-theme .financial-table .loading-cell {
   color: #166534 !important;
+}
+
+/* Lock geometry vs global theme sheets (colors may change; sizes must not) */
+body.glass-dark .financial-overview-container:not(.light-theme) :is(
+  .export-btn, .export-btn-secondary, .filter-clear-btn, .filter-input, .detail-link-btn, .mf-date-icon
+),
+body.glass-light .financial-overview-container.light-theme :is(
+  .export-btn, .export-btn-secondary, .filter-clear-btn, .filter-input, .detail-link-btn, .mf-date-icon
+) {
+  border-width: 1px !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(
+  .page-header, .filters-bar, .stat-card, .financial-table-section, .chart-card, .fin-mobile-card
+),
+body.glass-light .financial-overview-container.light-theme :is(
+  .page-header, .filters-bar, .stat-card, .financial-table-section, .chart-card, .fin-mobile-card
+) {
+  border-width: 1px !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(.financial-table-wrap, .financial-table-section > .financial-table),
+body.glass-light .financial-overview-container.light-theme :is(.financial-table-wrap, .financial-table-section > .financial-table) {
+  border-width: 1px !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th,
+body.glass-light .financial-overview-container.light-theme .financial-table th {
+  border-bottom-width: 1px !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td,
+body.glass-light .financial-overview-container.light-theme .financial-table td {
+  border-bottom-width: 1px !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th:not(:last-child),
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td:not(:last-child),
+body.glass-light .financial-overview-container.light-theme .financial-table th:not(:last-child),
+body.glass-light .financial-overview-container.light-theme .financial-table td:not(:last-child) {
+  border-right-width: 1px !important;
+}
+</style>
+
+<!-- Unscoped: defeat global style.css mobile table→card stacking -->
+<style>
+@media (max-width: 768px) {
+  .financial-overview-container .fin-desktop-table {
+    display: none !important;
+  }
+
+  .financial-overview-container .fin-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  .financial-overview-container table.financial-table,
+  .financial-overview-container table.financial-table thead,
+  .financial-overview-container table.financial-table tbody,
+  .financial-overview-container table.financial-table tfoot,
+  .financial-overview-container table.financial-table tr,
+  .financial-overview-container table.financial-table th,
+  .financial-overview-container table.financial-table td,
+  .financial-overview-container table.sub-table,
+  .financial-overview-container table.sub-table thead,
+  .financial-overview-container table.sub-table tbody,
+  .financial-overview-container table.sub-table tr,
+  .financial-overview-container table.sub-table th,
+  .financial-overview-container table.sub-table td {
+    display: revert !important;
+    width: auto !important;
+    position: static !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .financial-overview-container table.financial-table td::before,
+  .financial-overview-container table.sub-table td::before {
+    content: none !important;
+  }
+
+  .financial-overview-container .module-section > table.financial-table th,
+  .financial-overview-container .module-section > table.sub-table th {
+    padding: 0.28rem 0.4rem !important;
+    font-size: 0.58rem !important;
+  }
+
+  .financial-overview-container .module-section > table.financial-table td,
+  .financial-overview-container .module-section > table.sub-table td {
+    padding: 0.3rem 0.4rem !important;
+    font-size: 0.68rem !important;
+  }
+
+  .financial-overview-container table.financial-table,
+  .financial-overview-container table.sub-table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .financial-overview-container .financial-table-wrap {
+    overflow-x: visible !important;
+  }
+
+  /* Compact filters — beat global style.css min-height:44px + glass padding */
+  .financial-overview-container .filters-bar {
+    gap: 0.35rem !important;
+    padding: 0.45rem 0.55rem !important;
+    margin-bottom: 0.45rem !important;
+  }
+
+  .financial-overview-container .filter-group {
+    gap: 0.12rem !important;
+    width: 100% !important;
+  }
+
+  .financial-overview-container .filter-label {
+    font-size: 0.55rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .financial-overview-container .filters-bar :is(
+    .filter-input,
+    .filter-clear-btn,
+    select.filter-input,
+    input.filter-input,
+    input.mf-date-input,
+    input[type='date']
+  ) {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 1.85rem !important;
+    height: 1.85rem !important;
+    max-height: 1.85rem !important;
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .financial-overview-container .filters-bar .mf-date-input {
+    padding-right: 2.15rem !important;
+  }
+
+  .financial-overview-container .filters-bar .mf-date-field {
+    position: relative !important;
+    display: block !important;
+    height: 1.85rem !important;
+    min-height: 1.85rem !important;
+  }
+
+  .financial-overview-container .filters-bar .mf-date-icon {
+    width: 1.35rem !important;
+    height: 1.35rem !important;
+    right: 0.28rem !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto 0 !important;
+    transform: none !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 5px !important;
+  }
+
+  .financial-overview-container .filters-bar .mf-date-icon svg {
+    width: 0.72rem !important;
+    height: 0.72rem !important;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  .financial-overview-container .filters-bar .mf-date-input::-webkit-calendar-picker-indicator {
+    width: 2rem !important;
+    height: 100% !important;
+  }
+
+  .financial-overview-container .filters-bar .filter-clear-btn {
+    margin-top: 0.1rem !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+  }
 }
 </style>

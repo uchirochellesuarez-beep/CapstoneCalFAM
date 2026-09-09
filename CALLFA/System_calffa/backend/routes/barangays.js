@@ -17,15 +17,16 @@ router.get('/stats/summary', verifyToken, isAdmin, async (req, res) => {
       SELECT 
         COUNT(DISTINCT b.id) as total_barangays,
         COUNT(DISTINCT CASE WHEN b.status = 'active' THEN b.id END) as active_barangays,
-        COUNT(DISTINCT f.id) as total_farmers,
-        COUNT(DISTINCT bo.id) as total_officers,
-        COALESCE(SUM(bc.amount), 0) as total_contributions,
-        COUNT(DISTINCT ba.id) as total_activities
+        COUNT(DISTINCT CASE WHEN f.status = 'approved' THEN f.id END) as total_farmers,
+        COUNT(DISTINCT CASE WHEN f.status = 'approved'
+          AND f.role IN ('president', 'treasurer', 'auditor', 'operator', 'operation_manager', 'business_manager')
+          THEN f.id END) as total_officers,
+        COALESCE((
+          SELECT SUM(scc.amount) FROM share_capital_contributions scc WHERE scc.status = 'confirmed'
+        ), 0) as total_contributions,
+        0 as total_activities
       FROM barangays b
-      LEFT JOIN farmers f ON f.address = b.name AND f.status = 'approved'
-      LEFT JOIN barangay_officers bo ON bo.barangay_id = b.id AND bo.status = 'active'
-      LEFT JOIN barangay_contributions bc ON bc.barangay_id = b.id AND bc.status = 'verified'
-      LEFT JOIN barangay_activities ba ON ba.barangay_id = b.id
+      LEFT JOIN farmers f ON f.barangay_id = b.id
     `);
 
     res.json({ success: true, stats: stats[0] });

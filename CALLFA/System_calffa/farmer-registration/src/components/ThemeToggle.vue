@@ -2,8 +2,8 @@
   <button
     type="button"
     :class="buttonClass"
-    :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+    :title="isDark ? t('theme.toLight') : t('theme.toDark')"
+    :aria-label="isDark ? t('theme.toLight') : t('theme.toDark')"
     :aria-pressed="isDark"
     @click="toggleTheme"
   >
@@ -41,12 +41,13 @@
         stroke-linejoin="round"
       />
     </svg>
-    <span v-if="showLabel" class="theme-label">{{ isDark ? 'Dark' : 'Light' }}</span>
+    <span v-if="showLabel" class="theme-label">{{ isDark ? t('theme.dark') : t('theme.light') }}</span>
   </button>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const props = defineProps({
@@ -62,6 +63,7 @@ const props = defineProps({
 })
 
 const { isDark, toggleTheme, canToggleDarkMode } = useBackdropTheme()
+const { t } = useI18n()
 
 const buttonClass = computed(() => ({
   'icon-btn': props.variant === 'header',

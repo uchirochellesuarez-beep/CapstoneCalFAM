@@ -1,19 +1,25 @@
 <template>
-  <div class="page-container farmer-income-page" :class="{ 'light-theme': isLight }">
-    <div class="page-header">
-      <h1 class="page-title">Talaan ng Kita sa Pagsasaka</h1>
-      <p class="page-subtitle">Punan ang form na ito para maitala ang iyong gastos at kita sa pagsasaka. Kinakailangan para sa eligibility sa tulong na pang-agrikultura tulad ng pataba at binhi.</p>
+  <div class="page-container farmer-income-page machinery-ui" :class="{ 'light-theme': isLight }">
+    <div class="page-header page-header-split">
+      <div class="page-header-text">
+        <h1 class="page-title">{{ $t('ui.farmIncomeTitle') }}</h1>
+        <p class="page-subtitle">{{ $t('incomeForm.subtitle') }}</p>
+      </div>
     </div>
 
-    <!-- Success/Error Messages -->
-    <div v-if="successMessage" class="alert alert-success">
-      <span>{{ successMessage }}</span>
-      <button class="alert-close" @click="successMessage = ''">&times;</button>
-    </div>
-    <div v-if="errorMessage" class="alert alert-error">
-      <span>{{ errorMessage }}</span>
-      <button class="alert-close" @click="errorMessage = ''">&times;</button>
-    </div>
+    <!-- Success/Error Messages (teleported, centered — clears fixed header) -->
+    <Teleport to="body">
+      <div v-if="successMessage || errorMessage" class="alert-center-stack farmer-income-alerts" :class="{ 'light-theme': isLight }">
+        <div v-if="successMessage" class="alert alert-success">
+          <span>{{ successMessage }}</span>
+          <button type="button" class="alert-close" @click="successMessage = ''">&times;</button>
+        </div>
+        <div v-if="errorMessage" class="alert alert-error">
+          <span>{{ errorMessage }}</span>
+          <button type="button" class="alert-close" @click="errorMessage = ''">&times;</button>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
@@ -22,28 +28,28 @@
         :class="{ active: activeTab === 'form' }"
         @click="activeTab = 'form'; if (editingRecordId) cancelEdit()"
       >
-        {{ editingRecordId ? 'I-edit ang Talaan' : 'Bagong Talaan' }}
+        {{ editingRecordId ? $t('incomeForm.editRecord') : $t('incomeForm.newRecord') }}
       </button>
       <button
         class="tab-btn"
         :class="{ active: activeTab === 'history' }"
         @click="activeTab = 'history'; fetchRecords()"
       >
-        Mga Naunang Talaan
+        {{ $t('incomeForm.previousRecords') }}
       </button>
       <button
         class="tab-btn"
         :class="{ active: activeTab === 'assistance' }"
         @click="activeTab = 'assistance'; fetchCompletedAssistance()"
       >
-        Tulong na Natanggap
+        {{ $t('incomeForm.assistanceReceived') }}
       </button>
       <button
         class="tab-btn"
         :class="{ active: activeTab === 'predictive' }"
         @click="activeTab = 'predictive'; loadPredictiveData()"
       >
-        Predictive Analytics
+        {{ $t('common.predictiveAnalytics') }}
       </button>
     </div>
 
@@ -51,44 +57,47 @@
     <div v-if="activeTab === 'form'" class="form-wrapper">
       <!-- Edit mode banner -->
       <div v-if="editingRecordId" class="edit-banner">
-        <span>Ine-edit mo ang talaan mula {{ formatDate(editingCreatedAt) }}</span>
-        <button class="cancel-edit-btn" @click="cancelEdit">Kanselahin</button>
+        <span>{{ $t('incomeForm.editingFrom', { date: formatDate(editingCreatedAt) }) }}</span>
+        <button class="cancel-edit-btn" @click="cancelEdit">{{ $t('common.cancel') }}</button>
       </div>
       <form @submit.prevent="submitForm" class="income-form">
 
         <!-- Section 1: Farm Details -->
         <div class="form-section">
-          <h2 class="section-title">Detalye ng Taniman</h2>
+          <h2 class="section-title">{{ $t('incomeForm.farmDetails') }}</h2>
           <div class="form-row">
             <div class="form-group">
-              <label>Lawak ng Taniman (Ektarya)</label>
+              <label>{{ $t('incomeForm.areaHectares') }}</label>
               <input
                 type="number"
                 v-model.number="form.area_hectares"
-                placeholder="Halimbawa: 1.5"
-                step="0.01"
+                :placeholder="$t('incomeForm.example15')"
+                step="any"
                 min="0.01"
                 required
+                @wheel.prevent
+                @keydown.up.prevent
+                @keydown.down.prevent
               />
             </div>
             <div class="form-group">
-              <label>Paraan ng Pagtatanim</label>
+              <label>{{ $t('incomeForm.plantingMethod') }}</label>
               <select v-model="form.planting_method" required>
-                <option value="">-- Pumili --</option>
-                <option value="sabog">Sabog</option>
-                <option value="talok">Talok</option>
+                <option value="">{{ $t('ui.choose') }}</option>
+                <option value="sabog">{{ $t('incomeForm.sabog') }}</option>
+                <option value="talok">{{ $t('incomeForm.talok') }}</option>
               </select>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group full-width">
-              <label>Patubig</label>
+              <label>{{ $t('ui.irrigation') }}</label>
               <select v-model="form.irrigation_type" required>
-                <option value="">-- Pumili --</option>
-                <option value="NIA">NIA</option>
-                <option value="bugsok_waterpump">Bugsok na Waterpump</option>
-                <option value="waterpump_irrigation">Waterpump na Nakalawit sa Irrigation</option>
-                <option value="waterpump_ilog">Waterpump na Nakalawit sa Ilog</option>
+                <option value="">{{ $t('ui.choose') }}</option>
+                <option value="NIA">{{ $t('incomeForm.nia') }}</option>
+                <option value="bugsok_waterpump">{{ $t('incomeForm.bugsokPump') }}</option>
+                <option value="waterpump_irrigation">{{ $t('incomeForm.pumpIrrigation') }}</option>
+                <option value="waterpump_ilog">{{ $t('incomeForm.pumpRiver') }}</option>
               </select>
             </div>
           </div>
@@ -96,23 +105,28 @@
 
         <!-- Section 2: Abono (Fertilizers) -->
         <div class="form-section">
-          <h2 class="section-title">Mga Ginamit na Abono</h2>
+          <h2 class="section-title">{{ $t('incomeForm.fertilizersUsed') }}</h2>
           <div class="dynamic-table-wrapper">
             <table class="dynamic-table">
               <thead>
                 <tr>
-                  <th>Klase ng Abono</th>
-                  <th>Ilan Sako</th>
-                  <th>Presyo Kada Sako (₱)</th>
-                  <th>Kabuuan (₱)</th>
+                  <th>{{ $t('incomeForm.fertilizerClass') }}</th>
+                  <th>{{ $t('incomeForm.howManySacks') }}</th>
+                  <th>{{ $t('incomeForm.pricePerSack') }}</th>
+                  <th>{{ $t('incomeForm.totalPeso') }}</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in form.fertilizers" :key="'fert-' + index">
+                <tr
+                  v-for="(item, index) in form.fertilizers"
+                  :key="'fert-' + index"
+                  :class="{ 'has-remove': form.fertilizers.length > 1 }"
+                >
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.fertilizerClass') }}</span>
                     <select v-model="item.type" required>
-                      <option value="">-- Pumili --</option>
+                      <option value="">{{ $t('ui.choose') }}</option>
                       <option value="14-14-14">14-14-14</option>
                       <option value="46-0-0">46-0-0</option>
                       <option value="0-0-60">0-0-60</option>
@@ -123,40 +137,49 @@
                     </select>
                   </td>
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.howManySacks') }}</span>
                     <input
                       type="number"
                       v-model.number="item.sacks"
                       placeholder="0"
                       min="0"
-                      step="1"
+                      step="any"
+                      @wheel.prevent
+                      @keydown.up.prevent
+                      @keydown.down.prevent
                     />
                   </td>
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.pricePerSackShort') }}</span>
                     <input
                       type="number"
                       v-model.number="item.price_per_sack"
                       placeholder="0.00"
                       min="0"
-                      step="0.01"
+                      step="any"
+                      @wheel.prevent
+                      @keydown.up.prevent
+                      @keydown.down.prevent
                     />
                   </td>
                   <td class="computed-cell">
-                    ₱{{ fertilizerLineTotal(item).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                    <span class="dt-label">{{ $t('ui.total') }}</span>
+                    <span class="dt-value">₱{{ fertilizerLineTotal(item).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                   </td>
-                  <td>
+                  <td class="dt-actions-cell">
                     <button
                       type="button"
                       class="remove-btn"
                       @click="removeFertilizer(index)"
                       v-if="form.fertilizers.length > 1"
-                      title="Alisin"
+                      :title="$t('ui.remove')"
                     >&times;</button>
                   </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="total-label">Kabuuang Halaga sa Abono:</td>
+                  <td colspan="3" class="total-label">{{ $t('incomeForm.totalFertilizerCost') }}</td>
                   <td class="total-value">
                     ₱{{ totalFertilizerCost.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
                   </td>
@@ -166,69 +189,83 @@
             </table>
           </div>
           <button type="button" class="add-row-btn" @click="addFertilizer">
-            Magdagdag ng Abono
+            {{ $t('incomeForm.addFertilizer') }}
           </button>
         </div>
 
         <!-- Section 3: Pesticides -->
         <div class="form-section">
-          <h2 class="section-title">Mga Ginamit na Lason</h2>
+          <h2 class="section-title">{{ $t('incomeForm.pesticidesUsed') }}</h2>
           <div class="dynamic-table-wrapper">
             <table class="dynamic-table">
               <thead>
                 <tr>
-                  <th>Klase ng Lason</th>
-                  <th>Ilang Bote/Pack</th>
-                  <th>Presyo Kada Bote/Pack (₱)</th>
-                  <th>Kabuuan (₱)</th>
+                  <th>{{ $t('incomeForm.pesticideClass') }}</th>
+                  <th>{{ $t('incomeForm.bottlesPacks') }}</th>
+                  <th>{{ $t('incomeForm.pricePerBottle') }}</th>
+                  <th>{{ $t('incomeForm.totalPeso') }}</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in form.pesticides" :key="'pest-' + index">
+                <tr
+                  v-for="(item, index) in form.pesticides"
+                  :key="'pest-' + index"
+                  :class="{ 'has-remove': form.pesticides.length > 1 }"
+                >
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.pesticideClass') }}</span>
                     <input
                       type="text"
                       v-model="item.type"
-                      placeholder="Pangalan ng lason"
+                      :placeholder="$t('incomeForm.pesticideNamePh')"
                       required
                     />
                   </td>
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.bottlesPacks') }}</span>
                     <input
                       type="number"
                       v-model.number="item.quantity"
                       placeholder="0"
                       min="0"
-                      step="1"
+                      step="any"
+                      @wheel.prevent
+                      @keydown.up.prevent
+                      @keydown.down.prevent
                     />
                   </td>
                   <td>
+                    <span class="dt-label">{{ $t('incomeForm.pricePerUnit') }}</span>
                     <input
                       type="number"
                       v-model.number="item.price_per_unit"
                       placeholder="0.00"
                       min="0"
-                      step="0.01"
+                      step="any"
+                      @wheel.prevent
+                      @keydown.up.prevent
+                      @keydown.down.prevent
                     />
                   </td>
                   <td class="computed-cell">
-                    ₱{{ pesticideLineTotal(item).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                    <span class="dt-label">{{ $t('ui.total') }}</span>
+                    <span class="dt-value">₱{{ pesticideLineTotal(item).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                   </td>
-                  <td>
+                  <td class="dt-actions-cell">
                     <button
                       type="button"
                       class="remove-btn"
                       @click="removePesticide(index)"
                       v-if="form.pesticides.length > 1"
-                      title="Alisin"
+                      :title="$t('ui.remove')"
                     >&times;</button>
                   </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="total-label">Kabuuang Halaga sa Lason:</td>
+                  <td colspan="3" class="total-label">{{ $t('incomeForm.totalPesticideCost') }}</td>
                   <td class="total-value">
                     ₱{{ totalPesticideCost.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
                   </td>
@@ -238,104 +275,104 @@
             </table>
           </div>
           <button type="button" class="add-row-btn" @click="addPesticide">
-            Magdagdag ng Lason
+            {{ $t('incomeForm.addPesticide') }}
           </button>
         </div>
 
         <!-- Section 4: Labor & Other Expenses -->
         <div class="form-section">
-          <h2 class="section-title">Gastos sa Labor at Iba Pa</h2>
+          <h2 class="section-title">{{ $t('incomeForm.laborOther') }}</h2>
           <div class="form-row">
             <div class="form-group">
-              <label>Gastos sa Paghahanda ng Lupang Taniman (₱)</label>
-              <input type="number" v-model.number="form.land_preparation_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.landPrepCost') }}</label>
+              <input type="number" v-model.number="form.land_preparation_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
             <div class="form-group">
-              <label>Gastos sa Bunot / Talok / Hasik (₱)</label>
-              <input type="number" v-model.number="form.planting_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.plantingCost') }}</label>
+              <input type="number" v-model.number="form.planting_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Gastos sa Pagspray / Pagsabog ng Abono at Iba Pa (₱)</label>
-              <input type="number" v-model.number="form.spraying_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.sprayingCost') }}</label>
+              <input type="number" v-model.number="form.spraying_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
             <div class="form-group">
-              <label>Bayad sa Harvester (₱)</label>
-              <input type="number" v-model.number="form.harvester_cost" placeholder="0.00" min="0" step="0.01" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Bayad sa Pagbibilad (₱)</label>
-              <input type="number" v-model.number="form.drying_cost" placeholder="0.00" min="0" step="0.01" />
-            </div>
-            <div class="form-group">
-              <label>Bayad sa Paghakot (₱)</label>
-              <input type="number" v-model.number="form.hauling_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.harvesterCost') }}</label>
+              <input type="number" v-model.number="form.harvester_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Tarasko (₱)</label>
-              <input type="number" v-model.number="form.tarasko_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.dryingCost') }}</label>
+              <input type="number" v-model.number="form.drying_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
             <div class="form-group">
-              <label>Krudo (₱)</label>
-              <input type="number" v-model.number="form.fuel_cost" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.haulingCost') }}</label>
+              <input type="number" v-model.number="form.hauling_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ $t('incomeForm.taraskoCost') }}</label>
+              <input type="number" v-model.number="form.tarasko_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
+            </div>
+            <div class="form-group">
+              <label>{{ $t('incomeForm.fuelCost') }}</label>
+              <input type="number" v-model.number="form.fuel_cost" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group full-width">
-              <label>Iba Pang Gastos (₱)</label>
-              <input type="number" v-model.number="form.other_expenses" placeholder="0.00" min="0" step="0.01" />
+              <label>{{ $t('incomeForm.otherExpenses') }}</label>
+              <input type="number" v-model.number="form.other_expenses" placeholder="0.00" min="0" step="any" @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
           <div class="labor-total-box">
-            <span class="labor-total-label">Kabuuang Gastos sa Labor:</span>
+            <span class="labor-total-label">{{ $t('incomeForm.totalLabor') }}</span>
             <span class="labor-total-value">₱{{ totalLaborCost.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
           </div>
         </div>
 
         <!-- Section 5: Harvest -->
         <div class="form-section">
-          <h2 class="section-title">Ani</h2>
+          <h2 class="section-title">{{ $t('ui.harvest') }}</h2>
           <div class="form-row">
             <div class="form-group">
-              <label>Ilang Sako ang Naani</label>
-              <input type="number" v-model.number="form.sacks_harvested" placeholder="0" min="0" step="1" required />
+              <label>{{ $t('incomeForm.sacksHarvested') }}</label>
+              <input type="number" v-model.number="form.sacks_harvested" placeholder="0" min="0" step="any" required @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
             <div class="form-group">
-              <label>Kilo Kada Sako</label>
-              <input type="number" v-model.number="form.kg_per_sack" placeholder="0" min="0" step="0.01" required />
+              <label>{{ $t('incomeForm.kgPerSack') }}</label>
+              <input type="number" v-model.number="form.kg_per_sack" placeholder="0" min="0" step="any" required @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Presyo Kada Kilo (₱)</label>
-              <input type="number" v-model.number="form.price_per_kg" placeholder="0.00" min="0" step="0.01" required />
+              <label>{{ $t('incomeForm.pricePerKg') }}</label>
+              <input type="number" v-model.number="form.price_per_kg" placeholder="0.00" min="0" step="any" required @wheel.prevent @keydown.up.prevent @keydown.down.prevent />
             </div>
           </div>
         </div>
 
         <!-- Summary Section -->
         <div class="form-section summary-section">
-          <h2 class="section-title">Buod</h2>
+          <h2 class="section-title">{{ $t('incomeForm.summary') }}</h2>
           <div class="summary-grid">
             <div class="summary-item">
-              <span class="summary-label">Kabuuang Ani (kg)</span>
+              <span class="summary-label">{{ $t('incomeForm.totalHarvestKg') }}</span>
               <span class="summary-value">{{ totalHarvestKg.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }} kg</span>
             </div>
             <div class="summary-item income">
-              <span class="summary-label">Kabuuang Benta</span>
+              <span class="summary-label">{{ $t('incomeForm.totalSales') }}</span>
               <span class="summary-value">₱{{ grossIncome.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="summary-item expense">
-              <span class="summary-label">Kabuuang Gastos</span>
+              <span class="summary-label">{{ $t('ui.totalExpenses') }}</span>
               <span class="summary-value">₱{{ totalExpenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="summary-item" :class="netIncome >= 0 ? 'profit' : 'loss'">
-              <span class="summary-label">Netong Kita</span>
+              <span class="summary-label">{{ $t('incomeForm.netIncome') }}</span>
               <span class="summary-value">₱{{ netIncome.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
           </div>
@@ -343,10 +380,10 @@
 
         <!-- Submit -->
         <div class="form-actions">
-          <button type="button" class="btn-reset" @click="editingRecordId ? cancelEdit() : resetForm()">{{ editingRecordId ? 'Kanselahin' : 'I-reset' }}</button>
+          <button type="button" class="btn-reset" @click="editingRecordId ? cancelEdit() : resetForm()">{{ editingRecordId ? $t('incomeForm.cancel') : $t('incomeForm.reset') }}</button>
           <button type="submit" class="btn-submit" :disabled="submitting">
-            <span v-if="submitting">{{ editingRecordId ? 'Ina-update...' : 'Sinusumite...' }}</span>
-            <span v-else>{{ editingRecordId ? 'I-update ang Talaan' : 'I-save ang Talaan' }}</span>
+            <span v-if="submitting">{{ editingRecordId ? $t('incomeForm.updating') : $t('incomeForm.submitting') }}</span>
+            <span v-else>{{ editingRecordId ? $t('incomeForm.updateRecord') : $t('incomeForm.saveRecord') }}</span>
           </button>
         </div>
       </form>
@@ -356,11 +393,11 @@
     <div v-if="activeTab === 'history'" class="history-wrapper">
       <div v-if="loadingRecords" class="loading-state">
         <div class="spinner"></div>
-        <p>Kinukuha ang mga talaan...</p>
+        <p>{{ $t('ui.loadingRecords') }}</p>
       </div>
       <div v-else-if="records.length === 0" class="empty-state">
         <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
-        <p>Wala pang naitatalang kita. Punan ang form para magsimula!</p>
+        <p>{{ $t('incomeForm.noIncomeYet') }}</p>
       </div>
       <div v-else class="records-list">
         <div
@@ -369,45 +406,53 @@
           class="record-card"
         >
           <div class="record-header">
-            <span class="record-date">{{ formatDate(record.created_at) }}</span>
-            <div class="record-actions">
-              <button class="edit-btn" @click="startEdit(record)">I-edit</button>
-              <button class="view-btn" @click="openRecordDetail(record)">Tingnan</button>
-            </div>
+            <h4 class="record-date">{{ formatDate(record.created_at) }}</h4>
+            <span class="status-badge" :class="incomeStatusClass(record.status)">
+              {{ incomeStatusLabel(record.status) }}
+            </span>
           </div>
           <div class="record-body">
             <div class="record-info-grid">
               <div class="record-info-item">
-                <span class="detail-label">Lawak</span>
-                <span class="detail-value">{{ record.area_hectares }} ektarya</span>
+                <span class="detail-label">{{ $t('ui.area') }}</span>
+                <span class="detail-value">{{ record.area_hectares }} {{ $t('incomeForm.hectares') }}</span>
               </div>
               <div class="record-info-item">
-                <span class="detail-label">Pagtatanim</span>
-                <span class="detail-value">{{ record.planting_method }}</span>
+                <span class="detail-label">{{ $t('ui.planting') }}</span>
+                <span class="detail-value">{{ formatPlanting(record.planting_method) }}</span>
               </div>
               <div class="record-info-item">
-                <span class="detail-label">Patubig</span>
+                <span class="detail-label">{{ $t('ui.irrigation') }}</span>
                 <span class="detail-value">{{ formatIrrigation(record.irrigation_type) }}</span>
               </div>
               <div class="record-info-item record-info-item-wide">
-                <span class="detail-label">Ani</span>
-                <span class="detail-value">{{ record.sacks_harvested }} sako × {{ record.kg_per_sack }} kg @ ₱{{ record.price_per_kg }}/kg</span>
+                <span class="detail-label">{{ $t('ui.harvest') }}</span>
+                <span class="detail-value">{{ $t('incomeForm.harvestLine', { sacks: record.sacks_harvested, kg: record.kg_per_sack, price: record.price_per_kg }) }}</span>
               </div>
             </div>
           </div>
           <div class="record-financials">
             <div class="financial-item income">
-              <span class="financial-label">Benta</span>
+              <span class="financial-label">{{ $t('ui.sales') }}</span>
               <span class="financial-value">₱{{ parseFloat(record.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="financial-item expense">
-              <span class="financial-label">Gastos</span>
+              <span class="financial-label">{{ $t('ui.expenses') }}</span>
               <span class="financial-value">₱{{ parseFloat(record.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="financial-item" :class="parseFloat(record.net_income || 0) >= 0 ? 'profit' : 'loss'">
-              <span class="financial-label">Net</span>
+              <span class="financial-label">{{ $t('ui.net') }}</span>
               <span class="financial-value">₱{{ parseFloat(record.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
+          </div>
+          <div class="record-actions">
+            <button
+              v-if="canEditIncomeRecord(record)"
+              type="button"
+              class="edit-btn"
+              @click="startEdit(record)"
+            >{{ $t('common.edit') }}</button>
+            <button type="button" class="view-btn" @click="openRecordDetail(record)">{{ $t('common.view') }}</button>
           </div>
         </div>
       </div>
@@ -417,11 +462,11 @@
     <div v-if="activeTab === 'assistance'" class="assistance-wrapper">
       <div v-if="loadingAssistance" class="loading-state">
         <div class="spinner"></div>
-        <p>Kinukuha ang tulong na natanggap...</p>
+        <p>{{ $t('incomeForm.loadingAssistance') }}</p>
       </div>
       <div v-else-if="completedAssistance.length === 0" class="empty-state">
         <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
-        <p>Walang natanggapang tulong pa. Maghintay na kayo ay maging eligible at lumikha ng tulong.</p>
+        <p>{{ $t('incomeForm.noAssistanceWait') }}</p>
       </div>
       <div v-else>
         <!-- Assistance Grid -->
@@ -433,34 +478,34 @@
                   {{ formatAssistanceType(assist.assistance_type) }}
                 </span>
               </div>
-              <span class="status-badge completed">Natanggap</span>
+              <span class="status-badge completed">{{ $t('ui.received') }}</span>
             </div>
 
             <div class="card-body">
               <div class="info-row">
                 <div class="info-item">
-                  <span class="info-label">Petsa ng Talaan</span>
+                  <span class="info-label">{{ $t('ui.recordDate') }}</span>
                   <span class="info-value">{{ formatDate(assist.created_at) }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Dami</span>
-                  <span class="info-value quantity-highlight">{{ assist.notes ? extractQuantityFromNotes(assist.notes) : assist.quantity + ' ' + (assist.unit || 'sako') }}</span>
+                  <span class="info-label">{{ $t('ui.quantity') }}</span>
+                  <span class="info-value quantity-highlight">{{ formatAssistanceQuantity(assist) }}</span>
                 </div>
               </div>
 
               <div class="info-row dates-row">
                 <div v-if="assist.distribution_date" class="info-item">
-                  <span class="info-label">Araw ng Pamamahagi</span>
+                  <span class="info-label">{{ $t('ui.distributionDay') }}</span>
                   <span class="info-value">{{ formatDate(assist.distribution_date) }}</span>
                 </div>
                 <div v-if="assist.received_date" class="info-item">
-                  <span class="info-label">Araw ng Pagtanggap</span>
+                  <span class="info-label">{{ $t('ui.receivedDay') }}</span>
                   <span class="info-value">{{ formatDate(assist.received_date) }}</span>
                 </div>
               </div>
 
-              <div v-if="assist.notes && !assist.notes.startsWith('Pataba')" class="notes-section">
-                <span class="notes-label">Tala</span>
+              <div v-if="extractNotesOnly(assist.notes)" class="notes-section">
+                <span class="notes-label">{{ $t('ui.note') }}</span>
                 <p class="notes-content">{{ extractNotesOnly(assist.notes) }}</p>
               </div>
             </div>
@@ -476,115 +521,148 @@
     <!-- PREDICTIVE TAB -->
     <div v-if="activeTab === 'predictive'" class="predictive-wrapper">
       <div class="form-section">
-        <h2 class="section-title">Predicted Future Expenses</h2>
+        <h2 class="section-title">{{ $t('incomeForm.predictedExpenses') }}</h2>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Target Farmer ID</label>
+            <label>{{ $t('incomeForm.targetFarmerId') }}</label>
             <input v-if="!isPresident" type="text" :value="targetFarmerId || '-'" disabled />
             <select v-else v-model="selectedForecastFarmerId" @change="loadPredictiveData">
-              <option value="">-- Pumili ng farmer --</option>
+              <option value="">{{ $t('ui.chooseFarmer') }}</option>
               <option v-for="f in barangayFarmers" :key="f.id" :value="String(f.id)">
                 #{{ f.id }} - {{ f.full_name }}
               </option>
             </select>
           </div>
           <div class="form-group">
-            <label>Foundation Data (CSV/JSON)</label>
+            <label>{{ $t('incomeForm.foundationData') }}</label>
             <input type="file" accept=".csv,.json,text/csv,application/json" @change="onFoundationFileChange" />
           </div>
         </div>
 
         <div class="predictive-actions">
           <button class="btn-submit" type="button" :disabled="foundationUploading || !canUploadFoundation" @click="uploadFoundationFile">
-            <span v-if="foundationUploading">Uploading...</span>
-            <span v-else>Upload Historical Foundation</span>
-          </button>
-          <button class="btn-reset" type="button" :disabled="foundationDeleting || !targetFarmerId" @click="clearFoundation">
-            <span v-if="foundationDeleting">Removing...</span>
-            <span v-else>Clear Foundation</span>
+            <span v-if="foundationUploading">{{ $t('common.uploading') }}</span>
+            <span v-else>{{ $t('common.uploadFoundation') }}</span>
           </button>
           <button class="btn-submit" type="button" :disabled="forecastLoading || !targetFarmerId" @click="fetchExpenseForecast">
-            <span v-if="forecastLoading">Forecasting...</span>
-            <span v-else>Run Expense Forecast</span>
+            <span v-if="forecastLoading">{{ $t('common.forecasting') }}</span>
+            <span v-else>{{ $t('common.runForecast') }}</span>
           </button>
         </div>
 
         <div class="foundation-summary" v-if="foundationSummary">
-          <p><strong>Foundation Farmer ID:</strong> {{ foundationSummary.farmer_id }}</p>
-          <p><strong>Uploaded Points:</strong> {{ foundationSummary.count || 0 }}</p>
-          <p v-if="foundationSummary.updated_at"><strong>Last Updated:</strong> {{ formatDate(foundationSummary.updated_at) }}</p>
+          <p><strong>{{ $t('incomeForm.foundationFarmerId') }}</strong> {{ foundationSummary.farmer_id }}</p>
+          <p><strong>{{ $t('incomeForm.uploadedPoints') }}</strong> {{ foundationSummary.count || 0 }}</p>
+          <p v-if="foundationSummary.updated_at"><strong>{{ $t('incomeForm.lastUpdated') }}</strong> {{ formatDate(foundationSummary.updated_at) }}</p>
           <p v-if="(foundationSummary.preview || []).length > 0">
-            <strong>Preview:</strong> {{ foundationSummary.preview.join(', ') }}
+            <strong>{{ $t('incomeForm.preview') }}</strong> {{ foundationSummary.preview.join(', ') }}
           </p>
         </div>
       </div>
 
       <div class="form-section" v-if="forecastResult">
-        <h3 class="section-title">Forecast Result</h3>
+        <h3 class="section-title">{{ $t('incomeForm.forecastResult') }}</h3>
         <div v-if="forecastResult.ok" class="summary-grid">
           <div class="summary-item expense">
-            <span class="summary-label">Predicted Future Expense</span>
+            <span class="summary-label">{{ $t('incomeForm.predictedFutureExpense') }}</span>
             <span class="summary-value">₱{{ formatPeso(forecastResult.forecast_next?.predicted_total_expenses) }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">95% Confidence Interval</span>
+            <span class="summary-label">{{ $t('incomeForm.ci95') }}</span>
             <span class="summary-value">
               ₱{{ formatPeso(forecastResult.forecast_next?.ci95_low) }} - ₱{{ formatPeso(forecastResult.forecast_next?.ci95_high) }}
             </span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">Model Quality (R²)</span>
-            <span class="summary-value">{{ forecastResult.forecast_next?.r_squared ?? '-' }}</span>
+            <span class="summary-label">{{ $t('incomeForm.modelQuality') }}</span>
+            <span class="summary-value">{{ forecastResult.forecast_next?.r_squared ?? '—' }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">Training Points</span>
+            <span class="summary-label">{{ $t('incomeForm.trainingPoints') }}</span>
             <span class="summary-value">{{ forecastResult.training_n || 0 }}</span>
           </div>
         </div>
         <div v-else class="alert alert-error">
-          <span>{{ forecastResult.error || 'Forecast failed.' }}</span>
+          <span>{{ translatedForecastError || $t('incomeForm.forecastFailed') }}</span>
         </div>
 
         <div class="model-info-box" v-if="forecastResult.ok">
-          <p><strong>Model Used:</strong> {{ forecastResult.model || 'N/A' }}</p>
+          <p><strong>{{ $t('incomeForm.modelUsed') }}</strong> {{ forecastResult.model || 'N/A' }}</p>
           <p>
-            <strong>Engine:</strong>
-            {{ forecastResult.ml_engine === 'python_sklearn' ? 'Python sklearn' : 'Node.js OLS fallback' }}
+            <strong>{{ $t('incomeForm.engine') }}</strong>
+            {{ forecastEngineLabel }}
           </p>
-          <p>{{ forecastResult.method_description_ph || '' }}</p>
+          <p>{{ forecastMethodText }}</p>
+          <p v-if="forecastQualityHint">{{ forecastQualityHint }}</p>
+        </div>
+        <div v-if="forecastHistory.length" class="foundation-summary">
+          <p class="forecast-history-title"><strong>{{ $t('incomeForm.savedExpensesUsed') }}</strong></p>
+          <div class="forecast-history-wrap">
+            <table class="forecast-history-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th>{{ $t('incomeForm.forecastSource') }}</th>
+                  <th>{{ $t('incomeForm.forecastPeriod') }}</th>
+                  <th class="col-amt">{{ $t('ui.expenses') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, idx) in forecastHistory" :key="idx">
+                  <td class="col-num">{{ idx + 1 }}</td>
+                  <td>{{ forecastHistorySource(row) }}</td>
+                  <td>{{ forecastHistoryPeriod(row) }}</td>
+                  <td class="col-amt">₱{{ formatPeso(row.total_expenses) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- VIEW DETAIL MODAL -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay farmer-income-page-modal" :class="{ 'light-theme': isLight }" @click.self="closeDetailModal">
+      <div
+        v-if="showDetailModal"
+        class="modal-overlay farmer-income-page-modal"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeDetailModal"
+      >
         <div class="modal-container">
           <div class="modal-header">
-            <h2>Buong Detalye ng Talaan</h2>
+            <h2>{{ $t('ui.fullRecordDetails') }}</h2>
             <button class="modal-close" @click="closeDetailModal">&times;</button>
           </div>
           <div class="modal-body" v-if="selectedRecord">
 
             <!-- Farm Info -->
             <div class="detail-section">
-              <h3 class="detail-section-title">Detalye ng Taniman</h3>
+              <h3 class="detail-section-title">{{ $t('incomeForm.farmDetails') }}</h3>
               <div class="detail-grid">
                 <div class="detail-cell">
-                  <span class="cell-label">Petsa ng Talaan</span>
+                  <span class="cell-label">{{ $t('ui.status') }}</span>
+                  <span class="cell-value">
+                    <span class="status-badge" :class="incomeStatusClass(selectedRecord.status)">
+                      {{ incomeStatusLabel(selectedRecord.status) }}
+                    </span>
+                  </span>
+                </div>
+                <div class="detail-cell">
+                  <span class="cell-label">{{ $t('ui.recordDate') }}</span>
                   <span class="cell-value">{{ formatDate(selectedRecord.created_at) }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Lawak (Ektarya)</span>
+                  <span class="cell-label">{{ $t('incomeForm.areaHectares') }}</span>
                   <span class="cell-value">{{ selectedRecord.area_hectares }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Paraan ng Pagtatanim</span>
-                  <span class="cell-value">{{ selectedRecord.planting_method === 'sabog' ? 'Sabog' : 'Talok' }}</span>
+                  <span class="cell-label">{{ $t('incomeForm.plantingMethod') }}</span>
+                  <span class="cell-value">{{ formatPlanting(selectedRecord.planting_method) }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Patubig</span>
+                  <span class="cell-label">{{ $t('ui.irrigation') }}</span>
                   <span class="cell-value">{{ formatIrrigation(selectedRecord.irrigation_type) }}</span>
                 </div>
               </div>
@@ -592,14 +670,15 @@
 
             <!-- Fertilizers -->
             <div class="detail-section" v-if="selectedRecord.fertilizers && selectedRecord.fertilizers.length > 0">
-              <h3 class="detail-section-title">Mga Ginamit na Abono</h3>
+              <h3 class="detail-section-title">{{ $t('incomeForm.fertilizersUsed') }}</h3>
+              <div class="detail-table-wrap">
               <table class="detail-table">
                 <thead>
                   <tr>
-                    <th>Klase</th>
-                    <th>Sako</th>
-                    <th>Presyo/Sako</th>
-                    <th>Kabuuan</th>
+                    <th>{{ $t('ui.classLabel') }}</th>
+                    <th>{{ $t('ui.sacks') }}</th>
+                    <th>{{ $t('ui.pricePerSack') }}</th>
+                    <th>{{ $t('ui.total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -612,27 +691,29 @@
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="3" class="foot-label">Kabuuang Abono:</td>
+                    <td colspan="3" class="foot-label">{{ $t('ui.fertilizerTotalColon') }}</td>
                     <td class="foot-value">₱{{ parseFloat(selectedRecord.total_fertilizer_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">Mga Ginamit na Abono</h3>
-              <p class="no-data">Walang naitalang abono.</p>
+              <h3 class="detail-section-title">{{ $t('incomeForm.fertilizersUsed') }}</h3>
+              <p class="no-data">{{ $t('ui.noFertilizerRecorded') }}</p>
             </div>
 
             <!-- Pesticides -->
             <div class="detail-section" v-if="selectedRecord.pesticides && selectedRecord.pesticides.length > 0">
-              <h3 class="detail-section-title">Mga Ginamit na Lason</h3>
+              <h3 class="detail-section-title">{{ $t('incomeForm.pesticidesUsed') }}</h3>
+              <div class="detail-table-wrap">
               <table class="detail-table">
                 <thead>
                   <tr>
-                    <th>Klase</th>
-                    <th>Bilang</th>
-                    <th>Presyo/Unit</th>
-                    <th>Kabuuan</th>
+                    <th>{{ $t('ui.classLabel') }}</th>
+                    <th>{{ $t('ui.count') }}</th>
+                    <th>{{ $t('ui.pricePerUnit') }}</th>
+                    <th>{{ $t('ui.total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -645,59 +726,60 @@
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="3" class="foot-label">Kabuuang Lason:</td>
+                    <td colspan="3" class="foot-label">{{ $t('ui.pesticideTotalColon') }}</td>
                     <td class="foot-value">₱{{ parseFloat(selectedRecord.total_pesticide_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
             <div class="detail-section" v-else>
-              <h3 class="detail-section-title">Mga Ginamit na Lason</h3>
-              <p class="no-data">Walang naitalang lason.</p>
+              <h3 class="detail-section-title">{{ $t('incomeForm.pesticidesUsed') }}</h3>
+              <p class="no-data">{{ $t('ui.noPesticideRecorded') }}</p>
             </div>
 
             <!-- Labor & Expenses -->
             <div class="detail-section">
-              <h3 class="detail-section-title">Gastos sa Labor at Iba Pa</h3>
+              <h3 class="detail-section-title">{{ $t('incomeForm.laborOther') }}</h3>
               <div class="expense-grid">
                 <div class="expense-row">
-                  <span>Paghahanda ng Lupa</span>
+                  <span>{{ $t('ui.landPrep') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.land_preparation_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bunot / Talok / Hasik</span>
+                  <span>{{ $t('incomeForm.plantingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.planting_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Pagspray / Pagsabog ng Abono</span>
+                  <span>{{ $t('incomeForm.sprayingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.spraying_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Harvester</span>
+                  <span>{{ $t('incomeForm.harvesterCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.harvester_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Pagbibilad</span>
+                  <span>{{ $t('incomeForm.dryingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.drying_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Paghakot</span>
+                  <span>{{ $t('incomeForm.haulingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.hauling_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Tarasko</span>
+                  <span>{{ $t('incomeForm.taraskoCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.tarasko_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Krudo</span>
+                  <span>{{ $t('incomeForm.fuelCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.fuel_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Iba Pang Gastos</span>
+                  <span>{{ $t('incomeForm.otherExpensesShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.other_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row total-row">
-                  <span>Kabuuang Labor:</span>
+                  <span>{{ $t('incomeForm.totalLabor') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.total_labor_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
               </div>
@@ -705,22 +787,22 @@
 
             <!-- Harvest -->
             <div class="detail-section">
-              <h3 class="detail-section-title">Ani</h3>
+              <h3 class="detail-section-title">{{ $t('ui.harvest') }}</h3>
               <div class="detail-grid">
                 <div class="detail-cell">
-                  <span class="cell-label">Sako na Naani</span>
+                  <span class="cell-label">{{ $t('ui.sacksHarvested') }}</span>
                   <span class="cell-value">{{ selectedRecord.sacks_harvested }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Kilo Kada Sako</span>
+                  <span class="cell-label">{{ $t('incomeForm.kgPerSack') }}</span>
                   <span class="cell-value">{{ selectedRecord.kg_per_sack }} kg</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Presyo Kada Kilo</span>
+                  <span class="cell-label">{{ $t('incomeForm.pricePerKg') }}</span>
                   <span class="cell-value">₱{{ parseFloat(selectedRecord.price_per_kg || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Kabuuang Ani</span>
+                  <span class="cell-label">{{ $t('incomeForm.totalHarvestKg') }}</span>
                   <span class="cell-value">{{ (parseFloat(selectedRecord.sacks_harvested || 0) * parseFloat(selectedRecord.kg_per_sack || 0)).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }} kg</span>
                 </div>
               </div>
@@ -728,18 +810,18 @@
 
             <!-- Grand Summary -->
             <div class="detail-section summary-detail-section">
-              <h3 class="detail-section-title">Buod</h3>
+              <h3 class="detail-section-title">{{ $t('incomeForm.summary') }}</h3>
               <div class="grand-summary">
                 <div class="grand-row income-row">
-                  <span>Kabuuang Benta</span>
+                  <span>{{ $t('incomeForm.totalSales') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="grand-row expense-summary-row">
-                  <span>Kabuuang Gastos</span>
+                  <span>{{ $t('ui.totalExpenses') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="grand-row" :class="parseFloat(selectedRecord.net_income || 0) >= 0 ? 'net-profit-row' : 'net-loss-row'">
-                  <span>Netong Kita</span>
+                  <span>{{ $t('incomeForm.netIncome') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
               </div>
@@ -747,7 +829,7 @@
 
           </div>
           <div class="modal-footer">
-            <button class="btn-close-modal" @click="closeDetailModal">Isara</button>
+            <button class="btn-close-modal" @click="closeDetailModal">{{ $t('common.close') }}</button>
           </div>
         </div>
       </div>
@@ -756,10 +838,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+
+const { t, locale } = useI18n()
 
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
@@ -782,7 +867,6 @@ const editingRecordId = ref(null)
 const editingCreatedAt = ref(null)
 const forecastLoading = ref(false)
 const foundationUploading = ref(false)
-const foundationDeleting = ref(false)
 const forecastResult = ref(null)
 const foundationSummary = ref(null)
 const foundationFile = ref(null)
@@ -794,6 +878,39 @@ const targetFarmerId = computed(() => {
   return currentUser.value?.id != null ? String(currentUser.value.id) : ''
 })
 const canUploadFoundation = computed(() => !!foundationFile.value && !!targetFarmerId.value)
+const forecastHistory = computed(() => {
+  const rows = forecastResult.value?.history
+  return Array.isArray(rows) ? rows : []
+})
+const forecastEngineLabel = computed(() => {
+  const engine = forecastResult.value?.ml_engine
+  if (engine === 'python_sklearn') return t('incomeForm.enginePython')
+  if (engine === 'node_sparse_fallback') return t('incomeForm.engineSparse')
+  return t('incomeForm.engineOls')
+})
+const forecastMethodText = computed(() => {
+  const model = forecastResult.value?.model
+  const engine = forecastResult.value?.ml_engine
+  if (model === 'last_saved_expense') return t('incomeForm.methodLastSaved')
+  if (model === 'two_point_trend') return t('incomeForm.methodTwoPoint')
+  if (engine === 'python_sklearn') return t('incomeForm.methodPython')
+  if (engine === 'node_ols_fallback') return t('incomeForm.methodOls')
+  return ''
+})
+const forecastQualityHint = computed(() => {
+  const engine = forecastResult.value?.ml_engine
+  if (engine === 'node_sparse_fallback') return t('incomeForm.qualityHintSparse')
+  if (forecastResult.value?.forecast_quality_hint_ph) return t('incomeForm.qualityHintLow')
+  return ''
+})
+const translatedForecastError = computed(() => {
+  const err = String(forecastResult.value?.error || '')
+  if (!err) return ''
+  if (/Wala pang naka-save/i.test(err)) return t('incomeForm.noRecordsForForecast')
+  if (/Kulang ang datos/i.test(err)) return t('incomeForm.notEnoughRecords')
+  if (/Hindi kayang i-fit/i.test(err)) return t('incomeForm.forecastFitFailed')
+  return t('incomeForm.forecastFailed')
+})
 
 const syncActiveTabFromRoute = async () => {
   const requestedTab = String(route.query.tab || '').trim()
@@ -825,6 +942,18 @@ const closeDetailModal = () => {
   showDetailModal.value = false
   selectedRecord.value = null
 }
+
+watch(
+  showDetailModal,
+  (open) => {
+    document.body.style.overflow = open ? 'hidden' : ''
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+})
 
 // ─── Form State ───
 const getInitialForm = () => ({
@@ -897,7 +1026,7 @@ const netIncome = computed(() => grossIncome.value - totalExpenses.value)
 // ─── Submit (create or update) ───
 const submitForm = async () => {
   if (!currentUser.value?.id) {
-    errorMessage.value = 'Hindi ka naka-login. Mag-login muna.'
+    errorMessage.value = t('incomeForm.loginRequired')
     return
   }
   submitting.value = true
@@ -955,11 +1084,11 @@ const submitForm = async () => {
       })
     }
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'May problema sa pag-save.')
+    if (!res.ok) throw new Error(t('incomeForm.saveFailed'))
 
     successMessage.value = editingRecordId.value
-      ? 'Matagumpay na na-update ang talaan!'
-      : 'Matagumpay na naitala ang iyong kita!'
+      ? t('incomeForm.updateSuccess')
+      : t('incomeForm.saveSuccess')
     cancelEdit()
   } catch (err) {
     errorMessage.value = err.message
@@ -970,6 +1099,7 @@ const submitForm = async () => {
 
 // ─── Edit helpers ───
 const startEdit = (record) => {
+  if (!canEditIncomeRecord(record)) return
   editingRecordId.value = record.id
   editingCreatedAt.value = record.created_at
 
@@ -1028,7 +1158,7 @@ const fetchRecords = async () => {
   try {
     const res = await fetch(`/api/farmer-income/${currentUser.value.id}`)
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi makuha ang mga talaan.')
+    if (!res.ok) throw new Error(t('incomeForm.fetchRecordsError'))
     records.value = data
   } catch (err) {
     errorMessage.value = err.message
@@ -1049,7 +1179,7 @@ const fetchCompletedAssistance = async () => {
       headers: { 'Authorization': `Bearer ${authStore.token}` }
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi makuha ang tulong na natanggap.')
+    if (!res.ok) throw new Error(t('incomeForm.fetchAssistanceError'))
     completedAssistance.value = data
   } catch (err) {
     errorMessage.value = err.message
@@ -1065,7 +1195,7 @@ const fetchBarangayFarmers = async () => {
       headers: { 'Authorization': `Bearer ${authStore.token}` }
     })
     const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi makuha ang listahan ng farmers.')
+    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.fetchFarmersError'))
     barangayFarmers.value = data.farmers || []
     if (!selectedForecastFarmerId.value && barangayFarmers.value.length > 0) {
       selectedForecastFarmerId.value = String(barangayFarmers.value[0].id)
@@ -1082,7 +1212,7 @@ const fetchFoundationSummary = async () => {
       headers: { 'Authorization': `Bearer ${authStore.token}` }
     })
     const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi makuha ang foundation summary.')
+    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.fetchFoundationError'))
     foundationSummary.value = data
   } catch (err) {
     foundationSummary.value = null
@@ -1100,8 +1230,8 @@ const fetchExpenseForecast = async () => {
     })
     const data = await res.json()
     forecastResult.value = data
-    if (!res.ok && data?.error) {
-      throw new Error(data.error)
+    if (!res.ok) {
+      throw new Error(t('incomeForm.forecastFailed'))
     }
   } catch (err) {
     errorMessage.value = err.message
@@ -1127,8 +1257,8 @@ const uploadFoundationFile = async () => {
       body: formData
     })
     const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi na-upload ang file.')
-    successMessage.value = data.message || 'Foundation uploaded.'
+    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.uploadFailed'))
+    successMessage.value = t('incomeForm.foundationUploaded')
     foundationFile.value = null
     await fetchFoundationSummary()
     await fetchExpenseForecast()
@@ -1136,26 +1266,6 @@ const uploadFoundationFile = async () => {
     errorMessage.value = err.message
   } finally {
     foundationUploading.value = false
-  }
-}
-
-const clearFoundation = async () => {
-  if (!targetFarmerId.value) return
-  foundationDeleting.value = true
-  try {
-    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${authStore.token}` }
-    })
-    const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'Hindi na-clear ang foundation.')
-    successMessage.value = data.message || 'Foundation removed.'
-    foundationSummary.value = null
-    await fetchExpenseForecast()
-  } catch (err) {
-    errorMessage.value = err.message
-  } finally {
-    foundationDeleting.value = false
   }
 }
 
@@ -1174,9 +1284,31 @@ const resetForm = () => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('fil-PH', {
+  const loc = locale.value === 'tl' ? 'fil-PH' : 'en-PH'
+  return new Date(dateStr).toLocaleDateString(loc, {
     year: 'numeric', month: 'long', day: 'numeric'
   })
+}
+
+const normalizeIncomeStatus = (status) => {
+  const s = String(status || 'Pending').trim()
+  if (s === 'Eligible' || s === 'Upcoming Assistance' || s === 'Received') return 'Eligible'
+  if (s === 'Rejected') return 'Rejected'
+  return 'Pending'
+}
+
+const incomeStatusLabel = (status) => {
+  const s = normalizeIncomeStatus(status)
+  if (s === 'Eligible') return t('ui.eligible')
+  if (s === 'Rejected') return t('common.rejected')
+  return t('common.pending')
+}
+
+const incomeStatusClass = (status) => normalizeIncomeStatus(status).toLowerCase()
+
+const canEditIncomeRecord = (record) => {
+  const s = normalizeIncomeStatus(record?.status)
+  return s === 'Pending' || s === 'Rejected'
 }
 
 const formatPeso = (value) => {
@@ -1187,27 +1319,67 @@ const formatPeso = (value) => {
 
 const formatIrrigation = (type) => {
   const map = {
-    'NIA': 'NIA',
-    'bugsok_waterpump': 'Bugsok na Waterpump',
-    'waterpump_irrigation': 'Waterpump na Nakalawit sa Irrigation',
-    'waterpump_ilog': 'Waterpump na Nakalawit sa Ilog'
+    NIA: 'incomeForm.nia',
+    bugsok_waterpump: 'incomeForm.bugsokPump',
+    waterpump_irrigation: 'incomeForm.pumpIrrigation',
+    waterpump_ilog: 'incomeForm.pumpRiver'
   }
-  return map[type] || type
+  return map[type] ? t(map[type]) : (type || '-')
 }
 
 const formatPlanting = (method) => {
-  return method === 'sabog' ? 'Sabog' : 'Talok'
+  if (method === 'sabog') return t('incomeForm.sabog')
+  if (method === 'talok') return t('incomeForm.talok')
+  return method || '-'
 }
 
 const formatAssistanceType = (type) => {
-  const map = { 'fertilizer': 'Pataba', 'seeds': 'Binhi', 'both': 'Pataba at Binhi' }
-  return map[type] || type
+  const map = {
+    fertilizer: 'incomeForm.assistFertilizer',
+    seeds: 'incomeForm.assistSeeds',
+    both: 'incomeForm.assistBoth'
+  }
+  return map[type] ? t(map[type]) : type
+}
+
+const forecastHistorySource = (row) => {
+  if (row?.source === 'upload') return t('incomeForm.foundationSource')
+  return t('incomeForm.savedRecordSource')
+}
+
+const forecastHistoryPeriod = (row) => {
+  const pi = Number(row?.period_index)
+  if (Number.isFinite(pi) && pi > 0) return String(pi)
+  return '—'
 }
 
 const extractQuantityFromNotes = (notes) => {
   if (!notes) return ''
   const quantityPart = notes.split(' - ')[0]
   return quantityPart.trim()
+}
+
+const parseAssistanceQty = (notes) => {
+  if (!notes) return null
+  const quantityPart = notes.split(' - ')[0]
+  const fert = quantityPart.match(/(?:Pataba|Fertilizer):\s*([\d.]+)/i)
+  const seeds = quantityPart.match(/(?:Binhi|Seeds):\s*([\d.]+)/i)
+  if (!fert && !seeds) return null
+  return {
+    fertilizer: fert ? fert[1] : '0',
+    seeds: seeds ? seeds[1] : '0'
+  }
+}
+
+const formatAssistanceQuantity = (assist) => {
+  const parsed = parseAssistanceQty(assist?.notes)
+  if (parsed) return t('ui.assistQtyLine', parsed)
+  const unit = assist?.unit && assist.unit !== 'sako' ? assist.unit : t('incomeForm.sacksUnit')
+  if (assist?.notes) {
+    const leftover = extractQuantityFromNotes(assist.notes)
+    if (leftover && leftover !== assist.notes) return leftover
+  }
+  return `${assist?.quantity ?? 0} ${unit}`
 }
 
 const extractNotesOnly = (notes) => {
@@ -1230,17 +1402,17 @@ const getAssistanceTypeClass = (type) => {
 }
 
 const getTimeSinceReceived = (dateStr) => {
-  if (!dateStr) return 'Kamakailan'
+  if (!dateStr) return t('incomeForm.recently')
   const date = new Date(dateStr)
   const now = new Date()
   const days = Math.floor((now - date) / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) return 'Ngayong araw'
-  if (days === 1) return 'Kahapon'
-  if (days < 7) return `${days} araw na ang nakakaraan`
-  if (days < 30) return `${Math.floor(days / 7)} linggo na ang nakakaraan`
-  if (days < 365) return `${Math.floor(days / 30)} buwan na ang nakakaraan`
-  return `${Math.floor(days / 365)} taon na ang nakakaraan`
+
+  if (days === 0) return t('incomeForm.today')
+  if (days === 1) return t('incomeForm.yesterday')
+  if (days < 7) return t('incomeForm.daysAgo', { n: days })
+  if (days < 30) return t('incomeForm.weeksAgo', { n: Math.floor(days / 7) })
+  if (days < 365) return t('incomeForm.monthsAgo', { n: Math.floor(days / 30) })
+  return t('incomeForm.yearsAgo', { n: Math.floor(days / 365) })
 }
 
 onMounted(() => {
@@ -1262,59 +1434,103 @@ watch(targetFarmerId, async (id) => {
 </script>
 
 <style scoped>
-.page-container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 1rem;
+.page-container.farmer-income-page {
+  padding: 2rem;
+  max-width: none;
+  margin: 0 -1.5rem;
+  width: calc(100% + 3rem);
+  min-height: calc(100vh - 70px - 3rem);
+  box-sizing: border-box;
+  border-radius: 18px;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.page-container:not(.light-theme) .page-header {
-  background: rgba(25, 38, 29, 0.92);
-  border: 1px solid rgba(190, 235, 203, 0.13);
-  border-radius: 20px;
-  padding: 32px 38px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 1px 1px 0 rgba(255, 255, 255, 0.06);
+.page-header-split {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 14px;
   position: relative;
   overflow: hidden;
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.page-container:not(.light-theme) .page-header::before {
+.page-header-split::before {
   content: '';
   position: absolute;
-  top: -40px;
-  right: -40px;
+  top: -62px;
+  right: -72px;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle, rgba(45, 212, 191, 0.13) 0%, transparent 65%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 68%);
   pointer-events: none;
 }
 
-.page-container:not(.light-theme) .page-title {
-  margin: 0;
-  font-size: 34px;
+.page-header-split::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
+  pointer-events: none;
+}
+
+.page-header-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: 2rem;
   font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  color: #eefde6;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(229, 235, 231, 0.82);
+}
+
+.page-container:not(.light-theme) .page-title {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
 }
 
 .page-container:not(.light-theme) .page-subtitle {
-  margin: 6px 0 0 0;
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
-  font-size: 17px;
   opacity: 0.92;
 }
 
-/* Alerts */
+/* Alerts (base; teleported stack styled in unscoped block) */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.9rem;
+  gap: 0.75rem;
+  min-width: min(340px, 92vw);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 .alert-success {
   background: #d1fae5;
@@ -1332,6 +1548,7 @@ watch(targetFarmerId, async (id) => {
   font-size: 1.2rem;
   cursor: pointer;
   color: inherit;
+  flex-shrink: 0;
 }
 
 /* Tab Navigation */
@@ -1340,18 +1557,26 @@ watch(targetFarmerId, async (id) => {
   gap: 0.75rem;
   margin-bottom: 2rem;
   align-items: center;
+  flex-wrap: wrap;
 }
-.page-container:not(.light-theme) .tab-btn {
+.tab-btn {
   padding: 0.78rem 1.3rem;
-  border: 1px solid rgba(190, 235, 203, 0.28) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 700;
+  color: #ffffff;
+  transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  box-shadow: none;
+  filter: none;
+}
+.page-container:not(.light-theme) .tab-btn {
+  border: 1px solid rgba(190, 235, 203, 0.28) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  transition: all 0.22s ease;
   box-shadow: none !important;
   filter: none !important;
 }
@@ -1404,6 +1629,60 @@ watch(targetFarmerId, async (id) => {
   margin: 0.25rem 0;
 }
 
+.forecast-history-title {
+  margin: 0 0 0.65rem !important;
+}
+
+.forecast-history-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.forecast-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.forecast-history-table th,
+.forecast-history-table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(190, 235, 203, 0.18);
+  vertical-align: middle;
+}
+
+.forecast-history-table th {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.78;
+}
+
+.forecast-history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.forecast-history-table .col-num {
+  width: 2.2rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.forecast-history-table .col-amt {
+  text-align: right;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.page-container:not(.light-theme) .forecast-history-table th,
+.page-container:not(.light-theme) .forecast-history-table td {
+  border-bottom-color: rgba(134, 239, 172, 0.16);
+  color: #ecfdf5;
+}
+
 .page-container:not(.light-theme) .model-info-box {
   margin-top: 1rem;
   padding: 1rem;
@@ -1418,59 +1697,90 @@ watch(targetFarmerId, async (id) => {
   color: #bbf7d0;
 }
 
-/* Form Sections */
+/* Form Sections — shared geometry (both themes) */
 .form-section {
   background: #ffffff;
   border: 1px solid rgba(167, 243, 208, 0.45);
-  border-radius: 16px;
-  padding: 2.15rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 20px rgba(6, 16, 11, 0.2);
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 22px rgba(6, 16, 11, 0.2);
 }
 
 .section-title {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #166534;
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.5rem;
+  margin: 0 0 0.85rem 0;
+  padding-bottom: 0.45rem;
   border-bottom: 1px solid rgba(167, 243, 208, 0.65);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.2rem;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.form-group {
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+/* accessible.css adds a global 24px gutter to .form-group — the grid gap handles spacing here */
+.farmer-income-page .form-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 0 !important;
+  gap: 0.2rem;
 }
-.form-group.full-width {
+.farmer-income-page .form-group.full-width {
   grid-column: 1 / -1;
 }
-.form-group label {
-  font-size: 0.92rem;
+.farmer-income-page .form-group label {
+  font-size: 0.88rem;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 0.35rem;
+  margin: 0 0 0.15rem 0 !important;
+  line-height: 1.25;
+  padding: 0;
+}
+
+/* Mobile-only stacked labels for the dynamic tables */
+.dt-label {
+  display: none;
 }
 .form-group input,
 .form-group select {
-  padding: 1.05rem 1.1rem;
+  padding: 0.55rem 0.7rem;
   border: 1px solid rgba(110, 231, 183, 0.35);
-  border-radius: 12px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
   transition: border-color 0.2s;
   background: rgba(245, 255, 250, 0.9);
+  min-height: 38px;
+  box-sizing: border-box;
 }
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* Hide number spinners — user types exact amounts; scroll must not change values */
+.farmer-income-page input[type='number']::-webkit-outer-spin-button,
+.farmer-income-page input[type='number']::-webkit-inner-spin-button,
+.farmer-income-page .dynamic-table input[type='number']::-webkit-outer-spin-button,
+.farmer-income-page .dynamic-table input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.farmer-income-page input[type='number'],
+.farmer-income-page .dynamic-table input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Dynamic Tables */
@@ -1531,22 +1841,38 @@ watch(targetFarmerId, async (id) => {
   white-space: nowrap;
 }
 .remove-btn {
-  background: #fee2e2;
+  background: #fef2f2;
   color: #dc2626;
-  border: none;
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  -webkit-text-fill-color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
   cursor: pointer;
-  font-size: 0.85rem;
-  display: flex;
+  font-size: 1.15rem;
+  line-height: 1;
+  font-weight: 700;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .remove-btn:hover {
   background: #dc2626;
-  color: white;
+  border-color: #dc2626;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.dynamic-table td.dt-actions-cell {
+  width: 48px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 0.4rem;
 }
 .add-row-btn {
   margin-top: 0.75rem;
@@ -1710,68 +2036,82 @@ watch(targetFarmerId, async (id) => {
 .records-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 .record-card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 1.25rem 1.35rem;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 0.85rem 0.9rem 0.75rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
+  gap: 0;
 }
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding-bottom: 0.95rem;
+  gap: 0.5rem;
+  padding-bottom: 0.55rem;
+  margin-bottom: 0.45rem;
   border-bottom: 1px solid #e5e7eb;
 }
 .page-container:not(.light-theme) .record-header {
   border-bottom-color: rgba(134, 239, 172, 0.18);
 }
+.record-date {
+  margin: 0;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: #1f2937;
+}
 .page-container:not(.light-theme) .record-date {
-  font-weight: 700;
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
-  font-size: 1rem;
 }
 .record-body {
-  padding: 0.95rem 0;
+  padding: 0;
+  margin: 0;
 }
 .record-info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
 }
 .record-info-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
   min-width: 0;
 }
 .record-info-item-wide {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 .detail-label {
-  font-size: 0.72rem;
+  flex-shrink: 0;
+  min-width: 5.2rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   color: #6b7280;
+  padding-top: 0.1rem;
 }
 .page-container:not(.light-theme) .detail-label {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 .detail-value {
-  font-size: 0.92rem;
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: 0.84rem;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.35;
   word-break: break-word;
   color: #1f2937;
 }
@@ -1782,8 +2122,9 @@ watch(targetFarmerId, async (id) => {
 .record-financials {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-  padding-top: 0.95rem;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
   border-top: 1px solid #e5e7eb;
 }
 .page-container:not(.light-theme) .record-financials {
@@ -1792,66 +2133,598 @@ watch(targetFarmerId, async (id) => {
 .financial-item {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.7rem 0.75rem;
-  border-radius: 10px;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.45rem 0.35rem;
+  border-radius: 8px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
+  min-width: 0;
 }
 .page-container:not(.light-theme) .financial-item {
   background: rgba(0, 0, 0, 0.22);
   border-color: rgba(134, 239, 172, 0.12);
 }
 .financial-label {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: #6b7280;
 }
 .page-container:not(.light-theme) .financial-label {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 .financial-value {
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
 }
 .financial-item.income .financial-value { color: #2563eb; }
 .financial-item.expense .financial-value { color: #dc2626; }
 .financial-item.profit .financial-value { color: #166534; }
 .financial-item.loss .financial-value { color: #dc2626; }
 
-/* Responsive */
+.record-actions {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #e5e7eb;
+}
+.page-container:not(.light-theme) .record-actions {
+  border-top-color: rgba(134, 239, 172, 0.18);
+}
+
+/* Responsive — Machinery Management parity */
 @media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
+  .page-container.farmer-income-page {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.7rem 0.55rem 1.35rem;
+    border-radius: 14px;
+    overflow-x: clip;
   }
+
+  .page-header-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "subtitle";
+    align-items: start;
+    column-gap: 0.65rem;
+    row-gap: 0.15rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .page-header-split::after {
+    display: none;
+  }
+
+  .page-header-text {
+    display: contents;
+    min-width: 0;
+  }
+
+  .page-title {
+    grid-area: title;
+    font-size: 1.2rem !important;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .page-subtitle {
+    grid-area: subtitle;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .tab-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .tab-btn,
+  .page-container:not(.light-theme) .tab-btn {
+    padding: 0.55rem 0.4rem !important;
+    font-size: 0.72rem !important;
+    border-radius: 10px;
+    min-height: 42px;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .form-section {
+    padding: 0.65rem 0.7rem !important;
+    margin-bottom: 0.55rem !important;
+    border-radius: 12px;
+  }
+
+  .section-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem !important;
+    padding-bottom: 0.25rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .form-row:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .farmer-income-page .form-group {
+    margin-bottom: 0 !important;
+    gap: 0.15rem !important;
+  }
+
+  .farmer-income-page .form-group label {
+    font-size: 0.78rem !important;
+    margin: 0 0 0.2rem 0 !important;
+    line-height: 1.3 !important;
+    white-space: normal;
+  }
+
+  .farmer-income-page .form-group input,
+  .farmer-income-page .form-group select,
+  .dynamic-table td input,
+  .dynamic-table td select {
+    padding: 0.55rem 0.65rem !important;
+    font-size: 16px !important;
+    min-height: 44px !important;
+    height: auto !important;
+    border-radius: 10px !important;
+  }
+
   .summary-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
   }
-  .record-info-grid {
-    grid-template-columns: 1fr;
+
+  .summary-section .summary-grid {
+    margin: 0;
   }
-  .record-financials {
-    grid-template-columns: 1fr;
+
+  .summary-item {
+    margin: 0;
+    padding: 0.55rem 0.5rem;
+    border-radius: 8px;
   }
-  .tab-nav {
+
+  .summary-item .summary-label {
+    font-size: 0.65rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .summary-item .summary-value {
+    font-size: 0.95rem;
+  }
+
+  .labor-total-box {
+    padding: 0.5rem 0.7rem;
+    margin-top: 0.45rem;
+  }
+
+  .labor-total-label {
+    font-size: 0.8rem;
+  }
+
+  .labor-total-value {
+    font-size: 0.9rem;
+  }
+
+  .add-row-btn {
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .record-info-item-wide {
+    grid-column: 1 / -1;
+  }
+
+  .record-info-item-wide .detail-value,
+  .record-info-item .detail-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .predictive-wrapper input[type='file'] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .foundation-summary {
+    padding: 0.55rem 0.5rem !important;
+    margin-top: 0.65rem;
+    border-radius: 10px;
+  }
+
+  .forecast-history-title {
+    margin: 0 0 0.4rem !important;
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .forecast-history-table {
+    font-size: 0.68rem;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .forecast-history-table th,
+  .forecast-history-table td {
+    padding: 0.28rem 0.22rem;
+    line-height: 1.2;
+  }
+
+  .forecast-history-table th {
+    font-size: 0.58rem;
+    letter-spacing: 0.02em;
+  }
+
+  .forecast-history-table .col-num {
+    width: 1.35rem;
+    padding-left: 0;
+    padding-right: 0.15rem;
+  }
+
+  .forecast-history-table .col-amt {
+    width: 5.6rem;
+    font-size: 0.66rem;
+  }
+
+  .model-info-box {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .predictive-actions {
     flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .record-financials {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+  }
+
+  .record-card {
+    padding: 0.7rem 0.75rem 0.65rem;
+    border-radius: 12px;
+  }
+
+  .record-header {
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .record-date {
+    font-size: 0.9rem;
+  }
+
+  .record-actions {
+    width: 100%;
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+  }
+
+  .edit-btn,
+  .view-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+    min-height: 36px;
+  }
+
+  .financial-item {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .financial-value {
+    font-size: 0.72rem;
+  }
+
+  .records-list {
+    gap: 0.55rem;
+  }
+
+  .assistance-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .assistance-card {
+    border-radius: 10px;
+  }
+
+  .assistance-card .card-header {
+    padding: 0.4rem 0.55rem;
+  }
+
+  .assistance-card .card-body {
+    padding: 0.45rem 0.55rem 0.35rem;
+  }
+
+  .assistance-card .card-footer {
+    padding: 0.25rem 0.55rem;
+  }
+
+  .assistance-type-badge,
+  .status-badge {
+    font-size: 0.62rem;
+    padding: 0.14rem 0.42rem;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 0.28rem;
+    margin-bottom: 0.28rem;
+  }
+
+  .info-label {
+    font-size: 0.58rem;
+  }
+
+  .info-value,
+  .quantity-highlight {
+    font-size: 0.74rem;
+  }
+
+  .predictive-actions {
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .predictive-actions .btn-submit,
+  .predictive-actions .btn-reset {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+  }
+
+  .btn-submit,
+  .btn-reset {
+    width: 100%;
+    text-align: center;
+    min-height: 40px;
+    padding: 0.65rem 1rem;
+    font-size: 0.88rem;
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .empty-icon-block {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  /* Dynamic tables → stacked mobile cards (label above field) */
+  .dynamic-table-wrapper {
+    overflow: hidden !important;
+    width: 100%;
+  }
+
+  .dynamic-table thead {
+    display: none;
+  }
+
+  .dynamic-table,
+  .dynamic-table tbody,
+  .dynamic-table tfoot,
+  .dynamic-table tr,
+  .dynamic-table td {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .dynamic-table tbody tr {
+    position: relative;
+    margin-bottom: 0.5rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 10px;
+    border: 1px solid rgba(167, 211, 178, 0.35);
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .dynamic-table tbody tr.has-remove {
+    padding-top: 2.4rem;
+  }
+
+  .page-container.light-theme .dynamic-table tbody tr {
+    background: #f8fdf9;
+    border-color: #bbf7d0;
+  }
+
+  .dynamic-table td.dt-actions-cell {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    left: auto;
+    width: auto !important;
+    max-width: none;
+    padding: 0 !important;
+    margin: 0;
+    border: none !important;
+    z-index: 2;
+  }
+
+  .dynamic-table td.dt-actions-cell:empty {
+    display: none !important;
+  }
+
+  .dynamic-table td.dt-actions-cell .remove-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    font-size: 1.2rem;
+  }
+
+  .dynamic-table tbody td {
+    padding: 0 0 0.4rem;
+    border-bottom: none;
+  }
+
+  .dynamic-table tbody td:last-child {
+    padding-bottom: 0;
+  }
+
+  .dt-label {
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    color: rgba(229, 235, 231, 0.65);
+  }
+
+  .page-container.light-theme .dt-label {
+    color: #64748b;
+  }
+
+  .dynamic-table td input,
+  .dynamic-table td select {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.5rem 0.55rem;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .dynamic-table td.computed-cell {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.35rem 0 0;
+    border-top: 1px solid rgba(190, 235, 203, 0.18);
+  }
+
+  .page-container.light-theme .dynamic-table td.computed-cell {
+    border-top-color: #e2e8f0;
+  }
+
+  .dynamic-table td.computed-cell .dt-label {
+    margin-bottom: 0;
+  }
+
+  .dt-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .dynamic-table tfoot tr {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0.1rem 0;
+    margin: 0;
+    border: none;
+  }
+
+  .dynamic-table tfoot td {
+    display: block;
+    width: auto;
+    border: none;
+    padding: 0 !important;
+  }
+
+  .dynamic-table tfoot .total-label {
+    text-align: left;
+    font-size: 0.78rem;
+    min-width: 0;
+  }
+
+  .dynamic-table tfoot .total-value {
+    font-size: 0.9rem;
+    padding: 0 !important;
+  }
+
+  .dynamic-table tfoot td:empty,
+  .dynamic-table tfoot td:last-child:not(.total-value) {
+    display: none;
+  }
+
+  .edit-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .cancel-edit-btn {
+    width: 100%;
+    min-height: 36px;
   }
 }
 
 @media (max-width: 480px) {
+  .page-container.farmer-income-page {
+    padding: 0.55rem 0.45rem 1.1rem;
+  }
+
   .summary-grid {
     grid-template-columns: 1fr;
   }
-  .form-actions {
-    flex-direction: column;
+
+  .tab-nav {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
   }
-  .btn-submit, .btn-reset {
-    width: 100%;
-    text-align: center;
+
+  .page-title {
+    font-size: 1.08rem !important;
+  }
+
+  .record-financials {
+    grid-template-columns: 1fr !important;
+  }
+
+  .financial-value {
+    font-size: 0.88rem;
   }
 }
 
@@ -1947,27 +2820,39 @@ watch(targetFarmerId, async (id) => {
   background: #fef3c7;
 }
 
-/* Modal Overlay */
+/* Modal Overlay — geometry shared; colors via theme classes */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 1rem;
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10050 !important;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  background: rgba(6, 12, 9, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .modal-container {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 14px;
   width: 100%;
   max-width: 720px;
-  max-height: 90vh;
+  max-height: min(92dvh, calc(100dvh - 1.5rem));
+  margin: auto;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
   overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(190, 235, 203, 0.14);
 }
 .modal-header {
   display: flex;
@@ -2004,6 +2889,12 @@ watch(targetFarmerId, async (id) => {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+}
+.detail-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-footer {
   padding: 1rem 1.5rem;
@@ -2233,52 +3124,52 @@ watch(targetFarmerId, async (id) => {
 /* Assistance Grid */
 .assistance-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.75rem;
 }
 
 .assistance-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
 }
 
 .assistance-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   border-color: #86efac;
 }
 
-/* Card Header */
 .assistance-card .card-header {
-  padding: 1rem;
-  border-bottom: 2px solid #f3f4f6;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid #f3f4f6;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex: 1;
+  min-width: 0;
 }
 
 .assistance-type-badge {
   display: inline-block;
-  padding: 0.35rem 0.85rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
   font-weight: 700;
   white-space: nowrap;
+  line-height: 1.3;
 }
 
 .assistance-type-badge.type-fertilizer {
@@ -2301,48 +3192,94 @@ watch(targetFarmerId, async (id) => {
 
 .status-badge {
   display: inline-block;
-  padding: 0.3rem 0.75rem;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.3;
 }
 
 .status-badge.completed {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
+  background: #bbf7d0;
+  color: #14532d;
+  border: 1px solid #4ade80;
 }
 
-/* Card Body */
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.status-badge.eligible {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.page-container:not(.light-theme) .status-badge.pending {
+  background: rgba(146, 64, 14, 0.5);
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.45);
+}
+
+.page-container:not(.light-theme) .status-badge.eligible {
+  background: rgba(22, 101, 52, 0.45);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+.page-container:not(.light-theme) .status-badge.rejected {
+  background: rgba(127, 29, 29, 0.5);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.page-container.farmer-income-page:not(.light-theme) .status-badge.completed,
+.page-container.farmer-income-page:not(.light-theme) .assistance-card .status-badge.completed {
+  background: #166534 !important;
+  color: #f7fee7 !important;
+  -webkit-text-fill-color: #f7fee7 !important;
+  border: 1px solid #4ade80 !important;
+}
+
 .assistance-card .card-body {
-  padding: 1.25rem;
+  padding: 0.55rem 0.7rem 0.45rem;
   flex: 1;
 }
 
 .info-row {
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
 .info-row.dates-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding-top: 1rem;
+  gap: 0.3rem;
+  margin-bottom: 0.35rem;
+  padding-top: 0.4rem;
   border-top: 1px solid #f3f4f6;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.12rem;
+  min-width: 0;
 }
 
 .info-label {
-  font-size: 0.75rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
@@ -2350,13 +3287,14 @@ watch(targetFarmerId, async (id) => {
 }
 
 .info-value {
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: #1f2937;
+  line-height: 1.3;
 }
 
 .quantity-highlight {
-  font-size: 1.1rem;
+  font-size: 0.78rem;
   color: #16a34a;
   font-weight: 700;
 }
@@ -2364,31 +3302,30 @@ watch(targetFarmerId, async (id) => {
 .notes-section {
   background: #f9fafb;
   border-left: 3px solid #16a34a;
-  padding: 0.75rem;
+  padding: 0.4rem 0.5rem;
   border-radius: 6px;
-  margin-top: 0.75rem;
+  margin-top: 0.35rem;
 }
 
 .notes-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.2rem;
 }
 
 .notes-content {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #374151;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
-/* Card Footer */
 .assistance-card .card-footer {
-  padding: 0.75rem 1.25rem;
+  padding: 0.3rem 0.65rem;
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
   display: flex;
@@ -2396,12 +3333,12 @@ watch(targetFarmerId, async (id) => {
 }
 
 .badge-info {
-  font-size: 0.75rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: #6b7280;
   background: #f3f4f6;
-  padding: 0.35rem 0.75rem;
-  border-radius: 12px;
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
@@ -2561,10 +3498,19 @@ watch(targetFarmerId, async (id) => {
   -webkit-text-fill-color: #ffffff !important;
 }
 
-.page-container:not(.light-theme) .computed-cell,
-.page-container:not(.light-theme) .total-label,
-.page-container:not(.light-theme) .total-value {
-  color: #ecfdf5 !important;
+.page-container:not(.light-theme) .remove-btn {
+  background: rgba(127, 29, 29, 0.42) !important;
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
+  border: 1px solid rgba(248, 113, 113, 0.5) !important;
+  box-shadow: none !important;
+}
+
+.page-container:not(.light-theme) .remove-btn:hover {
+  background: #dc2626 !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Assistance: labels at badge na dating abo sa madilim na card */
@@ -2643,8 +3589,9 @@ watch(targetFarmerId, async (id) => {
 
 /* Detail modal Teleport — hindi nasa ilalim ng .page-container sa DOM */
 .farmer-income-page-modal:not(.light-theme).modal-overlay {
-  background: rgba(6, 12, 9, 0.78);
-  backdrop-filter: blur(8px);
+  background: rgba(6, 12, 9, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 .farmer-income-page-modal:not(.light-theme) .modal-container {
@@ -2760,58 +3707,52 @@ watch(targetFarmerId, async (id) => {
   filter: none !important;
 }
 
-/* ===== LIGHT MODE — white surfaces ===== */
-.page-container.farmer-income-page.light-theme .page-header {
+/* ===== LIGHT MODE — colors only (layout matches dark) ===== */
+.page-container.farmer-income-page.light-theme .page-header-split {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  border-radius: 20px;
-  padding: 32px 38px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.12) !important;
-  position: relative;
-  overflow: hidden;
+  border-color: #86efac !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+.page-container.farmer-income-page.light-theme .page-header-split::before {
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.14) 0%, transparent 68%);
+}
+
+.page-container.farmer-income-page.light-theme .page-header-split::after {
+  background: linear-gradient(90deg, rgba(22, 101, 52, 0.35), rgba(134, 239, 172, 0.12));
 }
 
 .page-container.farmer-income-page.light-theme .page-title {
-  margin: 0;
-  font-size: 34px;
-  font-weight: 800;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: none !important;
 }
 
 .page-container.farmer-income-page.light-theme .page-subtitle {
-  margin: 6px 0 0 0;
-  font-size: 17px;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
 }
 
 .page-container.farmer-income-page.light-theme .tab-btn {
-  padding: 0.78rem 1.3rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 700;
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  border: 1px solid #86efac !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08) !important;
 }
 
 .page-container.farmer-income-page.light-theme .tab-btn.active,
 .page-container.farmer-income-page.light-theme .tab-btn:hover:not(.active) {
-  background: #ffffff !important;
-  border: 2px solid #052e16 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18), 0 4px 14px rgba(22, 101, 52, 0.1) !important;
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.1) !important;
 }
 
 .page-container.farmer-income-page.light-theme .card-sub {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
 }
 
 .page-container.farmer-income-page.light-theme :is(
@@ -2821,11 +3762,10 @@ watch(targetFarmerId, async (id) => {
   .assistance-summary,
   .assistance-card,
   .summary-box,
-  .modal-container,
   .empty-state
 ) {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
+  border-color: #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
@@ -2841,45 +3781,59 @@ watch(targetFarmerId, async (id) => {
   .foundation-summary,
   .model-info-box
 ) {
-  background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.42) !important;
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
 }
 
 .page-container.farmer-income-page.light-theme .record-header {
-  border-bottom: 2px solid rgba(22, 101, 52, 0.38) !important;
+  border-bottom-color: #bbf7d0 !important;
 }
 
-.page-container.farmer-income-page.light-theme .record-financials {
-  border-top: 2px solid rgba(22, 101, 52, 0.38) !important;
+.page-container.farmer-income-page.light-theme .record-financials,
+.page-container.farmer-income-page.light-theme .record-actions {
+  border-top-color: #bbf7d0 !important;
 }
 
 .page-container.farmer-income-page.light-theme .section-title {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border-bottom: 2px solid rgba(22, 101, 52, 0.38) !important;
-  font-weight: 800 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-bottom-color: #bbf7d0 !important;
 }
 
 .page-container.farmer-income-page.light-theme .dynamic-table th,
 .page-container.farmer-income-page.light-theme .detail-table th {
   background: #f0fdf4 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  font-weight: 700 !important;
-  border-bottom: 2px solid #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-bottom-color: #86efac !important;
 }
 
 .page-container.farmer-income-page.light-theme .dynamic-table td,
 .page-container.farmer-income-page.light-theme .detail-table td {
-  border-bottom: 1.5px solid rgba(22, 101, 52, 0.3) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+.page-container.farmer-income-page.light-theme .remove-btn {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+  box-shadow: none !important;
+}
+
+.page-container.farmer-income-page.light-theme .remove-btn:hover {
+  background: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .page-container.farmer-income-page.light-theme .view-btn,
 .page-container.farmer-income-page.light-theme .edit-btn {
   background: #ffffff !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border: 2px solid #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 1px solid #86efac !important;
 }
 
 .page-container.farmer-income-page.light-theme :is(
@@ -2914,8 +3868,8 @@ watch(targetFarmerId, async (id) => {
   .history-wrapper,
   .assistance-wrapper
 ) {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .page-container.farmer-income-page.light-theme .financial-item.income .financial-value {
@@ -2945,172 +3899,200 @@ watch(targetFarmerId, async (id) => {
   .dynamic-table td select
 ) {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  border: 1px solid #94a3b8 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
   color-scheme: light;
-  caret-color: #000000;
-  font-weight: 600;
+  caret-color: #052e16;
 }
 
 .page-container.farmer-income-page.light-theme .form-group select option,
 .page-container.farmer-income-page.light-theme .dynamic-table td select option {
   background: #ffffff !important;
-  color: #000000 !important;
+  color: #052e16 !important;
 }
 
 .page-container.farmer-income-page.light-theme .form-group input::placeholder,
 .page-container.farmer-income-page.light-theme .dynamic-table td input::placeholder {
-  color: #374151 !important;
-  -webkit-text-fill-color: #374151 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
 }
 
 .page-container.farmer-income-page.light-theme .form-group input:-webkit-autofill,
 .page-container.farmer-income-page.light-theme .form-group input:-webkit-autofill:focus,
 .page-container.farmer-income-page.light-theme .dynamic-table td input:-webkit-autofill,
 .page-container.farmer-income-page.light-theme .dynamic-table td input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #000000 !important;
+  -webkit-text-fill-color: #052e16 !important;
   box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
 .page-container.farmer-income-page.light-theme .labor-total-box {
   background: #f0fdf4 !important;
-  border: 2px solid #166534 !important;
+  border-color: #86efac !important;
 }
 
 .page-container.farmer-income-page.light-theme .labor-total-label,
 .page-container.farmer-income-page.light-theme .labor-total-value {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .page-container.farmer-income-page.light-theme .summary-item .summary-label {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  font-weight: 700 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
 }
 
 .page-container.farmer-income-page.light-theme .add-row-btn {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border: 2px dashed #166534 !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  border: 1px dashed #86efac !important;
   background: #f0fdf4 !important;
-  font-weight: 700 !important;
 }
 
 .page-container.farmer-income-page.light-theme .foundation-summary,
 .page-container.farmer-income-page.light-theme .model-info-box {
-  background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.42) !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .page-container.farmer-income-page.light-theme .model-info-box strong {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.page-container.farmer-income-page.light-theme .forecast-history-table th,
+.page-container.farmer-income-page.light-theme .forecast-history-table td {
+  border-bottom-color: #d1fae5 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .page-container.farmer-income-page.light-theme .assistance-card .quantity-highlight {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.page-container.farmer-income-page.light-theme .assistance-card .status-badge.completed {
+  background: #bbf7d0 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border: 1px solid #22c55e !important;
 }
 
 .page-container.farmer-income-page.light-theme .assistance-card .badge-info {
   background: #f3f4f6 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
 }
 
 .page-container.farmer-income-page.light-theme .empty-state {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
 }
 
 .page-container.farmer-income-page.light-theme input[type='file'] {
-  color: #000000;
+  color: #052e16;
 }
 
 .page-container.farmer-income-page.light-theme input[type='file']::file-selector-button {
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  border: 1px solid #86efac !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-income-page-modal.light-theme.modal-overlay {
+  background: rgba(15, 23, 42, 0.4) !important;
 }
 
 .farmer-income-page-modal.light-theme .modal-container {
-  background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  box-shadow: 0 24px 56px rgba(22, 101, 52, 0.15) !important;
+  background: #fffef9 !important;
+  border-color: #86efac !important;
+  box-shadow: 0 24px 48px rgba(22, 101, 52, 0.18) !important;
+}
+
+.farmer-income-page-modal.light-theme .modal-header {
+  background: #166534 !important;
+  color: #f0fdf4 !important;
 }
 
 .farmer-income-page-modal.light-theme .modal-body,
 .farmer-income-page-modal.light-theme .cell-value,
 .farmer-income-page-modal.light-theme .detail-table td,
 .farmer-income-page-modal.light-theme .modal-header h2 {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-income-page-modal.light-theme .modal-header h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .farmer-income-page-modal.light-theme .detail-section-title {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  font-weight: 800 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .farmer-income-page-modal.light-theme .cell-label,
 .farmer-income-page-modal.light-theme .no-data {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  font-weight: 600 !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
 }
 
 .farmer-income-page-modal.light-theme .detail-table th {
   background: #f0fdf4 !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border-bottom: 2px solid #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-bottom-color: #86efac !important;
 }
 
 .farmer-income-page-modal.light-theme .detail-table td {
-  border-bottom: 1.5px solid rgba(22, 101, 52, 0.3) !important;
+  border-bottom-color: #e2e8f0 !important;
 }
 
 .farmer-income-page-modal.light-theme .detail-cell {
-  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
 }
 
 .farmer-income-page-modal.light-theme .summary-detail-section {
   background: #f0fdf4 !important;
-  border: 2px solid rgba(22, 101, 52, 0.42) !important;
+  border-color: #bbf7d0 !important;
 }
 
 .farmer-income-page-modal.light-theme .modal-footer {
-  background: #ffffff !important;
-  border-top: 2px solid rgba(22, 101, 52, 0.35) !important;
+  background: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
 }
 
 .farmer-income-page-modal.light-theme .btn-close-modal {
   background: #ffffff !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border: 2px solid #166534 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border: 1px solid #86efac !important;
 }
 
 .farmer-income-page-modal.light-theme .expense-row,
+.farmer-income-page-modal.light-theme .grand-row {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+}
+
 .farmer-income-page-modal.light-theme .expense-row span,
-.farmer-income-page-modal.light-theme .income-row,
 .farmer-income-page-modal.light-theme .grand-row span {
-  background: #f9fafb !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  border: 2px solid rgba(22, 101, 52, 0.35) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 .farmer-income-page-modal.light-theme .detail-section {
-  border-bottom: 2px solid rgba(22, 101, 52, 0.3) !important;
+  border-bottom-color: #e2e8f0 !important;
 }
 
 @media (max-width: 600px) {
@@ -3118,7 +4100,7 @@ watch(targetFarmerId, async (id) => {
     grid-template-columns: 1fr;
   }
   .modal-container {
-    max-height: 95vh;
+    max-height: min(94dvh, calc(100dvh - 1rem));
   }
   .assistance-summary {
     grid-template-columns: repeat(2, 1fr);
@@ -3142,6 +4124,846 @@ watch(targetFarmerId, async (id) => {
   }
   .summary-value {
     font-size: 1.5rem;
+  }
+}
+</style>
+
+<style>
+/* Teleported alerts + modal chrome (outside scoped page tree) */
+.alert-center-stack.farmer-income-alerts {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10060;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  pointer-events: none;
+  width: min(420px, calc(100vw - 1.5rem));
+}
+
+.alert-center-stack.farmer-income-alerts .alert {
+  pointer-events: auto;
+  margin: 0;
+}
+
+.farmer-income-page-modal.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+  background: rgba(6, 12, 9, 0.62) !important;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.farmer-income-page-modal.light-theme.modal-overlay {
+  background: rgba(15, 23, 42, 0.4) !important;
+}
+
+@media (max-width: 768px) {
+  .farmer-income-page-modal .modal-container {
+    max-width: 100%;
+    max-height: min(92dvh, calc(100dvh - 1rem));
+  }
+
+  .farmer-income-page-modal .modal-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .farmer-income-page-modal .modal-header h2 {
+    font-size: 1rem;
+  }
+
+  .farmer-income-page-modal .modal-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .farmer-income-page-modal .detail-table-wrap,
+  .farmer-income-page-modal .detail-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.farmer-income-page-modal {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (min-width: 769px) {
+  html body .page-container.farmer-income-page.machinery-ui {
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    border-radius: 14px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .page-header-split {
+    margin-bottom: 10px !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui h1.page-title,
+  html body .page-container.farmer-income-page.machinery-ui .page-title {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+    margin: 0 0 2px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .page-subtitle {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-nav {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    align-items: stretch !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    min-height: 36px !important;
+    border-width: 1px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-wrapper,
+  html body .page-container.farmer-income-page.machinery-ui .predictive-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .edit-banner {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 6px 10px !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    border-width: 1px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .income-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .cancel-edit-btn {
+    width: auto !important;
+    flex-shrink: 0 !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    min-height: 28px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-section {
+    padding: 8px 10px !important;
+    margin-bottom: 0 !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+    box-shadow: 0 4px 12px rgba(6, 12, 9, 0.22) !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-section:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui h3.section-title,
+  html body .page-container.farmer-income-page.machinery-ui .section-title {
+    font-size: 0.95rem !important;
+    margin: 0 0 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-row {
+    gap: 6px 8px !important;
+    margin-bottom: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-row:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .farmer-income-page .form-group,
+  html body .page-container.farmer-income-page.machinery-ui .form-group {
+    gap: 2px !important;
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-group label {
+    font-size: 12px !important;
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table-wrapper {
+    margin: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(
+    .form-group input,
+    .form-group select,
+    .dynamic-table td input,
+    .dynamic-table td select
+  ) {
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-group input[type='file'] {
+    height: auto !important;
+    min-height: 32px !important;
+    padding: 4px 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table {
+    font-size: 12px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table th {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    border-bottom-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table td {
+    padding: 4px 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tfoot td {
+    padding-top: 4px !important;
+    padding-bottom: 2px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(.total-label, .total-value) {
+    padding-top: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .remove-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    font-size: 1rem !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .add-row-btn {
+    margin-top: 4px !important;
+    margin-bottom: 0 !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    min-height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-box {
+    padding: 6px 10px !important;
+    margin-top: 6px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-label {
+    font-size: 13px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-value {
+    font-size: 1rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-section {
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-grid {
+    gap: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item .summary-label {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item .summary-value {
+    font-size: 0.95rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 4px !important;
+    padding: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-wrapper > .form-section,
+  html body .page-container.farmer-income-page.machinery-ui .assistance-wrapper > .form-section,
+  html body .page-container.farmer-income-page.machinery-ui .history-wrapper + .form-section {
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset) {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    min-height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions :is(.btn-submit, .btn-reset) {
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .foundation-summary,
+  html body .page-container.farmer-income-page.machinery-ui .model-info-box {
+    padding: 8px 12px !important;
+    margin-top: 10px !important;
+    font-size: 12px !important;
+    border-width: 1px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table {
+    font-size: 12px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table th,
+  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table td {
+    padding: 6px 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .records-list {
+    gap: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .record-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .record-header {
+    padding-bottom: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .record-date {
+    font-size: 0.9rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .status-badge {
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .record-financials {
+    gap: 6px !important;
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .financial-item {
+    padding: 6px 4px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .financial-label {
+    font-size: 9px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .financial-value {
+    font-size: 0.78rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .record-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(.edit-btn, .view-btn) {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    min-height: 30px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .assistance-grid {
+    gap: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .assistance-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .loading-state,
+  html body .page-container.farmer-income-page.machinery-ui .empty-state {
+    padding: 24px 12px !important;
+    font-size: 13px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .spinner {
+    width: 32px !important;
+    height: 32px !important;
+    border-width: 3px !important;
+  }
+
+  body.glass-dark .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .add-row-btn, .cancel-edit-btn, .tab-btn),
+  body.glass-light .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .add-row-btn, .cancel-edit-btn, .tab-btn) {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  body.glass-dark .page-container.farmer-income-page.machinery-ui .tab-btn,
+  body.glass-light .page-container.farmer-income-page.machinery-ui .tab-btn {
+    border-width: 1px !important;
+  }
+
+  .farmer-income-page-modal .modal-header {
+    padding: 12px 16px !important;
+  }
+
+  .farmer-income-page-modal .modal-header h2 {
+    font-size: 16px !important;
+    margin: 0 !important;
+  }
+
+  .farmer-income-page-modal .modal-body {
+    padding: 12px 16px !important;
+  }
+
+  .farmer-income-page-modal .modal-close {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 1.1rem !important;
+    border-radius: 8px !important;
+  }
+
+  .farmer-income-page-modal .btn-close-modal {
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    min-height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  .farmer-income-page-modal .detail-table th,
+  .farmer-income-page-modal .detail-table td {
+    padding: 7px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .page-container.farmer-income-page.machinery-ui .tab-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-btn {
+    min-height: 34px !important;
+    font-size: 11px !important;
+    padding: 7px 8px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body .page-container.farmer-income-page.machinery-ui {
+    padding: 8px 10px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui h1.page-title,
+  html body .page-container.farmer-income-page.machinery-ui .page-title {
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .page-subtitle {
+    font-size: 0.68rem !important;
+    line-height: 1.3 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-nav {
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-btn {
+    min-height: 34px !important;
+    padding: 5px 4px !important;
+    font-size: 0.65rem !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-wrapper,
+  html body .page-container.farmer-income-page.machinery-ui .income-form,
+  html body .page-container.farmer-income-page.machinery-ui .predictive-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .edit-banner {
+    padding: 6px 8px !important;
+    margin-bottom: 0 !important;
+    font-size: 0.72rem !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .cancel-edit-btn {
+    min-height: 30px !important;
+    padding: 4px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-section {
+    padding: 6px 8px !important;
+    margin-bottom: 0 !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+    box-shadow: 0 2px 8px rgba(6, 12, 9, 0.18) !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui h2.section-title,
+  html body .page-container.farmer-income-page.machinery-ui h3.section-title,
+  html body .page-container.farmer-income-page.machinery-ui .section-title {
+    font-size: 0.82rem !important;
+    margin: 0 0 3px !important;
+    padding-bottom: 3px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-row {
+    gap: 3px !important;
+    margin-bottom: 3px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-row:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-group {
+    gap: 1px !important;
+    margin-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-group label {
+    font-size: 0.68rem !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(
+    .form-group input,
+    .form-group select,
+    .dynamic-table td input,
+    .dynamic-table td select
+  ) {
+    padding: 4px 8px !important;
+    font-size: 14px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-group input[type='file'] {
+    height: auto !important;
+    min-height: 32px !important;
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table-wrapper {
+    margin: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tbody tr {
+    margin-bottom: 4px !important;
+    padding: 6px 7px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tbody tr.has-remove {
+    padding-top: 1.85rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dt-label {
+    font-size: 0.58rem !important;
+    margin-bottom: 2px !important;
+    line-height: 1.15 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tbody td {
+    padding: 0 0 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tbody td:last-child {
+    padding-bottom: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table td.computed-cell {
+    padding: 4px 0 0 !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dt-value {
+    font-size: 0.78rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tfoot tr {
+    padding: 4px 0 0 !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(.total-label, .total-value) {
+    padding-top: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tfoot .total-label {
+    font-size: 0.68rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table tfoot .total-value {
+    font-size: 0.78rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .remove-btn,
+  html body .page-container.farmer-income-page.machinery-ui .dynamic-table td.dt-actions-cell .remove-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    font-size: 1rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .add-row-btn {
+    margin-top: 4px !important;
+    padding: 5px 8px !important;
+    font-size: 0.72rem !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-box {
+    padding: 5px 8px !important;
+    margin-top: 4px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-label {
+    font-size: 0.72rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .labor-total-value {
+    font-size: 0.82rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-section {
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-grid {
+    gap: 4px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item {
+    padding: 5px 6px !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item .summary-label {
+    font-size: 0.58rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item .summary-value {
+    font-size: 0.82rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-actions {
+    gap: 4px !important;
+    margin-top: 4px !important;
+    padding: 0 !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset) {
+    min-height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions {
+    gap: 4px !important;
+    margin-top: 6px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions :is(.btn-submit, .btn-reset) {
+    min-height: 34px !important;
+    font-size: 0.78rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .foundation-summary,
+  html body .page-container.farmer-income-page.machinery-ui .model-info-box {
+    padding: 6px 8px !important;
+    margin-top: 6px !important;
+    font-size: 0.72rem !important;
+    border-radius: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body .page-container.farmer-income-page.machinery-ui {
+    padding: 6px 8px 10px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-wrapper,
+  html body .page-container.farmer-income-page.machinery-ui .income-form,
+  html body .page-container.farmer-income-page.machinery-ui .predictive-wrapper {
+    gap: 3px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .form-section {
+    padding: 5px 7px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .section-title {
+    font-size: 0.78rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui :is(
+    .form-group input,
+    .form-group select,
+    .dynamic-table td input,
+    .dynamic-table td select
+  ) {
+    min-height: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    padding: 3px 7px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .tab-btn {
+    min-height: 32px !important;
+    font-size: 0.62rem !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 3px !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .summary-item .summary-value {
+    font-size: 0.78rem !important;
   }
 }
 </style>

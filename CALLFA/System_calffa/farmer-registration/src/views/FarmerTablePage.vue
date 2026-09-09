@@ -2,7 +2,7 @@
   <div class="farmer-table-page glass-module-page" :class="{ 'light-theme': isLight }">
     <div class="page-inner">
       <div class="page-top-row">
-        <h1 class="page-title">Members Management</h1>
+        <h1 class="page-title">{{ $t('ui.membersManagement') }}</h1>
         <button
           v-if="canViewMemberSummary"
           type="button"
@@ -15,54 +15,61 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          Members Summary
+          {{ $t('common.membersSummary') }}
         </button>
       </div>
 
-      <!-- Tabs -->
-      <div class="members-summary-tabs mb-6">
+      <!-- Overview / status tabs -->
+      <div class="stats-group stats-group--members">
+        <div class="members-summary-tabs stats-grid stats-grid--members">
         <button
           type="button"
-          :class="['tab-btn', { active: activeTab === 'pending' }]"
+          :class="['tab-btn stat-card stat-card-pending', { active: activeTab === 'pending' }]"
           @click="activeTab = 'pending'"
         >
-          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span class="tab-btn-label">Pending Approval</span>
-          <span class="tab-btn-count">{{ pendingCount }}</span>
+          <span class="stat-content">
+            <span class="tab-btn-label stat-label">{{ $t('common.pendingApproval') }}</span>
+            <span class="tab-btn-count stat-value">{{ pendingCount }}</span>
+          </span>
         </button>
         <button
           type="button"
-          :class="['tab-btn', { active: activeTab === 'registered' }]"
+          :class="['tab-btn stat-card stat-card-registered', { active: activeTab === 'registered' }]"
           @click="activeTab = 'registered'"
         >
-          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span class="tab-btn-label">Registered Members</span>
-          <span class="tab-btn-count">{{ registeredCount }}</span>
+          <span class="stat-content">
+            <span class="tab-btn-label stat-label">{{ $t('common.registeredMembers') }}</span>
+            <span class="tab-btn-count stat-value">{{ registeredCount }}</span>
+          </span>
         </button>
         <button
           type="button"
-          :class="['tab-btn', { active: activeTab === 'rejected' }]"
+          :class="['tab-btn stat-card stat-card-rejected', { active: activeTab === 'rejected' }]"
           @click="activeTab = 'rejected'"
         >
-          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-          <span class="tab-btn-label">Rejected Accounts</span>
-          <span class="tab-btn-count">{{ rejectedCount }}</span>
+          <span class="stat-content">
+            <span class="tab-btn-label stat-label">{{ $t('common.rejectedAccounts') }}</span>
+            <span class="tab-btn-count stat-value">{{ rejectedCount }}</span>
+          </span>
         </button>
+        </div>
       </div>
 
       <div class="filter-bar">
+        <div class="filter-barangay-row">
+          <template v-if="isAdmin">
+            <label for="members-barangay-filter" class="filter-label">{{ $t('ui.barangay') }}</label>
+            <select id="members-barangay-filter" v-model="selectedBarangayId" class="filter-select">
+              <option value="">{{ $t('ui.allBarangays') }}</option>
+              <option v-for="barangay in barangays" :key="barangay.id" :value="String(barangay.id)">
+                {{ barangay.name }}
+              </option>
+            </select>
+          </template>
+          <span v-else-if="userBarangayName" class="filter-barangay-badge">
+            Barangay: {{ userBarangayName }}
+          </span>
+        </div>
         <div class="filter-search-wrap">
           <span class="filter-search-icon" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -75,21 +82,9 @@
             v-model.trim="searchQuery"
             type="search"
             class="filter-search-input"
-            placeholder="Search by name, reference #, or phone..."
+            :placeholder="$t('ui.searchMembers')"
           />
         </div>
-        <template v-if="isAdmin">
-          <label for="members-barangay-filter" class="filter-label">Barangay</label>
-          <select id="members-barangay-filter" v-model="selectedBarangayId" class="filter-select">
-            <option value="">All Barangays</option>
-            <option v-for="barangay in barangays" :key="barangay.id" :value="String(barangay.id)">
-              {{ barangay.name }}
-            </option>
-          </select>
-        </template>
-        <span v-else-if="userBarangayName" class="filter-barangay-badge">
-          Barangay: {{ userBarangayName }}
-        </span>
         <span v-if="hasActiveFilters" class="filter-hint">
           {{ filterSummary }}
         </span>
@@ -111,15 +106,54 @@
       </div>
       <div v-else-if="activeTab === 'rejected'">
         <div class="registered-members-card">
-          <h2 class="registered-members-title">Rejected Accounts</h2>
+          <h2 class="registered-members-title">{{ $t('common.rejectedAccounts') }}</h2>
           <div v-if="loading" class="state-center">
             <div class="spinner"></div>
-            <p class="state-text">Loading...</p>
+            <p class="state-text">{{ $t('common.loading') }}</p>
           </div>
           <div v-else-if="rejectedFarmers.length === 0" class="state-center">
-            <p class="state-text">No rejected accounts found.</p>
+            <p class="state-text">{{ $t('ui.noRejectedAccounts') }}</p>
           </div>
-          <div v-else class="registered-table-scroll">
+          <template v-else>
+          <div class="members-mobile-list">
+            <article v-for="farmer in rejectedFarmers" :key="'rm-' + farmer.id" class="members-mobile-card">
+              <div class="mmc-head">
+                <div class="member-avatar-wrap">
+                  <img
+                    v-if="farmer.profile_picture"
+                    :src="getProfilePictureUrl(farmer.profile_picture)"
+                    :alt="$t('ui.profile')"
+                    class="member-avatar"
+                  />
+                  <div v-else class="member-avatar member-avatar-fallback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                      <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="mmc-head-text">
+                  <h3 class="mmc-name">{{ farmer.full_name }}</h3>
+                  <p class="mmc-ref">{{ farmer.reference_number }}</p>
+                </div>
+                <span class="status-chip status-chip-rejected">{{ $t('common.rejected') }}</span>
+              </div>
+              <div class="mmc-rows">
+                <div class="mmc-row"><span>{{ $t('ui.phone') }}</span><strong>{{ farmer.phone_number || farmer.contact_number || 'N/A' }}</strong></div>
+                <div class="mmc-row"><span>{{ $t('ui.education') }}</span><strong>{{ farmer.educational_status || 'N/A' }}</strong></div>
+                <div class="mmc-row"><span>{{ $t('ui.role') }}</span><strong><span class="role-badge" :class="farmer.role">{{ formatMemberRole(farmer.role) }}</span></strong></div>
+                <div class="mmc-row"><span>{{ $t('ui.registered') }}</span><strong>{{ formatMemberDate(farmer.registered_on) }}</strong></div>
+              </div>
+              <div class="members-action-row mmc-actions">
+                <button type="button" class="table-action-btn table-action-approve mmc-action-text" :title="$t('common.approve')" :aria-label="$t('common.approve')" @click="handleApprove(farmer.id)">
+                  {{ $t('common.approve') }}
+                </button>
+                <button type="button" class="table-action-btn table-action-delete mmc-action-text" :title="$t('common.delete')" :aria-label="$t('common.delete')" @click="handleDelete(farmer.id)">
+                  {{ $t('common.delete') }}
+                </button>
+              </div>
+            </article>
+          </div>
+          <div class="registered-table-scroll members-desktop-only">
             <div class="members-table-container">
               <table class="members-table">
                 <colgroup>
@@ -136,16 +170,16 @@
                 </colgroup>
                 <thead>
                   <tr>
-                    <th>Photo</th>
-                    <th>Ref #</th>
-                    <th>Name</th>
-                    <th>DOB</th>
-                    <th>Phone</th>
-                    <th>Education</th>
-                    <th class="members-th-role">Role</th>
-                    <th>Registered</th>
-                    <th>Status</th>
-                    <th class="members-th-actions">Actions</th>
+                    <th>{{ $t('ui.photo') }}</th>
+                    <th>{{ $t('ui.refHash') }}</th>
+                    <th>{{ $t('ui.name') }}</th>
+                    <th>{{ $t('ui.dob') }}</th>
+                    <th>{{ $t('ui.phone') }}</th>
+                    <th>{{ $t('ui.education') }}</th>
+                    <th class="members-th-role">{{ $t('ui.role') }}</th>
+                    <th>{{ $t('ui.registered') }}</th>
+                    <th>{{ $t('ui.status') }}</th>
+                    <th class="members-th-actions">{{ $t('ui.actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -155,7 +189,7 @@
                         <img
                           v-if="farmer.profile_picture"
                           :src="getProfilePictureUrl(farmer.profile_picture)"
-                          alt="Profile"
+                          :alt="$t('ui.profile')"
                           class="member-avatar"
                         />
                         <div v-else class="member-avatar member-avatar-fallback">
@@ -175,16 +209,16 @@
                     </td>
                     <td class="members-cell">{{ formatMemberDate(farmer.registered_on) }}</td>
                     <td class="members-cell">
-                      <span class="status-chip status-chip-rejected">Rejected</span>
+                      <span class="status-chip status-chip-rejected">{{ $t('common.rejected') }}</span>
                     </td>
                     <td class="members-cell members-actions-cell">
                       <div class="members-action-row">
-                        <button type="button" class="table-action-btn table-action-approve" title="Approve" aria-label="Approve" @click="handleApprove(farmer.id)">
+                        <button type="button" class="table-action-btn table-action-approve" :title="$t('common.approve')" :aria-label="$t('common.approve')" @click="handleApprove(farmer.id)">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
                         </button>
-                        <button type="button" class="table-action-btn table-action-delete" title="Delete" aria-label="Delete" @click="handleDelete(farmer.id)">
+                        <button type="button" class="table-action-btn table-action-delete" :title="$t('common.delete')" :aria-label="$t('common.delete')" @click="handleDelete(farmer.id)">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -199,6 +233,7 @@
               </table>
             </div>
           </div>
+          </template>
         </div>
       </div>
       <div v-else>
@@ -596,7 +631,9 @@ const goToMembersSummary = () => router.push('/members-summary')
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  column-gap: 0.75rem;
+  row-gap: 0.35rem;
+  gap: 0.40rem 0.75rem;
   margin-bottom: 1.25rem;
   padding: 0.85rem 1rem;
   background: rgba(28, 42, 33, 0.9);
@@ -605,9 +642,18 @@ const goToMembersSummary = () => router.push('/members-summary')
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
+.filter-barangay-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
 .filter-search-wrap {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 220px;
+  width: 100%;
   position: relative;
 }
 
@@ -752,9 +798,33 @@ const goToMembersSummary = () => router.push('/members-summary')
   margin-bottom: 24px;
 }
 
+/* Tablet: keep 3 columns but slightly tighter */
 @media (max-width: 900px) {
   .members-summary-tabs {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 0.85rem;
+  }
+
+  .tab-btn {
+    min-height: 0;
+    padding: 0.7rem 0.45rem;
+    gap: 4px;
+  }
+
+  .tab-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .tab-btn-label {
+    font-size: 0.75rem;
+  }
+
+  .tab-btn-count {
+    font-size: 0.95rem;
+    min-width: 28px;
+    padding: 2px 8px;
   }
 }
 
@@ -873,20 +943,20 @@ const goToMembersSummary = () => router.push('/members-summary')
   }
 }
 
-/* ===== DARK MODE — readable light-surface controls ===== */
+/* ===== DARK MODE — readable light-surface controls (colors only; layout matches base) ===== */
 .farmer-table-page:not(.light-theme) .btn-summary,
 .farmer-table-page:not(.light-theme) .btn-summary .btn-tab-icon {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #16a34a !important;
+  border-color: #16a34a !important;
 }
 
 .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #16a34a !important;
+  border-color: #16a34a !important;
   box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
 }
 
@@ -922,7 +992,7 @@ const goToMembersSummary = () => router.push('/members-summary')
   background: #ffffff !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
-  border: 1.5px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
   box-shadow: none !important;
 }
 
@@ -958,7 +1028,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page:not(.light-theme) :deep(.loading-state),
 .farmer-table-page:not(.light-theme) :deep(.error-state) {
   background: #ffffff !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
   color: #052e16 !important;
 }
 
@@ -975,7 +1045,7 @@ const goToMembersSummary = () => router.push('/members-summary')
   background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #15803d !important;
+  border-color: #15803d !important;
 }
 
 .farmer-table-page:not(.light-theme) .state-text {
@@ -999,15 +1069,14 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme .page-title {
   color: #052e16 !important;
-  font-size: 1.875rem;
   background: none !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
 .farmer-table-page.light-theme .filter-bar {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
-  box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1) !important;
+  border-color: #86efac !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme .filter-search-icon {
@@ -1018,8 +1087,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme .filter-select {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 1.5px solid #94a3b8 !important;
-  font-size: 1.0625rem !important;
+  border-color: #94a3b8 !important;
 }
 
 .farmer-table-page.light-theme .filter-search-input::placeholder {
@@ -1030,7 +1098,6 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme .filter-hint,
 .farmer-table-page.light-theme .state-text {
   color: #000000 !important;
-  font-size: 0.9375rem !important;
 }
 
 .farmer-table-page.light-theme .filter-barangay-badge {
@@ -1047,7 +1114,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme .members-summary-tabs .tab-btn {
   background: #ffffff !important;
   color: #052e16 !important;
-  border: 2px solid #bbf7d0 !important;
+  border-color: #bbf7d0 !important;
   box-shadow: 0 4px 12px rgba(22, 101, 52, 0.08) !important;
 }
 
@@ -1089,7 +1156,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme .registered-members-card {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
@@ -1103,7 +1170,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme :deep(.registered-members-card) {
   background: #ffffff;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
 }
 
@@ -1116,8 +1183,8 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .farmer-table-page.light-theme :deep(.empty-state) {
-  background: #f8fdf9;
-  border: 1.5px solid #bbf7d0;
+  background: #ffffff;
+  border-color: #94a3b8;
   color: #14532d;
 }
 
@@ -1129,13 +1196,12 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme :deep(.empty-checklist),
 .farmer-table-page.light-theme :deep(.empty-checklist li) {
   color: #166534 !important;
-  font-size: 14px;
 }
 
 .farmer-table-page.light-theme :deep(.empty-checklist code) {
   background: #ecfdf5;
   color: #14532d !important;
-  border: 1px solid #bbf7d0;
+  border-color: #bbf7d0;
 }
 
 .farmer-table-page.light-theme :deep(.loading-state),
@@ -1146,7 +1212,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme :deep(.refresh-btn) {
   background: #ffffff;
   color: #15803d;
-  border: 1.5px solid #86efac;
+  border-color: #86efac;
 }
 
 .farmer-table-page.light-theme :deep(.refresh-btn:hover:not(:disabled)) {
@@ -1162,30 +1228,24 @@ const goToMembersSummary = () => router.push('/members-summary')
   color: #15803d !important;
 }
 
-/* Registered Members — role filter cards */
+/* Registered Members — role filter cards (colors only; layout matches dark) */
 .farmer-table-page.light-theme :deep(.role-tabs) {
   background: #f4faf6 !important;
-  border: 2px solid #86efac !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08) !important;
+  border-color: #86efac !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab) {
   background: #ffffff !important;
-  border: 1.5px solid #bbf7d0 !important;
+  border-color: #bbf7d0 !important;
   color: #14532d !important;
-  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.06) !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-label) {
   color: #000000 !important;
-  font-size: 0.9375rem !important;
-  font-weight: 700 !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-count) {
   color: #15803d !important;
-  font-size: 0.8125rem !important;
-  font-weight: 700 !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab-icon) {
@@ -1204,7 +1264,6 @@ const goToMembersSummary = () => router.push('/members-summary')
   background: #f0fdf4 !important;
   border-color: #86efac !important;
   color: #052e16 !important;
-  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab:hover .role-tab-label) {
@@ -1215,7 +1274,6 @@ const goToMembersSummary = () => router.push('/members-summary')
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
   border-color: #15803d !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.22) !important;
 }
 
 .farmer-table-page.light-theme :deep(.role-tab.active .role-tab-label),
@@ -1227,7 +1285,7 @@ const goToMembersSummary = () => router.push('/members-summary')
 .farmer-table-page.light-theme :deep(.edit-input-modal) {
   background: #ffffff !important;
   color: #052e16 !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .farmer-table-page.light-theme :deep(.edit-input-modal::placeholder) {
@@ -1255,58 +1313,34 @@ const goToMembersSummary = () => router.push('/members-summary')
 
 .farmer-table-page.light-theme :deep(.edit-photo-row) {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
-  border: 2px solid rgba(22, 101, 52, 0.38) !important;
+  border-color: rgba(22, 101, 52, 0.38) !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-overlay) {
   background: rgba(236, 253, 245, 0.55) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .farmer-table-page.light-theme :deep(.modal-content) {
   background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%) !important;
-  border: 2px solid #166534 !important;
+  border-color: #166534 !important;
   color: #000000 !important;
-  border-radius: 20px !important;
-  box-shadow:
-    0 24px 48px rgba(22, 101, 52, 0.16),
-    0 8px 20px rgba(22, 101, 52, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header) {
-  position: relative;
-  overflow: hidden;
-  padding: 1.35rem 1.5rem !important;
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
-  border-bottom: 2px solid #166534 !important;
+  border-bottom-color: #166534 !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-title) {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
-  font-size: 1.28rem !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.02em !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header button) {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
-  border-radius: 10px !important;
+  border-color: #166534 !important;
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
-  font-size: 1.35rem !important;
-  font-weight: 700 !important;
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.1) !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-header button:hover) {
@@ -1317,19 +1351,16 @@ const goToMembersSummary = () => router.push('/members-summary')
 }
 
 .farmer-table-page.light-theme :deep(.modal-body) {
-  padding: 1.5rem !important;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(240, 253, 244, 0.35) 100%) !important;
 }
 
 .farmer-table-page.light-theme :deep(.member-name) {
-  font-size: 1.22rem !important;
-  font-weight: 800 !important;
-  margin-top: 0.85rem !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-body .rounded-full.object-cover) {
   border-color: #166534 !important;
-  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.18) !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-avatar-fallback) {
@@ -1337,32 +1368,19 @@ const goToMembersSummary = () => router.push('/members-summary')
   border-color: #166534 !important;
 }
 
-.farmer-table-page.light-theme :deep(.details-grid) {
-  gap: 0.85rem 1rem !important;
-}
-
 .farmer-table-page.light-theme :deep(.detail-item) {
-  padding: 0.75rem 0.9rem !important;
   background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.35) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.06) !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
 }
 
-.farmer-table-page.light-theme :deep(.detail-label) {
-  font-size: 0.72rem !important;
-  letter-spacing: 0.06em !important;
-}
-
+.farmer-table-page.light-theme :deep(.detail-label),
 .farmer-table-page.light-theme :deep(.detail-value) {
-  font-size: 0.92rem !important;
-  font-weight: 700 !important;
-  line-height: 1.45 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .farmer-table-page.light-theme :deep(.modal-footer) {
-  border-top: 2px solid rgba(22, 101, 52, 0.35) !important;
-  padding: 1.2rem 1.5rem !important;
+  border-top-color: rgba(22, 101, 52, 0.35) !important;
   background: #ffffff !important;
 }
 
@@ -1370,11 +1388,7 @@ const goToMembersSummary = () => router.push('/members-summary')
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  border: 2px solid #15803d !important;
-  border-radius: 11px !important;
-  font-weight: 800 !important;
-  padding: 0.72rem 1.35rem !important;
-  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+  border-color: #15803d !important;
 }
 
 .farmer-table-page.light-theme :deep(.btn-secondary:hover) {
@@ -1382,16 +1396,13 @@ const goToMembersSummary = () => router.push('/members-summary')
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: #166534 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.28) !important;
 }
 
 .farmer-table-page.light-theme :deep(.btn-primary) {
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  border: 2px solid #15803d !important;
-  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+  border-color: #15803d !important;
 }
 
 /* Compact tables in child tabs (Pending / Registered Members) */
@@ -1433,6 +1444,18 @@ const goToMembersSummary = () => router.push('/members-summary')
   min-height: 24px !important;
 }
 
+.farmer-table-page :deep(.mmc-actions .table-action-btn.mmc-action-text) {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 1.85rem !important;
+  padding: 0.28rem 0.55rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  border-radius: 7px !important;
+}
+
 .farmer-table-page :deep(.members-action-row .table-action-btn svg) {
   width: 11px !important;
   height: 11px !important;
@@ -1442,5 +1465,389 @@ const goToMembersSummary = () => router.push('/members-summary')
   font-size: 0.58rem !important;
   padding: 0.12rem 0.2rem !important;
   min-height: 1.45rem;
+}
+
+/* Theme parity lock — same geometry in light & dark; themes only recolor */
+.farmer-table-page .members-summary-tabs .tab-btn,
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn,
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn {
+  border-width: 1.5px !important;
+  border-radius: 14px !important;
+}
+
+.farmer-table-page :deep(.table-action-btn),
+.farmer-table-page.light-theme :deep(.table-action-btn),
+.farmer-table-page:not(.light-theme) :deep(.table-action-btn) {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px !important;
+  border-width: 1px !important;
+}
+
+.farmer-table-page :deep(.members-action-row .table-action-btn) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+}
+
+.farmer-table-page :deep(.mmc-actions .table-action-btn.mmc-action-text) {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 1.85rem !important;
+  border-radius: 7px !important;
+}
+
+/* Compact position grid — phones + tablets */
+@media (max-width: 1024px) {
+  .farmer-table-page :deep(.role-tabs) {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    column-gap: 3px !important;
+    row-gap: 3px !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    margin-bottom: 0.35rem !important;
+    overflow: visible !important;
+  }
+
+  .farmer-table-page :deep(.role-tab) {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    flex: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 2px !important;
+    row-gap: 0 !important;
+    padding: 3px 4px !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    line-height: 1 !important;
+    align-items: center !important;
+    justify-items: center !important;
+  }
+
+  .farmer-table-page :deep(.role-tab:hover),
+  .farmer-table-page :deep(.role-tab.active) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .farmer-table-page :deep(.role-tab-icon) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 10px !important;
+    height: 10px !important;
+    margin: 0 !important;
+  }
+
+  .farmer-table-page :deep(.role-tab-label) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    word-break: break-word !important;
+    text-align: center !important;
+  }
+
+  .farmer-table-page :deep(.role-tab-count) {
+    grid-column: 2 !important;
+    grid-row: 1 / -1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .farmer-table-page.light-theme :deep(.role-tabs),
+  .farmer-table-page.light-theme :deep(.role-tab) {
+    box-shadow: none !important;
+  }
+}
+
+/* ============================================
+   MOBILE — compact chrome, content above the fold
+   ============================================ */
+@media (max-width: 768px) {
+  .farmer-table-page {
+    padding: 0.55rem 0.55rem 1rem;
+  }
+
+  .page-top-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.45rem !important;
+    margin-bottom: 0.55rem !important;
+  }
+
+  .page-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 1.05rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-summary {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 0.4rem 0.7rem !important;
+    font-size: 0.72rem !important;
+    gap: 5px !important;
+    border-radius: 8px !important;
+  }
+
+  .btn-tab-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Keep all 3 status tabs visible in one row — no stacked cards */
+  .members-summary-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    margin-bottom: 0.55rem;
+  }
+
+  .tab-btn {
+    min-height: 0;
+    padding: 0.4rem 0.25rem;
+    gap: 2px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(4, 18, 12, 0.16);
+  }
+
+  .tab-btn:hover,
+  .tab-btn.active {
+    transform: none;
+  }
+
+  .tab-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .tab-btn-label {
+    font-size: 0.62rem;
+    line-height: 1.15;
+    /* Shorten visual height of long labels */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .tab-btn-count {
+    font-size: 0.8rem;
+    min-width: 22px;
+    padding: 1px 6px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px !important;
+    row-gap: 6px !important;
+    column-gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    padding: 0.5rem 0.55rem;
+    border-radius: 10px;
+  }
+
+  .filter-barangay-row {
+    flex: 0 0 auto;
+    width: 100%;
+    flex-wrap: wrap;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .filter-search-wrap {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .filter-select,
+  .filter-search-input {
+    margin: 0 !important;
+  }
+
+  .filter-search-input {
+    padding: 0.5rem 0.6rem 0.5rem 2rem;
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  .filter-label {
+    font-size: 0.78rem;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.88rem;
+  }
+
+  .filter-barangay-badge {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .filter-hint {
+    font-size: 0.75rem;
+  }
+
+  /* Child tab cards / headers */
+  .farmer-table-page :deep(.registered-members-card),
+  .farmer-table-page :deep(.pending-members-card) {
+    padding: 0.65rem !important;
+    margin-bottom: 0.65rem !important;
+    border-radius: 10px !important;
+  }
+
+  .farmer-table-page :deep(.registered-members-title) {
+    font-size: 1rem !important;
+  }
+
+  .farmer-table-page :deep(.section-header-with-actions) {
+    margin-bottom: 0.55rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .farmer-table-page :deep(.bulk-actions) {
+    gap: 0.4rem !important;
+  }
+
+  /* Mobile cards — tighter stack + larger tap targets */
+  .farmer-table-page :deep(.members-mobile-card) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    padding: 0.55rem 0.6rem !important;
+  }
+
+  .farmer-table-page :deep(.mmc-head),
+  .farmer-table-page :deep(.mmc-rows),
+  .farmer-table-page :deep(.mmc-controls) {
+    margin-bottom: 0 !important;
+  }
+
+  .farmer-table-page :deep(.mmc-actions .table-action-btn),
+  .farmer-table-page :deep(.mmc-actions .table-action-protected) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    transform: none !important;
+  }
+
+  .farmer-table-page :deep(.mmc-actions .table-action-btn svg) {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+  }
+
+  .farmer-table-page :deep(.mmc-actions .table-action-btn.mmc-action-text) {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 0.7rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    border-radius: 8px !important;
+  }
+
+  .farmer-table-page :deep(.mmc-actions) {
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+  }
+
+  .farmer-table-page :deep(.mmc-actions .table-action-btn:hover),
+  .farmer-table-page :deep(.mmc-actions .table-action-btn:active) {
+    transform: none !important;
+  }
+
+  .farmer-table-page :deep(.bulk-approve-btn),
+  .farmer-table-page :deep(.refresh-btn) {
+    padding: 0.4rem 0.7rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .farmer-table-page :deep(.member-avatar),
+  .farmer-table-page :deep(.member-avatar-wrap) {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+  }
+
+  .state-center,
+  .farmer-table-page :deep(.loading-state),
+  .farmer-table-page :deep(.empty-state),
+  .farmer-table-page :deep(.error-state) {
+    padding: 1.25rem 0.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .farmer-table-page {
+    padding: 0.4rem 0.4rem 0.85rem;
+  }
+
+  .page-top-row {
+    flex-wrap: nowrap !important;
+  }
+
+  .page-title {
+    font-size: 15px !important;
+  }
+
+  .btn-summary {
+    font-size: 11px !important;
+    padding: 0.35rem 0.55rem !important;
+  }
+
+  .tab-btn-label {
+    font-size: 0.58rem;
+  }
+
+  .tab-btn-count {
+    font-size: 0.75rem;
+  }
 }
 </style>

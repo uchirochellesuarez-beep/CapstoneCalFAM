@@ -166,7 +166,7 @@ const getBarangayStats = async (barangayId) => {
         (SELECT COUNT(*) FROM loans WHERE barangay_id = ? AND status = 'approved') as total_loans_approved,
         (SELECT SUM(amount) FROM loans WHERE barangay_id = ? AND status = 'paid') as total_loans_paid,
         (SELECT COUNT(*) FROM machinery_inventory WHERE barangay_id = ? AND status = 'Available') as available_machinery,
-        (SELECT SUM(amount) FROM contributions WHERE barangay_id = ? AND status = 'confirmed') as total_contributions
+        (SELECT SUM(amount) FROM share_capital_contributions WHERE barangay_id = ? AND status = 'confirmed') as total_contributions
     `, [barangayId, barangayId, barangayId, barangayId, barangayId, barangayId]);
 
     return stats[0] || {};

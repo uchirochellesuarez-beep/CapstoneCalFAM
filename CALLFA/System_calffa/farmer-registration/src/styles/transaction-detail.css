@@ -1,0 +1,862 @@
+/* ============================================================
+   Transaction Detail UI — compact, responsive, theme-aware
+   Namespace: .tx-detail-*
+   ============================================================ */
+
+:root {
+  --tx-detail-primary: #111827;
+  --tx-detail-secondary: #4b5563;
+  --tx-detail-label: #6b7280;
+  --tx-detail-surface: #ffffff;
+  --tx-detail-surface-soft: #f8fafc;
+  --tx-detail-section: #ffffff;
+  --tx-detail-border: #d1d5db;
+  --tx-detail-border-soft: #e5e7eb;
+  --tx-detail-accent: #166534;
+  --tx-detail-amount: #047857;
+  --tx-detail-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  --tx-detail-overlay: rgba(0, 0, 0, 0.52);
+  --tx-detail-penalty-bg: #fffbeb;
+  --tx-detail-penalty-border: #fcd34d;
+  --tx-detail-penalty-text: #92400e;
+  --tx-detail-rejection-bg: #fef2f2;
+  --tx-detail-rejection-border: #fecaca;
+  --tx-detail-rejection-text: #991b1b;
+}
+
+body.glass-dark {
+  --tx-detail-primary: #f9fafb;
+  --tx-detail-secondary: #d1d5db;
+  --tx-detail-label: #9ca3af;
+  --tx-detail-surface: #1a2b20;
+  --tx-detail-surface-soft: #15241b;
+  --tx-detail-section: #1f3024;
+  --tx-detail-border: rgba(134, 239, 172, 0.28);
+  --tx-detail-border-soft: rgba(255, 255, 255, 0.1);
+  --tx-detail-accent: #bbf7d0;
+  --tx-detail-amount: #86efac;
+  --tx-detail-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+  --tx-detail-overlay: rgba(0, 0, 0, 0.62);
+  --tx-detail-penalty-bg: rgba(251, 191, 36, 0.14);
+  --tx-detail-penalty-border: rgba(251, 191, 36, 0.4);
+  --tx-detail-penalty-text: #fde68a;
+  --tx-detail-rejection-bg: rgba(248, 113, 113, 0.14);
+  --tx-detail-rejection-border: rgba(248, 113, 113, 0.35);
+  --tx-detail-rejection-text: #fecaca;
+}
+
+/* Shell */
+.tx-detail-modal.modal-content,
+.modal-content.tx-detail-modal {
+  background: var(--tx-detail-surface) !important;
+  color: var(--tx-detail-primary) !important;
+  border: 1px solid var(--tx-detail-border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--tx-detail-shadow) !important;
+  width: min(920px, calc(100vw - 1.5rem)) !important;
+  max-width: min(920px, calc(100vw - 1.5rem)) !important;
+  max-height: min(88dvh, 900px) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.tx-detail-modal .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--tx-detail-border-soft) !important;
+  background: var(--tx-detail-surface) !important;
+}
+
+.tx-detail-modal .modal-header :is(h2, h3),
+.tx-detail-modal .modal-title-text :is(h2, h3) {
+  margin: 0 !important;
+  color: var(--tx-detail-primary) !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+.tx-detail-modal .modal-subtitle {
+  margin: 0.15rem 0 0 !important;
+  color: var(--tx-detail-secondary) !important;
+  font-size: 0.82rem !important;
+}
+
+.tx-detail-modal .modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.85rem 1rem 1rem !important;
+  color: var(--tx-detail-primary) !important;
+}
+
+.tx-detail-modal .modal-footer,
+.tx-detail-modal .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--tx-detail-border-soft) !important;
+  background: var(--tx-detail-surface) !important;
+}
+
+.tx-detail-modal :is(.close-btn, .modal-close) {
+  color: var(--tx-detail-secondary) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.tx-detail-modal :is(.close-btn, .modal-close):hover {
+  color: var(--tx-detail-primary) !important;
+}
+
+/* Sections + grid */
+.tx-detail-sections,
+.tx-detail-modal .booking-details,
+.tx-detail-modal .loan-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.tx-detail-section,
+.tx-detail-modal .detail-section {
+  background: var(--tx-detail-section) !important;
+  border: 1px solid var(--tx-detail-border-soft) !important;
+  border-radius: 12px !important;
+  padding: 0.7rem 0.8rem !important;
+  box-shadow: none !important;
+}
+
+.tx-detail-section-title,
+.tx-detail-modal .detail-section h3,
+.tx-detail-modal .detail-section h4,
+.tx-detail-modal .section-title-row h4 {
+  margin: 0 0 0.55rem !important;
+  color: var(--tx-detail-accent) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tx-details-grid,
+.tx-detail-modal .details-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.55rem 0.7rem !important;
+  margin: 0 !important;
+}
+
+.tx-detail-item,
+.tx-detail-modal .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+  padding: 0.45rem 0.55rem !important;
+  border-radius: 10px !important;
+  background: var(--tx-detail-surface-soft) !important;
+  border: 1px solid var(--tx-detail-border-soft) !important;
+}
+
+.tx-detail-item--full,
+.tx-detail-modal .detail-item.full-width,
+.tx-detail-modal .detail-item.tx-detail-item--full {
+  grid-column: 1 / -1 !important;
+}
+
+.tx-detail-item label,
+.tx-detail-modal .detail-item label {
+  margin: 0 !important;
+  color: var(--tx-detail-label) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.25 !important;
+}
+
+.tx-detail-item :is(span, p, strong):not(.badge):not(.status-badge):not(.payment-badge),
+.tx-detail-modal .detail-item :is(span, p, strong):not(.badge):not(.status-badge):not(.payment-badge) {
+  margin: 0 !important;
+  color: var(--tx-detail-primary) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  word-break: break-word;
+}
+
+.tx-detail-item .amount,
+.tx-detail-modal .detail-item .amount,
+.tx-detail-modal .price-highlight {
+  color: var(--tx-detail-amount) !important;
+  font-weight: 800 !important;
+}
+
+.tx-detail-modal .notes-text,
+.tx-detail-modal .modal-permission-note,
+.tx-detail-modal .modal-hint {
+  margin: 0 !important;
+  color: var(--tx-detail-secondary) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.45 !important;
+}
+
+.tx-detail-modal .rejection-box,
+.tx-detail-modal .rejection-reason,
+.tx-detail-item--rejection {
+  background: var(--tx-detail-rejection-bg) !important;
+  border: 1px solid var(--tx-detail-rejection-border) !important;
+  border-radius: 10px !important;
+  color: var(--tx-detail-rejection-text) !important;
+  padding: 0.55rem 0.7rem !important;
+}
+
+.tx-detail-modal .rejection-box :is(strong, p),
+.tx-detail-modal .rejection-reason {
+  color: var(--tx-detail-rejection-text) !important;
+}
+
+.tx-detail-item--penalty,
+.tx-detail-modal .detail-item-penalty {
+  background: var(--tx-detail-penalty-bg) !important;
+  border: 1px solid var(--tx-detail-penalty-border) !important;
+  color: var(--tx-detail-penalty-text) !important;
+}
+
+.tx-detail-modal .detail-item-penalty :is(label, p, strong),
+.tx-detail-modal .penalty-note {
+  color: var(--tx-detail-penalty-text) !important;
+}
+
+/* Payment / summary boxes inside detail sections */
+.tx-detail-modal .down-payment-box,
+.tx-detail-modal .booking-summary,
+.tx-detail-modal .loan-summary,
+.tx-detail-modal .transaction-context-panel {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem !important;
+  margin: 0 0 0.55rem !important;
+  border-radius: 10px !important;
+  background: var(--tx-detail-surface-soft) !important;
+  border: 1px solid var(--tx-detail-border-soft) !important;
+  color: var(--tx-detail-primary) !important;
+}
+
+.tx-detail-modal .dp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--tx-detail-secondary) !important;
+  font-size: 0.82rem !important;
+}
+
+.tx-detail-modal .dp-row strong {
+  color: var(--tx-detail-primary) !important;
+}
+
+.tx-detail-modal .booking-summary p,
+.tx-detail-modal .loan-summary p {
+  margin: 0 !important;
+  color: var(--tx-detail-secondary) !important;
+  font-size: 0.84rem !important;
+}
+
+.tx-detail-modal .booking-summary strong,
+.tx-detail-modal .loan-summary strong {
+  color: var(--tx-detail-primary) !important;
+}
+
+/* History tables */
+.tx-detail-modal .payment-history-section,
+.tx-detail-modal .tx-history-section {
+  margin-top: 0.15rem;
+  padding: 0.7rem 0.8rem !important;
+  border: 1px solid var(--tx-detail-border-soft) !important;
+  border-radius: 12px !important;
+  background: var(--tx-detail-section) !important;
+}
+
+.tx-detail-modal .payment-history-table-wrap,
+.tx-detail-modal .tx-table-wrap,
+.tx-detail-modal .payments-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tx-detail-modal :is(.payment-history-table, .payments-table) {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.tx-detail-modal :is(.payment-history-table, .payments-table) th,
+.tx-detail-modal :is(.payment-history-table, .payments-table) td {
+  padding: 0.45rem 0.55rem !important;
+  border-bottom: 1px solid var(--tx-detail-border-soft) !important;
+  color: var(--tx-detail-primary) !important;
+  font-size: 0.8rem !important;
+  text-align: left;
+}
+
+.tx-detail-modal :is(.payment-history-table, .payments-table) th {
+  color: var(--tx-detail-label) !important;
+  font-size: 0.68rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Status / badges remain readable */
+.tx-detail-modal .status-badge,
+.tx-detail-modal .badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Dark status colors use muted borders instead of light outlines. */
+body.glass-dark .tx-detail-modal .status-badge {
+  box-shadow: none !important;
+}
+
+body.glass-dark .tx-detail-modal :is(
+  .status-success,
+  .status-completed,
+  .status-paid,
+  .status-badge.completed,
+  .status-badge.paid
+) {
+  background: rgba(22, 101, 52, 0.55) !important;
+  border: 1px solid rgba(74, 222, 128, 0.28) !important;
+  color: #dcfce7 !important;
+  -webkit-text-fill-color: #dcfce7 !important;
+}
+
+body.glass-dark .tx-detail-modal :is(
+  .status-info,
+  .status-approved,
+  .status-active,
+  .status-confirmed,
+  .status-badge.approved,
+  .status-badge.active
+) {
+  background: rgba(30, 64, 175, 0.42) !important;
+  border: 1px solid rgba(96, 165, 250, 0.3) !important;
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+}
+
+body.glass-dark .tx-detail-modal :is(
+  .status-warning,
+  .status-pending,
+  .status-awaiting,
+  .status-incomplete,
+  .status-badge.pending,
+  .status-badge.incomplete
+) {
+  background: rgba(146, 64, 14, 0.45) !important;
+  border: 1px solid rgba(251, 191, 36, 0.3) !important;
+  color: #fef3c7 !important;
+  -webkit-text-fill-color: #fef3c7 !important;
+}
+
+body.glass-dark .tx-detail-modal :is(
+  .status-danger,
+  .status-rejected,
+  .status-cancelled,
+  .status-expired,
+  .status-overdue,
+  .status-badge.rejected,
+  .status-badge.cancelled,
+  .status-badge.expired,
+  .status-badge.overdue
+) {
+  background: rgba(153, 27, 27, 0.42) !important;
+  border: 1px solid rgba(248, 113, 113, 0.28) !important;
+  color: #fee2e2 !important;
+  -webkit-text-fill-color: #fee2e2 !important;
+}
+
+body.glass-dark .tx-detail-modal .status-default {
+  background: rgba(55, 65, 81, 0.58) !important;
+  border: 1px solid rgba(156, 163, 175, 0.24) !important;
+  color: #e5e7eb !important;
+  -webkit-text-fill-color: #e5e7eb !important;
+}
+
+/* Forms nested in view modals stay compact but usable */
+.tx-detail-modal .down-payment-form,
+.tx-detail-modal .form-group {
+  margin-top: 0.45rem;
+}
+
+.tx-detail-modal .form-group {
+  margin-bottom: 0.55rem;
+}
+
+.tx-detail-modal .form-group label,
+.tx-detail-modal .form-label {
+  color: var(--tx-detail-label) !important;
+  font-size: 0.75rem !important;
+}
+
+.tx-detail-modal :is(.form-input, select, textarea, input) {
+  color: var(--tx-detail-primary);
+}
+
+body.glass-dark .tx-detail-modal :is(.form-input, select, textarea, input:not([type='file'])) {
+  background: #122018 !important;
+  color: #f9fafb !important;
+  border-color: rgba(134, 239, 172, 0.35) !important;
+}
+
+/* Ensure shared tx-detail tokens win over older hard-coded white islands */
+body.glass-dark .tx-detail-modal.modal-content,
+body.glass-dark .modal-content.tx-detail-modal {
+  background: var(--tx-detail-surface) !important;
+  color: var(--tx-detail-primary) !important;
+  border-color: var(--tx-detail-border) !important;
+}
+
+body.glass-light .tx-detail-modal.modal-content,
+body.glass-light .modal-content.tx-detail-modal,
+.light-theme .tx-detail-modal.modal-content {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .tx-detail-modal,
+.light-theme .tx-detail-modal {
+  --tx-detail-primary: #111827;
+  --tx-detail-secondary: #4b5563;
+  --tx-detail-label: #6b7280;
+  --tx-detail-surface: #ffffff;
+  --tx-detail-surface-soft: #f8fafc;
+  --tx-detail-section: #ffffff;
+  --tx-detail-border: #86efac;
+  --tx-detail-border-soft: #dcfce7;
+  --tx-detail-accent: #166534;
+  --tx-detail-amount: #047857;
+}
+
+/* Responsive */
+@media (max-width: 999px) {
+  .tx-details-grid,
+  .tx-detail-modal .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .tx-detail-modal.modal-content,
+  .modal-content.tx-detail-modal {
+    width: min(95vw, calc(100vw - 1rem)) !important;
+    max-width: min(95vw, calc(100vw - 1rem)) !important;
+    max-height: 90dvh !important;
+    border-radius: 14px !important;
+  }
+
+  .tx-detail-modal .modal-header,
+  .tx-detail-modal .modal-body,
+  .tx-detail-modal .modal-footer,
+  .tx-detail-modal .modal-actions {
+    padding-left: 0.8rem !important;
+    padding-right: 0.8rem !important;
+  }
+
+  .tx-details-grid,
+  .tx-detail-modal .details-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Payment history: fit modal width — no nested horizontal scroll on mobile */
+  .tx-detail-modal .payment-history-table-wrap,
+  .tx-detail-modal .tx-table-wrap,
+  .tx-detail-modal .payments-table-wrap {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: auto;
+    max-width: 100%;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: auto;
+  }
+
+  .tx-detail-modal .modal-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .tx-detail-modal .modal-actions > * {
+    width: 100%;
+  }
+
+  .app-modal-overlay,
+  .modal-overlay.app-modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .app-modal-overlay .modal-content:not(.tx-detail-modal):not(.receipt-modal-content):not(.receipt-modal-box):not(.pay-checkout-shell),
+  .modal-overlay.app-modal-overlay .modal-content:not(.tx-detail-modal):not(.receipt-modal-content):not(.receipt-modal-box):not(.pay-checkout-shell) {
+    width: min(95vw, calc(100vw - 1rem));
+    max-width: min(95vw, calc(100vw - 1rem));
+    max-height: 90dvh;
+    border-radius: 14px;
+  }
+
+  .app-modal-overlay .modal-content.pay-checkout-shell,
+  .modal-overlay.app-modal-overlay .modal-content.pay-checkout-shell {
+    width: min(26.5rem, calc(100vw - 2rem)) !important;
+    max-width: min(26.5rem, calc(100vw - 2rem)) !important;
+    padding: 1.25rem 1.4rem 1.2rem !important;
+  }
+}
+
+/* ============================================================
+   App modal overlay — centered, above header/sidebar, scroll-locked
+   Use with <Teleport to="body"> + <Transition name="app-modal">
+   ============================================================ */
+
+body.app-modal-open,
+html.app-modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+body.app-modal-open .main-content,
+body.app-modal-open .main-content-wrapper {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.app-modal-overlay,
+.modal-overlay.app-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  z-index: 11050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(0.75rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+  background: rgba(15, 23, 42, 0.58) !important;
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+
+.app-modal-overlay .modal-content,
+.modal-overlay.app-modal-overlay .modal-content {
+  position: relative;
+  margin: auto !important;
+  flex-shrink: 0;
+  width: min(42rem, calc(100vw - 1.5rem));
+  max-width: min(42rem, calc(100vw - 1.5rem));
+  max-height: min(88dvh, 900px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.app-modal-overlay .modal-content.pay-checkout-shell,
+.modal-overlay.app-modal-overlay .modal-content.pay-checkout-shell {
+  width: min(26.5rem, calc(100vw - 2.25rem)) !important;
+  max-width: min(26.5rem, calc(100vw - 2.25rem)) !important;
+  max-height: min(92dvh, calc(100dvh - 2rem)) !important;
+  padding: 1.4rem 1.55rem 1.3rem !important;
+  overflow: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Receipt preview: compact, no forced scroll — fits typical viewports */
+.app-modal-overlay .modal-content.receipt-modal-content,
+.app-modal-overlay .modal-content.receipt-modal-box,
+.modal-overlay.app-modal-overlay .modal-content.receipt-modal-content,
+.modal-overlay.app-modal-overlay .modal-content.receipt-modal-box,
+.app-modal-overlay .receipt-modal-box,
+.modal-overlay.app-modal-overlay .receipt-modal-box {
+  width: min(440px, calc(100vw - 1.25rem)) !important;
+  max-width: min(440px, calc(100vw - 1.25rem)) !important;
+  max-height: none !important;
+  height: auto !important;
+  display: block !important;
+  overflow: visible !important;
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32) !important;
+  padding: 8px 10px !important;
+  box-sizing: border-box !important;
+}
+
+.app-modal-overlay .modal-content.modal-large:not(.pay-checkout-shell),
+.app-modal-overlay .modal-content.tx-detail-modal,
+.modal-overlay.app-modal-overlay .modal-content.modal-large:not(.pay-checkout-shell),
+.modal-overlay.app-modal-overlay .modal-content.tx-detail-modal {
+  width: min(48rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(48rem, calc(100vw - 1.5rem)) !important;
+}
+
+.app-modal-overlay .modal-content > .modal-header,
+.app-modal-overlay .modal-content > .modal-footer,
+.app-modal-overlay .modal-content > .modal-actions,
+.modal-overlay.app-modal-overlay .modal-content > .modal-header,
+.modal-overlay.app-modal-overlay .modal-content > .modal-footer,
+.modal-overlay.app-modal-overlay .modal-content > .modal-actions {
+  flex-shrink: 0;
+}
+
+.app-modal-overlay .modal-content > .modal-body,
+.modal-overlay.app-modal-overlay .modal-content > .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.app-modal-overlay .modal-body .modal-actions,
+.modal-overlay.app-modal-overlay .modal-body .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  background: inherit;
+}
+
+/* Vue Transition: fade + scale */
+.app-modal-enter-active,
+.app-modal-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.app-modal-enter-active .modal-content,
+.app-modal-leave-active .modal-content {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.app-modal-enter-from,
+.app-modal-leave-to {
+  opacity: 0;
+}
+
+.app-modal-enter-from .modal-content,
+.app-modal-leave-to .modal-content {
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+}
+
+.app-modal-enter-to .modal-content,
+.app-modal-leave-from .modal-content {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.tx-history-mobile {
+  display: none;
+}
+
+.tx-history-card {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--tx-detail-border-soft);
+  border-radius: 12px;
+  background: var(--tx-detail-section);
+  scroll-margin-top: 0.75rem;
+  scroll-margin-bottom: 1.25rem;
+}
+
+.tx-history-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.tx-history-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--tx-detail-primary);
+}
+
+.tx-history-card-amount {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--tx-detail-amount);
+}
+
+.tx-history-card-meta {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.tx-history-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.tx-history-meta-row > span:first-child {
+  flex: 0 0 6.5rem;
+  color: var(--tx-detail-label);
+  font-weight: 700;
+}
+
+.tx-history-meta-row > span:last-child {
+  flex: 1;
+  text-align: right;
+  color: var(--tx-detail-primary);
+  overflow-wrap: anywhere;
+}
+
+.tx-history-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.7rem;
+}
+
+.tx-history-card.notification-highlight-row,
+.tx-history-card--rejected.notification-highlight-row {
+  outline: 2px solid #ef4444;
+  outline-offset: 0;
+  background: rgba(127, 29, 29, 0.18);
+}
+
+@media (max-width: 768px) {
+  .tx-detail-modal.modal-content,
+  .modal-content.tx-detail-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .app-modal-overlay:has(.tx-detail-modal),
+  .modal-overlay.app-modal-overlay:has(.tx-detail-modal) {
+    padding: 0 !important;
+    align-items: stretch;
+  }
+
+  .tx-detail-modal .modal-body {
+    padding-bottom: 1.5rem !important;
+  }
+
+  .tx-detail-modal .tx-history-desktop,
+  .tx-detail-modal .payments-table-wrap.tx-history-desktop,
+  .tx-detail-modal .payment-history-table-wrap.tx-history-desktop {
+    display: none !important;
+  }
+
+  .tx-detail-modal .tx-history-mobile,
+  .tx-history-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-bottom: 1.5rem;
+  }
+
+  /* Loan payment history: global stacked-table labels were overlapping values */
+  .tx-detail-modal :is(.payment-history-table, .payments-table) thead {
+    display: none !important;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) tbody,
+  .tx-detail-modal :is(.payment-history-table, .payments-table) tr,
+  .tx-detail-modal :is(.payment-history-table, .payments-table) td {
+    display: block;
+    width: 100%;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) tr {
+    margin: 0 0 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--tx-detail-border-soft);
+    border-radius: 12px;
+    background: var(--tx-detail-section);
+    box-sizing: border-box;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.38rem 0 !important;
+    border-bottom: 1px solid var(--tx-detail-border-soft) !important;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) td::before {
+    content: attr(data-label);
+    position: static !important;
+    left: auto !important;
+    flex: 0 0 6.75rem;
+    max-width: 42%;
+    margin: 0;
+    color: var(--tx-detail-label) !important;
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) .history-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tx-detail-modal :is(.payment-history-table, .payments-table) .history-proof-btn {
+    color: var(--tx-detail-accent);
+    white-space: nowrap;
+  }
+}

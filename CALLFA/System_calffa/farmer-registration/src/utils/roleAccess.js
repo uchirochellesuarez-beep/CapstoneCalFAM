@@ -8,10 +8,22 @@ export const OFFICER_LOAN_APPLICANT_ROLES = [
   'business_manager'
 ]
 
+/** Members and officers who pay dues/share capital — personal ledger (excludes agriculturist & admin). */
+export const DUES_PAYMENTS_LEDGER_ROLES = [
+  'farmer',
+  ...OFFICER_LOAN_APPLICANT_ROLES
+]
+
+export const canViewDuesPaymentsLedger = (role) =>
+  DUES_PAYMENTS_LEDGER_ROLES.includes(String(role || '').toLowerCase())
+
 export const MACHINERY_BOOKING_ROLES = ['farmer', ...OFFICER_LOAN_APPLICANT_ROLES]
 
 export const canBookMachinery = (role) =>
   MACHINERY_BOOKING_ROLES.includes(String(role || '').toLowerCase())
+
+export const canCreateBookingOnBehalf = (role) =>
+  ['operation_manager', 'business_manager', 'admin'].includes(String(role || '').toLowerCase())
 
 export const canApplyOfficerLoan = (role) =>
   OFFICER_LOAN_APPLICANT_ROLES.includes(String(role || '').toLowerCase())

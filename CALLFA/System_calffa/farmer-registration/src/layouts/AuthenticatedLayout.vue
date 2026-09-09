@@ -4,8 +4,16 @@
     :class="{ 'sidebar-collapsed': sidebarCollapsed }"
   >
     <div class="backdrop-dashboard" :class="backdropThemeClass"></div>
-    <TopHeader />
-    <Sidebar @toggle="onSidebarToggle" />
+    <TopHeader
+      :mobile-nav-open="mobileNavOpen"
+      @toggle-mobile-nav="onHamburgerClick"
+    />
+    <Sidebar
+      :mobile-open="mobileNavOpen"
+      :collapsed="sidebarCollapsed"
+      @toggle="onSidebarToggle"
+      @close-mobile="closeMobileNav"
+    />
     <main class="main-content-wrapper">
       <div class="main-content">
         <router-view />
@@ -15,17 +23,63 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { useLoanModuleStore } from '../stores/loanModuleStore'
+import { useDownPaymentStore } from '../stores/downPaymentStore'
 import TopHeader from '../components/TopHeader.vue'
 import Sidebar from '../components/Sidebar.vue'
 
 const { backdropThemeClass } = useBackdropTheme()
+const loanModuleStore = useLoanModuleStore()
+const downPaymentStore = useDownPaymentStore()
+const route = useRoute()
 
 const sidebarCollapsed = ref(false)
 const onSidebarToggle = ({ isCollapsed }) => {
   sidebarCollapsed.value = !!isCollapsed
 }
+
+// Mobile navigation drawer state
+const mobileNavOpen = ref(false)
+const closeMobileNav = () => {
+  mobileNavOpen.value = false
+}
+
+// Hamburger: opens the drawer on mobile/tablet, collapses the sidebar on desktop
+const onHamburgerClick = () => {
+  if (window.innerWidth > 1024) {
+    sidebarCollapsed.value = !sidebarCollapsed.value
+  } else {
+    mobileNavOpen.value = !mobileNavOpen.value
+  }
+}
+
+// Auto-close the drawer after navigating to any page
+watch(() => route.fullPath, closeMobileNav)
+
+// Lock page scroll behind the full-screen drawer (sidebar .nav-sections stays scrollable)
+watch(mobileNavOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+  document.documentElement.style.overflow = open ? 'hidden' : ''
+})
+
+const onKeydown = (event) => {
+  if (event.key === 'Escape') closeMobileNav()
+}
+
+onMounted(() => {
+  loanModuleStore.fetchStatus()
+  downPaymentStore.fetchStatus()
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
+})
 </script>
 
 <style scoped>

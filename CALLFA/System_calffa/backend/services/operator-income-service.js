@@ -3,6 +3,82 @@ const {
   createOperatorIncomeNotification,
   formatLocalDate
 } = require('./notification-service');
+const {
+  generateReceiptNumber,
+  recordPaymentReceipt,
+  ensureReceiptTables
+} = require('./receipt-service');
+
+async function findOperatorLaborReceipt(incomeId) {
+  const [rows] = await pool.execute(
+    `SELECT receipt_number
+     FROM payment_receipts
+     WHERE module = 'operator_labor'
+       AND reference_type = 'operator_income'
+       AND reference_id = ?
+     ORDER BY id DESC
+     LIMIT 1`,
+    [incomeId]
+  );
+  return rows[0]?.receipt_number || null;
+}
+
+async function issueOperatorLaborReceipt({
+  incomeId,
+  operatorId,
+  operatorName,
+  machineryName,
+  laborCost,
+  transactionDate,
+  bookingId = null,
+  expenseId = null,
+  barangayId = null,
+  recordedBy = null
+}) {
+  const amount = parseFloat(laborCost) || 0;
+  if (!incomeId || amount <= 0) return null;
+
+  await ensureReceiptTables(pool);
+
+  const existing = await findOperatorLaborReceipt(incomeId);
+  if (existing) return existing;
+
+  const [opRows] = await pool.execute(
+    'SELECT id, full_name, barangay_id FROM farmers WHERE id = ?',
+    [operatorId]
+  );
+  const operator = opRows[0] || {};
+  const resolvedName = operatorName || operator.full_name || 'Operator';
+  const resolvedBarangay = barangayId || operator.barangay_id || null;
+  const machineLabel = machineryName || 'Machinery';
+  const paymentDate = transactionDate || formatLocalDate(new Date());
+  const receiptNumber = await generateReceiptNumber(pool);
+
+  await recordPaymentReceipt(pool, {
+    receiptNumber,
+    module: 'operator_labor',
+    referenceId: incomeId,
+    referenceType: 'operator_income',
+    clientName: resolvedName,
+    amountPaid: amount,
+    remainingBalance: 0,
+    paymentMethod: 'Cash',
+    paymentDate,
+    collectedBy: recordedBy || null,
+    barangayId: resolvedBarangay,
+    remarks: `Labor compensation — ${machineLabel}`,
+    metadata: {
+      payment_type: 'operator_labor',
+      operator_id: operatorId,
+      booking_id: bookingId || null,
+      expense_id: expenseId || null,
+      machinery_name: machineLabel,
+      labor_cost_amount: amount
+    }
+  });
+
+  return receiptNumber;
+}
 
 async function getLaborCostForBooking(bookingId, machineryId) {
   const [byBooking] = await pool.execute(
@@ -64,9 +140,11 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
         [newAmount, options.expenseId, options.transactionDate || null, existing[0].id]
       );
       const [bookings] = await pool.execute(
-        `SELECT mb.*, mi.machinery_name, mi.assigned_operator_id
+        `SELECT mb.*, mi.machinery_name, mi.assigned_operator_id, mi.barangay_id,
+                op.full_name AS operator_name
          FROM machinery_bookings mb
          JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+         LEFT JOIN farmers op ON COALESCE(mb.assigned_operator_id, mi.assigned_operator_id, mb.completed_by) = op.id
          WHERE mb.id = ?`,
         [bookingIdNum]
       );
@@ -79,16 +157,56 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
           laborCost: newAmount,
           transactionDate: options.transactionDate
         });
+        await issueOperatorLaborReceipt({
+          incomeId: existing[0].id,
+          operatorId,
+          operatorName: bookings[0].operator_name,
+          machineryName: bookings[0].machinery_name,
+          laborCost: newAmount,
+          transactionDate: options.transactionDate || formatLocalDate(new Date()),
+          bookingId: bookingIdNum,
+          expenseId: options.expenseId,
+          barangayId: bookings[0].barangay_id,
+          recordedBy: options.recordedBy || null
+        });
       }
       return { created: false, updated: true, incomeId: existing[0].id, laborCost: newAmount };
     }
-    return { created: false, reason: 'already_exists', incomeId: existing[0].id };
+    const [incomeRows] = await pool.execute(
+      `SELECT oi.*, mi.machinery_name, mi.barangay_id, op.full_name AS operator_name
+       FROM operator_income oi
+       LEFT JOIN machinery_inventory mi ON oi.machinery_id = mi.id
+       LEFT JOIN farmers op ON oi.operator_id = op.id
+       WHERE oi.id = ?`,
+      [existing[0].id]
+    );
+    const incomeRow = incomeRows[0] || {};
+    const receiptNumber = await issueOperatorLaborReceipt({
+      incomeId: existing[0].id,
+      operatorId: incomeRow.operator_id || options.operatorId,
+      operatorName: incomeRow.operator_name,
+      machineryName: incomeRow.machinery_name,
+      laborCost: existingAmount || options.laborCost,
+      transactionDate: options.transactionDate || incomeRow.transaction_date,
+      bookingId: bookingIdNum,
+      expenseId: options.expenseId || incomeRow.expense_id,
+      barangayId: incomeRow.barangay_id,
+      recordedBy: options.recordedBy || null
+    });
+    return {
+      created: false,
+      reason: 'already_exists',
+      incomeId: existing[0].id,
+      receipt_number: receiptNumber || (await findOperatorLaborReceipt(existing[0].id))
+    };
   }
 
   const [bookings] = await pool.execute(
-    `SELECT mb.*, mi.assigned_operator_id, mi.machinery_name
+    `SELECT mb.*, mi.assigned_operator_id, mi.machinery_name, mi.barangay_id,
+            op.full_name AS operator_name
      FROM machinery_bookings mb
      JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+     LEFT JOIN farmers op ON COALESCE(mb.assigned_operator_id, mi.assigned_operator_id, mb.completed_by) = op.id
      WHERE mb.id = ?`,
     [bookingIdNum]
   );
@@ -136,12 +254,46 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
     transactionDate: txDate
   });
 
+  const receiptNumber = laborCost > 0
+    ? await issueOperatorLaborReceipt({
+        incomeId: result.insertId,
+        operatorId,
+        operatorName: booking.operator_name,
+        machineryName: booking.machinery_name,
+        laborCost,
+        transactionDate: txDate,
+        bookingId: bookingIdNum,
+        expenseId,
+        barangayId: booking.barangay_id,
+        recordedBy: options.recordedBy || null
+      })
+    : null;
+
   return {
     created: true,
     incomeId: result.insertId,
     operatorId,
-    laborCost
+    laborCost,
+    receipt_number: receiptNumber
   };
+}
+
+async function ensureLaborReceiptForIncomeRow(row) {
+  if (!row?.id || !(parseFloat(row.labor_cost_amount) > 0)) {
+    return row?.receipt_number || null;
+  }
+  if (row.receipt_number) return row.receipt_number;
+
+  return issueOperatorLaborReceipt({
+    incomeId: row.id,
+    operatorId: row.operator_id,
+    machineryName: row.machinery_name,
+    laborCost: row.labor_cost_amount,
+    transactionDate: row.transaction_date,
+    bookingId: row.booking_id,
+    expenseId: row.expense_id,
+    barangayId: row.barangay_id || null
+  });
 }
 
 async function getOperatorIncomeSummary(operatorId, filters = {}) {
@@ -158,7 +310,7 @@ async function getOperatorIncomeSummary(operatorId, filters = {}) {
   }
   if (filters.machinery_id) {
     where += ' AND oi.machinery_id = ?';
-    params.push(filters.machinery_id);
+    params.push(parseInt(filters.machinery_id, 10));
   }
   if (filters.booking_status) {
     where += ' AND mb.status = ?';
@@ -210,5 +362,8 @@ module.exports = {
   formatLocalDate,
   getLaborCostForBooking,
   generateOperatorIncomeForBooking,
-  getOperatorIncomeSummary
+  getOperatorIncomeSummary,
+  issueOperatorLaborReceipt,
+  findOperatorLaborReceipt,
+  ensureLaborReceiptForIncomeRow
 };

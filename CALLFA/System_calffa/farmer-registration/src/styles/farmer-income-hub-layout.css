@@ -1,0 +1,1600 @@
+/* Farmer Income Hub — layout aligned with Machinery Management */
+
+/* Hide duplicate subpage chrome when embedded in the hub (all breakpoints) */
+.farmer-income-hub-page .income-hub-subpage > .page-header,
+.farmer-income-hub-page .agriculturist-income-page > .page-header,
+.farmer-income-hub-page .income-hub-subpage > .tab-navigation {
+  display: none;
+}
+
+.farmer-income-hub-page .income-hub-subpage,
+.farmer-income-hub-page .agriculturist-income-page {
+  padding: 0 !important;
+  max-width: none;
+  margin: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  box-sizing: border-box;
+}
+
+/* Modal overlay: beat scoped page z-index, use global app-modal stack */
+.modal-overlay.app-modal-overlay.farmer-income-hub-modal,
+.modal-overlay.app-modal-overlay.agriculturist-income-modal {
+  z-index: 11050 !important;
+  background: rgba(15, 23, 42, 0.58) !important;
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-content,
+.agriculturist-income-modal.app-modal-overlay .modal-content {
+  background: var(--senior-surface, #fffef9);
+  border: 1px solid rgba(126, 184, 145, 0.28);
+  color: #14532d;
+  width: min(42rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(42rem, calc(100vw - 1.5rem)) !important;
+  max-height: min(88dvh, 900px) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: auto !important;
+  box-sizing: border-box;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-content.modal-large,
+.agriculturist-income-modal.app-modal-overlay .modal-content.modal-large {
+  width: min(48rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(48rem, calc(100vw - 1.5rem)) !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay:not(.light-theme) .modal-content,
+.agriculturist-income-modal.app-modal-overlay:not(.light-theme) .modal-content {
+  background: linear-gradient(145deg, rgba(18, 43, 29, 0.98), rgba(14, 33, 23, 0.96));
+  border-color: rgba(126, 184, 145, 0.28);
+  color: #ecfdf5;
+}
+
+/* Dual-render tables in detail modals */
+.income-hub-subpage .fin-mobile-list,
+.agriculturist-income-page .fin-mobile-list,
+.detail-table-mobile {
+  display: none;
+}
+
+.income-hub-subpage .fin-desktop-table,
+.agriculturist-income-page .fin-desktop-table,
+.detail-table-desktop {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.income-hub-subpage .fin-mobile-empty {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-soft, #94a3b8);
+}
+
+.farmer-income-hub-page:not(.light-theme) .income-hub-subpage .fin-mobile-card,
+.farmer-income-hub-page:not(.light-theme) .agriculturist-income-page .fin-mobile-card,
+.agriculturist-income-page:not(.light-theme) .fin-mobile-card {
+  padding: 0.45rem 0.5rem 0.4rem;
+  border-radius: 9px;
+  border: 1px solid rgba(167, 211, 178, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.farmer-income-hub-page:not(.light-theme) .income-hub-subpage .fin-mobile-card-name,
+.agriculturist-income-page:not(.light-theme) .fin-mobile-card-name {
+  color: var(--text-main, #ecfdf5);
+}
+
+.income-hub-subpage .fin-mobile-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+}
+
+.income-hub-subpage .fin-mobile-card-name {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-main, #ecfdf5);
+  word-break: break-word;
+}
+
+.income-hub-subpage .fin-mobile-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.income-hub-subpage .fin-mobile-meta-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.income-hub-subpage .fin-mobile-label {
+  color: var(--text-soft, #94a3b8);
+  font-size: 0.6rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Search tools — Machinery Management tools-card sizing */
+.farmer-income-hub-page:not(.light-theme) .income-hub-subpage .ih-tools-card.sc-tools-card {
+  --tools-h: 36px;
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(126, 184, 145, 0.35);
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+}
+
+.income-hub-subpage .ih-tools-card.sc-tools-card {
+  --tools-h: 36px;
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(126, 184, 145, 0.35);
+  box-shadow: none;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .ih-tools-card.sc-tools-card {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #94a3b8;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .record-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06) !important;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .record-details {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .empty-state {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.income-hub-subpage .ih-tools-card .tools-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.income-hub-subpage .ih-tools-card .search-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--tools-h);
+}
+
+.income-hub-subpage .ih-tools-card .search-icon-wrap {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(186, 240, 200, 0.65);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .ih-tools-card .search-icon-wrap {
+  color: #166534;
+}
+
+.income-hub-subpage .ih-tools-card .search-svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  display: block;
+}
+
+.farmer-income-hub-page:not(.light-theme) .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+  width: 100%;
+  height: var(--tools-h);
+  min-height: var(--tools-h);
+  padding: 0 0.65rem 0 2.1rem;
+  border-radius: 9px;
+  border: 1px solid rgba(126, 184, 145, 0.35);
+  background: rgba(0, 0, 0, 0.18);
+  color: #ecfdf5;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+  width: 100%;
+  height: var(--tools-h);
+  min-height: var(--tools-h);
+  padding: 0 0.65rem 0 2.1rem;
+  border-radius: 9px;
+  border: 1px solid rgba(126, 184, 145, 0.35);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #94a3b8;
+}
+
+.income-hub-subpage .ih-tools-card .toolbar-input.search-input-main::placeholder {
+  color: rgba(186, 240, 200, 0.55);
+  opacity: 1;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main::placeholder {
+  color: #64748b;
+}
+
+.income-hub-subpage .ih-tools-card .toolbar-input.search-input-main:focus {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15);
+}
+
+.income-hub-subpage .filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.45rem;
+}
+
+.income-hub-subpage .results-count {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-soft, #94a3b8);
+  line-height: 1.3;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .results-count {
+  color: #166534;
+}
+
+.income-hub-subpage .results-count-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  padding: 0.06rem 0.28rem;
+  margin-right: 0.2rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  background: rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .results-count-num {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.income-hub-subpage .results-count-filtered {
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* Compact record financial stats */
+.income-hub-subpage .records-list {
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.farmer-income-hub-page .income-hub-subpage .record-card {
+  padding: 0.55rem 0.65rem !important;
+  border-radius: 10px !important;
+  border-width: 1px !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.farmer-income-hub-page .income-hub-subpage .record-header {
+  margin-bottom: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  gap: 0.35rem !important;
+  border-bottom-width: 1px !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .farmer-info {
+  gap: 0.2rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .record-details {
+  margin-bottom: 0.35rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .record-detail {
+  gap: 0.35rem !important;
+  padding: 0.28rem 0.4rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .detail-icon svg {
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .header-actions {
+  gap: 0.35rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .view-btn .inline-icon {
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+  padding: 0.08rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .record-actions {
+  gap: 0.35rem !important;
+  margin-top: 0.4rem !important;
+}
+
+.farmer-income-hub-page .income-hub-subpage .btn-approve,
+.farmer-income-hub-page .income-hub-subpage .btn-reject {
+  padding: 0.38rem 0.55rem !important;
+  font-size: 0.7rem !important;
+  min-height: 32px !important;
+}
+
+.income-hub-subpage .record-financials {
+  gap: 0.35rem;
+  padding-top: 0.35rem !important;
+}
+
+.income-hub-subpage .financial-stat {
+  padding: 0.38rem 0.45rem;
+  gap: 0.2rem;
+  border-width: 1px;
+  border-radius: 8px;
+}
+
+.income-hub-subpage .fin-stat-value {
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+.income-hub-subpage .fin-stat-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+}
+
+.income-hub-subpage .fin-stat-head {
+  gap: 0.28rem;
+}
+
+.income-hub-subpage .fin-stat-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 6px;
+}
+
+.income-hub-subpage .fin-stat-icon svg {
+  width: 0.68rem;
+  height: 0.68rem;
+}
+
+.income-hub-subpage .farmer-name {
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.income-hub-subpage .record-date {
+  font-size: 0.65rem;
+}
+
+.income-hub-subpage .farmer-name .inline-icon,
+.income-hub-subpage .record-date .inline-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0.08rem;
+  border-radius: 6px;
+}
+
+.income-hub-subpage .status-badge,
+.income-hub-subpage .pending-badge {
+  font-size: 0.55rem;
+  padding: 0.12rem 0.38rem;
+}
+
+.income-hub-subpage .view-btn {
+  padding: 0.28rem 0.45rem;
+  font-size: 0.65rem;
+  min-height: 28px;
+  border-radius: 7px;
+}
+
+.income-hub-subpage .record-detail {
+  font-size: 0.68rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 7px;
+}
+
+.income-hub-subpage .alert {
+  padding: 0.45rem 0.55rem;
+  font-size: 0.72rem;
+  margin-bottom: 0.45rem;
+}
+
+.income-hub-subpage .financial-item {
+  font-size: 0.68rem;
+  padding: 0.32rem 0.4rem;
+  border-radius: 7px;
+}
+
+/* Modal detail — compact info */
+.farmer-income-hub-modal.app-modal-overlay .farmer-banner {
+  padding: 0.38rem 0.5rem;
+  margin-bottom: 0.4rem;
+  border-radius: 8px;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .banner-icon {
+  font-size: 0.85rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .banner-name {
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-section {
+  margin-bottom: 0.45rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-section-title {
+  font-size: 0.65rem;
+  margin-bottom: 0.28rem;
+  gap: 0.25rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .section-title-icon svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-grid {
+  gap: 0.3rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-cell {
+  padding: 0.28rem 0.4rem;
+  border-radius: 7px;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .cell-label {
+  font-size: 0.52rem;
+  margin-bottom: 0.1rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .cell-value {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .expense-row {
+  font-size: 0.7rem;
+  padding: 0.28rem 0.38rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .expense-grid {
+  gap: 0.25rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .grand-summary {
+  gap: 0.25rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .grand-row {
+  font-size: 0.74rem;
+  padding: 0.35rem 0.45rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-table {
+  font-size: 0.65rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .detail-table th,
+.farmer-income-hub-modal.app-modal-overlay .detail-table td {
+  padding: 0.28rem 0.38rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-header {
+  padding: 0.85rem 1rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-header h2 {
+  font-size: 1.05rem !important;
+  line-height: 1.25;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-close {
+  font-size: 1.35rem !important;
+  line-height: 1;
+  min-width: 2rem;
+  min-height: 2rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-body {
+  padding: 0.85rem 1rem !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .modal-status-badge {
+  font-size: 0.52rem;
+  padding: 0.1rem 0.32rem;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .fin-mobile-card {
+  padding: 0.45rem 0.5rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .fin-mobile-card-name {
+  font-size: 0.78rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .fin-mobile-meta-row {
+  font-size: 0.68rem !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay .fin-mobile-label {
+  font-size: 0.6rem !important;
+}
+
+/* Search inputs — vertically centered icon + text */
+.income-hub-subpage .search-box,
+.agriculturist-income-page .search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.income-hub-subpage .search-icon,
+.agriculturist-income-page .search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 0;
+}
+
+.income-hub-subpage .search-input,
+.agriculturist-income-page .search-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 1.5rem;
+  padding: 0;
+  line-height: 1.35;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.income-hub-subpage .search-input::placeholder,
+.agriculturist-income-page .search-input::placeholder {
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  /* Match Machinery Management mobile page margins */
+  .farmer-income-hub-page.page-container {
+    margin: 0 -0.75rem !important;
+    width: calc(100% + 1.5rem) !important;
+    max-width: none !important;
+    padding: 0.75rem !important;
+    box-sizing: border-box;
+    border-radius: 0;
+    overflow-x: hidden;
+    min-height: 0;
+    touch-action: pan-y;
+  }
+
+  .farmer-income-hub-page .page-header,
+  .farmer-income-hub-page .page-header-split {
+    margin-bottom: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+  }
+
+  .farmer-income-hub-page .page-title {
+    font-size: 1.15rem !important;
+    line-height: 1.25;
+  }
+
+  .farmer-income-hub-page .page-subtitle {
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+
+  .farmer-income-hub-page .tabs-container {
+    margin: 0 0 0.65rem;
+    padding: 0;
+  }
+
+  .farmer-income-hub-page .tabs {
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+  }
+
+  .farmer-income-hub-page .tab-btn,
+  .farmer-income-hub-page .tabs .tab-btn--wide {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 2.65rem;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.62rem !important;
+    border-radius: 8px;
+    gap: 0.15rem !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .farmer-income-hub-page .tab-btn-label {
+    text-align: center;
+    line-height: 1.15;
+    font-size: 0.62rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .farmer-income-hub-page .tab-badge {
+    font-size: 0.62rem !important;
+    padding: 0 0.28rem !important;
+    min-width: 1.15rem !important;
+    line-height: 1.3;
+  }
+
+  .farmer-income-hub-page .tab-content,
+  .farmer-income-hub-page .tab-content--main {
+    margin-top: 0;
+    padding: 0.65rem 0.7rem;
+    border-radius: 12px;
+  }
+
+  .farmer-income-hub-page .foundation-hub-panel {
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .farmer-income-hub-page .hub-foundation-intro {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    margin-bottom: 0.65rem;
+  }
+
+  .farmer-income-hub-page .foundation-farmer-select {
+    min-height: 36px;
+    font-size: 0.82rem;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .farmer-income-hub-page .farmer-pick-row {
+    gap: 0.3rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .farmer-income-hub-page .farmer-pick-row label {
+    font-size: 0.72rem;
+  }
+
+  .income-hub-subpage .records-list {
+    gap: 0.35rem;
+  }
+
+  .farmer-income-hub-page .income-hub-subpage .record-card {
+    padding: 0.45rem 0.55rem !important;
+    border-radius: 10px !important;
+  }
+
+  .farmer-income-hub-page .income-hub-subpage .record-header {
+    margin-bottom: 0.32rem !important;
+    padding-bottom: 0.32rem !important;
+    gap: 0.28rem !important;
+  }
+
+  .income-hub-subpage .farmer-name {
+    font-size: 0.78rem;
+  }
+
+  .income-hub-subpage .farmer-name .inline-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .income-hub-subpage .record-date {
+    font-size: 0.6rem;
+  }
+
+  .income-hub-subpage .record-date .inline-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .income-hub-subpage .status-badge,
+  .income-hub-subpage .pending-badge {
+    font-size: 0.5rem;
+    padding: 0.1rem 0.32rem;
+  }
+
+  .income-hub-subpage .view-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+    min-height: 32px;
+  }
+
+  .income-hub-subpage .record-financials {
+    gap: 0.28rem;
+    padding-top: 0.32rem;
+  }
+
+  .income-hub-subpage .financial-stat {
+    padding: 0.32rem 0.38rem;
+    gap: 0.15rem;
+  }
+
+  .income-hub-subpage .fin-stat-value {
+    font-size: 0.7rem;
+  }
+
+  .income-hub-subpage .fin-stat-label {
+    font-size: 0.5rem;
+  }
+
+  .income-hub-subpage .fin-stat-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .income-hub-subpage .fin-stat-icon svg {
+    width: 0.62rem;
+    height: 0.62rem;
+  }
+
+  .income-hub-subpage .financial-item {
+    font-size: 0.62rem;
+    padding: 0.28rem 0.35rem;
+  }
+
+  .income-hub-subpage .record-detail {
+    font-size: 0.62rem;
+    padding: 0.22rem 0.32rem;
+  }
+
+  .income-hub-subpage .ih-tools-card.sc-tools-card {
+    --tools-h: 36px;
+    padding: 0.55rem 0.6rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+    font-size: 0.78rem;
+    padding-left: 2.1rem;
+  }
+
+  .income-hub-subpage .results-count {
+    font-size: 0.68rem;
+  }
+
+  .farmer-income-hub-page .page-header::after,
+  .farmer-income-hub-page .page-header-split::after {
+    display: none;
+  }
+
+  .farmer-income-hub-page .page-header-text,
+  .farmer-income-hub-page .header-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    align-items: flex-start;
+    text-align: left;
+    max-width: none;
+    margin: 0;
+  }
+
+  .farmer-income-hub-page .tabs .tab-btn--wide {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+
+  .income-hub-subpage .filter-bar {
+    margin-bottom: 0.4rem;
+  }
+
+  .income-hub-subpage .record-financials {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.28rem !important;
+  }
+
+  .income-hub-subpage .financial-stat:last-child:nth-child(odd) {
+    grid-column: auto !important;
+  }
+
+  .income-hub-subpage .financial-item > span:first-child {
+    font-size: 0.5rem !important;
+    letter-spacing: 0.02em;
+  }
+
+  .income-hub-subpage .financial-item > span:last-child {
+    font-size: 0.68rem !important;
+    line-height: 1.15;
+  }
+
+  .income-hub-subpage .record-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .income-hub-subpage .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .income-hub-subpage .stats-container,
+  .income-hub-subpage .stats-group--overview {
+    display: none;
+  }
+
+  .income-hub-subpage .record-actions {
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+  }
+
+  .income-hub-subpage .btn-approve,
+  .income-hub-subpage .btn-reject {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.7rem;
+    min-height: 34px;
+    border-radius: 8px;
+  }
+
+  .income-hub-subpage .alert {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.68rem;
+    margin-bottom: 0.4rem;
+    border-radius: 8px;
+  }
+
+  .income-hub-subpage .empty-state {
+    padding: 0.85rem 0.65rem;
+    border-radius: 10px;
+  }
+
+  .income-hub-subpage .empty-state p {
+    font-size: 0.72rem;
+  }
+
+  .agriculturist-income-page .tab-navigation {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    margin-bottom: 0.55rem;
+    gap: 0.3rem;
+    padding: 0.3rem;
+  }
+
+  .agriculturist-income-page .tab-navigation .tab-btn {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 2.35rem !important;
+    padding: 0.4rem 0.35rem !important;
+    font-size: 0.68rem !important;
+    border-radius: 8px !important;
+  }
+
+  .agriculturist-income-modal.app-modal-overlay .assistance-form-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .agriculturist-income-modal.app-modal-overlay .assistance-form-footer .btn-cancel,
+  .agriculturist-income-modal.app-modal-overlay .assistance-form-footer .btn-submit {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 2.35rem !important;
+  }
+
+  .agriculturist-income-page .records-grid {
+    gap: 0.4rem;
+  }
+
+  .agriculturist-income-page .record-card {
+    border-radius: 10px;
+  }
+
+  .agriculturist-income-page .card-header,
+  .agriculturist-income-page .card-info,
+  .agriculturist-income-page .card-financials,
+  .agriculturist-income-page .card-actions {
+    padding: 0.4rem 0.55rem !important;
+  }
+
+  .agriculturist-income-page .farmer-name {
+    font-size: 0.72rem !important;
+  }
+
+  .agriculturist-income-page .farmer-date,
+  .agriculturist-income-page .info-label {
+    font-size: 0.58rem !important;
+  }
+
+  .agriculturist-income-page .info-row,
+  .agriculturist-income-page .info-value,
+  .agriculturist-income-page .fin-item {
+    font-size: 0.64rem !important;
+  }
+
+  .agriculturist-income-page .fin-value {
+    font-size: 0.66rem !important;
+  }
+
+  .agriculturist-income-page .status-badge {
+    font-size: 0.52rem !important;
+  }
+
+  .agriculturist-income-page .farmer-avatar {
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+  }
+
+  .agriculturist-income-page .card-actions {
+    gap: 0.3rem;
+  }
+
+  .agriculturist-income-page .card-actions button {
+    min-height: 1.9rem;
+    font-size: 0.64rem;
+    padding: 0.32rem 0.4rem;
+    border-radius: 7px;
+  }
+
+  /* Modal compact (mobile) — keep touch targets ≥34px */
+  .farmer-income-hub-modal.app-modal-overlay .modal-header,
+  .agriculturist-income-modal.app-modal-overlay .modal-header {
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .modal-header h2 {
+    font-size: 0.95rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .modal-body,
+  .agriculturist-income-modal.app-modal-overlay .modal-body {
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .modal-footer,
+  .agriculturist-income-modal.app-modal-overlay .modal-footer {
+    padding: 0.55rem 0.75rem !important;
+    gap: 0.4rem;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .modal-footer button,
+  .agriculturist-income-modal.app-modal-overlay .modal-footer button {
+    min-height: 36px;
+    font-size: 0.78rem;
+    border-radius: 9px;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .detail-section {
+    margin-bottom: 0.4rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .detail-section-title {
+    font-size: 0.62rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .detail-grid {
+    gap: 0.28rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .detail-cell {
+    padding: 0.25rem 0.35rem !important;
+    border-radius: 7px;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .cell-label {
+    font-size: 0.5rem !important;
+  }
+
+  .farmer-income-hub-modal.app-modal-overlay .cell-value {
+    font-size: 0.68rem !important;
+  }
+
+  /* Table dual-render toggle */
+  .income-hub-subpage .fin-desktop-table,
+  .income-hub-subpage .detail-table-desktop,
+  .agriculturist-income-page .fin-desktop-table {
+    display: none !important;
+  }
+
+  .income-hub-subpage .fin-mobile-list,
+  .income-hub-subpage .detail-table-mobile,
+  .agriculturist-income-page .fin-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .farmer-income-hub-page.page-container {
+    padding: 0.65rem !important;
+  }
+
+  .farmer-income-hub-page .tab-content,
+  .farmer-income-hub-page .tab-content--main {
+    padding: 0.55rem 0.6rem;
+  }
+
+  .farmer-income-hub-page .page-title {
+    font-size: 1.1rem !important;
+  }
+
+  .farmer-income-hub-page .tab-btn-label {
+    font-size: 0.55rem;
+  }
+
+  .income-hub-subpage .ih-tools-card.sc-tools-card {
+    --tools-h: 34px;
+    padding: 0.55rem 0.6rem;
+  }
+}
+
+/* Light theme — geometry identical, colors only */
+.farmer-income-hub-page.light-theme .income-hub-subpage .fin-mobile-card,
+.farmer-income-hub-page.light-theme .agriculturist-income-page .fin-mobile-card {
+  background: #ffffff;
+  border-color: #bbf7d0;
+}
+
+.farmer-income-hub-page.light-theme .agriculturist-income-page .tab-navigation {
+  /* Colors only; keep dark geometry */
+  background: #ffffff;
+  border-color: #bbf7d0;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.06);
+}
+
+.farmer-income-hub-page.light-theme .agriculturist-income-page .tab-btn {
+  /* Match dark tab control size; colors only */
+  min-height: 2.5rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .fin-mobile-card-name {
+  color: #052e16;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .fin-mobile-meta-row {
+  color: #14532d;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .fin-mobile-label {
+  color: #64748b;
+}
+
+.farmer-income-hub-modal.app-modal-overlay.light-theme .modal-content,
+.agriculturist-income-modal.app-modal-overlay.light-theme .modal-content {
+  background: #ffffff;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.farmer-income-hub-modal.app-modal-overlay.light-theme :is(
+  .detail-cell,
+  .expense-row,
+  .farmer-banner,
+  .fin-mobile-card
+) {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #14532d !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay.light-theme .cell-label,
+.farmer-income-hub-modal.app-modal-overlay.light-theme .fin-mobile-label {
+  color: #64748b !important;
+}
+
+.farmer-income-hub-modal.app-modal-overlay.light-theme .cell-value,
+.farmer-income-hub-modal.app-modal-overlay.light-theme .fin-mobile-card-name {
+  color: #052e16 !important;
+}
+
+.record-card.notification-highlight-card {
+  animation: incomeHubHighlightPulse 2s ease-in-out 3;
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-color: #ef4444 !important;
+  z-index: 2;
+}
+
+.farmer-income-hub-page:not(.light-theme) .record-card.notification-highlight-card,
+.agriculturist-income-page:not(.light-theme) .record-card.notification-highlight-card {
+  background: rgba(127, 29, 29, 0.42) !important;
+  outline-color: #f87171;
+  border-color: #f87171 !important;
+}
+
+@keyframes incomeHubHighlightPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.22); }
+  50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.4); }
+}
+
+/* Form inputs — vertically centered icons and text */
+.agriculturist-income-modal .input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.agriculturist-income-modal .input-group .form-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  line-height: 1.35;
+  box-sizing: border-box;
+}
+
+.agriculturist-income-modal .input-unit {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.agriculturist-income-modal .form-textarea {
+  min-height: 72px;
+  line-height: 1.35;
+}
+
+/* ===== Overview stats — clean label / number (no decorative icons) ===== */
+.farmer-income-hub-page .income-hub-subpage .stats-group {
+  margin-bottom: 6px;
+}
+
+.farmer-income-hub-page .income-hub-subpage .stats-grid {
+  display: grid !important;
+  gap: 6px;
+  margin-bottom: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.farmer-income-hub-page .income-hub-subpage .stats-grid--income-hub {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.farmer-income-hub-page .income-hub-subpage .stat-card {
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88));
+  box-shadow: 8px 8px 18px rgba(8, 13, 10, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.farmer-income-hub-page .income-hub-subpage .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.farmer-income-hub-page .income-hub-subpage .stat-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft, rgba(220, 238, 211, 0.62));
+  margin-bottom: 1px;
+  line-height: 1.2;
+}
+
+.farmer-income-hub-page .income-hub-subpage .stat-value {
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.05;
+  color: #bbf7d0;
+  letter-spacing: -0.02em;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .stat-card {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .stat-label {
+  color: #166534 !important;
+}
+
+.farmer-income-hub-page.light-theme .income-hub-subpage .stat-value {
+  color: #052e16 !important;
+}
+
+/* Desktop compact — hub shell + embedded subpages */
+@media (min-width: 769px) {
+  html body .page-container.farmer-income-hub-page.glass-module-page {
+    padding: 8px 12px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    border-radius: 12px !important;
+    min-height: 0 !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .page-header-split::before {
+    top: -36px !important;
+    right: -44px !important;
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .page-header-split::after {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 0.35rem !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .tabs-container {
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .tabs {
+    gap: 4px !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .tab-btn {
+    min-height: 28px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .tab-badge {
+    min-width: 1.1rem !important;
+    height: 1.1rem !important;
+    font-size: 9px !important;
+    padding: 0 4px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .section-label {
+    font-size: 0.7rem !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .tab-content--main {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .hub-foundation-intro {
+    margin: 0 0 6px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .farmer-pick-row {
+    margin-bottom: 6px !important;
+    gap: 3px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .farmer-pick-row label {
+    font-size: 10px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .foundation-farmer-select {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .alert-warn {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .empty-state {
+    padding: 14px 10px !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .empty-title {
+    font-size: 0.85rem !important;
+  }
+
+  html body .page-container.farmer-income-hub-page.glass-module-page .empty-text {
+    font-size: 11px !important;
+  }
+
+  /* Subpages — search, filters, record cards */
+  html body .farmer-income-hub-page .income-hub-subpage .filter-bar {
+    margin-bottom: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .ih-tools-card.sc-tools-card {
+    --tools-h: 28px;
+    margin: 0 0 4px !important;
+    padding: 5px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .ih-tools-card .toolbar-input.search-input-main {
+    font-size: 11px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .results-count {
+    font-size: 10px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .results-count-num {
+    font-size: 9px !important;
+    padding: 1px 5px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .stats-grid--income-hub {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .stats-grid--income-hub:has(.stat-card:only-child) {
+    grid-template-columns: minmax(120px, 180px) !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .stat-label {
+    font-size: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .stat-value {
+    font-size: 0.95rem !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .record-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .record-header {
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .farmer-name {
+    font-size: 0.82rem !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .record-date {
+    font-size: 10px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .view-btn {
+    padding: 2px 7px !important;
+    font-size: 10px !important;
+    min-height: 24px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .btn-approve,
+  html body .farmer-income-hub-page .income-hub-subpage .btn-reject {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    min-height: 26px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .record-financials {
+    gap: 4px !important;
+    padding-top: 4px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .financial-stat {
+    padding: 4px 6px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .fin-stat-value {
+    font-size: 0.78rem !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .fin-stat-label {
+    font-size: 7px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .fin-stat-icon {
+    width: 1rem !important;
+    height: 1rem !important;
+    border-radius: 5px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .fin-stat-icon svg {
+    width: 0.58rem !important;
+    height: 0.58rem !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .status-badge,
+  html body .farmer-income-hub-page .income-hub-subpage .pending-badge {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .alert {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .tab-navigation .tab-btn {
+    min-height: 28px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+
+  /* Detail tables in modals — readable, scroll contained */
+  html body .farmer-income-hub-page .income-hub-subpage .fin-desktop-table,
+  html body .farmer-income-hub-modal.app-modal-overlay .fin-desktop-table {
+    max-height: min(14rem, 38vh) !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .detail-table,
+  html body .farmer-income-hub-modal.app-modal-overlay .detail-table {
+    font-size: 11px !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .detail-table th,
+  html body .farmer-income-hub-modal.app-modal-overlay .detail-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
+
+  html body .farmer-income-hub-page .income-hub-subpage .detail-table td,
+  html body .farmer-income-hub-modal.app-modal-overlay .detail-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+  }
+
+  /* Agriculturist subpage cards */
+  html body .farmer-income-hub-page .agriculturist-income-page .tab-navigation {
+    margin-bottom: 6px !important;
+    padding: 3px !important;
+    gap: 4px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .agriculturist-income-page .tab-navigation .tab-btn {
+    min-height: 28px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-income-hub-page .agriculturist-income-page .record-card {
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-income-hub-page .agriculturist-income-page .card-header,
+  html body .farmer-income-hub-page .agriculturist-income-page .card-info,
+  html body .farmer-income-hub-page .agriculturist-income-page .card-financials,
+  html body .farmer-income-hub-page .agriculturist-income-page .card-actions {
+    padding: 5px 8px !important;
+  }
+
+  html body .farmer-income-hub-page .agriculturist-income-page .card-actions button {
+    min-height: 26px !important;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .farmer-income-hub-page .income-hub-subpage .stats-grid--income-hub {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+

@@ -118,11 +118,54 @@ body.glass-light .top-header .user-profile {
   box-shadow: 0 6px 16px rgba(22, 101, 52, 0.1) !important;
 }
 
+body.glass-light .top-header .lang-toggle--header {
+  background: #ffffff !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light .top-header .lang-toggle--header .lang-btn,
+body.glass-light .top-header .lang-toggle--header .lang-btn :is(span, .lang-btn-full, .lang-btn-short) {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+body.glass-light .top-header .lang-toggle--header .lang-btn.active {
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+
 body.glass-light .top-header .profile-name,
 body.glass-light .top-header .profile-id,
 body.glass-light .top-header .profile-chevron,
 body.glass-light .top-header .theme-toggle-btn {
-  color: #000000 !important;
+  color: #052e16 !important;
+}
+
+body.glass-light .top-header .profile-id {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border: 1px solid #86efac !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .top-header .user-profile:hover {
+  background: linear-gradient(140deg, #ffffff 0%, #ecfdf5 100%) !important;
+  border-color: #4ade80 !important;
+  box-shadow: 0 8px 20px rgba(22, 101, 52, 0.12) !important;
+  filter: none !important;
+}
+
+body.glass-light .top-header .profile-avatar-shell {
+  box-shadow: 0 0 0 2px #bbf7d0, 0 6px 12px rgba(22, 101, 52, 0.12) !important;
+}
+
+body.glass-light .top-header .profile-avatar {
+  border-color: #86efac !important;
+  background: #f0fdf4 !important;
+}
+
+body.glass-light .top-header .profile-online-dot {
+  border-color: #ffffff !important;
 }
 
 body.glass-light .top-header .profile-status {
@@ -271,11 +314,11 @@ body::after {
 }
 
 .login-page {
-  background: url('https://i.pinimg.com/1200x/1d/73/0c/1d730c5473037a32dd743b05ac2bb466.jpg') center/cover no-repeat fixed !important;
+  background: #0f2a1c !important;
 }
 
 .signup-page {
-  background: url('https://i.pinimg.com/1200x/1d/73/0c/1d730c5473037a32dd743b05ac2bb466.jpg') center/cover no-repeat fixed !important;
+  background: #0f2a1c !important;
 }
 
 :is(.login-page::before, .signup-page::before) {
@@ -313,7 +356,7 @@ body::after {
   .submit-btn,
   .submit-button,
   .save-btn,
-  .export-btn,
+  .export-btn:not(.export-btn-secondary),
   .print-btn,
   .report-type-btn,
   .btn-action,
@@ -340,7 +383,7 @@ body::after {
   .submit-btn,
   .submit-button,
   .save-btn,
-  .export-btn,
+  .export-btn:not(.export-btn-secondary),
   .print-btn,
   .report-type-btn,
   .btn-action,
@@ -349,7 +392,7 @@ body::after {
   .btn-summary,
   .link-btn,
   button[type='submit']
-):hover {
+):hover:not(.active):not(:disabled) {
   transform: translateY(-1px) scale(1.02) !important;
   filter: saturate(1.12) brightness(1.05);
   box-shadow: 0 14px 28px rgba(22, 47, 31, 0.32) !important;
@@ -394,7 +437,8 @@ body::after {
   -webkit-backdrop-filter: blur(20px) saturate(136%);
 }
 
-.notification-item.unread {
+/* Scoped to notification center page — modal dropdown uses TopHeader styles */
+.notification-center-container .notification-item.unread {
   border-left: 3px solid var(--glass-pending);
   background: rgba(255, 210, 77, 0.12);
 }
@@ -527,7 +571,7 @@ body::after {
 .financial-container.light-theme .summary-table td,
 .financial-container.light-theme .summary-table th {
   background: linear-gradient(145deg, rgba(248, 255, 251, 0.2), rgba(226, 255, 236, 0.14)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
   color: var(--glass-text) !important;
 }
 
@@ -547,10 +591,8 @@ body::after {
 .financial-container.light-theme .summary-table input,
 .financial-container.light-theme .summary-table select {
   color: #111827 !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 11px !important;
+  border-color: #cbd5e1 !important;
   background: #ffffff !important;
-  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.06) !important;
 }
 
 .financial-container.light-theme .form-input-sm:focus,
@@ -558,20 +600,15 @@ body::after {
 .financial-container.light-theme .summary-table select:focus {
   outline: none !important;
   border-color: #7f9d81 !important;
-  box-shadow:
-    0 0 0 2px rgba(127, 157, 129, 0.28),
-    inset 2px 2px 4px rgba(0, 0, 0, 0.06) !important;
 }
 
 .financial-container.light-theme .btn-generate,
 .financial-container.light-theme .orient-btn,
 .financial-container.light-theme .btn-action,
 .financial-container.light-theme .btn-primary-small {
-  border-radius: 12px !important;
-  border: 1px solid rgba(255, 233, 188, 0.42) !important;
+  border-color: rgba(255, 233, 188, 0.42) !important;
   background: linear-gradient(125deg, rgba(239, 120, 50, 0.88), rgba(105, 179, 111, 0.86)) !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
 }
 
 .financial-container.light-theme .orient-btn.active,
@@ -579,7 +616,6 @@ body::after {
 .financial-container.light-theme .btn-action.print,
 .financial-container.light-theme .btn-action.clear {
   border-color: rgba(255, 248, 220, 0.85) !important;
-  box-shadow: 0 0 0 1px rgba(255, 237, 187, 0.35), 0 12px 24px rgba(22, 47, 31, 0.3) !important;
 }
 
 .financial-container .overdue-flag {
@@ -694,7 +730,7 @@ canvas {
 .dashboard-container .stat-card {
   border: 1px solid rgba(22, 101, 52, 0.45) !important;
   background: linear-gradient(165deg, #ffffff 0%, #f4fdf7 55%, #ecfdf3 100%) !important;
-  border-radius: 18px !important;
+  border-radius: 14px !important;
   box-shadow:
     0 4px 12px rgba(15, 23, 42, 0.06),
     0 14px 32px rgba(15, 23, 42, 0.1),
@@ -728,7 +764,7 @@ canvas {
 .dashboard-container .glass-chart-card {
   border: 1px solid rgba(134, 239, 172, 0.14) !important;
   background: linear-gradient(165deg, #1a281f 0%, #1f3024 45%, #243529 100%) !important;
-  border-radius: 22px !important;
+  border-radius: 14px !important;
   box-shadow:
     14px 14px 32px rgba(4, 12, 8, 0.55),
     -10px -10px 26px rgba(43, 62, 47, 0.45),
@@ -811,6 +847,28 @@ canvas {
 .dashboard-container[class] select option {
   background: #ffffff !important;
   color: #111827 !important;
+}
+
+/* Desktop compact radii — identical in light and dark (colors stay in theme files) */
+@media (min-width: 769px) {
+  .dashboard-container .dashboard-header,
+  .dashboard-container .analytics-section {
+    border-radius: 16px !important;
+  }
+
+  .dashboard-container .header-time-card,
+  .dashboard-container .filter-panel {
+    border-radius: 12px !important;
+  }
+
+  .dashboard-container .stat-card,
+  .dashboard-container .glass-chart-card {
+    border-radius: 14px !important;
+  }
+
+  .dashboard-container[class] :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not([type='reset']):not([type='hidden']):not([type='file']):not([type='image']) {
+    border-radius: 8px !important;
+  }
 }
 
 /* =============================================
@@ -942,9 +1000,9 @@ canvas {
 }
 
 /* =============================================
-   SHARE CAPITAL — Remove white highlight
+   SHARE CAPITAL — Remove white highlight (dark mode only)
    ============================================= */
-.page-container .page-header {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .page-header {
   background: rgba(25, 38, 29, 0.92) !important;
   border: 1px solid rgba(190, 235, 203, 0.13) !important;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35) !important;
@@ -952,7 +1010,7 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.page-container .card {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .card {
   background: rgba(28, 42, 33, 0.90) !important;
   border: 1px solid rgba(190, 235, 203, 0.13) !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28) !important;
@@ -960,7 +1018,7 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.page-container .stat-card {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .stat-card {
   background: rgba(28, 42, 33, 0.90) !important;
   border: 1px solid rgba(190, 235, 203, 0.13) !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24) !important;
@@ -968,7 +1026,7 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.page-container .table-container {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .table-container {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -976,7 +1034,7 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.page-container .stats-grid {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .stats-grid {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -984,7 +1042,7 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-.page-container .empty-state {
+body.glass-dark .financial-container.share-capital-page:not(.light-theme) .empty-state {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -1137,21 +1195,18 @@ canvas {
 }
 
 /* =============================================
-   MACHINERY FINANCIAL — Light summary cards & readable text
+   MACHINERY FINANCIAL — Light colors only (layout matches dark)
    ============================================= */
 .financial-container.light-theme .summary-card {
   background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 8px 24px rgba(15, 23, 42, 0.06) !important;
+  border-color: #e2e8f0 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 .financial-container.light-theme .summary-card::before,
 .financial-container.light-theme .summary-card::after {
-  display: none !important;
+  opacity: 0.35 !important;
 }
 
 .financial-container.light-theme .summary-card .card-label,
@@ -1164,7 +1219,6 @@ canvas {
   color: #64748b !important;
 }
 
-/* Amounts: strong contrast on white (overrides global .income-card .card-amount etc.) */
 .financial-container.light-theme .income-card .card-amount,
 .financial-container.light-theme .income-card .summary-value {
   color: #166534 !important;
@@ -1202,13 +1256,8 @@ canvas {
   color: #b91c1c !important;
 }
 
-/* Hero KPI row (top three cards): black titles + amounts, subtitle-sized labels */
 .financial-container.light-theme .summary-cards > .summary-card .card-label {
   color: #111827 !important;
-  font-size: 1.0625rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.02em !important;
-  text-transform: none !important;
   text-shadow: none !important;
 }
 
@@ -1221,15 +1270,13 @@ canvas {
   color: #b91c1c !important;
 }
 
-/* Financial reports panel: white cards/buttons with black readable text */
 .financial-container.light-theme .report-option-card,
 .financial-container.light-theme .actions-card,
 .financial-container.light-theme .custom-date-inputs,
 .financial-container.light-theme .orientation-setting {
   background: #ffffff !important;
-  border: 1px solid #166534 !important;
+  border-color: #166534 !important;
   color: #111827 !important;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
 }
 
 .financial-container.light-theme .report-option-card h4,
@@ -1240,29 +1287,9 @@ canvas {
   text-shadow: none !important;
 }
 
-.financial-container.light-theme .report-option-card h4 {
-  font-size: 1.375rem !important;
-  font-weight: 800 !important;
-}
-
-.financial-container.light-theme .orientation-label {
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
-}
-
-.financial-container.light-theme .checkbox-inline span {
-  font-size: 1.125rem !important;
-  font-weight: 700 !important;
-}
-
 .financial-container.light-theme .filter-checkbox span {
   color: #111827 !important;
   text-shadow: none !important;
-  overflow: visible !important;
-  -webkit-line-clamp: unset !important;
-  display: block !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
 }
 
 .financial-container.light-theme .report-type-btn,
@@ -1271,45 +1298,36 @@ canvas {
 .financial-container.light-theme .btn-action {
   background: #ffffff !important;
   color: #111827 !important;
-  border: 1px solid #166534 !important;
-  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.08) !important;
+  border-color: #166534 !important;
   filter: none !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .financial-container.light-theme .report-type-btn .btn-text {
-  font-size: 1.125rem !important;
-  font-weight: 800 !important;
-}
-
-.financial-container.light-theme .btn-action {
-  font-size: 1.125rem !important;
-  font-weight: 800 !important;
+  color: #111827 !important;
 }
 
 .financial-container.light-theme .btn-action.print {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
   color: #ffffff !important;
   border-color: #14532d !important;
-  opacity: 1 !important;
 }
 
 .financial-container.light-theme .btn-action.print:disabled {
   background: #e2e8f0 !important;
   color: #334155 !important;
   border-color: #94a3b8 !important;
-  opacity: 1 !important;
   cursor: not-allowed !important;
 }
 
-.financial-container.light-theme .report-type-btn:hover,
-.financial-container.light-theme .orient-btn:hover,
-.financial-container.light-theme .btn-generate:hover,
-.financial-container.light-theme .btn-action:hover {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #94a3b8 !important;
+.financial-container.light-theme .report-type-btn:hover:not(.active),
+.financial-container.light-theme .orient-btn:hover:not(.active),
+.financial-container.light-theme .btn-generate:hover:not(.active),
+.financial-container.light-theme .btn-action:hover:not(.active):not(.print) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  border-color: #15803d !important;
 }
 
 .financial-container.light-theme .btn-action.print:hover:not(:disabled) {
@@ -1318,44 +1336,46 @@ canvas {
   border-color: #14532d !important;
 }
 
+/* Selected report / orientation buttons — high contrast (same look both themes) */
 .financial-container.light-theme .report-type-btn.active,
-.financial-container.light-theme .orient-btn.active {
-  background: #ffffff !important;
-  color: #14532d !important;
-  border-color: #7f9d81 !important;
-  box-shadow: 0 0 0 2px rgba(127, 157, 129, 0.28) !important;
+.financial-container.light-theme .orient-btn.active,
+.financial-container.light-theme .report-type-btn.active:hover,
+.financial-container.light-theme .orient-btn.active:hover,
+.financial-container.light-theme .report-type-btn.active:focus,
+.financial-container.light-theme .orient-btn.active:focus {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 12px rgba(22, 101, 52, 0.25) !important;
+  opacity: 1 !important;
+  transition: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.financial-container.light-theme .report-type-btn.active .btn-text {
+  color: #ffffff !important;
 }
 
 .financial-container.light-theme .filter-checkbox {
   background: #ffffff !important;
-  border: 1px solid #166534 !important;
-  box-shadow: none !important;
+  border-color: #166534 !important;
 }
 
 .financial-container.light-theme .filter-checkbox:hover {
-  background: #f8fafc !important;
-  border-color: #94a3b8 !important;
+  background: #f0fdf4 !important;
+  border-color: #15803d !important;
 }
 
-.financial-container.light-theme .report-type-btn .btn-icon,
-.financial-container.light-theme .btn-action .btn-icon {
-  display: none !important;
-}
-
-/* Filter bar & modals: white fields, dark text */
 .financial-container.light-theme :is(.filter-input, .filter-select-glass, .barangay-select, textarea.form-input, select.form-input, input.form-input):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not([type='reset']):not([type='hidden']):not([type='file']) {
   color: #111827 !important;
   background: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.06) !important;
+  border-color: #cbd5e1 !important;
 }
 
 .financial-container.light-theme :is(.filter-input, .filter-select-glass, .barangay-select, textarea.form-input, select.form-input, input.form-input):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not([type='reset']):not([type='hidden']):not([type='file']):focus {
   outline: none !important;
-  border-color: #7f9d81 !important;
-  box-shadow:
-    0 0 0 2px rgba(127, 157, 129, 0.28),
-    inset 2px 2px 4px rgba(0, 0, 0, 0.06) !important;
+  border-color: #16a34a !important;
 }
 
 .financial-container.light-theme select option {
@@ -1399,33 +1419,36 @@ canvas {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Tab pills (e.g. Profit Computation, Reports): white chrome, readable dark text */
 .financial-container.light-theme .tabs-container .tab {
   background: #ffffff !important;
   color: #111827 !important;
-  border: 1px solid #cbd5e1 !important;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  border-color: #cbd5e1 !important;
   filter: none !important;
 }
 
-.financial-container.light-theme .tabs-container .tab:hover {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #94a3b8 !important;
-  transform: translateY(-1px) !important;
+.financial-container.light-theme .tabs-container .tab:hover:not(.active) {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  border-color: #86efac !important;
   filter: none !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1) !important;
 }
 
-.financial-container.light-theme .tabs-container .tab.active {
-  background: #ffffff !important;
-  color: #14532d !important;
-  border-color: #7f9d81 !important;
-  box-shadow:
-    0 0 0 2px rgba(127, 157, 129, 0.35),
-    0 2px 10px rgba(15, 23, 42, 0.08) !important;
+.financial-container.light-theme .tabs-container .tab.active,
+.financial-container.light-theme .tabs-container .tab.active:hover,
+.financial-container.light-theme .tabs-container .tab.active:focus,
+.financial-container.light-theme .tabs-container .tab.active:focus-visible {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.financial-container.light-theme .tabs-container .tab.active .tab-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container .table-container {
@@ -1451,6 +1474,109 @@ canvas {
   .grid-2 {
     grid-template-columns: 1fr !important;
   }
+
+  /* Financial KPI row keeps its own compact 3-column layout */
+  .financial-container .summary-cards,
+  .financial-container .summary-cards.stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* Loan pages + Share Capital + Association Dues keep compact 2-column KPI grid on mobile */
+  .admin-loans-page .stats-grid,
+  .officer-loans-page .stats-grid,
+  .share-capital-page .stats-grid,
+  .share-capital-withdrawal-page .stats-grid,
+  .seed-fertilizer-plan .stats-grid,
+  .financial-overview-container .stats-grid,
+  .page-container.barangays-page .stats-grid--barangays,
+  .page-container.machinery-management-page .stats-grid--machinery,
+  .farmer-table-page .stats-grid--members,
+  .association-dues-view .stats-grid,
+  .operator-dashboard-page .stats-grid,
+  .machinery-management-page .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .share-capital-withdrawal-page .stats-grid--withdrawal {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .seed-fertilizer-plan .stats-grid--seed-fert {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .financial-overview-container .stats-grid--overview {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .page-container.barangays-page .stats-grid--barangays {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .page-container.machinery-management-page .stats-grid--machinery {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .page-container.machinery-approval-page .stats-grid--machinery-approval {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .farmer-table-page .stats-grid--members {
+    grid-template-columns: 1fr !important;
+  }
+
+  .farmer-table-page .stats-grid--roles {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .share-capital-withdrawal-page .grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .share-capital-withdrawal-page .stats-grid--withdrawal {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .seed-fertilizer-plan .stats-grid--seed-fert {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .financial-overview-container .stats-grid--overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .page-container.barangays-page .stats-grid--barangays {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .page-container.machinery-management-page .stats-grid--machinery {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .page-container.machinery-approval-page .stats-grid--machinery-approval {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .farmer-table-page .stats-grid--members {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .farmer-table-page .stats-grid--roles {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .farmer-table-page .stats-grid--roles {
+    grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+  }
+
+  .page-container.machinery-approval-page .stats-grid--machinery-approval {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -1466,6 +1592,16 @@ canvas {
   background-clip: border-box !important;
   color: #f2eee4 !important;
   -webkit-text-fill-color: currentColor !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+@media (min-width: 920px) {
+  .login-page.glass-auth-page .form-title {
+    font-size: 1.7rem !important;
+  }
 }
 
 .login-page.glass-auth-page .form-subtitle {
@@ -1473,8 +1609,14 @@ canvas {
 }
 
 /* Beat global :is(..., p, label) color !important on hero + form chrome */
-.login-page.glass-auth-page .identity-badge {
+.login-page.glass-auth-page .identity-badge,
+.login-page.glass-auth-page .identity-name {
   color: #ffd966 !important;
+  text-transform: none;
+}
+
+.login-page.glass-auth-page .identity-org {
+  color: rgba(249, 244, 231, 0.92) !important;
 }
 
 .login-page.glass-auth-page .identity-title {
@@ -1512,6 +1654,23 @@ canvas {
   box-shadow: none !important;
 }
 
+.login-page.glass-auth-page .auth-form .field-input-wrapper .form-input {
+  padding-left: 2rem !important;
+}
+
+.login-page.glass-auth-page .auth-form .password-input-wrapper.field-input-wrapper .form-input {
+  padding-right: 2.4rem !important;
+}
+
+.login-page.glass-auth-page .auth-form .field-icon {
+  color: #64748b !important;
+  z-index: 2 !important;
+}
+
+.login-page.light-theme.glass-auth-page .auth-form .field-icon {
+  color: #166534 !important;
+}
+
 .login-page.glass-auth-page .auth-form .form-input:focus,
 .login-page.glass-auth-page .auth-form select.form-input:focus,
 .login-page.glass-auth-page .auth-form textarea.form-input:focus {
@@ -1530,101 +1689,76 @@ canvas {
 }
 
 .login-page.glass-auth-page .link-btn {
-  border-radius: 999px !important;
-  border: 1px solid rgba(134, 239, 172, 0.5) !important;
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.2) 50%,
-    rgba(74, 222, 128, 0.22) 100%
-  ) !important;
-  color: rgba(220, 255, 235, 0.96) !important;
-  font-size: 0.8rem !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.01em !important;
-  box-shadow:
-    0 4px 18px rgba(74, 222, 128, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   transform: none !important;
   filter: none !important;
 }
 
 .login-page.glass-auth-page .link-btn:hover {
-  background: linear-gradient(
-    128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%
-  ) !important;
-  border-color: rgba(134, 239, 172, 0.72) !important;
-  color: #fff !important;
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow:
-    0 8px 28px rgba(74, 222, 128, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  background: transparent !important;
+  border: none !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  transform: none !important;
+  box-shadow: none !important;
   filter: none !important;
 }
 
 .login-page.glass-auth-page .submit-btn {
   position: relative !important;
   overflow: hidden !important;
-  border-radius: 999px !important;
-  border: 1px solid rgba(255, 220, 100, 0.48) !important;
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.88) 0%,
-    rgba(234, 110, 14, 0.84) 30%,
-    rgba(245, 168, 16, 0.82) 60%,
-    rgba(96, 160, 14, 0.86) 100%
-  ) !important;
-  color: #fff !important;
+  border-radius: 12px !important;
+  border: none !important;
+  background: #16a34a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
   font-weight: 700 !important;
-  font-size: 0.86rem !important;
-  letter-spacing: 0.03em !important;
-  padding: 0.62rem 1.36rem !important;
+  font-size: 0.95rem !important;
+  letter-spacing: -0.01em !important;
+  padding: 0.78rem 1.2rem !important;
   width: 100% !important;
   min-width: 0 !important;
+  min-height: 2.7rem !important;
   box-sizing: border-box !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
-  box-shadow:
-    0 10px 30px rgba(100, 30, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36) !important;
+  box-shadow: 0 8px 20px rgba(4, 18, 12, 0.32) !important;
   transform: none !important;
   filter: none !important;
   transition:
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.22s ease,
-    background 0.3s ease,
-    filter 0.22s ease !important;
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease !important;
 }
 
 .login-page.glass-auth-page .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(
-    128deg,
-    rgba(224, 72, 12, 0.96) 0%,
-    rgba(249, 130, 18, 0.92) 30%,
-    rgba(252, 196, 24, 0.9) 60%,
-    rgba(120, 190, 18, 0.94) 100%
-  ) !important;
-  transform: translateY(-3px) scale(1.028) !important;
-  box-shadow:
-    0 18px 42px rgba(100, 30, 0, 0.36),
-    0 0 36px rgba(234, 100, 20, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
-  filter: saturate(1.05) brightness(1.03) !important;
+  background: #22c55e !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 24px rgba(4, 18, 12, 0.36) !important;
+  filter: none !important;
 }
 
 .login-page.glass-auth-page .submit-btn:focus-visible {
   outline: none !important;
   box-shadow:
-    0 0 0 3px rgba(252, 200, 40, 0.46),
-    0 12px 36px rgba(100, 30, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
+    0 0 0 3px rgba(74, 222, 128, 0.38),
+    0 8px 20px rgba(4, 18, 12, 0.32) !important;
 }
 
 .login-page.glass-auth-page .submit-btn:disabled {
@@ -1647,8 +1781,14 @@ canvas {
   color: rgba(215, 207, 191, 0.92) !important;
 }
 
-.signup-page.glass-auth-page .identity-badge {
+.signup-page.glass-auth-page .identity-badge,
+.signup-page.glass-auth-page .identity-name {
   color: #ffd966 !important;
+  text-transform: none;
+}
+
+.signup-page.glass-auth-page .identity-org {
+  color: rgba(249, 244, 231, 0.92) !important;
 }
 
 .signup-page.glass-auth-page .identity-title {
@@ -1675,17 +1815,20 @@ canvas {
 .signup-page.glass-auth-page .form-footer,
 .signup-page.glass-auth-page .form-footer .footer-text {
   color: rgba(227, 255, 238, 0.92) !important;
+  background: transparent !important;
+  border-top: none !important;
 }
 
 /* FarmerSignup.vue: match Login glass auth (beat global dark :is(...) on .registration-form) */
 .signup-page.glass-auth-page .registration-form .form-group {
-  gap: 0.1rem !important;
+  gap: 0.14rem !important;
 }
 
 .signup-page.glass-auth-page .registration-form .form-label {
-  font-size: 0.68rem !important;
-  line-height: 1.1 !important;
-  margin: 0 !important;
+  font-size: 0.7rem !important;
+  line-height: 1.2 !important;
+  margin: 0 0 0 0.15rem !important;
+  padding: 0 !important;
 }
 
 .signup-page.glass-auth-page .registration-form .form-input,
@@ -1695,21 +1838,107 @@ canvas {
   color: #111111 !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
-  border-radius: 8px !important;
-  padding: 0.3rem 0.5rem !important;
+  border-radius: 11px !important;
+  padding: 0 0.66rem !important;
   font-size: 0.78rem !important;
-  line-height: 1.15 !important;
+  line-height: normal !important;
   min-height: 0 !important;
-  height: 1.9rem !important;
+  height: 2.3rem !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
 }
 
+/* Selects: global CSS strips the native arrow (appearance:none), and the white
+   background above wipes its replacement arrow image — restore it here */
+.signup-page.glass-auth-page .registration-form select.form-input {
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 0.7rem center !important;
+  padding-right: 1.9rem !important;
+}
+
 .signup-page.glass-auth-page .registration-form .field-input-wrapper .form-input {
-  padding-left: 1.75rem !important;
+  padding-left: 2rem !important;
 }
 
 .signup-page.glass-auth-page .registration-form .password-input-wrapper.field-input-wrapper .form-input {
-  padding-right: 2.15rem !important;
+  padding-right: 2.4rem !important;
+}
+
+.signup-page.glass-auth-page .registration-form .field-icon {
+  color: #64748b !important;
+  z-index: 2 !important;
+}
+
+.signup-page.light-theme.glass-auth-page .registration-form .field-icon {
+  color: #166534 !important;
+}
+
+.signup-page.light-theme.glass-auth-page .registration-form .password-toggle,
+.signup-page.light-theme.glass-auth-page .registration-form .password-toggle .password-toggle-svg {
+  color: #374151 !important;
+  stroke: currentColor !important;
+}
+
+@media (min-width: 920px) {
+  .signup-page.glass-auth-page .form-title {
+    font-size: 1.5rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .form-label {
+    font-size: 0.82rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .form-group {
+    gap: 0.28rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .form-input,
+  .signup-page.glass-auth-page .registration-form select.form-input,
+  .signup-page.glass-auth-page .registration-form textarea.form-input {
+    height: 2.75rem !important;
+    font-size: 0.92rem !important;
+    border-radius: 12px !important;
+    padding: 0 0.85rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .field-input-wrapper .form-input {
+    padding-left: 2.35rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .password-input-wrapper.field-input-wrapper .form-input {
+    padding-right: 2.7rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form select.form-input {
+    padding-right: 2rem !important;
+  }
+}
+
+/* Mobile: 16px font prevents iOS focus-zoom; taller inputs for touch (matches Login) */
+@media (max-width: 919px) {
+  .signup-page.glass-auth-page .registration-form .form-input,
+  .signup-page.glass-auth-page .registration-form select.form-input,
+  .signup-page.glass-auth-page .registration-form textarea.form-input {
+    height: 2.5rem !important;
+    font-size: 1rem !important;
+    padding: 0 0.7rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .field-input-wrapper .form-input {
+    padding-left: 2.2rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .password-input-wrapper.field-input-wrapper .form-input {
+    padding-right: 2.6rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form select.form-input {
+    padding-right: 2rem !important;
+  }
+
+  .signup-page.glass-auth-page .registration-form .form-label {
+    font-size: 0.78rem !important;
+  }
 }
 
 .signup-page.glass-auth-page .registration-form .form-input:focus,
@@ -1730,40 +1959,32 @@ canvas {
 }
 
 .signup-page.glass-auth-page .link-btn {
-  border-radius: 999px !important;
-  border: 1px solid rgba(134, 239, 172, 0.5) !important;
-  background: linear-gradient(
-    128deg,
-    rgba(200, 58, 8, 0.25) 0%,
-    rgba(245, 168, 16, 0.2) 50%,
-    rgba(74, 222, 128, 0.22) 100%
-  ) !important;
-  color: rgba(220, 255, 235, 0.96) !important;
-  font-size: 0.8rem !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.01em !important;
-  box-shadow:
-    0 4px 18px rgba(74, 222, 128, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   transform: none !important;
   filter: none !important;
+  text-decoration: none !important;
 }
 
 .signup-page.glass-auth-page .link-btn:hover {
-  background: linear-gradient(
-    128deg,
-    rgba(224, 72, 12, 0.88) 0%,
-    rgba(249, 130, 18, 0.86) 45%,
-    rgba(74, 222, 128, 0.88) 100%
-  ) !important;
-  border-color: rgba(134, 239, 172, 0.72) !important;
-  color: #fff !important;
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow:
-    0 8px 28px rgba(74, 222, 128, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  background: transparent !important;
+  border: none !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  transform: none !important;
+  box-shadow: none !important;
   filter: none !important;
 }
 
@@ -1833,4 +2054,47 @@ canvas {
   cursor: not-allowed !important;
   transform: none !important;
   filter: none !important;
+}
+
+@media (min-width: 920px) {
+  .signup-page.glass-auth-page .submit-btn {
+    min-height: 2.95rem !important;
+    font-size: 0.98rem !important;
+    border-radius: 13px !important;
+    padding: 0.78rem 1.2rem !important;
+    max-width: none !important;
+  }
+
+  .signup-page.glass-auth-page .link-btn {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Light auth: frosted card + inputs — must come after generic signup input rules */
+.login-page.light-theme.glass-auth-page .auth-form .form-input,
+.login-page.light-theme.glass-auth-page .auth-form select.form-input,
+.login-page.light-theme.glass-auth-page .auth-form textarea.form-input,
+.signup-page.light-theme.glass-auth-page .registration-form .form-input,
+.signup-page.light-theme.glass-auth-page .registration-form textarea.form-input {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 2px solid rgba(22, 101, 52, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.signup-page.light-theme.glass-auth-page .registration-form select.form-input {
+  background: rgba(255, 255, 255, 0.88) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 0.7rem center !important;
+}
+
+.login-page.light-theme.glass-auth-page .auth-form .form-input:focus,
+.login-page.light-theme.glass-auth-page .auth-form select.form-input:focus,
+.login-page.light-theme.glass-auth-page .auth-form textarea.form-input:focus,
+.signup-page.light-theme.glass-auth-page .registration-form .form-input:focus,
+.signup-page.light-theme.glass-auth-page .registration-form select.form-input:focus,
+.signup-page.light-theme.glass-auth-page .registration-form textarea.form-input:focus {
+  background: rgba(255, 255, 255, 0.94) !important;
+}
+
+.signup-page.light-theme.glass-auth-page .registration-form select.form-input:focus {
+  background: rgba(255, 255, 255, 0.94) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 0.7rem center !important;
 }

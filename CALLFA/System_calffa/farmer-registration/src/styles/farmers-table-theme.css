@@ -1,0 +1,927 @@
+/**
+ * Farmers Table (/farmers-table) — theme parity layer
+ * Loaded last so it wins over glass-unified / senior / farm theme rules.
+ *
+ * RULE: Theme selectors only set colors (and soft shadows for depth).
+ * Layout geometry is defined once and applied to BOTH themes.
+ */
+
+/* ========== SHARED GEOMETRY (both themes) ========== */
+.farmer-table-page .btn-summary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 18px !important;
+  border-radius: 10px !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  background-image: none !important;
+}
+
+.farmer-table-page .btn-summary:hover {
+  transform: translateY(-2px) !important;
+  filter: none !important;
+}
+
+.farmer-table-page .btn-tab-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.farmer-table-page .members-summary-tabs .tab-btn {
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  border-radius: 14px !important;
+  background-image: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.farmer-table-page .members-summary-tabs .tab-btn:hover,
+.farmer-table-page .members-summary-tabs .tab-btn.active {
+  transform: none !important;
+  filter: none !important;
+}
+
+.farmer-table-page .filter-bar {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 12px !important;
+  /* Barangay + search are always stacked (100% width) — keep vertical gap tight */
+  row-gap: 0.35rem !important;
+}
+
+.farmer-table-page .filter-search-input,
+.farmer-table-page .filter-select {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 8px !important;
+  font-size: 1.0625rem !important;
+  padding: 0.6rem 0.75rem 0.6rem 2.25rem !important;
+}
+
+.farmer-table-page .filter-select {
+  padding: 0.55rem 0.75rem !important;
+}
+
+.farmer-table-page .registered-members-card,
+.farmer-table-page .registered-members-card {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+}
+
+.farmer-table-page .registered-members-title,
+.farmer-table-page .registered-members-title {
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  margin: 0 0 0.85rem !important;
+  letter-spacing: 0.02em !important;
+}
+
+.farmer-table-page .members-table-container {
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+.farmer-table-page .members-table th,
+.farmer-table-page .members-table td {
+  padding: 4px 6px !important;
+  line-height: 1.25 !important;
+}
+
+.farmer-table-page .members-table th {
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+  white-space: nowrap !important;
+}
+
+.farmer-table-page .members-table td {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+  vertical-align: middle !important;
+}
+
+.farmer-table-page .members-table th:not(:last-child),
+.farmer-table-page .members-table td:not(:last-child) {
+  border-right-width: 1.5px !important;
+  border-right-style: solid !important;
+}
+
+.farmer-table-page .member-avatar,
+.farmer-table-page .member-avatar-wrap {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  box-shadow: none !important;
+}
+
+.farmer-table-page .members-action-row .table-action-btn,
+.farmer-table-page .members-action-row .table-action-protected {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  border-radius: 6px !important;
+  border-width: 1px !important;
+  padding: 0 !important;
+}
+
+.farmer-table-page .members-action-row .table-action-btn svg {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+.farmer-table-page .mmc-actions .table-action-btn.mmc-action-text {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 1.85rem !important;
+  padding: 0.28rem 0.55rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  border-radius: 7px !important;
+  border-width: 1.5px !important;
+}
+
+.farmer-table-page .bulk-approve-btn,
+.farmer-table-page .refresh-btn,
+.farmer-table-page .retry-btn {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-weight: 600 !important;
+  background-image: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.farmer-table-page .bulk-approve-btn:hover:not(:disabled),
+.farmer-table-page .refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+}
+
+.farmer-table-page .empty-state,
+.farmer-table-page .loading-state,
+.farmer-table-page .error-state {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-radius: 12px !important;
+  padding: 40px 20px !important;
+}
+
+/* ========== LIGHT MODE — high-contrast colors only ========== */
+.farmer-table-page.light-theme .btn-summary {
+  background: #ffffff !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border-color: #166534 !important;
+}
+
+.farmer-table-page.light-theme .btn-summary:hover {
+  background: #f0fdf4 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.16) !important;
+}
+
+.farmer-table-page.light-theme .btn-tab-icon {
+  color: #15803d !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #86efac !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.1) !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn-count {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn:hover {
+  background: #f0fdf4 !important;
+  border-color: #4ade80 !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active :is(.tab-icon, .tab-btn-label, .tab-btn-count) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .members-summary-tabs .tab-btn.active .tab-btn-count {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.farmer-table-page.light-theme .bulk-approve-btn,
+.farmer-table-page.light-theme .refresh-btn,
+.farmer-table-page.light-theme .retry-btn {
+  background: #ffffff !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.12) !important;
+}
+
+.farmer-table-page.light-theme .bulk-approve-btn:hover:not(:disabled),
+.farmer-table-page.light-theme .refresh-btn:hover:not(:disabled),
+.farmer-table-page.light-theme .retry-btn:hover:not(:disabled) {
+  background: #ecfdf5 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+}
+
+/* Action chips — dark chips (same as dark mode), bright labels for contrast */
+.farmer-table-page.light-theme .table-action-btn,
+.farmer-table-page.light-theme .machinery-action-btn {
+  background: rgba(10, 24, 18, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+.farmer-table-page.light-theme .table-action-btn:hover,
+.farmer-table-page.light-theme .machinery-action-btn:hover {
+  background: rgba(16, 36, 28, 1) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.farmer-table-page.light-theme .table-action-edit {
+  color: #fb923c !important;
+  -webkit-text-fill-color: #fb923c !important;
+}
+
+.farmer-table-page.light-theme .table-action-view {
+  color: #38bdf8 !important;
+  -webkit-text-fill-color: #38bdf8 !important;
+}
+
+.farmer-table-page.light-theme .table-action-delete {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .table-action-approve {
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
+}
+
+.farmer-table-page.light-theme .table-action-reject {
+  color: #f87171 !important;
+  -webkit-text-fill-color: #f87171 !important;
+}
+
+.farmer-table-page.light-theme .table-action-delete:hover {
+  background: rgba(40, 20, 20, 0.95) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Mobile text actions — dark olive chips + bright labels (readable on light page) */
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text {
+  background: #1a2e24 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 2px 6px rgba(4, 18, 12, 0.22) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text.table-action-view {
+  color: #7dd3fc !important;
+  -webkit-text-fill-color: #7dd3fc !important;
+}
+
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text.table-action-edit {
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
+}
+
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text.table-action-delete {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text.table-action-approve {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+.farmer-table-page.light-theme .mmc-actions .mmc-action-text.table-action-reject {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+.farmer-table-page.light-theme .role-tabs {
+  background: #f4faf6 !important;
+  border-color: #86efac !important;
+}
+
+.farmer-table-page.light-theme .role-tab {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+}
+
+.farmer-table-page.light-theme .role-tab-label {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page.light-theme .role-tab-count {
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+.farmer-table-page.light-theme .role-tab-icon {
+  color: #166534 !important;
+}
+
+.farmer-table-page.light-theme .role-tab.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+}
+
+.farmer-table-page.light-theme .role-tab.active :is(.role-tab-label, .role-tab-count, .role-tab-icon) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ========== DARK MODE — readable light-surface colors (geometry from shared block) ========== */
+.farmer-table-page:not(.light-theme) .btn-summary {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #16a34a !important;
+}
+
+.farmer-table-page:not(.light-theme) .btn-summary .btn-tab-icon {
+  color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+.farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  border-color: #15803d !important;
+}
+
+.farmer-table-page:not(.light-theme) .bulk-approve-btn,
+.farmer-table-page:not(.light-theme) .refresh-btn,
+.farmer-table-page:not(.light-theme) .retry-btn {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #15803d !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-btn {
+  background: rgba(10, 24, 18, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-edit {
+  color: #fb923c !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-view {
+  color: #38bdf8 !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-delete {
+  color: #ffffff !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-approve {
+  color: #4ade80 !important;
+}
+
+.farmer-table-page:not(.light-theme) .table-action-reject {
+  color: #f87171 !important;
+}
+
+/* Dark mobile text actions — same geometry, dark chips with clear labels */
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text {
+  background: rgba(10, 24, 18, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text.table-action-view {
+  color: #38bdf8 !important;
+}
+
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text.table-action-edit {
+  color: #fb923c !important;
+}
+
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text.table-action-delete {
+  color: #ffffff !important;
+}
+
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text.table-action-approve {
+  color: #4ade80 !important;
+}
+
+.farmer-table-page:not(.light-theme) .mmc-actions .mmc-action-text.table-action-reject {
+  color: #f87171 !important;
+}
+
+/* Beat global glass-light “all text black” for action labels */
+body.glass-light .farmer-table-page.light-theme :is(
+  .table-action-btn,
+  .table-action-btn.mmc-action-text,
+  button.table-action-view,
+  button.table-action-edit,
+  button.table-action-delete,
+  button.table-action-approve,
+  button.table-action-reject
+) {
+  background: #1a2e24 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme button.table-action-view {
+  color: #7dd3fc !important;
+  -webkit-text-fill-color: #7dd3fc !important;
+}
+
+body.glass-light .farmer-table-page.light-theme button.table-action-edit {
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
+}
+
+body.glass-light .farmer-table-page.light-theme button.table-action-delete {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-light .farmer-table-page.light-theme button.table-action-approve {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+body.glass-light .farmer-table-page.light-theme button.table-action-reject {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+/* ========== MOBILE shared geometry (theme-agnostic) ========== */
+@media (max-width: 768px) {
+  /* Tighten barangay filter ↔ name search stack */
+  .farmer-table-page .filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    row-gap: 6px !important;
+  }
+
+  .farmer-table-page .filter-barangay-row,
+  .farmer-table-page .filter-search-wrap {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .farmer-table-page .filter-select,
+  .farmer-table-page .filter-search-input {
+    margin: 0 !important;
+  }
+
+  .farmer-table-page .page-top-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.45rem !important;
+    margin-bottom: 0.55rem !important;
+  }
+
+  .farmer-table-page .page-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 16.8px !important; /* fixed px so body 17px light root can't wrap the row */
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .farmer-table-page .btn-summary {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 0.4rem 0.7rem !important;
+    font-size: 11.5px !important;
+    gap: 5px !important;
+    border-radius: 8px !important;
+  }
+
+  .farmer-table-page .btn-tab-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .farmer-table-page .members-summary-tabs .tab-btn {
+    min-height: 0 !important;
+    padding: 0.4rem 0.25rem !important;
+    gap: 2px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Mobile action buttons — beat shared geometry locks */
+  .farmer-table-page .mmc-actions .table-action-btn,
+  .farmer-table-page .mmc-actions .table-action-protected {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    transform: none !important;
+  }
+
+  .farmer-table-page .mmc-actions .table-action-btn svg {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+  }
+
+  .farmer-table-page .mmc-actions .table-action-btn.mmc-action-text {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 0.7rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    border-radius: 8px !important;
+  }
+
+  .farmer-table-page .mmc-actions {
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+  }
+
+  .farmer-table-page .mmc-actions .table-action-btn:hover,
+  .farmer-table-page .mmc-actions .table-action-btn:active {
+    transform: none !important;
+  }
+
+  .farmer-table-page .members-mobile-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    padding: 0.55rem 0.6rem !important;
+  }
+
+  .farmer-table-page .mmc-head,
+  .farmer-table-page .mmc-rows,
+  .farmer-table-page .mmc-controls {
+    margin-bottom: 0 !important;
+  }
+
+  .farmer-table-page .member-avatar,
+  .farmer-table-page .member-avatar-wrap {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+  }
+}
+
+/* ========== DESKTOP COMPACT LAYOUT (both themes) ========== */
+@media (min-width: 769px) {
+  html body .farmer-table-page.glass-module-page {
+    padding: 8px 12px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    overflow-x: clip !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .page-top-row {
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .btn-summary {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .stats-group--members {
+    margin-bottom: 6px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-summary-tabs.stats-grid--members {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .tab-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    gap: 0 !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .stat-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .stat-label,
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .tab-btn-label {
+    font-size: 8px !important;
+    margin: 0 0 1px !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .stat-value,
+  html body .farmer-table-page.glass-module-page .members-summary-tabs .tab-btn-count {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-weight: 800 !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .filter-bar {
+    padding: 5px 8px !important;
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .filter-label {
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .filter-search-input,
+  html body .farmer-table-page.glass-module-page .filter-select {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .filter-search-input {
+    padding-left: 2rem !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .registered-members-card {
+    padding: 6px 8px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .registered-members-title {
+    font-size: 0.82rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .role-tabs {
+    gap: 4px !important;
+    padding: 4px !important;
+    margin-bottom: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .role-tab {
+    min-height: 0 !important;
+    padding: 4px 6px !important;
+    gap: 2px !important;
+    border-radius: 6px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .role-tab-icon {
+    display: none !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .role-tab-label {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .role-tab-count {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .registered-table-scroll {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    max-height: min(24rem, 55vh) !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    border-radius: 6px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .members-table-container {
+    border-width: 1px !important;
+  }
+
+  html body .farmer-table-page.glass-module-page .bulk-approve-btn,
+  html body .farmer-table-page.glass-module-page .refresh-btn,
+  html body .farmer-table-page.glass-module-page .retry-btn {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html body .farmer-table-page.glass-module-page .members-summary-tabs.stats-grid--members {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+  }
+}
+
+/* Role tabs — compact label/number grid (all viewports) */
+.farmer-table-page .role-tabs.stats-grid--roles {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  margin-bottom: 6px !important;
+  border-radius: 8px !important;
+}
+
+.farmer-table-page .role-tabs .role-tab-icon {
+  display: none !important;
+}
+
+.farmer-table-page .role-tabs .role-tab-content,
+.farmer-table-page .role-tabs .stat-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+@media (min-width: 1200px) {
+  html body .farmer-table-page .role-tabs.stats-grid--roles {
+    grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .farmer-table-page .role-tabs .role-tab {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 4px 6px !important;
+    border-radius: 6px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  html body .farmer-table-page .role-tabs .role-tab-label {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  html body .farmer-table-page .role-tabs .role-tab-count {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+    margin-top: 1px !important;
+  }
+
+  html body .farmer-table-page .role-tabs .role-tab:hover,
+  html body .farmer-table-page .role-tabs .role-tab.active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Layout lock — neutralize global .stat-card glass sizing on role filter tabs */
+html body .farmer-table-page .role-tabs.stats-grid--roles {
+  display: grid !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  margin-bottom: 6px !important;
+  border-radius: 8px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+html body .farmer-table-page .role-tabs.stats-grid--roles .role-tab.stat-card {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 4px 6px !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  transform: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body .farmer-table-page .role-tabs.stats-grid--roles .role-tab-icon,
+html body .farmer-table-page .role-tabs.stats-grid--roles .stat-icon-wrap {
+  display: none !important;
+}
+
+html body .farmer-table-page .role-tabs.stats-grid--roles :is(.stat-label, .role-tab-label) {
+  font-size: 8px !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+html body .farmer-table-page .role-tabs.stats-grid--roles :is(.stat-value, .role-tab-count) {
+  font-size: 0.95rem !important;
+  line-height: 1.05 !important;
+  margin-top: 1px !important;
+}
+
+@media (min-width: 1200px) {
+  html body .farmer-table-page .role-tabs.stats-grid--roles {
+    grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+  }
+}

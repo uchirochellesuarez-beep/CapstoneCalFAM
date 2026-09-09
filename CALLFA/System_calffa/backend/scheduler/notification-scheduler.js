@@ -12,6 +12,7 @@ const {
 
 let intervalId = null;
 let lastProcessedDate = null;
+let dailyTasksRunning = false;
 
 /**
  * Update loans to overdue status if past due date
@@ -126,7 +127,7 @@ async function updateOverdueLoans() {
 
 /**
  * Update machinery bookings to apply interest if past due date (30 days from booking).
- * Interest: Season 1 (0-6 months overdue) = 2%, Season 2 (6+ months) = 4%
+ * Interest uses each machinery's configured rate (season 2 = 2× rate when overdue 6+ months).
  * Calculated on the original total_price (before any interest additions).
  * Interest is added to total_price, increasing the remaining balance.
  */
@@ -176,15 +177,20 @@ async function runDailyTasksIfDateChanged(forceRun = false) {
   const todayStr = getManilaTodayString();
   const shouldRun = forceRun || lastProcessedDate !== todayStr;
 
-  if (!shouldRun) return;
+  if (!shouldRun || dailyTasksRunning) return;
 
+  dailyTasksRunning = true;
   console.log(`📅 Date checkpoint changed: ${lastProcessedDate || 'none'} -> ${todayStr}`);
-  await syncExpiredMachineryBookings();
-  await updateOverdueLoans();
-  await updateOverdueMachineryBookings();
-  await generateDueDateNotifications();
-  lastProcessedDate = todayStr;
-  console.log('✅ Daily notification tasks completed');
+  try {
+    await syncExpiredMachineryBookings();
+    await updateOverdueLoans();
+    await updateOverdueMachineryBookings();
+    await generateDueDateNotifications();
+    lastProcessedDate = todayStr;
+    console.log('✅ Daily notification tasks completed');
+  } finally {
+    dailyTasksRunning = false;
+  }
 }
 
 /**
@@ -210,7 +216,7 @@ function startNotificationScheduler() {
   const parsedInterval = Number(process.env.NOTIFICATION_DATE_CHECK_INTERVAL_MS);
   const DATE_CHECK_INTERVAL_MS = Number.isFinite(parsedInterval) && parsedInterval > 0
     ? parsedInterval
-    : 1000;
+    : 15000;
   intervalId = setInterval(async () => {
     try {
       await runDailyTasksIfDateChanged(false);

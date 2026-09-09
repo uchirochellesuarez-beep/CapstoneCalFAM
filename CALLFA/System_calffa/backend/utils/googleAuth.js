@@ -31,8 +31,12 @@ async function verifyGoogleToken(token, clientId) {
         return reject(new Error(`Token audience mismatch. Token aud: ${payload.aud}, Expected: ${clientId}`));
       }
 
-      // Verify email is verified
-      if (!payload.email_verified) {
+      if (!payload.email) {
+        return reject(new Error('Google token is missing email'));
+      }
+
+      // Some GIS/FedCM tokens omit email_verified; only reject an explicit false.
+      if (payload.email_verified === false) {
         return reject(new Error('Email not verified by Google'));
       }
 
@@ -115,6 +119,30 @@ async function hasFarmersGoogleIdColumn(pool) {
   return columns.length > 0;
 }
 
+async function ensureFarmersEmailColumn(pool) {
+  const exists = await hasFarmersEmailColumn(pool);
+  if (exists) return;
+
+  await pool.execute(
+    `ALTER TABLE farmers
+     ADD COLUMN email VARCHAR(191) NULL
+     AFTER full_name`
+  );
+
+  const [indexRows] = await pool.execute(
+    `SELECT INDEX_NAME
+     FROM INFORMATION_SCHEMA.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'farmers'
+       AND INDEX_NAME = 'uq_farmers_email'
+     LIMIT 1`
+  );
+
+  if (indexRows.length === 0) {
+    await pool.execute(`CREATE UNIQUE INDEX uq_farmers_email ON farmers(email)`);
+  }
+}
+
 async function ensureFarmersGoogleIdColumn(pool) {
   const exists = await hasFarmersGoogleIdColumn(pool);
   if (exists) return;
@@ -189,6 +217,7 @@ module.exports = {
   extractGoogleProfileData,
   hasFarmersEmailColumn,
   hasFarmersGoogleIdColumn,
+  ensureFarmersEmailColumn,
   ensureFarmersGoogleIdColumn,
   findUserByEmail,
   findUserByGoogleId

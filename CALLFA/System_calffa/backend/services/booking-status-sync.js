@@ -3,18 +3,21 @@ const {
   formatLocalDate,
   normalizeDateString,
   ensureNotificationSchema,
-  createBookingStatusNotification
+  createBookingStatusNotification,
+  createOperatorBookingAssignedNotification
 } = require('./notification-service');
 
 const {
   EXPIRABLE_DOWN_PAYMENT_STATUSES,
   BOOKING_STATUS_ENUM_VALUES,
+  LEGACY_DOWN_PAYMENT_STATUSES,
   calendarBlockingStatusesSql
 } = require('./booking-workflow');
 
 const EXPIRABLE_BOOKING_STATUSES = EXPIRABLE_DOWN_PAYMENT_STATUSES;
 
 let bookingSchemaPromise = null;
+let downPaymentMigrationPromise = null;
 
 async function ensureBookingSchema() {
   if (!bookingSchemaPromise) {
@@ -51,10 +54,77 @@ async function ensureBookingSchema() {
   return bookingSchemaPromise;
 }
 
+async function migrateLegacyDownPaymentBookings() {
+  const placeholders = LEGACY_DOWN_PAYMENT_STATUSES.map(() => '?').join(', ');
+  const [rows] = await pool.execute(
+    `SELECT mb.id, mb.farmer_id, mb.booking_date, mb.assigned_operator_id,
+            mi.machinery_name, mi.assigned_operator_id AS machinery_operator_id
+     FROM machinery_bookings mb
+     LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+     WHERE mb.status IN (${placeholders})
+       AND COALESCE(mb.down_payment_amount, 0) <= 0`,
+    LEGACY_DOWN_PAYMENT_STATUSES
+  );
+
+  for (const row of rows) {
+    const operatorId = row.assigned_operator_id || row.machinery_operator_id || null;
+    await pool.execute(
+      `UPDATE machinery_bookings
+       SET status = 'Approved',
+           assigned_operator_id = COALESCE(assigned_operator_id, ?)
+       WHERE id = ?`,
+      [operatorId, row.id]
+    );
+
+    await createBookingStatusNotification({
+      farmerId: row.farmer_id,
+      bookingId: row.id,
+      status: 'Approved',
+      machineryName: row.machinery_name,
+      bookingDate: row.booking_date
+    });
+
+    if (operatorId) {
+      await createOperatorBookingAssignedNotification({
+        operatorId,
+        bookingId: row.id,
+        machineryName: row.machinery_name,
+        bookingDate: row.booking_date
+      });
+    }
+  }
+
+  if (rows.length) {
+    console.log(`✅ Migrated ${rows.length} down-payment booking(s) to Approved (no down payment required)`);
+  }
+}
+
+async function migrateLegacyConfirmedBookings() {
+  const [result] = await pool.execute(
+    `UPDATE machinery_bookings
+     SET status = 'Approved'
+     WHERE status IN ('Booking Confirmed', 'Assigned to Operator')`
+  );
+  if (result.affectedRows) {
+    console.log(`✅ Unified ${result.affectedRows} booking(s) to Approved`);
+  }
+}
+
 async function syncExpiredMachineryBookings(options = {}) {
   const { bookingId = null } = options;
 
   await Promise.all([ensureBookingSchema(), ensureNotificationSchema()]);
+
+  if (!downPaymentMigrationPromise) {
+    downPaymentMigrationPromise = Promise.all([
+      migrateLegacyDownPaymentBookings(),
+      migrateLegacyConfirmedBookings()
+    ]).catch((error) => {
+      downPaymentMigrationPromise = null;
+      console.error('Failed to migrate legacy booking statuses:', error);
+    });
+  }
+  await downPaymentMigrationPromise;
 
   const todayStr = formatLocalDate(new Date());
   let query = `

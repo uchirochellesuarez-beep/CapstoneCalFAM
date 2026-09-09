@@ -19,13 +19,6 @@ async function userOwnsMachineryReceipt(userId, receipt) {
     bookingId = receipt.metadata?.booking_id
       ? parseInt(receipt.metadata.booking_id, 10)
       : null;
-    if (!bookingId) {
-      const [rows] = await pool.execute(
-        'SELECT booking_id FROM machinery_booking_refunds WHERE id = ?',
-        [refId]
-      );
-      bookingId = rows[0]?.booking_id || null;
-    }
   }
 
   if (!bookingId) return false;
@@ -40,6 +33,66 @@ async function userOwnsMachineryReceipt(userId, receipt) {
   );
 }
 
+async function userOwnsShareCapitalReceipt(userId, receipt) {
+  if (!userId || !receipt) return false;
+
+  const module = String(receipt.module || '');
+  const refId = parseInt(receipt.reference_id, 10);
+  if (!refId) return false;
+
+  if (module === 'share_capital' && receipt.reference_type === 'share_capital_contribution') {
+    const [rows] = await pool.execute(
+      'SELECT farmer_id FROM share_capital_contributions WHERE id = ?',
+      [refId]
+    );
+    return rows.length > 0 && parseInt(rows[0].farmer_id, 10) === parseInt(userId, 10);
+  }
+
+  if (module === 'share_capital_withdrawal' && receipt.reference_type === 'share_capital_withdrawal') {
+    const [rows] = await pool.execute(
+      'SELECT farmer_id FROM share_capital_withdrawals WHERE id = ?',
+      [refId]
+    );
+    return rows.length > 0 && parseInt(rows[0].farmer_id, 10) === parseInt(userId, 10);
+  }
+
+  return false;
+}
+
+async function userOwnsOperatorLaborReceipt(userId, receipt) {
+  if (!userId || !receipt) return false;
+  if (String(receipt.module || '') !== 'operator_labor') return false;
+
+  const incomeId = parseInt(receipt.reference_id, 10);
+  if (!incomeId) return false;
+
+  const [rows] = await pool.execute(
+    'SELECT operator_id FROM operator_income WHERE id = ?',
+    [incomeId]
+  );
+  return (
+    rows.length > 0 &&
+    parseInt(rows[0].operator_id, 10) === parseInt(userId, 10)
+  );
+}
+
+async function userOwnsLoanReceipt(userId, receipt) {
+  if (!userId || !receipt) return false;
+  if (String(receipt.module || '') !== 'admin_loan') return false;
+
+  const loanId = parseInt(receipt.reference_id, 10);
+  if (!loanId) return false;
+
+  const [rows] = await pool.execute(
+    'SELECT farmer_id FROM loans WHERE id = ?',
+    [loanId]
+  );
+  return (
+    rows.length > 0 &&
+    parseInt(rows[0].farmer_id, 10) === parseInt(userId, 10)
+  );
+}
+
 router.get('/:receiptNumber', verifyToken, async (req, res) => {
   try {
     const receipt = await getPaymentReceipt(pool, req.params.receiptNumber);
@@ -49,7 +102,11 @@ router.get('/:receiptNumber', verifyToken, async (req, res) => {
 
     const receiptBarangayId = receipt.barangay_id;
     const canBarangay = canAccessBarangay(req.user, receiptBarangayId);
-    const ownsReceipt = await userOwnsMachineryReceipt(req.user.id, receipt);
+    const ownsReceipt =
+      (await userOwnsMachineryReceipt(req.user.id, receipt)) ||
+      (await userOwnsShareCapitalReceipt(req.user.id, receipt)) ||
+      (await userOwnsOperatorLaborReceipt(req.user.id, receipt)) ||
+      (await userOwnsLoanReceipt(req.user.id, receipt));
 
     if (!canBarangay && !ownsReceipt) {
       return res.status(403).json({

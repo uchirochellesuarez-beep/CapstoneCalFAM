@@ -1,55 +1,56 @@
 <template>
-  <div class="financial-container glass-module-page" :class="{ 'light-theme': isLight }">
-    <div class="page-header">
-      <div class="header-content">
-        <h1>Machinery Financial Management</h1>
-        <p class="page-subtitle">Record expenses, income, and manage profit distribution</p>
+  <div
+    class="financial-container page-container machinery-financial-page machinery-ui glass-module-page"
+    :class="{ 'light-theme': isLight, 'association-dues-view': isDuesOnlyView }"
+  >
+    <div class="page-header page-header-split">
+      <div class="page-header-text">
+        <h1 class="page-title">{{ activeTab === 'dues' ? $t('ui.associationDuesTransactions') : $t('ui.machineryFinancial') }}</h1>
+        <p class="page-subtitle">{{ activeTab === 'dues' ? $t('ui.associationDuesSub') : $t('ui.machineryFinancialSub') }}</p>
       </div>
     </div>
 
     <!-- Access Denied Message -->
     <div v-if="!hasAccess" class="access-denied">
       <div class="denied-content">
-        <p class="denied-icon">🔒</p>
-        <p class="denied-text">Access Denied</p>
-        <p class="denied-reason">Only Admin, President, Treasurer, and Auditor can access this section.</p>
+        <p class="denied-text">{{ $t('ui.accessDenied') }}</p>
+        <p class="denied-reason">{{ $t('ui.onlyFinanceAccess') }}</p>
       </div>
     </div>
 
     <div v-else>
       <!-- Barangay Context Display -->
       <div v-if="!isDuesOnlyView && !isAdmin" class="barangay-context">
-        <span class="context-badge">📍 {{ userRole === 'treasurer' ? 'Managing' : 'Viewing' }} financial data for your assigned barangay</span>
+        <span class="context-badge">{{ userRole === 'treasurer' ? $t('ui.managingFinancialAssigned') : $t('ui.viewingFinancialAssigned') }}</span>
       </div>
       <div v-else-if="!isDuesOnlyView" class="barangay-context admin-context">
-        <span class="context-badge">🌐 Admin View</span>
         <div class="admin-filter">
-          <label for="barangay-select">Filter by Barangay:</label>
+          <label for="barangay-select">{{ $t('ui.filterByBarangayColon') }}</label>
           <select id="barangay-select" v-model="selectedBarangayId" class="barangay-select">
-            <option value="">All Barangays (Consolidated)</option>
+            <option value="">{{ $t('ui.allBarangaysConsolidated') }}</option>
             <option v-for="b in barangays" :key="b.id" :value="b.id">{{ b.name }}</option>
           </select>
         </div>
       </div>
       
       <!-- Financial Summary Cards -->
-      <div v-if="!isDuesOnlyView" class="summary-cards">
-        <div class="summary-card income-card">
-          <div class="card-content">
-            <span class="card-label">Total Income</span>
-            <span class="card-amount">₱{{ formatNumber(profitSummary.total_income) }}</span>
+      <div v-if="!isDuesOnlyView" class="summary-cards stats-grid">
+        <div class="summary-card income-card stat-card">
+          <div class="card-content stat-content">
+            <span class="card-label stat-label">{{ $t('ui.totalIncome') }}</span>
+            <span class="card-amount stat-value">₱{{ formatNumber(profitSummary.total_income) }}</span>
           </div>
         </div>
-        <div class="summary-card expense-card">
-          <div class="card-content">
-            <span class="card-label">Total Expenses</span>
-            <span class="card-amount">₱{{ formatNumber(profitSummary.total_expenses) }}</span>
+        <div class="summary-card expense-card stat-card">
+          <div class="card-content stat-content">
+            <span class="card-label stat-label">{{ $t('ui.totalExpenses') }}</span>
+            <span class="card-amount stat-value">₱{{ formatNumber(profitSummary.total_expenses) }}</span>
           </div>
         </div>
-        <div class="summary-card profit-card" :class="{ negative: profitSummary.net_profit < 0 }">
-          <div class="card-content">
-            <span class="card-label">Net Profit</span>
-            <span class="card-amount">₱{{ formatNumber(profitSummary.net_profit) }}</span>
+        <div class="summary-card profit-card stat-card" :class="{ negative: profitSummary.net_profit < 0 }">
+          <div class="card-content stat-content">
+            <span class="card-label stat-label">{{ $t('ui.netProfit') }}</span>
+            <span class="card-amount stat-value">₱{{ formatNumber(profitSummary.net_profit) }}</span>
           </div>
         </div>
       </div>
@@ -61,66 +62,30 @@
           :key="tab.id"
           type="button"
           :class="['tab', { active: activeTab === tab.id }]"
-          @click="activeTab = tab.id"
+          @click="selectTab(tab.id, $event)"
         >
-          <span class="tab-inner">
-            <svg v-if="tab.id === 'expenses'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            <svg v-else-if="tab.id === 'income'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-              <polyline points="17 6 23 6 23 12"/>
-            </svg>
-            <svg v-else-if="tab.id === 'ar'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="5" width="20" height="14" rx="2"/>
-              <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-            <svg v-else-if="tab.id === 'profit'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 3v18h18"/>
-              <path d="M7 16l4-4 4 4 5-6"/>
-            </svg>
-            <svg v-else-if="tab.id === 'reports'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <line x1="10" y1="9" x2="8" y2="9"/>
-            </svg>
-            <svg v-else-if="tab.id === 'dues'" class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span class="tab-label">{{ tab.label }}<span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span></span>
-          </span>
+          <span class="tab-label">{{ $t(tab.labelKey) }}</span>
+          <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
         </button>
       </div>
 
       <!-- TAB 1: EXPENSES MANAGEMENT -->
       <div v-if="activeTab === 'expenses'" class="tab-content">
         <div class="section-header">
-          <h2>Expense Management</h2>
-          <button v-if="canManage" @click="openManualExpenseForm" class="btn-primary">+ Record Manual Expense</button>
-          <span v-else class="view-only-badge">👁️ View Only</span>
+          <h2>{{ $t('ui.expenseManagement') }}</h2>
+          <button v-if="canManage" @click="openManualExpenseForm" class="btn-primary">{{ $t('common.recordManualExpense') }}</button>
+          <span v-else class="view-only-badge">{{ $t('ui.viewOnly') }}</span>
         </div>
 
         <div v-if="expenseSummary.pending_count > 0" class="pending-expense-alert">
           <strong>{{ expenseSummary.pending_count }}</strong> completed rental(s) awaiting expense entry.
         </div>
 
-        <div v-if="isPaymentVerifier && pendingPaymentsCount > 0" class="pending-expense-alert payment-alert">
-          <strong>{{ pendingPaymentsCount }}</strong> down payment or refund item(s) awaiting action on the Booking Payments tab.
-        </div>
-
-        <div class="filters-section">
+        <div class="filters-section tools-card">
           <div class="filter-group">
-            <label class="filter-label">Machinery/Equipment:</label>
-            <select v-model="filters.machinery_id" class="filter-input">
-              <option value="">All Machinery/Equipment</option>
+            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
+            <select v-model="filters.machinery_id" class="filter-input toolbar-select">
+              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
               <option v-for="m in machinery" :key="m.id" :value="m.id">
                 {{ m.machinery_name }} ({{ m.machinery_type }})
               </option>
@@ -128,265 +93,229 @@
           </div>
           <div class="filter-group">
             <label class="filter-label">Operator:</label>
-            <select v-model="filters.operator_id" class="filter-input">
-              <option value="">All Operators</option>
+            <select v-model="filters.operator_id" class="filter-input toolbar-select">
+              <option value="">{{ $t('ui.allOperators') }}</option>
               <option v-for="op in expenseOperators" :key="op.id" :value="op.id">{{ op.name }}</option>
             </select>
           </div>
           <div class="filter-group">
             <label class="filter-label">Expense Status:</label>
-            <select v-model="filters.expense_status" class="filter-input">
-              <option value="">All Status</option>
-              <option value="Pending">Pending Entry</option>
-              <option value="Recorded">Recorded</option>
+            <select v-model="filters.expense_status" class="filter-input toolbar-select">
+              <option value="">{{ $t('ui.allStatus') }}</option>
+              <option value="Pending">{{ $t('ui.pendingEntry') }}</option>
+              <option value="Recorded">{{ $t('ui.recorded') }}</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Start Date:</label>
-            <input v-model="filters.start_date" type="date" class="filter-input" />
+            <label class="filter-label">{{ $t('ui.startDateColon') }}</label>
+            <input v-model="filters.start_date" type="date" class="filter-input toolbar-input" />
           </div>
           <div class="filter-group">
-            <label class="filter-label">End Date:</label>
-            <input v-model="filters.end_date" type="date" class="filter-input" />
+            <label class="filter-label">{{ $t('ui.endDateColon') }}</label>
+            <input v-model="filters.end_date" type="date" class="filter-input toolbar-input" />
           </div>
           <div class="filter-actions">
-            <button @click="loadExpenses" class="btn-secondary">Filter</button>
-            <button @click="clearExpenseFilters" class="btn-secondary-outline">Clear</button>
+            <button type="button" @click="loadExpenses" class="btn-secondary">{{ $t('common.filter') }}</button>
+            <button type="button" @click="clearExpenseFilters" class="btn-secondary-outline">{{ $t('common.clear') }}</button>
           </div>
         </div>
 
         <div class="expense-section-block">
-          <h3 class="expense-section-title">Pending Expense Entries <span class="section-count">{{ pendingExpenses.length }}</span></h3>
-          <p class="section-hint">Generated automatically from completed rental transactions.</p>
+          <h3 class="expense-section-title">{{ $t('ui.pendingExpenseEntriesTitle') }} <span class="section-count">{{ pendingExpenses.length }}</span></h3>
+          <p class="section-hint">{{ $t('ui.generatedFromRentals') }}</p>
           <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Booking</th><th>Machinery</th><th>Operator</th><th>Farmer</th>
-                  <th>Service Date</th><th>Location</th><th>Status</th>
-                  <th v-if="canManage">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="expense in pendingExpenses" :key="'p-' + expense.id">
-                  <td>#{{ expense.booking_id }}</td>
-                  <td>{{ expense.machinery_name }}</td>
-                  <td>{{ expense.operator_name || '—' }}</td>
-                  <td>{{ expense.farmer_name || '—' }}</td>
-                  <td>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</td>
-                  <td>{{ expense.service_location || '—' }}</td>
-                  <td><span class="badge badge-pending">Pending Entry</span></td>
-                  <td v-if="canManage"><button @click="completePendingExpense(expense)" class="btn-primary btn-sm">Record Expenses &amp; Print Receipt</button></td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="pendingExpenses.length === 0" class="empty-state"><p>No pending expense entries.</p></div>
-          </div>
-        </div>
-
-        <div class="expense-section-block">
-          <h3 class="expense-section-title">Completed Expense Records <span class="section-count">{{ recordedBookingExpenses.length }}</span></h3>
-          <p class="section-hint">Expenses recorded from completed rental transactions.</p>
-          <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Booking</th><th>Machinery</th><th>Date</th><th>Operator</th>
-                  <th>Labor</th><th>Total</th><th>Receipt No.</th><th>Status</th><th v-if="canManage">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="expense in recordedBookingExpenses" :key="'rb-' + expense.id">
-                  <td>#{{ expense.booking_id }}</td>
-                  <td>{{ expense.machinery_name }}</td>
-                  <td>{{ formatDate(expense.date_of_expense) }}</td>
-                  <td>{{ expense.operator_name || '—' }}</td>
-                  <td>₱{{ formatNumber(expense.labor_cost) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
-                  <td>{{ expense.reference_number || '—' }}</td>
-                  <td><span class="badge badge-recorded">Recorded</span></td>
-                  <td v-if="canManage" class="actions-cell members-action-row">
-                    <button v-if="expense.reference_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(expense.reference_number)">Print</button>
-                    <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="recordedBookingExpenses.length === 0" class="empty-state"><p>No recorded transaction expenses yet.</p></div>
-          </div>
-        </div>
-
-        <div class="expense-section-block">
-          <h3 class="expense-section-title">Manual Expense Entries <span class="section-count">{{ manualExpenses.length }}</span></h3>
-          <p class="section-hint">Expenses manually added by the Treasurer.</p>
-          <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Machinery</th><th>Date</th><th>Particulars</th><th>Receipt No.</th>
-                  <th>Fuel</th><th>Labor</th><th>Total</th><th v-if="canManage">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="expense in manualExpenses" :key="'m-' + expense.id">
-                  <td>{{ expense.machinery_name }}</td>
-                  <td>{{ formatDate(expense.date_of_expense) }}</td>
-                  <td>{{ expense.particulars }}</td>
-                  <td>{{ expense.reference_number || '—' }}</td>
-                  <td>₱{{ formatNumber(expense.fuel_and_oil) }}</td>
-                  <td>₱{{ formatNumber(expense.labor_cost) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
-                  <td v-if="canManage" class="actions-cell members-action-row">
-                    <button v-if="expense.reference_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(expense.reference_number)">Print</button>
-                    <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                    <button type="button" @click="deleteExpense(expense.id)" class="table-action-btn table-action-delete" title="Delete" aria-label="Delete">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                        <path d="M10 11v6M14 11v6"/>
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="manualExpenses.length === 0" class="empty-state"><p>No manual expenses recorded yet.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: BOOKING PAYMENTS (Treasurer) -->
-      <div v-if="activeTab === 'payments'" class="tab-content">
-        <div class="section-header">
-          <h2>Down Payment &amp; Refund Verification</h2>
-          <span class="view-only-badge">Treasurer / President — verify down payments and refund requests</span>
-        </div>
-
-        <p class="info-text">
-          Verify <strong>20% down payments</strong> before they count as income and the manager can confirm the booking.
-          Remaining balance collections are recorded under <strong>A/R &amp; Collections</strong>; completed rentals appear as <strong>pending expense entries</strong> on the Expenses tab.
-        </p>
-
-        <div class="expense-section-block booking-payments-block">
-          <h3 class="expense-section-title">
-            Down Payment (20%) — Awaiting Verification
-            <span class="section-count">{{ pendingDownPayments.length }}</span>
-          </h3>
-          <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Booking</th>
-                  <th>Farmer</th>
-                  <th>Machinery</th>
-                  <th>Service Date</th>
-                  <th>Total Rental</th>
-                  <th>Down Payment (20%)</th>
-                  <th>Method</th>
-                  <th>Submitted</th>
-                  <th>Proof</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="b in pendingDownPayments" :key="'dp-' + b.id">
-                  <td>#{{ b.id }}</td>
-                  <td>{{ b.farmer_name }}</td>
-                  <td>{{ b.machinery_name }}</td>
-                  <td>{{ formatDate(b.booking_date) }}</td>
-                  <td>₱{{ formatNumber(b.total_price) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(b.down_payment_amount) }}</td>
-                  <td>{{ b.down_payment_method || '—' }}</td>
-                  <td>{{ formatDate(b.down_payment_submitted_at) }}</td>
-                  <td>
-                    <button
-                      v-if="b.down_payment_proof"
-                      type="button"
-                      class="proof-link btn-link-inline"
-                      @click="openProofPreview(paymentProofUrl(b.down_payment_proof))"
-                    >
-                      View proof
-                    </button>
-                    <span v-else-if="b.down_payment_method === 'Cash'">Cash (in person)</span>
-                    <span v-else>—</span>
-                  </td>
-                  <td class="payment-actions">
-                    <template v-if="canVerifyBookingPayment(b)">
-                      <button type="button" class="btn-primary btn-sm" @click="openVerifyDownPaymentModal(b)">Verify &amp; Record Income</button>
-                      <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectDownPaymentModal(b)">Reject</button>
-                    </template>
-                    <span v-else class="text-muted">Awaiting {{ b.booker_role === 'treasurer' ? 'President' : 'Treasurer' }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="pendingDownPayments.length === 0" class="empty-state">
-              <p>No down payments awaiting verification.</p>
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.machinery') }}</th><th>{{ $t('ui.operator') }}</th><th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.serviceDate') }}</th><th>{{ $t('ui.location') }}</th><th>{{ $t('ui.status') }}</th>
+                    <th v-if="canManage" class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="expense in pendingExpenses" :key="'p-' + expense.id">
+                    <td>{{ expense.machinery_name }}</td>
+                    <td>{{ expense.operator_name || '—' }}</td>
+                    <td>{{ expense.farmer_name || '—' }}</td>
+                    <td>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</td>
+                    <td>{{ expense.service_location || '—' }}</td>
+                    <td><span class="badge badge-pending">{{ $t('ui.pendingEntry') }}</span></td>
+                    <td v-if="canManage"><button type="button" @click="completePendingExpense(expense)" class="btn-primary btn-sm">{{ $t('common.recordExpensesPrint') }}</button></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+            <div class="fin-mobile-list">
+              <div v-if="pendingExpenses.length === 0" class="fin-mobile-empty">{{ $t('ui.noPendingExpense') }}</div>
+              <article v-else v-for="expense in pendingExpenses" :key="'pm-' + expense.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ expense.machinery_name || 'Machinery Expense' }}</h4>
+                  <span class="badge badge-pending">{{ $t('ui.pendingEntry') }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.operator') }}</span><span>{{ expense.operator_name || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.farmer') }}</span><span>{{ expense.farmer_name || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.serviceDate') }}</span><span>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.location') }}</span><span>{{ expense.service_location || '—' }}</span></div>
+                </div>
+                <div v-if="canManage" class="fin-mobile-card-actions">
+                  <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="completePendingExpense(expense)">{{ $t('common.recordExpensesPrint') }}</button>
+                </div>
+              </article>
+            </div>
+            <div v-if="pendingExpenses.length === 0" class="empty-state fin-desktop-empty"><p>{{ $t('ui.noPendingExpense') }}</p></div>
           </div>
         </div>
 
-        <div class="expense-section-block booking-payments-block">
-          <h3 class="expense-section-title">
-            Down Payment Refunds — Review Queue
-            <span class="section-count">{{ pendingRefundRequests.length }}</span>
-          </h3>
-          <p class="section-hint">Farmers may request a refund of their 20% down payment when the rental was not completed and service was not rendered. Approve before processing payment.</p>
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">{{ $t('ui.completedExpenseRecords') }} <span class="section-count">{{ recordedBookingExpenses.length }}</span></h3>
+          <p class="section-hint">{{ $t('ui.expensesFromRentals') }}</p>
           <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Refund #</th>
-                  <th>Booking</th>
-                  <th>Farmer</th>
-                  <th>Machinery</th>
-                  <th>Down Payment</th>
-                  <th>Refund Amount</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Requested</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="r in pendingRefundRequests" :key="'rf-' + r.id">
-                  <td>{{ r.refund_number || '—' }}</td>
-                  <td>#{{ r.booking_id }}</td>
-                  <td>{{ r.farmer_name }}</td>
-                  <td>{{ r.machinery_name }}</td>
-                  <td>₱{{ formatNumber(r.original_down_payment || r.refund_amount) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(r.refund_amount) }}</td>
-                  <td class="reason-cell">{{ r.refund_reason || r.reason || '—' }}</td>
-                  <td><span class="status-badge">{{ r.refund_status }}</span></td>
-                  <td>{{ formatDate(r.requested_at || r.created_at) }}</td>
-                  <td class="payment-actions">
-                    <template v-if="canVerifyBookingPayment(r)">
-                      <template v-if="['Refund Requested', 'Under Review', 'Pending'].includes(r.refund_status)">
-                        <button type="button" class="btn-primary btn-sm" @click="approveRefundRequest(r)">Approve</button>
-                        <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectRefundModal(r)">Reject</button>
-                      </template>
-                      <button v-else-if="r.refund_status === 'Approved'" type="button" class="btn-primary btn-sm" @click="openProcessRefundModal(r)">Process Refund</button>
-                      <span v-else>—</span>
-                    </template>
-                    <span v-else class="view-only-hint">—</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="pendingRefundRequests.length === 0" class="empty-state">
-              <p>No refund requests awaiting action.</p>
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.machinery') }}</th><th>{{ $t('ui.date') }}</th><th>{{ $t('ui.operator') }}</th>
+                    <th>{{ $t('ui.labor') }}</th><th>{{ $t('ui.total') }}</th><th>{{ $t('ui.receiptNo') }}</th><th>{{ $t('ui.status') }}</th><th v-if="canManage" class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="expense in recordedBookingExpenses" :key="'rb-' + expense.id">
+                    <td>{{ expense.machinery_name }}</td>
+                    <td>{{ formatDate(expense.date_of_expense) }}</td>
+                    <td>{{ expense.operator_name || '—' }}</td>
+                    <td>₱{{ formatNumber(expense.labor_cost) }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
+                    <td>{{ expense.reference_number || '—' }}</td>
+                    <td><span class="badge badge-recorded">{{ $t('ui.recorded') }}</span></td>
+                    <td v-if="canManage" class="actions-cell members-action-row">
+                      <button
+                        v-if="expense.reference_number"
+                        type="button"
+                        class="btn-secondary btn-sm receipt-view-btn"
+                        :title="$t('ui.viewReceipt')"
+                        @click="viewReceipt(expense.reference_number)"
+                      >
+                        {{ $t('common.viewReceipt') }}
+                      </button>
+                      <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" :title="$t('common.edit')" :aria-label="$t('common.edit')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+            <div class="fin-mobile-list">
+              <div v-if="recordedBookingExpenses.length === 0" class="fin-mobile-empty">{{ $t('ui.noRecordedTxExpenses') }}</div>
+              <article v-else v-for="expense in recordedBookingExpenses" :key="'rbm-' + expense.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ expense.machinery_name || 'Machinery Expense' }}</h4>
+                  <span class="badge badge-recorded">{{ $t('ui.recorded') }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.date') }}</span><span>{{ formatDate(expense.date_of_expense) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.operator') }}</span><span>{{ expense.operator_name || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.labor') }}</span><span>₱{{ formatNumber(expense.labor_cost) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.total') }}</span><span class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receipt') }}</span><span>{{ expense.reference_number || '—' }}</span></div>
+                </div>
+                <div v-if="canManage" class="fin-mobile-card-actions">
+                  <button
+                    v-if="expense.reference_number"
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action receipt-view-btn"
+                    @click="viewReceipt(expense.reference_number)"
+                  >{{ $t('common.viewReceipt') }}</button>
+                  <button type="button" class="fin-mobile-action-text fin-action-edit" @click="editExpense(expense)">{{ $t('common.edit') }}</button>
+                </div>
+              </article>
+            </div>
+            <div v-if="recordedBookingExpenses.length === 0" class="empty-state fin-desktop-empty"><p>{{ $t('ui.noRecordedTxExpenses') }}</p></div>
+          </div>
+        </div>
+
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">{{ $t('ui.manualExpenseEntries') }} <span class="section-count">{{ manualExpenses.length }}</span></h3>
+          <p class="section-hint">{{ $t('ui.expensesManualTreasurer') }}</p>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.machinery') }}</th><th>{{ $t('ui.date') }}</th><th>{{ $t('ui.particulars') }}</th><th>{{ $t('ui.receiptNo') }}</th>
+                    <th>{{ $t('ui.fuel') }}</th><th>{{ $t('ui.labor') }}</th><th>{{ $t('ui.total') }}</th><th v-if="canManage" class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="expense in manualExpenses" :key="'m-' + expense.id">
+                    <td>{{ expense.machinery_name }}</td>
+                    <td>{{ formatDate(expense.date_of_expense) }}</td>
+                    <td>{{ expense.particulars }}</td>
+                    <td>{{ expense.reference_number || '—' }}</td>
+                    <td>₱{{ formatNumber(expense.fuel_and_oil) }}</td>
+                    <td>₱{{ formatNumber(expense.labor_cost) }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</td>
+                    <td v-if="canManage" class="actions-cell members-action-row">
+                      <button
+                        v-if="expense.reference_number"
+                        type="button"
+                        class="btn-secondary btn-sm receipt-view-btn"
+                        :title="$t('ui.viewReceipt')"
+                        @click="viewReceipt(expense.reference_number)"
+                      >
+                        {{ $t('common.viewReceipt') }}
+                      </button>
+                      <button type="button" @click="editExpense(expense)" class="table-action-btn table-action-edit" :title="$t('common.edit')" :aria-label="$t('common.edit')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button type="button" @click="deleteExpense(expense.id)" class="table-action-btn table-action-delete" :title="$t('common.delete')" :aria-label="$t('common.delete')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="manualExpenses.length === 0" class="fin-mobile-empty">{{ $t('ui.noManualExpenses') }}</div>
+              <article v-else v-for="expense in manualExpenses" :key="'mm-' + expense.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ expense.machinery_name || 'Manual Expense' }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(expense.total_amount) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.date') }}</span><span>{{ formatDate(expense.date_of_expense) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.particulars') }}</span><span>{{ expense.particulars || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receipt') }}</span><span>{{ expense.reference_number || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.fuel') }}</span><span>₱{{ formatNumber(expense.fuel_and_oil) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.labor') }}</span><span>₱{{ formatNumber(expense.labor_cost) }}</span></div>
+                </div>
+                <div v-if="canManage" class="fin-mobile-card-actions">
+                  <button
+                    v-if="expense.reference_number"
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action receipt-view-btn"
+                    @click="viewReceipt(expense.reference_number)"
+                  >{{ $t('common.viewReceipt') }}</button>
+                  <button type="button" class="fin-mobile-action-text fin-action-edit" @click="editExpense(expense)">{{ $t('common.edit') }}</button>
+                  <button type="button" class="fin-mobile-action-text fin-action-delete" @click="deleteExpense(expense.id)">{{ $t('common.delete') }}</button>
+                </div>
+              </article>
+            </div>
+            <div v-if="manualExpenses.length === 0" class="empty-state fin-desktop-empty"><p>{{ $t('ui.noManualExpenses') }}</p></div>
           </div>
         </div>
       </div>
@@ -394,129 +323,264 @@
       <!-- TAB 2: INCOME MANAGEMENT -->
       <div v-if="activeTab === 'income'" class="tab-content">
         <div class="section-header">
-          <h2>Income Management (Auto-Populated from Completed Bookings)</h2>
+          <h2>{{ $t('ui.incomeManagement') }}</h2>
+          <button v-if="canManage" @click="openManualIncomeForm" class="btn-primary">
+            {{ $t('ui.recordOtherIncome') }}
+          </button>
         </div>
 
         <!-- Income Filters -->
-        <div class="filters-section">
+        <div class="filters-section tools-card">
           <div class="filter-group">
-            <label class="filter-label">Income Source:</label>
-            <select v-model="filters.income_source" class="filter-input">
-              <option value="all">All Sources</option>
-              <option value="machinery">Machinery Collections</option>
-              <option value="dues">Association Dues</option>
+            <label class="filter-label">{{ $t('ui.incomeSourceColon') }}</label>
+            <select v-model="filters.income_source" class="filter-input toolbar-select">
+              <option value="all">{{ $t('ui.allSources') }}</option>
+              <option value="machinery">{{ $t('ui.machineryDownPayment') }}</option>
+              <option value="dues">{{ $t('ui.associationDues') }}</option>
+              <option value="manual">{{ $t('ui.otherManualIncome') }}</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Start Date:</label>
-            <input v-model="filters.start_date" type="date" class="filter-input" />
+            <label class="filter-label">{{ $t('ui.startDateColon') }}</label>
+            <input v-model="filters.start_date" type="date" class="filter-input toolbar-input" />
           </div>
           <div class="filter-group">
-            <label class="filter-label">End Date:</label>
-            <input v-model="filters.end_date" type="date" class="filter-input" />
+            <label class="filter-label">{{ $t('ui.endDateColon') }}</label>
+            <input v-model="filters.end_date" type="date" class="filter-input toolbar-input" />
           </div>
           <div class="filter-actions">
-            <button @click="loadIncome" class="btn-secondary">Filter</button>
-            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+            <button @click="loadIncome" class="btn-secondary">{{ $t('common.filter') }}</button>
+            <button @click="clearFilters" class="btn-secondary-outline">{{ $t('common.clear') }}</button>
           </div>
         </div>
 
-        <p class="info-text">💡 Income includes verified down payments (20%), final payments, machinery collections, and association dues.</p>
+        <p class="info-text">{{ $t('ui.incomeReceivedHint') }}</p>
 
         <div class="card" style="margin-bottom: 12px;">
           <div class="card-header">
-            <h3 class="card-title">Total Income Breakdown</h3>
+            <h3 class="card-title">{{ $t('ui.incomeBreakdown') }}</h3>
           </div>
-          <div v-if="incomeSourceBreakdown.length === 0" class="empty-state">
-            <p>No income sources available for current filters.</p>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.source') }}</th>
+                    <th>{{ $t('ui.transactions') }}</th>
+                    <th>{{ $t('ui.totalAmount') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in incomeSourceBreakdown" :key="item.id">
+                    <td>{{ formatIncomeSourceItem(item) }}</td>
+                    <td>{{ item.count }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(item.total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="incomeSourceBreakdown.length === 0" class="fin-mobile-empty">{{ $t('ui.noIncomeSources') }}</div>
+              <article v-else v-for="item in incomeSourceBreakdown" :key="'ism-' + item.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ formatIncomeSourceItem(item) }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(item.total) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.transactions') }}</span><span>{{ item.count }}</span></div>
+                </div>
+              </article>
+            </div>
+            <div v-if="incomeSourceBreakdown.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noIncomeSources') }}</p>
+            </div>
           </div>
-          <div v-else class="table-container">
-            <table class="data-table">
+        </div>
+
+        <!-- Manual Income (Other Sources) -->
+        <div class="card" style="margin-bottom: 12px;">
+          <div class="card-header">
+            <h3 class="card-title">{{ $t('ui.otherIncome') }}</h3>
+          </div>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.source') }}</th>
+                    <th>{{ $t('ui.date') }}</th>
+                    <th>{{ $t('ui.amount') }}</th>
+                    <th>{{ $t('ui.remarks') }}</th>
+                    <th>{{ $t('ui.recordedBy') }}</th>
+                    <th v-if="canManage" class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="entry in manualIncomeList" :key="'manual-' + entry.id">
+                    <td>{{ entry.source_name }}</td>
+                    <td>{{ formatDate(entry.date_of_income) }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(entry.income_amount) }}</td>
+                    <td>{{ entry.remarks || $t('ui.na') }}</td>
+                    <td>{{ entry.recorded_by_name || $t('ui.na') }}</td>
+                    <td v-if="canManage" class="actions-cell members-action-row">
+                      <button
+                        type="button"
+                        class="btn-secondary btn-sm"
+                        @click="openEditManualIncome(entry)"
+                      >
+                        {{ $t('common.edit') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-secondary-outline btn-sm"
+                        @click="deleteManualIncome(entry)"
+                      >
+                        {{ $t('common.delete') }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="manualIncomeList.length === 0" class="fin-mobile-empty">{{ $t('ui.noManualIncomeYet') }}</div>
+              <article v-else v-for="entry in manualIncomeList" :key="'manualm-' + entry.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ entry.source_name }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(entry.income_amount) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.date') }}</span><span>{{ formatDate(entry.date_of_income) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.remarks') }}</span><span>{{ entry.remarks || $t('ui.na') }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.recordedBy') }}</span><span>{{ entry.recorded_by_name || $t('ui.na') }}</span></div>
+                </div>
+                <div v-if="canManage" class="fin-mobile-card-actions">
+                  <button type="button" class="fin-mobile-action-text fin-action-edit" @click="openEditManualIncome(entry)">{{ $t('common.edit') }}</button>
+                  <button type="button" class="fin-mobile-action-text fin-action-delete" @click="deleteManualIncome(entry)">{{ $t('common.delete') }}</button>
+                </div>
+              </article>
+            </div>
+            <div v-if="manualIncomeList.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noManualIncomeYet') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Income Transaction History -->
+        <div class="card income-history-card" style="margin-bottom: 12px;">
+          <div class="card-header">
+            <h3 class="card-title">{{ $t('ui.incomeHistory') }}</h3>
+          </div>
+          <div class="table-container">
+          <div class="fin-desktop-table">
+            <table class="income-table">
               <thead>
                 <tr>
-                  <th>Source</th>
-                  <th>Transactions</th>
-                  <th>Total Amount</th>
+                  <th>{{ $t('ui.source') }}</th>
+                  <th>{{ $t('ui.farmer') }}</th>
+                  <th>{{ $t('ui.machineryEquipment') }}</th>
+                  <th>{{ $t('ui.incomeFrom') }}</th>
+                  <th>{{ $t('ui.bookingTotal') }}</th>
+                  <th>{{ $t('ui.amountReceived') }}</th>
+                  <th>{{ $t('ui.paymentStatus') }}</th>
+                  <th>{{ $t('ui.paymentDate') }}</th>
+                  <th class="actions-col">{{ $t('ui.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in incomeSourceBreakdown" :key="item.source">
-                  <td>{{ item.source }}</td>
-                  <td>{{ item.count }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(item.total) }}</td>
+                <tr v-for="inc in consolidatedIncomeRecords" :key="getIncomeRowKey(inc)">
+                  <td>
+                    <span :class="['badge', isDuesIncome(inc) ? 'badge-collection' : (isDownPaymentIncome(inc) ? 'badge-down-payment' : 'badge-income')]">
+                      {{ formatIncomeTypeLabel(inc.income_type) }}
+                    </span>
+                  </td>
+                  <td>{{ inc.farmer_name || $t('ui.na') }}</td>
+                  <td>{{ formatIncomeMachinery(inc) }}</td>
+                  <td>{{ formatIncomeFrom(inc) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(inc.original_amount) }}</td>
+                  <td class="amount-cell">₱{{ formatNumber(inc.income_amount) }}</td>
+                  <td>
+                    <span :class="['status-badge', getIncomePaymentStatusClass(inc)]">
+                      {{ getIncomePaymentStatusLabel(inc) }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(inc.date_of_income) }}</td>
+                  <td class="actions-cell">
+                    <button
+                      v-if="getIncomeReceiptNumber(inc)"
+                      type="button"
+                      class="btn-secondary btn-sm receipt-view-btn"
+                      :title="$t('ui.viewReceipt')"
+                      @click="viewIncomeReceipt(inc)"
+                    >
+                      {{ $t('common.viewReceipt') }}
+                    </button>
+                    <span v-else class="text-muted">—</span>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
-
-        <!-- Income Table -->
-        <div class="table-container">
-          <table class="income-table">
-            <thead>
-              <tr>
-                <th>Source</th>
-                <th>Farmer Name</th>
-                <th>Machinery/Equipment</th>
-                <th>Coverage / Notes</th>
-                <th>Total Amount</th>
-                <th>Amount Paid</th>
-                <th>Payment Status</th>
-                <th>Payment Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="inc in consolidatedIncomeRecords" :key="getIncomeRowKey(inc)">
-                <td>
-                  <span :class="['badge', isDuesIncome(inc) ? 'badge-collection' : 'badge-income']">
-                    {{ inc.income_type || 'Income' }}
-                  </span>
-                </td>
-                <td>{{ inc.farmer_name || '-' }}</td>
-                <td>{{ inc.machinery_name ? `${inc.machinery_name}${inc.machinery_type ? ` (${inc.machinery_type})` : ''}` : 'Association Dues' }}</td>
-                <td>{{ isDuesIncome(inc) ? formatDuesCoverage(inc.period_start, inc.period_end) : (inc.remarks || '-') }}</td>
-                <td class="amount-cell">₱{{ formatNumber(inc.original_amount) }}</td>
-                <td class="amount-cell">₱{{ formatNumber(inc.income_amount) }}</td>
-                <td>
-                  <span :class="['status-badge', inc.payment_status.toLowerCase().replace(' ', '-')]">
-                    {{ inc.payment_status }}
-                  </span>
-                </td>
-                <td>{{ formatDate(inc.date_of_income) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-if="consolidatedIncomeRecords.length === 0" class="empty-state">
-            <p>No income records yet</p>
+          <div class="fin-mobile-list">
+            <div v-if="consolidatedIncomeRecords.length === 0" class="fin-mobile-empty">{{ $t('ui.noIncomeSources') }}</div>
+            <article v-else v-for="inc in consolidatedIncomeRecords" :key="'incm-' + getIncomeRowKey(inc)" class="fin-mobile-card">
+              <div class="fin-mobile-card-top">
+                <h4 class="fin-mobile-card-name">{{ inc.farmer_name || $t('ui.na') }}</h4>
+                <span :class="['badge', isDuesIncome(inc) ? 'badge-collection' : (isDownPaymentIncome(inc) ? 'badge-down-payment' : 'badge-income')]">
+                  {{ formatIncomeTypeLabel(inc.income_type) }}
+                </span>
+              </div>
+              <div class="fin-mobile-card-meta">
+                <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.incomeFrom') }}</span><span>{{ formatIncomeFrom(inc) }}</span></div>
+                <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machineryEquipment') }}</span><span>{{ formatIncomeMachinery(inc) }}</span></div>
+                <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.bookingTotal') }}</span><span class="amount-cell">₱{{ formatNumber(inc.original_amount) }}</span></div>
+                <div class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.amountReceived') }}</span>
+                  <span class="amount-cell" :class="{ 'income-dp-amount': isDownPaymentIncome(inc) }">₱{{ formatNumber(inc.income_amount) }}</span>
+                </div>
+                <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.paymentStatus') }}</span><span :class="['status-badge', getIncomePaymentStatusClass(inc)]">{{ getIncomePaymentStatusLabel(inc) }}</span></div>
+                <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.paymentDate') }}</span><span>{{ formatDate(inc.date_of_income) }}</span></div>
+                <div v-if="getIncomeReceiptNumber(inc)" class="fin-mobile-meta-row">
+                  <span class="fin-mobile-label">{{ $t('ui.receiptNo') }}</span>
+                  <span>{{ getIncomeReceiptNumber(inc) }}</span>
+                </div>
+              </div>
+              <div v-if="getIncomeReceiptNumber(inc)" class="fin-mobile-card-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm fin-mobile-action receipt-view-btn"
+                  @click="viewIncomeReceipt(inc)"
+                >
+                  {{ $t('common.viewReceipt') }}
+                </button>
+              </div>
+            </article>
+          </div>
+          <div v-if="consolidatedIncomeRecords.length === 0" class="empty-state fin-desktop-empty">
+            <p>{{ $t('ui.noIncomeTransactions') }}</p>
+          </div>
           </div>
         </div>
       </div>
 
       <!-- TAB 2: MONTHLY DUES COLLECTION -->
       <div v-if="activeTab === 'dues'" class="tab-content">
-        <div class="page-header">
-          <h1 class="page-title">💰 Association Dues Transactions</h1>
-          <p class="page-subtitle">
-            ₱120 every 6 months for all registered members (farmers and barangay officers) • President and Treasurer only
-          </p>
-        </div>
-
         <!-- Stats Grid -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-label">Total Transactions</div>
+            <div class="stat-label">{{ $t('ui.totalTransactions') }}</div>
             <div class="stat-value">{{ duesSummary.total_collections }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Total Amount Collected</div>
+            <div class="stat-label">{{ $t('ui.totalAmountCollected') }}</div>
             <div class="stat-value">₱{{ formatNumber(duesSummary.total_amount) }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Paid This Cycle</div>
+            <div class="stat-label">{{ $t('ui.paidThisCycle') }}</div>
             <div class="stat-value">{{ paidFarmersCount }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Unpaid This Cycle</div>
+            <div class="stat-label">{{ $t('ui.unpaidThisCycle') }}</div>
             <div class="stat-value">{{ unpaidFarmersCount }}</div>
           </div>
         </div>
@@ -526,171 +590,270 @@
           <!-- Left Column: Farmers List -->
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">Registered Members (Your Barangay)</h2>
-              <button class="btn" @click="loadEligibleFarmers" :disabled="false">Refresh</button>
+              <h2 class="card-title">{{ $t('ui.membersYourBarangay') }}</h2>
+              <button type="button" class="btn btn-primary-action" @click="loadEligibleFarmers">{{ $t('common.refresh') }}</button>
             </div>
             
-            <!-- Search Filter -->
-            <div class="filter-section">
-              <input
-                v-model="duesSearchQuery"
-                type="text"
-                placeholder="Search by reference number, name, or role..."
-                class="input filter-input"
-              />
+            <div class="tools-card sc-tools-card">
+              <div class="tools-card-top">
+                <div class="search-bar">
+                  <span class="search-icon-wrap" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="duesSearchQuery"
+                    type="text"
+                    class="toolbar-input search-input-main"
+                    :placeholder="$t('ui.searchByRefNameRole')"
+                  />
+                </div>
+              </div>
             </div>
 
             <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Ref No.</th>
-                    <th>Member</th>
-                    <th>Role</th>
-                    <th>This Cycle</th>
-                    <th>Last Paid</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-if="filteredEligibleFarmers.length === 0">
-                    <td colspan="6" class="empty-message">No registered members found</td>
-                  </tr>
-                  <tr
-                    v-else
-                    v-for="farmer in filteredEligibleFarmers"
-                    :key="farmer.id"
-                    :class="{ selected: selectedFarmer?.id === farmer.id }"
-                    @click="selectFarmer(farmer)"
-                  >
-                    <td>{{ farmer.reference_number || '-' }}</td>
-                    <td class="name">{{ farmer.full_name }}</td>
-                    <td>{{ formatRoleLabel(farmer.member_role) }}</td>
-                    <td>
-                      <span :class="['badge', Number(farmer.dues_paid) ? 'badge-paid' : 'badge-unpaid']">
-                        {{ Number(farmer.dues_paid) ? 'Paid' : 'Unpaid' }}
-                      </span>
-                    </td>
-                    <td>{{ farmer.last_payment_date ? formatDate(farmer.last_payment_date) : '—' }}</td>
-                    <td class="actions" @click.stop>
-                      <button class="btn btn-small" @click="selectFarmer(farmer)">View</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Right Column: Selected Farmer Details -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Association Dues</h2>
-            </div>
-
-            <div v-if="!selectedFarmer" class="empty-state">
-              <div class="empty-title">Select a farmer</div>
-              <div class="empty-text">Choose a farmer from the list to view and record six-month dues transactions.</div>
-            </div>
-
-            <div v-else>
-              <div class="farmer-summary">
-                <div class="farmer-name">{{ selectedFarmer.full_name }}</div>
-                <div class="farmer-meta">
-                  Reference: {{ selectedFarmer.reference_number || '—' }} • Role: {{ formatRoleLabel(selectedFarmer.member_role) }}
-                </div>
-              </div>
-
-              <div class="stats-grid compact">
-                <div class="stat-card">
-                  <div class="stat-label">Dues Amount</div>
-                  <div class="stat-value">₱120</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Current Cycle</div>
-                  <div class="stat-value stat-value-sm">{{ currentPeriodLabel }}</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Last Paid</div>
-                  <div class="stat-value">{{ selectedFarmer.last_payment_date ? formatDate(selectedFarmer.last_payment_date) : '—' }}</div>
-                </div>
-              </div>
-
-              <!-- Dues Collection Form -->
-              <div v-if="canCollectDues" class="action-row">
-                <div class="form-inline">
-                  <label class="inline-label">Collection Date</label>
-                  <input class="input" type="date" v-model="duesForm.collection_date" />
-                  <label class="inline-label">Amount</label>
-                  <input class="input" type="number" :value="120" disabled />
-                  <label class="inline-label">Payment Method</label>
-                  <select class="input" v-model="duesForm.payment_method">
-                    <option value="Cash">Cash</option>
-                    <option value="GCash">GCash</option>
-                  </select>
-                  <button class="btn btn-success" @click="collectMonthlyDues" :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid) || duesCollecting">
-                    {{ duesCollecting ? 'Recording...' : 'Collect Dues & Print Receipt' }}
-                  </button>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Lifetime Total Paid</div>
-                  <div class="stat-value">PHP {{ formatNumber(selectedFarmerTotalPaid) }}</div>
-                </div>
-              </div>
-
-              <div v-if="canCollectDues" class="form-group dues-remarks-group">
-                <label class="inline-label">Remarks</label>
-                <textarea v-model="duesForm.remarks" class="input dues-remarks-input" placeholder="Optional notes about this dues transaction..."></textarea>
-              </div>
-
-              <div v-if="canCollectDues && !Number(selectedFarmer?.dues_paid)" class="form-group auto-receipt-note">
-                <label>Official Receipt</label>
-                <input type="text" class="input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-                <small class="info-text">Receipt prints automatically after collection.</small>
-              </div>
-
-              <div v-if="Number(selectedFarmer?.dues_paid)" class="info-text">
-                This farmer already has a dues transaction recorded for the current 6-month cycle.
-              </div>
-
-              <!-- Dues Payment History -->
-              <div class="section-title">Dues Transactions</div>
-              <div class="table-container">
+              <div class="fin-desktop-table">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Amount</th>
-                      <th>Period</th>
-                      <th>Payment Method</th>
-                      <th>Receipt No.</th>
-                      <th>Collected By</th>
+                      <th>{{ $t('ui.refNo') }}</th>
+                      <th>{{ $t('ui.member') }}</th>
+                      <th>{{ $t('ui.role') }}</th>
+                      <th>{{ $t('ui.thisCycle') }}</th>
+                      <th>{{ $t('ui.lastPaid') }}</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="selectedFarmerPayments.length === 0">
-                      <td colspan="7" class="empty-message">No dues transactions recorded yet</td>
+                    <tr v-if="filteredEligibleFarmers.length === 0">
+                      <td colspan="6" class="empty-message">{{ $t('ui.noRegisteredMembers') }}</td>
                     </tr>
-                    <tr v-else v-for="payment in selectedFarmerPayments" :key="payment.id">
-                      <td>{{ formatDate(payment.collection_date) }}</td>
-                      <td class="amount">₱{{ formatNumber(payment.amount) }}</td>
-                      <td>{{ formatDuesCoverage(payment.period_start, payment.period_end) }}</td>
-                      <td>{{ payment.payment_method }}</td>
-                      <td>{{ payment.receipt_number || '—' }}</td>
-                      <td>{{ payment.collected_by_name }}</td>
-                      <td class="actions">
-                        <button
-                          v-if="payment.receipt_number"
-                          type="button"
-                          class="btn-link-inline"
-                          @click="showReceiptAfterVerify(payment.receipt_number)"
-                        >Print</button>
+                    <tr
+                      v-else
+                      v-for="farmer in filteredEligibleFarmers"
+                      :key="farmer.id"
+                      :class="{ selected: selectedFarmer?.id === farmer.id }"
+                      @click="selectFarmer(farmer)"
+                    >
+                      <td>{{ farmer.reference_number || '-' }}</td>
+                      <td class="name">{{ farmer.full_name }}</td>
+                      <td>{{ formatRoleLabel(farmer.member_role) }}</td>
+                      <td>
+                        <span :class="['badge', Number(farmer.dues_paid) ? 'badge-paid' : 'badge-unpaid']">
+                          {{ Number(farmer.dues_paid) ? $t('ui.paid') : $t('ui.unpaid') }}
+                        </span>
+                      </td>
+                      <td>{{ farmer.last_payment_date ? formatDate(farmer.last_payment_date) : '—' }}</td>
+                      <td class="actions" @click.stop>
+                        <button class="btn btn-small" @click="selectFarmer(farmer)">{{ $t('common.view') }}</button>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              <div class="fin-mobile-list">
+                <div v-if="filteredEligibleFarmers.length === 0" class="fin-mobile-empty">{{ $t('ui.noRegisteredMembers') }}</div>
+                <article
+                  v-else
+                  v-for="farmer in filteredEligibleFarmers"
+                  :key="'fem-' + farmer.id"
+                  class="fin-mobile-card"
+                  :class="{ selected: selectedFarmer?.id === farmer.id }"
+                  style="cursor: pointer"
+                  @click="selectFarmer(farmer)"
+                >
+                  <div class="fin-mobile-card-top">
+                    <h4 class="fin-mobile-card-name">{{ farmer.full_name }}</h4>
+                    <span :class="['badge', Number(farmer.dues_paid) ? 'badge-paid' : 'badge-unpaid']">
+                      {{ Number(farmer.dues_paid) ? $t('ui.paid') : $t('ui.unpaid') }}
+                    </span>
+                  </div>
+                  <div class="fin-mobile-card-meta">
+                    <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.refNo') }}</span><span>{{ farmer.reference_number || '-' }}</span></div>
+                    <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.role') }}</span><span>{{ formatRoleLabel(farmer.member_role) }}</span></div>
+                    <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.lastPaid') }}</span><span>{{ farmer.last_payment_date ? formatDate(farmer.last_payment_date) : '—' }}</span></div>
+                  </div>
+                  <div class="fin-mobile-card-actions" @click.stop>
+                    <button type="button" class="btn btn-small fin-mobile-action" @click="selectFarmer(farmer)">{{ $t('common.view') }}</button>
+                  </div>
+                </article>
+              </div>
             </div>
+          </div>
+
+          <!-- Right Column: Selected Farmer Details -->
+          <div class="card ad-member-detail-card">
+            <div class="card-header">
+              <h2 class="card-title">{{ $t('ui.associationDues') }}</h2>
+            </div>
+
+            <div v-if="!selectedFarmer" class="empty-state">
+              <div class="empty-title">{{ $t('ui.selectAFarmer') }}</div>
+              <div class="empty-text">{{ $t('ui.chooseFarmerDues') }}</div>
+            </div>
+
+            <Teleport to="body" :disabled="!isMobile">
+              <Transition :name="isMobile ? 'app-modal' : ''">
+                <div
+                  v-if="selectedFarmer"
+                  class="ad-detail-portal"
+                  :class="{ 'app-modal-overlay sc-detail-overlay': isMobile, 'light-theme': isMobile && isLight }"
+                  @click.self="isMobile && closeFarmerModal()"
+                >
+                  <div class="ad-detail-panel" :class="{ 'modal-content sc-detail-modal': isMobile }">
+                    <div v-if="isMobile" class="modal-header sc-detail-modal-header">
+                      <h2>{{ $t('ui.associationDues') }}</h2>
+                      <button
+                        type="button"
+                        class="sc-detail-close"
+                        :aria-label="$t('common.close')"
+                        @click="closeFarmerModal"
+                      >×</button>
+                    </div>
+                    <div class="card-body" :class="{ 'modal-body': isMobile }">
+              <div class="farmer-summary">
+                <div class="farmer-name">{{ selectedFarmer.full_name }}</div>
+                <div class="farmer-meta">
+                  {{ $t('ui.refRoleMeta', { ref: selectedFarmer.reference_number || '—', role: formatRoleLabel(selectedFarmer.member_role) }) }}
+                </div>
+              </div>
+
+              <div class="stats-grid compact">
+                <div class="stat-card">
+                  <div class="stat-label">{{ $t('ui.duesAmount') }}</div>
+                  <div class="stat-value">₱120</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">{{ $t('ui.currentCycle') }}</div>
+                  <div class="stat-value stat-value-sm">{{ currentPeriodLabel }}</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">{{ $t('ui.lastPaid') }}</div>
+                  <div class="stat-value">{{ selectedFarmer.last_payment_date ? formatDate(selectedFarmer.last_payment_date) : '—' }}</div>
+                </div>
+              </div>
+
+              <!-- Dues Collection Form -->
+              <div v-if="canCollectDues" class="dues-collection-panel">
+                <div class="dues-form-grid">
+                  <div class="form-field">
+                    <label class="inline-label">{{ $t('ui.collectionDate') }}</label>
+                    <input class="input" type="date" v-model="duesForm.collection_date" />
+                  </div>
+                  <div class="form-field">
+                    <label class="inline-label">{{ $t('ui.amount') }}</label>
+                    <input class="input" type="number" :value="120" disabled />
+                  </div>
+                  <div class="form-field">
+                    <label class="inline-label">{{ $t('ui.paymentMethod') }}</label>
+                    <select class="input" v-model="duesForm.payment_method">
+                      <option value="Cash">{{ $t('ui.cash') }}</option>
+                      <option value="GCash">{{ $t('ui.gcash') }}</option>
+                    </select>
+                  </div>
+                  <div class="form-field form-field--action">
+                    <button
+                      type="button"
+                      class="btn btn-success dues-collect-btn"
+                      @click="collectMonthlyDues"
+                      :disabled="!duesForm.collection_date || Number(selectedFarmer?.dues_paid) || duesCollecting"
+                    >
+                      {{ duesCollecting ? $t('common.processing') : $t('ui.recordPayment') }}
+                    </button>
+                  </div>
+                </div>
+                <div class="dues-lifetime-total">
+                  <span class="dues-lifetime-label">{{ $t('ui.lifetimeTotalPaid') }}</span>
+                  <span class="dues-lifetime-value">PHP {{ formatNumber(selectedFarmerTotalPaid) }}</span>
+                </div>
+              </div>
+
+              <div v-if="canCollectDues" class="form-group dues-remarks-group">
+                <label class="inline-label">{{ $t('ui.remarks') }}</label>
+                <textarea v-model="duesForm.remarks" class="input dues-remarks-input" :placeholder="$t('ui.optionalNotes')"></textarea>
+              </div>
+
+              <div v-if="canCollectDues && !Number(selectedFarmer?.dues_paid)" class="form-group auto-receipt-note">
+                <label>{{ $t('ui.officialReceipt') }}</label>
+                <input type="text" class="input" :value="$t('ui.receiptAutoGenerated')" disabled />
+                <small class="info-text">{{ $t('ui.receiptPrintsAfter') }}</small>
+              </div>
+
+              <div v-if="Number(selectedFarmer?.dues_paid)" class="info-text">
+                {{ $t('ui.duesAlreadyRecorded') }}
+              </div>
+
+              <!-- Dues Payment History -->
+              <div class="section-title">{{ $t('ui.duesTransactions') }}</div>
+              <div class="table-container">
+                <div class="fin-desktop-table dues-history-desktop">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>{{ $t('ui.date') }}</th>
+                        <th>{{ $t('ui.amount') }}</th>
+                        <th>{{ $t('ui.period') }}</th>
+                        <th>{{ $t('ui.paymentMethod') }}</th>
+                        <th>{{ $t('ui.receiptNo') }}</th>
+                        <th>{{ $t('ui.collectedBy') }}</th>
+                        <th class="actions-col" aria-label="Actions"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-if="selectedFarmerPayments.length === 0">
+                        <td colspan="7" class="empty-message">{{ $t('ui.noDuesTransactionsYet') }}</td>
+                      </tr>
+                      <tr v-else v-for="payment in selectedFarmerPayments" :key="payment.id">
+                        <td>{{ formatDate(payment.collection_date) }}</td>
+                        <td class="amount">₱{{ formatNumber(payment.amount) }}</td>
+                        <td>{{ formatDuesCoverage(payment.period_start, payment.period_end) }}</td>
+                        <td>{{ payment.payment_method }}</td>
+                        <td>{{ payment.receipt_number || '—' }}</td>
+                        <td>{{ payment.collected_by_name }}</td>
+                        <td class="actions-cell">
+                          <button
+                            v-if="payment.receipt_number"
+                            type="button"
+                            class="btn-secondary btn-sm receipt-view-btn"
+                            :title="$t('ui.viewReceipt')"
+                            @click="viewReceipt(payment.receipt_number)"
+                          >
+                            {{ $t('common.viewReceipt') }}
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="fin-mobile-list dues-history-mobile">
+                  <div v-if="selectedFarmerPayments.length === 0" class="fin-mobile-empty">{{ $t('ui.noDuesTransactionsYet') }}</div>
+                  <article v-else v-for="payment in selectedFarmerPayments" :key="'duesm-' + payment.id" class="fin-mobile-card">
+                    <div class="fin-mobile-card-top">
+                      <h4 class="fin-mobile-card-name">{{ formatDate(payment.collection_date) }}</h4>
+                      <span class="amount">₱{{ formatNumber(payment.amount) }}</span>
+                    </div>
+                    <div class="fin-mobile-card-meta">
+                      <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.period') }}</span><span>{{ formatDuesCoverage(payment.period_start, payment.period_end) }}</span></div>
+                      <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.paymentMethod') }}</span><span>{{ payment.payment_method }}</span></div>
+                      <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receiptNo') }}</span><span>{{ payment.receipt_number || '—' }}</span></div>
+                      <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.collectedBy') }}</span><span>{{ payment.collected_by_name }}</span></div>
+                    </div>
+                    <div v-if="payment.receipt_number" class="fin-mobile-card-actions">
+                      <button
+                        type="button"
+                        class="btn btn-small fin-mobile-action receipt-view-btn"
+                        @click="viewReceipt(payment.receipt_number)"
+                      >{{ $t('common.viewReceipt') }}</button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+            </Teleport>
           </div>
         </div>
       </div>
@@ -698,110 +861,410 @@
       <!-- TAB 3: ACCOUNTS RECEIVABLE & COLLECTIONS -->
       <div v-if="activeTab === 'ar'" class="tab-content">
         <div class="section-header">
-          <h2>Accounts Receivable & Collections</h2>
+          <h2>{{ $t('ui.accountsReceivableCollections') }}</h2>
+          <p class="section-desc ar-tab-desc">
+            {{ $t('ui.arCollectionsDesc') }}
+          </p>
+          <button
+            v-if="isPaymentVerifier && downPaymentModuleOn"
+            type="button"
+            class="btn-primary dp-queue-btn"
+            :title="$t('ui.downPaymentQueueBtnHint')"
+            @click="focusDownPaymentQueue"
+          >
+            {{ $t('ui.downPaymentQueueBtn') }}
+            <span v-if="pendingDownPayments.length" class="dp-queue-badge">{{ pendingDownPayments.length }}</span>
+          </button>
+          <button
+            v-if="isPaymentVerifier"
+            type="button"
+            class="btn-primary dp-queue-btn"
+            :title="$t('ui.downPaymentRefundsHint')"
+            @click="focusRefundQueue"
+          >
+            {{ $t('ui.refundQueueBtn') }}
+            <span v-if="pendingRefundRequests.length" class="dp-queue-badge">{{ pendingRefundRequests.length }}</span>
+          </button>
         </div>
         <div class="auto-interest-indicator">
-          Auto Interest Rule: <strong>2% (Partial)</strong> - automatically added once based on the full booking amount.
+          {{ $t('ui.interestRuleHint') }}
+        </div>
+
+        <div
+          v-if="isPaymentVerifier"
+          id="down-payment-refunds"
+          class="expense-section-block booking-payments-block"
+        >
+          <h3 class="expense-section-title">
+            {{ $t('ui.downPaymentRefundsQueue') }}
+            <span v-if="pendingRefundRequests.length" class="section-count">{{ pendingRefundRequests.length }}</span>
+          </h3>
+          <p class="section-hint">{{ $t('ui.downPaymentRefundsHint') }}</p>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.refundNumber') }}</th>
+                    <th>{{ $t('ui.booking') }}</th>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.downPaymentColon') }}</th>
+                    <th>{{ $t('ui.refundAmount') }}</th>
+                    <th>{{ $t('ui.reason') }}</th>
+                    <th>{{ $t('ui.status') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in pendingRefundRequests"
+                    :key="'rf-' + r.id"
+                    :data-refund-id="r.id"
+                    :data-booking-id="r.booking_id"
+                    :class="{ 'notification-highlight-row': isHighlightedRefund(r) }"
+                  >
+                    <td>{{ r.refund_number || '—' }}</td>
+                    <td>#{{ r.booking_id }}</td>
+                    <td>{{ r.farmer_name }}</td>
+                    <td>{{ r.machinery_name }}</td>
+                    <td>₱{{ formatNumber(r.original_down_payment || r.refund_amount) }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(r.refund_amount) }}</td>
+                    <td class="reason-cell">{{ r.refund_reason || r.reason || '—' }}</td>
+                    <td><span class="status-badge">{{ r.refund_status }}</span></td>
+                    <td class="payment-actions">
+                      <span v-if="!canActOnRefund(r)" class="view-only-hint">—</span>
+                      <div v-else-if="isRefundPendingReview(r)" class="payment-actions-inline">
+                        <button type="button" class="btn-primary btn-sm" @click="approveRefundRequest(r)">{{ $t('common.approve') }}</button>
+                        <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectRefundModal(r)">{{ $t('common.reject') }}</button>
+                      </div>
+                      <button
+                        v-else-if="isRefundApproved(r)"
+                        type="button"
+                        class="btn-primary btn-sm"
+                        @click="openProcessRefundModal(r)"
+                      >
+                        {{ $t('ui.processRefundPayment') }}
+                      </button>
+                      <span v-else>—</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="pendingRefundRequests.length === 0" class="fin-mobile-empty">{{ $t('ui.noRefundRequests') }}</div>
+              <article
+                v-else
+                v-for="r in pendingRefundRequests"
+                :key="'rfm-' + r.id"
+                class="fin-mobile-card"
+                :data-refund-id="r.id"
+                :data-booking-id="r.booking_id"
+                :class="{ 'notification-highlight-row': isHighlightedRefund(r) }"
+              >
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ r.refund_number || ('#' + r.booking_id) }} · {{ r.farmer_name }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(r.refund_amount) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machinery') }}</span><span>{{ r.machinery_name }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.status') }}</span><span>{{ r.refund_status }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.reason') }}</span><span>{{ r.refund_reason || r.reason || '—' }}</span></div>
+                </div>
+                <div class="fin-mobile-card-actions payment-actions">
+                  <div v-if="canActOnRefund(r) && isRefundPendingReview(r)" class="payment-actions-inline">
+                    <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="approveRefundRequest(r)">{{ $t('common.approve') }}</button>
+                    <button type="button" class="btn-secondary-outline btn-sm fin-mobile-action" @click="openRejectRefundModal(r)">{{ $t('common.reject') }}</button>
+                  </div>
+                  <button
+                    v-else-if="canActOnRefund(r) && isRefundApproved(r)"
+                    type="button"
+                    class="btn-primary btn-sm fin-mobile-action"
+                    @click="openProcessRefundModal(r)"
+                  >
+                    {{ $t('ui.processRefundPayment') }}
+                  </button>
+                </div>
+              </article>
+            </div>
+            <div v-if="pendingRefundRequests.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noRefundRequests') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="isPaymentVerifier && showDownPaymentQueueSection"
+          id="down-payment-queue"
+          class="expense-section-block"
+        >
+          <h3 class="expense-section-title">
+            {{ $t('ui.downPaymentAwaiting') }}
+            <span v-if="pendingDownPayments.length" class="section-count">{{ pendingDownPayments.length }}</span>
+          </h3>
+          <p class="section-hint">
+            {{ $t('ui.verifyDownPaymentsHint') }}
+          </p>
+          <div v-if="!pendingDownPayments.length" class="empty-message" style="padding: 1rem 0;">
+            {{ $t('ui.noDownPaymentsAwaiting') }}
+          </div>
+          <div v-else class="table-container">
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.booking') }}</th>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.downPaymentColon') }}</th>
+                    <th>{{ $t('ui.dpStatus') }}</th>
+                    <th>{{ $t('ui.method') }}</th>
+                    <th>{{ $t('ui.submitted') }}</th>
+                    <th>{{ $t('ui.proof') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="b in pendingDownPayments"
+                    :key="'dp-' + b.id"
+                    :data-dp-booking-id="b.id"
+                    :data-booking-id="b.id"
+                    :class="{ 'notification-highlight-row': highlightedBookingId == b.id }"
+                  >
+                    <td>#{{ b.id }}</td>
+                    <td>{{ b.farmer_name }}</td>
+                    <td>{{ b.machinery_name }}</td>
+                    <td class="amount-cell">
+                      <template v-if="b.down_payment_percent">{{ b.down_payment_percent }}% · </template>
+                      ₱{{ formatNumber(b.down_payment_amount) }}
+                    </td>
+                    <td>{{ downPaymentQueueStatusLabel(b) }}</td>
+                    <td>{{ b.down_payment_method || '—' }}</td>
+                    <td>{{ formatDate(b.down_payment_submitted_at) }}</td>
+                    <td>
+                      <button
+                        v-if="b.down_payment_proof"
+                        type="button"
+                        class="btn-secondary btn-sm proof-view-btn"
+                        @click="openProofPreview(paymentProofUrl(b.down_payment_proof))"
+                      >
+                        {{ $t('common.viewProof') }}
+                      </button>
+                      <span v-else-if="b.down_payment_method === 'Cash'">{{ $t('ui.cash') }}</span>
+                      <span v-else>—</span>
+                    </td>
+                    <td class="payment-actions">
+                      <template v-if="canVerifyBookingPayment(b)">
+                        <button
+                          v-if="canRecordCashDownPayment(b)"
+                          type="button"
+                          class="btn-primary btn-sm"
+                          @click="openRecordCashDownPaymentModal(b)"
+                        >
+                          {{ $t('ui.recordCashDownPayment') }}
+                        </button>
+                        <template v-if="b.status === 'Awaiting Payment Verification'">
+                          <button type="button" class="btn-primary btn-sm" @click="openVerifyDownPaymentModal(b)">{{ $t('common.verifyPrintReceipt') }}</button>
+                          <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectDownPaymentModal(b)">{{ $t('common.reject') }}</button>
+                        </template>
+                      </template>
+                      <span v-else class="text-muted">{{ $t('ui.awaitingRole', { role: b.booker_role === 'treasurer' ? $t('ui.president') : $t('ui.treasurer') }) }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <article
+                v-for="b in pendingDownPayments"
+                :key="'dpm-' + b.id"
+                class="fin-mobile-card"
+                :data-dp-booking-id="b.id"
+                :data-booking-id="b.id"
+                :class="{ 'notification-highlight-row': highlightedBookingId == b.id }"
+              >
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">#{{ b.id }} · {{ b.farmer_name }}</h4>
+                  <span class="amount-cell">
+                    <template v-if="b.down_payment_percent">{{ b.down_payment_percent }}% · </template>
+                    ₱{{ formatNumber(b.down_payment_amount) }}
+                  </span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machinery') }}</span><span>{{ b.machinery_name }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.dpStatus') }}</span><span>{{ downPaymentQueueStatusLabel(b) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.method') }}</span><span>{{ b.down_payment_method || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.submitted') }}</span><span>{{ formatDate(b.down_payment_submitted_at) }}</span></div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.proof') }}</span>
+                    <span>
+                      <button
+                        v-if="b.down_payment_proof"
+                        type="button"
+                        class="proof-link btn-link-inline"
+                        @click="openProofPreview(paymentProofUrl(b.down_payment_proof))"
+                      >{{ $t('common.viewProof') }}</button>
+                      <template v-else-if="b.down_payment_method === 'Cash'">{{ $t('ui.cash') }}</template>
+                      <template v-else>—</template>
+                    </span>
+                  </div>
+                </div>
+                <div class="fin-mobile-card-actions payment-actions">
+                  <template v-if="canVerifyBookingPayment(b)">
+                    <button
+                      v-if="canRecordCashDownPayment(b)"
+                      type="button"
+                      class="btn-primary btn-sm fin-mobile-action"
+                      @click="openRecordCashDownPaymentModal(b)"
+                    >
+                      {{ $t('ui.recordCashDownPayment') }}
+                    </button>
+                    <template v-if="b.status === 'Awaiting Payment Verification'">
+                      <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="openVerifyDownPaymentModal(b)">{{ $t('common.verifyPrintReceipt') }}</button>
+                      <button type="button" class="btn-secondary-outline btn-sm fin-mobile-action" @click="openRejectDownPaymentModal(b)">{{ $t('common.reject') }}</button>
+                    </template>
+                  </template>
+                  <span v-else class="text-muted">{{ $t('ui.awaitingRole', { role: b.booker_role === 'treasurer' ? $t('ui.president') : $t('ui.treasurer') }) }}</span>
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
 
         <!-- A/R Summary Cards -->
         <div class="summary-container">
           <div class="summary-card ar-card">
-            <div class="card-icon icon-receivables">📈</div>
             <div class="card-content">
-              <span class="card-label">Total Receivables</span>
+              <span class="card-label">{{ $t('ui.totalReceivables') }}</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_receivables) }}</span>
             </div>
           </div>
           <div class="summary-card collected-card">
-            <div class="card-icon icon-collected">💵</div>
             <div class="card-content">
-              <span class="card-label">Total Collected</span>
+              <span class="card-label">{{ $t('ui.totalCollected') }}</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_collected) }}</span>
             </div>
           </div>
           <div class="summary-card balance-card">
-            <div class="card-icon icon-balance">⚠️</div>
             <div class="card-content">
-              <span class="card-label">Outstanding Balance</span>
+              <span class="card-label">{{ $t('ui.outstandingBalance') }}</span>
               <span class="card-amount">₱{{ formatNumber(collectionsSummary.total_balance) }}</span>
             </div>
           </div>
         </div>
 
         <!-- Collections Filter -->
-        <div class="filters-section">
+        <div class="filters-section tools-card">
           <div class="filter-group">
-            <label class="filter-label">Machinery/Equipment:</label>
-            <select v-model="filters.machinery_id" class="filter-input">
-              <option value="">All Machinery/Equipment</option>
+            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
+            <select v-model="filters.machinery_id" class="filter-input toolbar-select">
+              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
               <option v-for="m in machinery" :key="m.id" :value="m.id">
                 {{ m.machinery_name }} ({{ m.machinery_type }})
               </option>
             </select>
           </div>
           <div class="filter-actions">
-            <button @click="loadARData" class="btn-secondary">Filter</button>
-            <button @click="clearFilters" class="btn-secondary-outline">Clear</button>
+            <button @click="loadARData" class="btn-secondary">{{ $t('common.filter') }}</button>
+            <button @click="clearFilters" class="btn-secondary-outline">{{ $t('common.clear') }}</button>
           </div>
         </div>
 
-        <div v-if="isPaymentVerifier" class="expense-section-block">
+        <div v-if="isPaymentVerifier && pendingBalanceSubmissions.length" class="expense-section-block">
           <h3 class="expense-section-title">
-            Farmer Balance Payments — Awaiting Verification
+            {{ $t('ui.farmerBalanceAwaiting') }}
             <span class="section-count">{{ pendingBalanceSubmissions.length }}</span>
           </h3>
           <p class="section-hint">
-            Farmer-submitted remaining balance (Cash/GCash). Verify here or record collections directly from the collectibles list below.
+            {{ $t('ui.farmerBalanceHint') }}
           </p>
           <div class="table-container">
-            <table class="expenses-table">
-              <thead>
-                <tr>
-                  <th>Booking</th>
-                  <th>Farmer</th>
-                  <th>Machinery</th>
-                  <th>Amount Submitted</th>
-                  <th>Balance Due</th>
-                  <th>Method</th>
-                  <th>Submitted</th>
-                  <th>Proof</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="s in pendingBalanceSubmissions" :key="'bs-' + s.id">
-                  <td>#{{ s.booking_id }}</td>
-                  <td>{{ s.farmer_name }}</td>
-                  <td>{{ s.machinery_name }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(s.amount) }}</td>
-                  <td>₱{{ formatNumber(s.remaining_balance) }}</td>
-                  <td>{{ s.payment_method }}</td>
-                  <td>{{ formatDate(s.submitted_at) }}</td>
-                  <td>
-                    <button
-                      v-if="s.proof_path"
-                      type="button"
-                      class="proof-link btn-link-inline"
-                      @click="openProofPreview(paymentProofUrl(s.proof_path))"
-                    >
-                      View proof
-                    </button>
-                    <span v-else-if="s.payment_method === 'Cash'">Cash</span>
-                    <span v-else>—</span>
-                  </td>
-                  <td class="payment-actions">
-                    <template v-if="canVerifyBookingPayment(s)">
-                      <button type="button" class="btn-primary btn-sm" @click="openVerifyBalanceSubmissionModal(s)">Verify &amp; Print Receipt</button>
-                      <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectBalanceSubmissionModal(s)">Reject</button>
-                    </template>
-                    <span v-else class="text-muted">Awaiting {{ s.booker_role === 'treasurer' ? 'President' : 'Treasurer' }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="pendingBalanceSubmissions.length === 0" class="empty-state">
-              <p>No farmer balance payments awaiting verification.</p>
+            <div class="fin-desktop-table">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.booking') }}</th>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.amountSubmitted') }}</th>
+                    <th>{{ $t('ui.balanceDue') }}</th>
+                    <th>{{ $t('ui.method') }}</th>
+                    <th>{{ $t('ui.submitted') }}</th>
+                    <th>{{ $t('ui.proof') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in pendingBalanceSubmissions" :key="'bs-' + s.id">
+                    <td>#{{ s.booking_id }}</td>
+                    <td>{{ s.farmer_name }}</td>
+                    <td>{{ s.machinery_name }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(s.amount) }}</td>
+                    <td>₱{{ formatNumber(s.remaining_balance) }}</td>
+                    <td>{{ s.payment_method }}</td>
+                    <td>{{ formatDate(s.submitted_at) }}</td>
+                    <td>
+                      <button
+                        v-if="s.proof_path"
+                        type="button"
+                        class="btn-secondary btn-sm proof-view-btn"
+                        @click="openProofPreview(paymentProofUrl(s.proof_path))"
+                      >
+                        {{ $t('common.viewProof') }}
+                      </button>
+                      <span v-else-if="s.payment_method === 'Cash'">{{ $t('ui.cash') }}</span>
+                      <span v-else>—</span>
+                    </td>
+                    <td class="payment-actions">
+                      <template v-if="canVerifyBookingPayment(s)">
+                        <button type="button" class="btn-primary btn-sm" @click="openVerifyBalanceSubmissionModal(s)">{{ $t('common.verifyPrintReceipt') }}</button>
+                        <button type="button" class="btn-secondary-outline btn-sm" @click="openRejectBalanceSubmissionModal(s)">{{ $t('common.reject') }}</button>
+                      </template>
+                      <span v-else class="text-muted">{{ $t('ui.awaitingRole', { role: s.booker_role === 'treasurer' ? $t('ui.president') : $t('ui.treasurer') }) }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="pendingBalanceSubmissions.length === 0" class="fin-mobile-empty">{{ $t('ui.noFarmerBalanceAwaiting') }}</div>
+              <article v-else v-for="s in pendingBalanceSubmissions" :key="'bsm-' + s.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">#{{ s.booking_id }} · {{ s.farmer_name }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(s.amount) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machinery') }}</span><span>{{ s.machinery_name }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.balanceDue') }}</span><span>₱{{ formatNumber(s.remaining_balance) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.method') }}</span><span>{{ s.payment_method }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.submitted') }}</span><span>{{ formatDate(s.submitted_at) }}</span></div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.proof') }}</span>
+                    <span>
+                      <button
+                        v-if="s.proof_path"
+                        type="button"
+                        class="proof-link btn-link-inline"
+                        @click="openProofPreview(paymentProofUrl(s.proof_path))"
+                      >{{ $t('common.viewProof') }}</button>
+                      <template v-else-if="s.payment_method === 'Cash'">{{ $t('ui.cash') }}</template>
+                      <template v-else>—</template>
+                    </span>
+                  </div>
+                </div>
+                <div class="fin-mobile-card-actions payment-actions">
+                  <template v-if="canVerifyBookingPayment(s)">
+                    <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="openVerifyBalanceSubmissionModal(s)">{{ $t('common.verifyPrintReceipt') }}</button>
+                    <button type="button" class="btn-secondary-outline btn-sm fin-mobile-action" @click="openRejectBalanceSubmissionModal(s)">{{ $t('common.reject') }}</button>
+                  </template>
+                  <span v-else class="text-muted">{{ $t('ui.awaitingRole', { role: s.booker_role === 'treasurer' ? $t('ui.president') : $t('ui.treasurer') }) }}</span>
+                </div>
+              </article>
+            </div>
+            <div v-if="pendingBalanceSubmissions.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noFarmerBalanceAwaiting') }}</p>
             </div>
           </div>
         </div>
@@ -809,80 +1272,493 @@
         <!-- A/R List -->
         <div class="ar-section">
           <div class="section-subheader">
-            <h3>📑 List of Collectibles (Accounts Receivable)</h3>
-            <span v-if="isViewOnly" class="view-only-badge">👁️ View Only</span>
+            <h3>{{ $t('ui.listOfCollectiblesAr') }}</h3>
+            <span v-if="isViewOnly" class="view-only-badge">{{ $t('ui.viewOnly') }}</span>
           </div>
+          <p class="collections-note ar-list-note">
+            {{ $t('ui.collectiblesNote') }}
+          </p>
           <div class="table-container">
-            <table class="ar-table">
-              <thead>
-                <tr>
-                  <th>Pangalan ng Kliyente</th>
-                  <th>Sisingilin (A/R)</th>
-                  <th>Nakolektang Bayad</th>
-                  <th>Petsa ng Bayad</th>
-                  <th>Receipt No.</th>
-                  <th>Natitirang Balanse</th>
-                  <th v-if="canManage">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="ar in arList" :key="ar.id" :data-booking-id="ar.id" :class="{ 'notification-highlight-row': highlightedBookingId == ar.id }">
-                  <td>{{ ar.farmer_name }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(ar.accounts_receivable || ar.total_price) }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(ar.amount_collected || 0) }}</td>
-                  <td>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</td>
-                  <td>{{ ar.last_receipt_number || '—' }}</td>
-                  <td class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">
-                    ₱{{ formatNumber(ar.remaining_balance) }}
-                  </td>
-                  <td v-if="canManage" class="actions-cell">
-                    <button @click="recordCollection(ar)" class="btn-primary-small" title="Record Payment">💳</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="arList.length === 0" class="empty-state">
-              <p>No outstanding receivables</p>
+            <div class="fin-desktop-table">
+              <table class="ar-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.sisingilinAr') }}</th>
+                    <th>{{ $t('ui.nakolektangBayad') }}</th>
+                    <th>{{ $t('ui.petsaNgBayad') }}</th>
+                    <th>{{ $t('ui.receiptNo') }}</th>
+                    <th>{{ $t('ui.outstandingBalance') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="ar in arList" :key="ar.id" :data-booking-id="ar.id" :class="{ 'notification-highlight-row': highlightedBookingId == ar.id }">
+                    <td>{{ ar.farmer_name }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(ar.remaining_balance ?? ar.accounts_receivable ?? 0) }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(ar.amount_collected || 0) }}</td>
+                    <td>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</td>
+                    <td>{{ ar.last_receipt_number || '—' }}</td>
+                    <td class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">
+                      ₱{{ formatNumber(ar.remaining_balance) }}
+                    </td>
+                    <td class="actions-cell">
+                      <div class="ar-row-actions">
+                        <button
+                          v-if="canManage"
+                          type="button"
+                          class="btn-primary btn-sm"
+                          @click.stop="openRecordCollection(ar)"
+                        >
+                          {{ $t('ui.recordPayment') }}
+                        </button>
+                        <button
+                          v-if="ar.last_receipt_number"
+                          type="button"
+                          class="btn-secondary btn-sm receipt-view-btn"
+                          @click="viewReceipt(ar.last_receipt_number)"
+                        >
+                          {{ $t('common.viewReceipt') }}
+                        </button>
+                        <span v-if="!canManage && !ar.last_receipt_number">—</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="arList.length === 0" class="fin-mobile-empty">{{ $t('ui.noOutstandingReceivables') }}</div>
+              <article
+                v-else
+                v-for="ar in arList"
+                :key="'arm-' + ar.id"
+                :data-booking-id="ar.id"
+                class="fin-mobile-card"
+                :class="{ 'notification-highlight-row': highlightedBookingId == ar.id }"
+              >
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ ar.farmer_name }}</h4>
+                  <span class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">₱{{ formatNumber(ar.remaining_balance) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.sisingilinAr') }}</span><span>₱{{ formatNumber(ar.remaining_balance ?? ar.accounts_receivable ?? 0) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.nakolektangBayad') }}</span><span>₱{{ formatNumber(ar.amount_collected || 0) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.petsaNgBayad') }}</span><span>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receiptNo') }}</span><span>{{ ar.last_receipt_number || '—' }}</span></div>
+                </div>
+                <div class="fin-mobile-card-actions ar-mobile-actions">
+                  <button
+                    v-if="canManage"
+                    type="button"
+                    class="btn-primary btn-sm fin-mobile-action"
+                    @click.stop="openRecordCollection(ar)"
+                  >
+                    {{ $t('ui.recordPayment') }}
+                  </button>
+                  <button
+                    v-if="ar.last_receipt_number"
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action receipt-view-btn"
+                    @click="viewReceipt(ar.last_receipt_number)"
+                  >
+                    {{ $t('common.viewReceipt') }}
+                  </button>
+                </div>
+              </article>
+            </div>
+            <div v-if="arList.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noOutstandingReceivables') }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Collections Transactions -->
+        <!-- Collections Transactions — actual payments received (not A/R due) -->
         <div class="collections-section">
-          <div class="section-subheader">
-            <h3>💵 Collections Transactions</h3>
-            <small class="auto-interest-note">Auto Interest: 2% is added once on first partial payment (based on full booking amount).</small>
+          <div class="section-subheader collections-header">
+            <div>
+              <h3>{{ $t('ui.collections') }}</h3>
+              <p class="collections-note">
+                {{ $t('ui.collectionsActualNote') }}
+              </p>
+            </div>
+            <label class="collections-search">
+              <span class="collections-search-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" stroke-linecap="round" />
+                </svg>
+              </span>
+              <input
+                v-model="collectionsSearchQuery"
+                type="search"
+                class="toolbar-input collections-search-input"
+                :placeholder="$t('ui.searchCollectionsPlaceholder')"
+                autocomplete="off"
+              />
+            </label>
           </div>
           <div class="table-container">
-            <table class="collections-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Farmer</th>
-                  <th>Machinery</th>
-                  <th>Collection Amount</th>
-                  <th>Receipt Number</th>
-                  <th>Remarks</th>
-                  <th>Receipt</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="col in collections" :key="col.id">
-                  <td>{{ formatDate(col.collection_date) }}</td>
-                  <td>{{ col.farmer_name }}</td>
-                  <td>{{ col.machinery_name }}</td>
-                  <td class="amount-cell">₱{{ formatNumber(col.collection_amount) }}</td>
-                  <td>{{ col.receipt_number || '—' }}</td>
-                  <td>{{ col.remarks || '-' }}</td>
-                  <td>
-                    <button v-if="col.receipt_number" type="button" class="btn-link-inline" @click="showReceiptAfterVerify(col.receipt_number)">Print</button>
-                  </td>
-                  <!-- Delete button removed to prevent income data inconsistencies -->
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="collections.length === 0" class="empty-state">
-              <p>No collections recorded yet</p>
+            <div class="fin-desktop-table">
+              <table class="collections-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.date') }}</th>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.refNo') }}</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.collectionAmount') }}</th>
+                    <th>{{ $t('ui.receiptNumber') }}</th>
+                    <th>{{ $t('ui.remarks') }}</th>
+                    <th class="actions-col">{{ $t('ui.receipt') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="filteredCollections.length === 0">
+                    <td colspan="8" class="empty-message">
+                      {{ collections.length === 0 ? $t('ui.noCollectionsYet') : $t('ui.noMatchingCollections') }}
+                    </td>
+                  </tr>
+                  <tr v-for="col in filteredCollections" :key="col.id">
+                    <td>{{ formatDate(col.collection_date) }}</td>
+                    <td>{{ col.farmer_name }}</td>
+                    <td>{{ col.farmer_reference || '—' }}</td>
+                    <td>{{ col.machinery_name }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(col.collection_amount) }}</td>
+                    <td>{{ col.receipt_number || '—' }}</td>
+                    <td>{{ col.remarks || '-' }}</td>
+                    <td class="actions-cell">
+                      <button
+                        v-if="col.receipt_number"
+                        type="button"
+                        class="btn-secondary btn-sm receipt-view-btn"
+                        @click="viewReceipt(col.receipt_number)"
+                      >
+                        {{ $t('common.viewReceipt') }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="filteredCollections.length === 0" class="fin-mobile-empty">
+                <p>{{ collections.length === 0 ? $t('ui.noCollectionsYet') : $t('ui.noMatchingCollections') }}</p>
+              </div>
+              <article v-else v-for="col in filteredCollections" :key="'colm-' + col.id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ col.farmer_name }}</h4>
+                  <span class="amount-cell">₱{{ formatNumber(col.collection_amount) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.refNo') }}</span><span>{{ col.farmer_reference || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.date') }}</span><span>{{ formatDate(col.collection_date) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machinery') }}</span><span>{{ col.machinery_name }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receiptNumber') }}</span><span>{{ col.receipt_number || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.remarks') }}</span><span>{{ col.remarks || '-' }}</span></div>
+                </div>
+                <div v-if="col.receipt_number" class="fin-mobile-card-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action receipt-view-btn"
+                    @click="viewReceipt(col.receipt_number)"
+                  >{{ $t('common.viewReceipt') }}</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: GCASH QR CODE (treasurer) -->
+      <div v-if="activeTab === 'inventory'" class="tab-content">
+        <div class="section-header">
+          <h2>{{ $t('ui.gcashQrCode') }}</h2>
+          <p class="section-desc">{{ $t('ui.gcashQrInventorySub') }}</p>
+        </div>
+
+        <div class="card gcash-qr-card">
+          <div class="gcash-qr-layout">
+            <div class="gcash-qr-visual">
+              <button
+                v-if="gcashDisplaySrc"
+                type="button"
+                class="gcash-qr-frame"
+                @click="openProofPreview(gcashDisplaySrc)"
+              >
+                <img :src="gcashDisplaySrc" :alt="$t('ui.gcashQrCode')" class="gcash-qr-preview" />
+              </button>
+              <div v-else class="gcash-qr-empty">
+                {{ $t('ui.gcashNoQrUploaded') }}
+              </div>
+              <p v-if="gcashPendingPreview" class="gcash-qr-caption">{{ $t('ui.gcashNewQrPreview') }}</p>
+              <p v-else-if="gcashQr" class="gcash-qr-caption">{{ $t('ui.gcashTapToEnlarge') }}</p>
+            </div>
+            <div class="gcash-qr-info">
+              <h3 class="gcash-qr-heading">{{ $t('ui.gcashCurrentQr') }}</h3>
+              <p v-if="gcashQr?.uploaded_by_name && !gcashPendingFile" class="gcash-qr-meta">
+                {{ $t('ui.recordedBy') }}: {{ gcashQr.uploaded_by_name }}
+              </p>
+              <p v-if="gcashPendingFile" class="gcash-qr-meta">{{ gcashPendingFile.name }}</p>
+              <input
+                ref="gcashQrFileInput"
+                type="file"
+                class="gcash-qr-file-native"
+                accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+                @change="onGcashQrFileSelect"
+              />
+              <div class="gcash-qr-actions">
+                <button
+                  type="button"
+                  class="gcash-qr-choose"
+                  :disabled="gcashQrBusy"
+                  @click="gcashQrFileInput?.click()"
+                >
+                  {{ gcashQr || gcashPendingFile ? $t('ui.gcashReplaceQr') : $t('ui.gcashUploadQr') }}
+                </button>
+                <button
+                  v-if="gcashPendingFile"
+                  type="button"
+                  class="btn-primary gcash-qr-save"
+                  :disabled="gcashQrBusy"
+                  @click="saveGcashQr"
+                >
+                  {{ gcashQrBusy ? $t('common.saving') : $t('ui.gcashSaveQr') }}
+                </button>
+                <button
+                  v-if="gcashPendingFile"
+                  type="button"
+                  class="gcash-qr-text-btn"
+                  :disabled="gcashQrBusy"
+                  @click="clearGcashPendingQr"
+                >
+                  {{ $t('common.cancel') }}
+                </button>
+                <button
+                  v-if="gcashQr && !gcashPendingFile"
+                  type="button"
+                  class="gcash-qr-delete"
+                  :disabled="gcashQrBusy"
+                  @click="deleteGcashQr"
+                >
+                  {{ $t('ui.gcashDeleteQr') }}
+                </button>
+                <button
+                  type="button"
+                  class="gcash-qr-history"
+                  :disabled="gcashHistoryBusy"
+                  @click="toggleGcashHistory"
+                >
+                  {{ showGcashHistory ? $t('ui.gcashHideHistory') : $t('ui.gcashHistory') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="expense-section-block">
+          <h3 class="expense-section-title">
+            {{ $t('ui.gcashPendingPayments') }}
+            <span v-if="pendingGcashPayments.length" class="section-count">{{ pendingGcashPayments.length }}</span>
+          </h3>
+          <p class="section-hint">{{ $t('ui.gcashPendingPaymentsHint') }}</p>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="ar-table gcash-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.gcashTransactionType') }}</th>
+                    <th>{{ $t('ui.refNo') }}</th>
+                    <th>{{ $t('ui.petsaNgBayad') }}</th>
+                    <th>{{ $t('ui.proof') }}</th>
+                    <th>{{ $t('ui.paymentStatus') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="pendingGcashPayments.length === 0">
+                    <td colspan="7" class="empty-message">{{ $t('ui.gcashNoPending') }}</td>
+                  </tr>
+                  <tr v-else v-for="row in pendingGcashPayments" :key="'gcash-' + row.id" :data-gcash-id="row.id" :data-gcash-ref="row.reference_id" :class="{ 'notification-highlight-row': String(highlightedGcashRef) === String(row.id) || String(highlightedGcashRef) === String(row.reference_id) }">
+                    <td>{{ row.farmer_name }}</td>
+                    <td>{{ gcashTypeLabel(row.transaction_type) }}</td>
+                    <td>{{ row.reference_number || row.reference_id }}</td>
+                    <td>{{ formatDate(row.payment_date || row.submitted_at) }}</td>
+                    <td>
+                      <button
+                        v-if="row.proof_path"
+                        type="button"
+                        class="btn-secondary btn-sm proof-view-btn"
+                        @click="openProofPreview(paymentProofUrl(row.proof_path))"
+                      >
+                        {{ $t('common.viewProof') }}
+                      </button>
+                      <span v-else>—</span>
+                    </td>
+                    <td>{{ $t('ui.gcashPendingVerification') }}</td>
+                    <td class="actions-cell">
+                      <div class="ar-row-actions">
+                        <button type="button" class="btn-primary btn-sm" @click="openGcashConfirm(row)">
+                          {{ $t('ui.gcashConfirmPayment') }}
+                        </button>
+                        <button type="button" class="btn-secondary-outline btn-sm" @click="openGcashReject(row)">
+                          {{ $t('common.reject') }}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="pendingGcashPayments.length === 0" class="fin-mobile-empty">{{ $t('ui.gcashNoPending') }}</div>
+              <article v-else v-for="row in pendingGcashPayments" :key="'gcashm-' + row.id" class="fin-mobile-card" :data-gcash-id="row.id" :data-gcash-ref="row.reference_id" :class="{ 'notification-highlight-row': String(highlightedGcashRef) === String(row.id) || String(highlightedGcashRef) === String(row.reference_id) }">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ row.farmer_name }}</h4>
+                  <span>{{ gcashTypeLabel(row.transaction_type) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.refNo') }}</span>
+                    <span>{{ row.reference_number || row.reference_id }}</span>
+                  </div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.petsaNgBayad') }}</span>
+                    <span>{{ formatDate(row.payment_date || row.submitted_at) }}</span>
+                  </div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.paymentStatus') }}</span>
+                    <span>{{ $t('ui.gcashPendingVerification') }}</span>
+                  </div>
+                </div>
+                <div class="fin-mobile-card-actions">
+                  <button
+                    v-if="row.proof_path"
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action"
+                    @click="openProofPreview(paymentProofUrl(row.proof_path))"
+                  >
+                    {{ $t('common.viewProof') }}
+                  </button>
+                  <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="openGcashConfirm(row)">
+                    {{ $t('ui.gcashConfirmPayment') }}
+                  </button>
+                  <button type="button" class="btn-secondary-outline btn-sm fin-mobile-action" @click="openGcashReject(row)">
+                    {{ $t('common.reject') }}
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="showGcashHistory" id="gcash-history" class="expense-section-block">
+          <h3 class="expense-section-title">
+            {{ $t('ui.gcashHistory') }}
+            <span v-if="gcashHistoryRows.length" class="section-count">{{ gcashHistoryRows.length }}</span>
+          </h3>
+          <p class="section-hint">{{ $t('ui.gcashHistoryHint') }}</p>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="ar-table gcash-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('ui.farmer') }}</th>
+                    <th>{{ $t('ui.gcashTransactionType') }}</th>
+                    <th>{{ $t('ui.refNo') }}</th>
+                    <th>{{ $t('ui.amount') }}</th>
+                    <th>{{ $t('ui.petsaNgBayad') }}</th>
+                    <th>{{ $t('ui.paymentStatus') }}</th>
+                    <th>{{ $t('ui.notes') }}</th>
+                    <th class="actions-col">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="gcashHistoryRows.length === 0">
+                    <td colspan="8" class="empty-message">{{ $t('ui.gcashNoHistory') }}</td>
+                  </tr>
+                  <tr
+                    v-else
+                    v-for="row in gcashHistoryRows"
+                    :key="'gcashh-' + row.id"
+                    :data-gcash-id="row.id"
+                    :class="{ 'notification-highlight-row': isHighlightedGcashRow(row) }"
+                  >
+                    <td>{{ row.farmer_name }}</td>
+                    <td>{{ gcashTypeLabel(row.transaction_type) }}</td>
+                    <td>{{ row.reference_number || row.reference_id }}</td>
+                    <td>{{ row.status === 'verified' ? '₱' + formatNumber(row.amount_paid) : '—' }}</td>
+                    <td>{{ formatDate(row.verified_at || row.payment_date || row.submitted_at) }}</td>
+                    <td>
+                      <span :class="['status-badge', row.status === 'rejected' ? 'unpaid' : 'verified']">
+                        {{ row.status === 'rejected' ? $t('ui.gcashRejected') : $t('ui.gcashVerified') }}
+                      </span>
+                    </td>
+                    <td>{{ gcashHistoryNote(row) }}</td>
+                    <td class="actions-cell">
+                      <button
+                        v-if="row.proof_path"
+                        type="button"
+                        class="btn-secondary btn-sm proof-view-btn"
+                        @click="openProofPreview(paymentProofUrl(row.proof_path))"
+                      >
+                        {{ $t('common.viewProof') }}
+                      </button>
+                      <span v-else>—</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="gcashHistoryRows.length === 0" class="fin-mobile-empty">{{ $t('ui.gcashNoHistory') }}</div>
+              <article
+                v-else
+                v-for="row in gcashHistoryRows"
+                :key="'gcashhm-' + row.id"
+                class="fin-mobile-card"
+                :data-gcash-id="row.id"
+                :class="{ 'notification-highlight-row': isHighlightedGcashRow(row) }"
+              >
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">{{ row.farmer_name }}</h4>
+                  <span :class="['status-badge', row.status === 'rejected' ? 'unpaid' : 'verified']">
+                    {{ row.status === 'rejected' ? $t('ui.gcashRejected') : $t('ui.gcashVerified') }}
+                  </span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.gcashTransactionType') }}</span>
+                    <span>{{ gcashTypeLabel(row.transaction_type) }}</span>
+                  </div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.refNo') }}</span>
+                    <span>{{ row.reference_number || row.reference_id }}</span>
+                  </div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.amount') }}</span>
+                    <span>{{ row.status === 'verified' ? '₱' + formatNumber(row.amount_paid) : '—' }}</span>
+                  </div>
+                  <div class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.petsaNgBayad') }}</span>
+                    <span>{{ formatDate(row.verified_at || row.payment_date || row.submitted_at) }}</span>
+                  </div>
+                  <div v-if="gcashHistoryNote(row)" class="fin-mobile-meta-row">
+                    <span class="fin-mobile-label">{{ $t('ui.notes') }}</span>
+                    <span>{{ gcashHistoryNote(row) }}</span>
+                  </div>
+                </div>
+                <div v-if="row.proof_path" class="fin-mobile-card-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary btn-sm fin-mobile-action"
+                    @click="openProofPreview(paymentProofUrl(row.proof_path))"
+                  >
+                    {{ $t('common.viewProof') }}
+                  </button>
+                </div>
+              </article>
             </div>
           </div>
         </div>
@@ -891,95 +1767,111 @@
       <!-- TAB 4: PROFIT COMPUTATION -->
       <div v-if="activeTab === 'profit'" class="tab-content">
         <div class="section-header">
-          <h2>Profit Computation & Distribution</h2>
+          <h2>{{ $t('ui.profitComputationDist') }}</h2>
         </div>
 
         <div class="usage-leaders-card">
           <div class="section-subheader">
-            <h3>Most Used Machinery (Completed Bookings Only)</h3>
+            <h3>{{ $t('ui.mostUsedMachineryCompleted') }}</h3>
           </div>
-          <div v-if="bookingUsageLeaders.length === 0" class="empty-state">
-            <p>No completed booking usage found for current filters.</p>
-          </div>
-          <div v-else class="table-container">
-            <table class="data-table usage-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Machinery</th>
-                  <th>Type</th>
-                  <th v-if="isAdmin">Barangay</th>
-                  <th>Completed Bookings</th>
-                  <th>Total Area Booked</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(item, index) in bookingUsageLeaders" :key="item.machinery_id">
-                  <td>{{ index + 1 }}</td>
-                  <td class="font-semibold">{{ item.machinery_name || '-' }}</td>
-                  <td>{{ item.machinery_type || '-' }}</td>
-                  <td v-if="isAdmin">{{ item.barangay_name || '-' }}</td>
-                  <td>{{ item.booking_count }}</td>
-                  <td>
-                    {{ formatNumber(item.total_area_booked) }}
-                    <small>{{ item.area_unit_hint || '' }}</small>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="table-container">
+            <div class="fin-desktop-table">
+              <table class="data-table usage-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.type') }}</th>
+                    <th v-if="isAdmin">{{ $t('ui.barangay') }}</th>
+                    <th>{{ $t('ui.completedBookings') }}</th>
+                    <th>{{ $t('ui.totalAreaBooked') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in bookingUsageLeaders" :key="item.machinery_id">
+                    <td>{{ index + 1 }}</td>
+                    <td class="font-semibold">{{ item.machinery_name || '-' }}</td>
+                    <td>{{ item.machinery_type || '-' }}</td>
+                    <td v-if="isAdmin">{{ item.barangay_name || '-' }}</td>
+                    <td>{{ item.booking_count }}</td>
+                    <td>
+                      {{ formatNumber(item.total_area_booked) }}
+                      <small>{{ formatAreaUnit(item.area_unit_hint) }}</small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="fin-mobile-list">
+              <div v-if="bookingUsageLeaders.length === 0" class="fin-mobile-empty">{{ $t('ui.noCompletedBookingUsage') }}</div>
+              <article v-else v-for="(item, index) in bookingUsageLeaders" :key="'usm-' + item.machinery_id" class="fin-mobile-card">
+                <div class="fin-mobile-card-top">
+                  <h4 class="fin-mobile-card-name">#{{ index + 1 }} · {{ item.machinery_name || '-' }}</h4>
+                  <span>{{ $t('ui.bookingCount', { count: item.booking_count }) }}</span>
+                </div>
+                <div class="fin-mobile-card-meta">
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.type') }}</span><span>{{ item.machinery_type || '-' }}</span></div>
+                  <div v-if="isAdmin" class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.barangay') }}</span><span>{{ item.barangay_name || '-' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.totalAreaBooked') }}</span><span>{{ formatNumber(item.total_area_booked) }} <small>{{ formatAreaUnit(item.area_unit_hint) }}</small></span></div>
+                </div>
+              </article>
+            </div>
+            <div v-if="bookingUsageLeaders.length === 0" class="empty-state fin-desktop-empty">
+              <p>{{ $t('ui.noCompletedBookingUsage') }}</p>
+            </div>
           </div>
         </div>
 
         <div class="profit-breakdown">
           <div class="breakdown-card">
-            <h3>Income Breakdown</h3>
+            <h3>{{ $t('ui.incomeBreakdownShort') }}</h3>
             <p class="amount">₱{{ formatNumber(profitSummary.total_income) }}</p>
           </div>
 
           <div class="breakdown-card">
-            <h3>Expense Breakdown</h3>
+            <h3>{{ $t('ui.expenseBreakdown') }}</h3>
             <div class="expense-items">
               <div class="expense-item">
-                <span>Fuel & Oil</span>
+                <span>{{ $t('ui.fuelAndOil') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.fuel_and_oil || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Labor Cost</span>
+                <span>{{ $t('ui.laborCost') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.labor_cost || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Per Diem</span>
+                <span>{{ $t('ui.perDiem') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.per_diem || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Repair & Maintenance</span>
+                <span>{{ $t('ui.repairMaintenance') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.repair_and_maintenance || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Office Supply</span>
+                <span>{{ $t('ui.officeSupply') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.office_supply || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Communication</span>
+                <span>{{ $t('ui.communication') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.communication_expense || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Utilities</span>
+                <span>{{ $t('ui.utilities') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.utilities_expense || 0) }}</span>
               </div>
               <div class="expense-item">
-                <span>Sundries</span>
+                <span>{{ $t('ui.sundries') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.sundries || 0) }}</span>
               </div>
               <div class="expense-item total">
-                <span>Total Expenses</span>
+                <span>{{ $t('ui.totalExpenses') }}</span>
                 <span>₱{{ formatNumber(expenseBreakdown.total || 0) }}</span>
               </div>
             </div>
           </div>
 
           <div class="breakdown-card profit">
-            <h3>Net Profit</h3>
+            <h3>{{ $t('ui.netProfit') }}</h3>
             <p class="amount" :class="{ negative: profitSummary.net_profit < 0 }">
               ₱{{ formatNumber(profitSummary.net_profit) }}
             </p>
@@ -988,8 +1880,8 @@
 
         <!-- Profit Distribution Breakdown -->
         <div v-if="profitSummary.net_profit > 0" class="profit-distribution-section">
-          <h3>Profit Distribution Allocation</h3>
-          <p class="info-text">Net profit is distributed as follows:</p>
+          <h3>{{ $t('ui.profitDistAlloc') }}</h3>
+          <p class="info-text">{{ $t('ui.netProfitDistributedAs') }}</p>
           
           <div class="distribution-grid">
             <div class="distribution-card org">
@@ -1002,7 +1894,7 @@
                 </svg>
               </div>
               <div class="distribution-content">
-                <h4>Organization</h4>
+                <h4>{{ $t('ui.organization') }}</h4>
                 <p class="percentage">30%</p>
                 <p class="amount">₱{{ formatNumber(profitDistribution.organization) }}</p>
               </div>
@@ -1018,7 +1910,7 @@
                 </svg>
               </div>
               <div class="distribution-content">
-                <h4>Training & Development</h4>
+                <h4>{{ $t('ui.trainingDevelopment') }}</h4>
                 <p class="percentage">20%</p>
                 <p class="amount">₱{{ formatNumber(profitDistribution.training) }}</p>
               </div>
@@ -1034,36 +1926,47 @@
                 </svg>
               </div>
               <div class="distribution-content">
-                <h4>Members Distribution</h4>
+                <h4>{{ $t('ui.membersDistribution') }}</h4>
                 <p class="percentage">50%</p>
                 <p class="amount">₱{{ formatNumber(profitDistribution.members) }}</p>
-                <p v-if="totalMembers > 0" class="per-member">
-                  Per Member: ₱{{ formatNumber(profitDistribution.per_member) }}
-                </p>
+              </div>
+            </div>
+
+            <div class="distribution-card per-member-card">
+              <div class="distribution-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="distribution-content">
+                <h4>{{ $t('ui.perMember') }}</h4>
+                <p class="percentage">{{ totalMembers > 0 ? $t('dashboard.membersCount', { count: totalMembers }) : '—' }}</p>
+                <p class="amount">₱{{ formatNumber(profitDistribution.per_member) }}</p>
               </div>
             </div>
           </div>
 
           <div v-if="canManage" class="distribution-actions">
             <button @click="generateProfitDistributionRecord" class="btn-primary">
-              Generate Profit Distribution Record
+              {{ $t('ui.generateProfitDistRecord') }}
             </button>
           </div>
         </div>
 
         <div v-else-if="profitSummary.net_profit === 0" class="empty-state">
-          <p>No profit to distribute (Income = Expenses)</p>
+          <p>{{ $t('ui.noProfitToDistribute') }}</p>
         </div>
 
         <div v-else class="empty-state">
-          <p>⚠️ Loss detected (Expenses > Income)</p>
+          <p>{{ $t('ui.lossDetected') }}</p>
         </div>
       </div>
 
       <!-- TAB 5: REPORTS -->
       <div v-if="activeTab === 'reports'" class="tab-content">
         <div class="section-header">
-          <h2>Financial Reports</h2>
+          <h2>{{ $t('ui.financialReports') }}</h2>
         </div>
         
         <!-- Report Generation Panel -->
@@ -1071,16 +1974,16 @@
           <div class="report-options-grid">
             <!-- Report Type Selection -->
             <div class="report-option-card">
-              <h4>Report Period</h4>
+              <h4>{{ $t('ui.reportPeriod') }}</h4>
               <div class="report-type-buttons">
-                <button @click="generateReport('monthly')" class="report-type-btn" :class="{ active: reportData?.type === 'monthly' }" :disabled="reportLoading">
-                  <span class="btn-text">Monthly</span>
+                <button type="button" @click="selectReportType('monthly', $event)" class="report-type-btn" :class="{ active: selectedReportType === 'monthly' }">
+                  <span class="btn-text">{{ $t('ui.monthly') }}</span>
                 </button>
-                <button @click="generateReport('quarterly')" class="report-type-btn" :class="{ active: reportData?.type === 'quarterly' }" :disabled="reportLoading">
-                  <span class="btn-text">Quarterly</span>
+                <button type="button" @click="selectReportType('quarterly', $event)" class="report-type-btn" :class="{ active: selectedReportType === 'quarterly' }">
+                  <span class="btn-text">{{ $t('ui.quarterly') }}</span>
                 </button>
-                <button @click="generateReport('annual')" class="report-type-btn" :class="{ active: reportData?.type === 'annual' }" :disabled="reportLoading">
-                  <span class="btn-text">Annual</span>
+                <button type="button" @click="selectReportType('annual', $event)" class="report-type-btn" :class="{ active: selectedReportType === 'annual' }">
+                  <span class="btn-text">{{ $t('ui.annual') }}</span>
                 </button>
               </div>
               
@@ -1088,91 +1991,101 @@
               <div class="custom-date-toggle">
                 <label class="checkbox-inline">
                   <input type="checkbox" v-model="reportFilters.customDateRange" />
-                  <span>Custom Date Range</span>
+                  <span>{{ $t('ui.customDateRange') }}</span>
                 </label>
               </div>
               <div v-if="reportFilters.customDateRange" class="custom-date-inputs">
                 <div class="date-input-group">
-                  <label>From:</label>
+                  <label>{{ $t('ui.fromColon') }}</label>
                   <input type="date" v-model="reportFilters.startDate" class="form-input-sm" />
                 </div>
                 <div class="date-input-group">
-                  <label>To:</label>
+                  <label>{{ $t('ui.toColon') }}</label>
                   <input type="date" v-model="reportFilters.endDate" class="form-input-sm" />
                 </div>
                 <button @click="generateReportCustom" class="btn-generate" :disabled="reportLoading || !reportFilters.startDate || !reportFilters.endDate">
-                  {{ reportLoading ? 'Generating...' : 'Generate' }}
+                  {{ reportLoading ? $t('ui.generating') : $t('ui.generate') }}
                 </button>
               </div>
             </div>
             
             <!-- Report Sections Filter -->
             <div class="report-option-card">
-              <h4>Include in Report</h4>
+              <h4>{{ $t('ui.includeInReport') }}</h4>
               <div class="filter-checkboxes">
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showSummary" />
-                  <span>Summary</span>
+                  <span>{{ $t('incomeForm.summary') }}</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showDistribution" />
-                  <span>Profit Distribution</span>
+                  <span>{{ $t('ui.profitDistribution') }}</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showAllTransactions" />
-                  <span>All Transactions</span>
+                  <span>{{ $t('ui.allTransactions') }}</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showExpenses" />
-                  <span>Expense Details</span>
+                  <span>{{ $t('ui.expenseDetails') }}</span>
                 </label>
-                <label class="filter-checkbox" title="Farmer Clients Transaction Record">
+                <label class="filter-checkbox" :title="$t('ui.farmerClientsRecordTitle')">
                   <input type="checkbox" v-model="reportFilters.showServiceLedger" />
-                  <span>Farmer Clients Record</span>
+                  <span>{{ $t('ui.farmerClientsRecord') }}</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showCollectiblesList" />
-                  <span>List of Collectibles</span>
+                  <span>{{ $t('ui.listOfCollectibles') }}</span>
                 </label>
                 <label class="filter-checkbox">
                   <input type="checkbox" v-model="reportFilters.showBookings" />
-                  <span>Bookings Summary</span>
+                  <span>{{ $t('ui.bookingsSummary') }}</span>
                 </label>
               </div>
             </div>
             
             <!-- Print/Export Actions -->
             <div class="report-option-card actions-card">
-              <h4>Export Options</h4>
+              <h4>{{ $t('ui.exportOptions') }}</h4>
               
               <!-- Orientation Toggle -->
               <div class="orientation-setting">
-                <span class="orientation-label">Page Orientation</span>
+                <span class="orientation-label">{{ $t('ui.pageOrientation') }}</span>
                 <div class="orientation-toggle">
-                  <button 
-                    @click="printOrientation = 'portrait'" 
-                    class="orient-btn" 
-                    :class="{ active: printOrientation === 'portrait' }">
-                    Portrait
+                  <button
+                    type="button"
+                    @click="selectOrientation('portrait', $event)"
+                    class="orient-btn"
+                    :class="{ active: printOrientation === 'portrait' }"
+                  >
+                    {{ $t('ui.portrait') }}
                   </button>
-                  <button 
-                    @click="printOrientation = 'landscape'" 
-                    class="orient-btn" 
-                    :class="{ active: printOrientation === 'landscape' }">
-                    Landscape
+                  <button
+                    type="button"
+                    @click="selectOrientation('landscape', $event)"
+                    class="orient-btn"
+                    :class="{ active: printOrientation === 'landscape' }"
+                  >
+                    {{ $t('ui.landscape') }}
                   </button>
                 </div>
               </div>
 
               <div class="action-buttons">
-                <button @click="printReport" class="btn-action print" :disabled="!reportData">
-                  <span>Print Report</span>
+                <button
+                  @click="printReport"
+                  class="btn-action print btn-action-icon"
+                  :disabled="!reportData"
+                  :title="$t('ui.printReport')"
+                  :aria-label="$t('ui.printReport')"
+                >
+                  <PrintIcon :size="18" />
                 </button>
                 <button class="btn-action select-all" @click="selectAllFilters">
-                  <span>Select All</span>
+                  <span>{{ $t('ui.selectAll') }}</span>
                 </button>
                 <button class="btn-action clear" @click="clearAllFilters">
-                  <span>Clear All</span>
+                  <span>{{ $t('common.clearAll') }}</span>
                 </button>
               </div>
             </div>
@@ -1182,9 +2095,9 @@
         <!-- Machinery filter (after report option cards) -->
         <div class="filters-section reports-machinery-filter-bar">
           <div class="filter-group">
-            <label class="filter-label">Machinery/Equipment:</label>
+            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
             <select v-model="filters.machinery_id" class="filter-input">
-              <option value="">All Machinery/Equipment</option>
+              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
               <option v-for="m in machinery" :key="m.id" :value="m.id">
                 {{ m.machinery_name }} ({{ m.machinery_type }})
               </option>
@@ -1195,7 +2108,7 @@
         <!-- Loading State (initial generate only) -->
         <div v-if="reportLoading && !reportData" class="report-loading">
           <div class="loading-spinner"></div>
-          <p>Generating report...</p>
+          <p>{{ $t('ui.generatingReport') }}</p>
         </div>
         
         <!-- Report Display -->
@@ -1207,118 +2120,50 @@
         >
           <div v-if="reportLoading" class="report-refresh-overlay" aria-live="polite">
             <div class="loading-spinner"></div>
-            <p>Ina-update ang report...</p>
+            <p>{{ $t('ui.updatingReport') }}</p>
           </div>
           <!-- Report Header (CFA = Barangay scope; period from filter/API; no contact/address) -->
           <div class="report-header">
             <div class="report-logo">
-              <img :src="reportLogoUrl" alt="CALFFA Logo" class="report-logo-image" />
+              <img :src="reportLogoUrl" alt="CalFFA Logo" class="report-logo-image" />
               <div class="logo-text">
                 <p class="report-cfa-line">
-                  <strong>Name ng CFA:</strong> {{ reportBarangayNameForReport }}
+                  <strong>{{ $t('ui.nameOfCfa') }}</strong> {{ reportBarangayNameForReport }}
                 </p>
-                <h3 class="report-doc-title">Machinery Financial Report</h3>
+                <h3 class="report-doc-title">{{ $t('ui.machineryFinancialReport') }}</h3>
               </div>
             </div>
             <div class="report-meta">
-              <h3>{{ reportData.type.charAt(0).toUpperCase() + reportData.type.slice(1) }} Transaction Report</h3>
+              <h3>{{ $t('ui.transactionReport', { type: reportTypeLabel(reportData.type) }) }}</h3>
               <p class="report-period-long">
                 {{ formatReportPeriodLong(reportData.period.start, reportData.period.end) }}
               </p>
               <p class="report-generated">
-                Generated: {{ formatReportDate(reportData.generated_at) }}
+                {{ $t('ui.generatedColon') }} {{ formatReportDate(reportData.generated_at) }}
               </p>
             </div>
           </div>
 
-          <!-- Farmer Clients Transaction Record (official collectibles-style sheet) -->
-          <div v-if="reportFilters.showServiceLedger" class="collectibles-form-sheet farmer-clients-record-sheet">
-            <div class="collectibles-form-title-block">
-              <h2 class="collectibles-main-title">Farmer Clients Transaction Record</h2>
-              <p class="collectibles-main-subtitle">Talaan ng Transaksyon ng mga Magsasakang Kliyente</p>
-            </div>
-
-            <div class="collectibles-meta-box collectibles-meta-box-compact">
-              <div class="collectibles-meta-split">
-                <div class="collectibles-meta-col collectibles-meta-col-left">
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Name ng CFA / Name of FCA:</span>
-                    <span class="collectibles-meta-fill">{{ reportBarangayNameForReport }}</span>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Uri ng makinarya / Type of Farm Machinery:</span>
-                    <span class="collectibles-meta-fill">{{ reportMachineryLabel }}</span>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Buwan saklaw ng talaan / Period covered:</span>
-                    <span class="collectibles-meta-fill">{{ formatReportPeriodCompact(reportData.period.start, reportData.period.end) }}</span>
-                  </div>
-                </div>
-                <div class="collectibles-meta-col collectibles-meta-col-right">
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Contact Person / Tauhan:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.contactPerson"
-                        type="text"
-                        data-sheet-field="contactPerson"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Cropping Period / Panahon ng Pagtatanim:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.croppingPeriod"
-                        type="text"
-                        data-sheet-field="croppingPeriod"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Address / Tirahan ng FCA:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.fcaAddress"
-                        type="text"
-                        data-sheet-field="fcaAddress"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Contact Number / Numero ng Telepono:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.contactNumber"
-                        type="text"
-                        data-sheet-field="contactNumber"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="collectibles-table-wrap fcr-responsive-wrap">
-              <!-- Desktop / tablet: full table -->
-              <div class="fcr-desktop-table">
+          <!-- Farmer Clients Transaction Record -->
+          <MachineryReportSheet
+            v-if="reportFilters.showServiceLedger"
+            :title="$t('ui.farmerClientsRecordTitle')"
+            :subtitle="$t('ui.farmerClientsRecord')"
+            sheet-class="farmer-clients-record-sheet"
+            :barangay-name="reportBarangayNameForReport"
+            :machinery-label="reportMachineryLabel"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
                 <table class="collectibles-data-table farmer-clients-record-table">
                   <thead>
                     <tr>
                       <th class="fcr-col-client">
-                        Name of Client<br />
-                        <span class="th-tl">(Pangalan ng Kliyente)</span>
+                        {{ $t('ui.nameOfFarmer') }}<br />
+                        <span class="th-tl">({{ $t('ui.nameOfFarmerOther') }})</span>
                       </th>
                       <th class="fcr-col-loc">
-                        Farm Location<br />
+                        {{ $t('ui.farmLocation') }}<br />
                         <span class="th-tl">(Lokasyon ng Bukid)</span>
                       </th>
                       <th class="fcr-col-cat">Category</th>
@@ -1347,7 +2192,7 @@
                         Cash Collection<br />
                         <span class="th-tl">(Nakolektang Bayad)</span>
                       </th>
-                      <th class="fcr-col-rcpt">Receipt No.</th>
+                      <th class="fcr-col-rcpt">{{ $t('ui.receiptNo') }}</th>
                       <th class="fcr-col-amt text-right">
                         A/R<br />
                         <span class="th-tl">(Singilin)</span>
@@ -1363,7 +2208,7 @@
                       <td class="fcr-col-date">{{ formatReportDateCompact(row.actual_service_date || row.booking_date) }}</td>
                       <td class="fcr-col-fee">{{ formatServiceFeeCompact(row) }}</td>
                       <td class="fcr-col-area">{{ formatAreaServicedCompact(row) }}</td>
-                      <td class="fcr-col-hrs">N/A</td>
+                      <td class="fcr-col-hrs">{{ $t('ui.na') }}</td>
                       <td class="fcr-col-amt text-right">{{ formatReportMoneyCompact(row.total_price) }}</td>
                       <td class="fcr-col-amt text-right">{{ formatReportMoneyCompact(row.cash_collection) }}</td>
                       <td class="fcr-col-rcpt">{{ (row.last_receipt_number && String(row.last_receipt_number).trim()) || '—' }}</td>
@@ -1383,9 +2228,8 @@
                     </tr>
                   </tfoot>
                 </table>
-              </div>
 
-              <!-- Mobile: one card per client record -->
+            <template #mobile>
               <div class="fcr-mobile-list">
                 <p v-if="serviceLedgerRows.length === 0" class="fcr-mobile-empty">
                   Walang rekord sa piniling saklaw ng petsa / No records in this period.
@@ -1396,11 +2240,11 @@
                   class="fcr-mobile-card"
                 >
                   <div class="fcr-mobile-row">
-                    <span class="fcr-mobile-label">Name of Client</span>
+                    <span class="fcr-mobile-label">{{ $t('ui.nameOfFarmer') }}</span>
                     <span class="fcr-mobile-value">{{ row.client_name || '—' }}</span>
                   </div>
                   <div class="fcr-mobile-row">
-                    <span class="fcr-mobile-label">Farm Location</span>
+                    <span class="fcr-mobile-label">{{ $t('ui.farmLocation') }}</span>
                     <span class="fcr-mobile-value">{{ row.farm_location || '—' }}</span>
                   </div>
                   <div class="fcr-mobile-row">
@@ -1425,7 +2269,7 @@
                   </div>
                   <div class="fcr-mobile-row">
                     <span class="fcr-mobile-label">Op. Hours</span>
-                    <span class="fcr-mobile-value">N/A</span>
+                    <span class="fcr-mobile-value">{{ $t('ui.na') }}</span>
                   </div>
                   <div class="fcr-mobile-row">
                     <span class="fcr-mobile-label">Total Amount</span>
@@ -1436,7 +2280,7 @@
                     <span class="fcr-mobile-value">{{ formatReportMoneyCompact(row.cash_collection) }}</span>
                   </div>
                   <div class="fcr-mobile-row">
-                    <span class="fcr-mobile-label">Receipt No.</span>
+                    <span class="fcr-mobile-label">{{ $t('ui.receiptNo') }}</span>
                     <span class="fcr-mobile-value">{{ (row.last_receipt_number && String(row.last_receipt_number).trim()) || '—' }}</span>
                   </div>
                   <div class="fcr-mobile-row">
@@ -1461,93 +2305,25 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </MachineryReportSheet>
 
-          <!-- List of Collectibles (official collectibles-style sheet) -->
-          <div v-if="reportFilters.showCollectiblesList" class="collectibles-form-sheet collectibles-list-sheet">
-            <div class="collectibles-form-title-block">
-              <h2 class="collectibles-main-title">List of Collectibles</h2>
-              <p class="collectibles-main-subtitle">Talaan ng mga Singilin</p>
-            </div>
-
-            <div class="collectibles-meta-box collectibles-meta-box-compact">
-              <div class="collectibles-meta-split">
-                <div class="collectibles-meta-col collectibles-meta-col-left">
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Name ng CFA / Name of FCA:</span>
-                    <span class="collectibles-meta-fill">{{ reportBarangayNameForReport }}</span>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Uri ng makinarya / Type of Farm Machinery:</span>
-                    <span class="collectibles-meta-fill">{{ reportMachineryLabel }}</span>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Buwan saklaw ng talaan / Period covered:</span>
-                    <span class="collectibles-meta-fill">{{ formatReportPeriodCompact(reportData.period.start, reportData.period.end) }}</span>
-                  </div>
-                </div>
-                <div class="collectibles-meta-col collectibles-meta-col-right">
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Contact Person / Tauhan:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.contactPerson"
-                        type="text"
-                        data-sheet-field="contactPerson"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Cropping Period / Panahon ng Pagtatanim:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.croppingPeriod"
-                        type="text"
-                        data-sheet-field="croppingPeriod"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Address / Tirahan ng FCA:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.fcaAddress"
-                        type="text"
-                        data-sheet-field="fcaAddress"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                  <div class="collectibles-meta-field-block">
-                    <span class="collectibles-meta-label-sm">Contact Number / Numero ng Telepono:</span>
-                    <div class="sheet-fill-line">
-                      <input
-                        v-model="reportSheetMeta.contactNumber"
-                        type="text"
-                        data-sheet-field="contactNumber"
-                        class="sheet-fill-input"
-                        spellcheck="false"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="collectibles-table-wrap fcr-responsive-wrap">
-              <div class="fcr-desktop-table">
+          <!-- List of Collectibles -->
+          <MachineryReportSheet
+            v-if="reportFilters.showCollectiblesList"
+            :title="$t('ui.listOfCollectibles')"
+            :subtitle="$t('ui.listOfCollectiblesOther')"
+            :barangay-name="reportBarangayNameForReport"
+            :machinery-label="reportMachineryLabel"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
                 <table class="collectibles-data-table collectibles-list-table">
                   <thead>
                     <tr>
                       <th class="col-client">
-                        Name of Client<br />
-                        <span class="th-tl">(Pangalan ng Kliyente)</span>
+                        {{ $t('ui.nameOfFarmer') }}<br />
+                        <span class="th-tl">({{ $t('ui.nameOfFarmerOther') }})</span>
                       </th>
                       <th class="col-ar text-right">
                         Accounts Receivables<br />
@@ -1561,7 +2337,7 @@
                         Date of Payment<br />
                         <span class="th-tl">(Petsa kung Kailan Nagbayad)</span>
                       </th>
-                      <th class="col-rcpt">Receipt No.</th>
+                      <th class="col-rcpt">{{ $t('ui.receiptNo') }}</th>
                       <th class="col-bal text-right">
                         Remaining Balance<br />
                         <span class="th-tl">(Natitirang Balanse)</span>
@@ -1592,8 +2368,8 @@
                     </tr>
                   </tfoot>
                 </table>
-              </div>
 
+            <template #mobile>
               <div class="fcr-mobile-list">
                 <p v-if="collectiblesListRows.length === 0" class="fcr-mobile-empty">
                   Walang rekord sa piniling saklaw ng petsa / No records in this period.
@@ -1604,7 +2380,7 @@
                   class="fcr-mobile-card"
                 >
                   <div class="fcr-mobile-row">
-                    <span class="fcr-mobile-label">Name of Client</span>
+                    <span class="fcr-mobile-label">{{ $t('ui.nameOfFarmer') }}</span>
                     <span class="fcr-mobile-value">{{ row.client_name || '—' }}</span>
                   </div>
                   <div class="fcr-mobile-row">
@@ -1620,7 +2396,7 @@
                     <span class="fcr-mobile-value">{{ formatReportDateCompact(row.date_of_payment) }}</span>
                   </div>
                   <div class="fcr-mobile-row">
-                    <span class="fcr-mobile-label">Receipt No.</span>
+                    <span class="fcr-mobile-label">{{ $t('ui.receiptNo') }}</span>
                     <span class="fcr-mobile-value">{{ (row.receipt_number && String(row.receipt_number).trim()) || '—' }}</span>
                   </div>
                   <div class="fcr-mobile-row">
@@ -1645,226 +2421,341 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </MachineryReportSheet>
 
           <!-- Summary -->
-          <div v-if="reportFilters.showSummary" class="report-section report-section-card report-plain-section">
-            <div class="section-title">
-              <h4>Summary</h4>
-            </div>
-            <div class="table-container">
-              <table class="data-table report-plain-table">
+          <MachineryReportSheet
+            v-if="reportFilters.showSummary"
+            :title="$t('incomeForm.summary')"
+            subtitle="Buod ng Pananalapi"
+            :show-machinery-type="false"
+            :barangay-name="reportBarangayNameForReport"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
+            <table class="collectibles-data-table collectibles-list-table mfr-summary-table">
                 <thead>
                   <tr>
-                    <th>Item</th>
-                    <th class="text-right">Amount</th>
-                    <th>Records</th>
+                  <th class="mfr-col-item">
+                    Item<br />
+                    <span class="th-tl">(Uri ng Item)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.amount') }}<br />
+                    <span class="th-tl">(Halaga)</span>
+                  </th>
+                  <th class="mfr-col-rec">
+                    {{ $t('ui.records') }}<br />
+                    <span class="th-tl">(Bilang ng Rekord)</span>
+                  </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Total Expenses</td>
-                    <td class="text-right">₱{{ reportData.summary.total_expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td>{{ reportData.counts.expenses }} records</td>
+                  <td class="mfr-col-item">{{ $t('ui.totalExpenses') }}</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.total_expenses) }}</td>
+                  <td class="mfr-col-rec">{{ reportData.counts.expenses }} records</td>
                   </tr>
                   <tr>
-                    <td>Total Income</td>
-                    <td class="text-right">₱{{ reportData.summary.total_income.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td>{{ reportData.counts.income }} records</td>
+                  <td class="mfr-col-item">{{ $t('ui.totalIncome') }}</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.total_income) }}</td>
+                  <td class="mfr-col-rec">{{ reportData.counts.income }} records</td>
                   </tr>
                   <tr>
-                    <td>Total Collections</td>
-                    <td class="text-right">₱{{ reportData.summary.total_collections.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td>{{ reportData.counts.collections }} payments</td>
+                  <td class="mfr-col-item">Total Collections</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.total_collections) }}</td>
+                  <td class="mfr-col-rec">{{ reportData.counts.collections }} payments</td>
                   </tr>
                   <tr>
-                    <td>Net Profit/Loss</td>
-                    <td class="text-right">₱{{ reportData.summary.net_profit.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td>{{ reportData.summary.net_profit >= 0 ? 'Profit' : 'Loss' }}</td>
+                  <td class="mfr-col-item">Net Profit/Loss</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.net_profit) }}</td>
+                  <td class="mfr-col-rec">{{ reportData.summary.net_profit >= 0 ? 'Profit' : 'Loss' }}</td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
+            <template #mobile>
+              <ReportMobileCards :cards="summaryMobileCards" />
+            </template>
+          </MachineryReportSheet>
           
           <!-- Profit Distribution -->
-          <div v-if="reportFilters.showDistribution && reportData.summary.net_profit > 0" class="report-section report-section-card report-plain-section">
-            <div class="section-title">
-              <h4>Profit Distribution</h4>
-            </div>
-            <div class="table-container">
-              <table class="data-table report-plain-table">
+          <MachineryReportSheet
+            v-if="reportFilters.showDistribution && reportData.summary.net_profit > 0"
+            :title="$t('ui.profitDistribution')"
+            subtitle="Pamamahagi ng Kita"
+            :show-machinery-type="false"
+            :barangay-name="reportBarangayNameForReport"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
+            <table class="collectibles-data-table collectibles-list-table mfr-distribution-table">
                 <thead>
                   <tr>
-                    <th>Allocation</th>
-                    <th>Share</th>
-                    <th class="text-right">Amount</th>
+                  <th class="mfr-col-alloc">
+                    Allocation<br />
+                    <span class="th-tl">(Paglalaan)</span>
+                  </th>
+                  <th class="mfr-col-share">
+                    {{ $t('common.share') }}<br />
+                    <span class="th-tl">(Bahagi)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.amount') }}<br />
+                    <span class="th-tl">(Halaga)</span>
+                  </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Organization</td>
-                    <td>30%</td>
-                    <td class="text-right">₱{{ reportData.summary.distribution.organization_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="mfr-col-alloc">{{ $t('ui.organization') }}</td>
+                  <td class="mfr-col-share">30%</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.distribution.organization_share) }}</td>
                   </tr>
                   <tr>
-                    <td>Training</td>
-                    <td>20%</td>
-                    <td class="text-right">₱{{ reportData.summary.distribution.training_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="mfr-col-alloc">{{ $t('ui.training') }}</td>
+                  <td class="mfr-col-share">20%</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.distribution.training_share) }}</td>
                   </tr>
                   <tr>
-                    <td>Members</td>
-                    <td>50%</td>
-                    <td class="text-right">₱{{ reportData.summary.distribution.members_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="mfr-col-alloc">{{ $t('nav.members') }}</td>
+                  <td class="mfr-col-share">50%</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.distribution.members_share) }}</td>
                   </tr>
                   <tr>
-                    <td>Per Member ({{ reportData.summary.distribution.member_count }} members)</td>
-                    <td>—</td>
-                    <td class="text-right">₱{{ reportData.summary.distribution.per_member_share.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="mfr-col-alloc">{{ $t('ui.perMemberCount', { count: reportData.summary.distribution.member_count }) }}</td>
+                  <td class="mfr-col-share">—</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(reportData.summary.distribution.per_member_share) }}</td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
+            <template #mobile>
+              <ReportMobileCards :cards="distributionMobileCards" />
+            </template>
+          </MachineryReportSheet>
 
-          <!-- All Transactions Table -->
-          <div v-if="reportFilters.showAllTransactions" class="report-transactions report-section-card">
-            <div class="section-title">
-              <span class="section-icon">📝</span>
-              <h4>All Transactions</h4>
-              <span class="section-count">{{ reportData.transactions.all.length }} records</span>
-            </div>
-            <div class="table-container">
-              <table class="data-table">
+          <!-- All Transactions -->
+          <MachineryReportSheet
+            v-if="reportFilters.showAllTransactions"
+            :title="$t('ui.allTransactions')"
+            subtitle="Lahat ng Transaksyon"
+            :show-machinery-type="false"
+            :barangay-name="reportBarangayNameForReport"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
+            <table class="collectibles-data-table collectibles-list-table mfr-transactions-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Machinery</th>
-                    <th>Description</th>
-                    <th>Farmer</th>
-                    <th class="text-right">Amount</th>
+                  <th class="mfr-col-date">
+                    {{ $t('ui.date') }}<br />
+                    <span class="th-tl">(Petsa)</span>
+                  </th>
+                  <th class="mfr-col-type">
+                    {{ $t('ui.type') }}<br />
+                    <span class="th-tl">(Uri)</span>
+                  </th>
+                  <th class="mfr-col-mach">
+                    {{ $t('ui.machinery') }}<br />
+                    <span class="th-tl">(Makinarya)</span>
+                  </th>
+                  <th class="mfr-col-desc">
+                    Description<br />
+                    <span class="th-tl">(Paglalarawan)</span>
+                  </th>
+                  <th class="mfr-col-farmer">
+                    {{ $t('ui.farmer') }}<br />
+                    <span class="th-tl">(Magsasaka)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.amount') }}<br />
+                    <span class="th-tl">(Halaga)</span>
+                  </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="txn in reportData.transactions.all" :key="txn.id + '-' + txn.transaction_type">
-                    <td>{{ formatReportDate(txn.date) }}</td>
-                    <td>
-                      <span class="badge" :class="getTransactionTypeClass(txn.transaction_type)">
-                        {{ txn.transaction_type }}
-                      </span>
-                    </td>
-                    <td>{{ txn.machinery_name || '-' }}</td>
-                    <td class="description-cell">{{ txn.description || '-' }}</td>
-                    <td>{{ txn.farmer_name || '-' }}</td>
-                    <td class="text-right" :class="txn.transaction_type === 'Expense' ? 'text-red' : 'text-green'">
-                      {{ txn.transaction_type === 'Expense' ? '-' : '+' }}₱{{ parseFloat(txn.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                  <td class="mfr-col-date">{{ formatReportDateCompact(txn.date) }}</td>
+                  <td class="mfr-col-type">{{ txn.transaction_type || '—' }}</td>
+                  <td class="mfr-col-mach">{{ txn.machinery_name || '—' }}</td>
+                  <td class="mfr-col-desc">{{ txn.description || '—' }}</td>
+                  <td class="mfr-col-farmer">{{ txn.farmer_name || '—' }}</td>
+                  <td class="mfr-col-amt text-right">
+                    {{ txn.transaction_type === 'Expense' ? '-' : '+' }}{{ formatReportMoneyCompact(txn.amount) }}
                     </td>
                   </tr>
                   <tr v-if="reportData.transactions.all.length === 0">
-                    <td colspan="6" class="empty-cell">No transactions found for this period</td>
+                  <td colspan="6" class="collectibles-empty-note">Walang rekord sa piniling saklaw ng petsa / No records in this period.</td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-          
-          <!-- Detailed Expenses Table -->
-          <div v-if="reportFilters.showExpenses && reportData.transactions.expenses.length > 0" class="report-section report-section-card">
-            <div class="section-title">
-              <span class="section-icon">📤</span>
-              <h4>Expense Details</h4>
-              <span class="section-count">{{ reportData.transactions.expenses.length }} records</span>
-            </div>
-            <div class="table-container">
-              <table class="data-table">
+            <template #mobile>
+              <ReportMobileCards
+                :cards="allTransactionsMobileCards"
+                :is-empty="reportData.transactions.all.length === 0"
+                :empty-text="REPORT_EMPTY_MOBILE_MSG"
+              />
+            </template>
+          </MachineryReportSheet>
+
+          <!-- Expense Details -->
+          <MachineryReportSheet
+            v-if="reportFilters.showExpenses"
+            :title="$t('ui.expenseDetails')"
+            subtitle="Detalye ng Gastos"
+            :barangay-name="reportBarangayNameForReport"
+            :machinery-label="reportMachineryLabel"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
+            <table class="collectibles-data-table farmer-clients-record-table mfr-expense-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Machinery</th>
-                    <th>Particulars</th>
-                    <th>Ref #</th>
-                    <th class="text-right">Fuel & Oil</th>
-                    <th class="text-right">Labor</th>
-                    <th class="text-right">Per Diem</th>
-                    <th class="text-right">R&M</th>
-                    <th class="text-right">Others</th>
-                    <th class="text-right">Total</th>
+                  <th class="mfr-col-date">
+                    {{ $t('ui.date') }}<br />
+                    <span class="th-tl">(Petsa)</span>
+                  </th>
+                  <th class="mfr-col-mach">
+                    {{ $t('ui.machinery') }}<br />
+                    <span class="th-tl">(Makinarya)</span>
+                  </th>
+                  <th class="mfr-col-desc">
+                    {{ $t('ui.particulars') }}<br />
+                    <span class="th-tl">(Detalye)</span>
+                  </th>
+                  <th class="mfr-col-ref">{{ $t('ui.refHash') }}</th>
+                  <th class="mfr-col-sm text-right">
+                    Fuel &amp; Oil<br />
+                    <span class="th-tl">(Gasolina at Langis)</span>
+                  </th>
+                  <th class="mfr-col-sm text-right">
+                    {{ $t('ui.labor') }}<br />
+                    <span class="th-tl">(Paggawa)</span>
+                  </th>
+                  <th class="mfr-col-sm text-right">
+                    Per Diem<br />
+                    <span class="th-tl">(Pang-araw-araw)</span>
+                  </th>
+                  <th class="mfr-col-sm text-right">R&amp;M</th>
+                  <th class="mfr-col-sm text-right">
+                    Others<br />
+                    <span class="th-tl">(Iba pa)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.total') }}<br />
+                    <span class="th-tl">(Kabuuan)</span>
+                  </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="exp in reportData.transactions.expenses" :key="'exp-' + exp.id">
-                    <td>{{ formatReportDate(exp.date) }}</td>
-                    <td>{{ exp.machinery_name || '-' }}</td>
-                    <td class="description-cell">{{ exp.description || '-' }}</td>
-                    <td>{{ exp.reference_number || '-' }}</td>
-                    <td class="text-right">₱{{ parseFloat(exp.fuel_and_oil || 0).toLocaleString() }}</td>
-                    <td class="text-right">₱{{ parseFloat(exp.labor_cost || 0).toLocaleString() }}</td>
-                    <td class="text-right">₱{{ parseFloat(exp.per_diem || 0).toLocaleString() }}</td>
-                    <td class="text-right">₱{{ parseFloat(exp.repair_and_maintenance || 0).toLocaleString() }}</td>
-                    <td class="text-right">₱{{ (parseFloat(exp.office_supply || 0) + parseFloat(exp.communication_expense || 0) + parseFloat(exp.utilities_expense || 0) + parseFloat(exp.sundries || 0)).toLocaleString() }}</td>
-                    <td class="text-right text-red">₱{{ parseFloat(exp.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="mfr-col-date">{{ formatReportDateCompact(exp.date) }}</td>
+                  <td class="mfr-col-mach">{{ exp.machinery_name || '—' }}</td>
+                  <td class="mfr-col-desc">{{ exp.description || '—' }}</td>
+                  <td class="mfr-col-ref">{{ exp.reference_number || '—' }}</td>
+                  <td class="mfr-col-sm text-right">{{ formatReportMoneyCompact(exp.fuel_and_oil) }}</td>
+                  <td class="mfr-col-sm text-right">{{ formatReportMoneyCompact(exp.labor_cost) }}</td>
+                  <td class="mfr-col-sm text-right">{{ formatReportMoneyCompact(exp.per_diem) }}</td>
+                  <td class="mfr-col-sm text-right">{{ formatReportMoneyCompact(exp.repair_and_maintenance) }}</td>
+                  <td class="mfr-col-sm text-right">{{ formatReportMoneyCompact((parseFloat(exp.office_supply || 0) + parseFloat(exp.communication_expense || 0) + parseFloat(exp.utilities_expense || 0) + parseFloat(exp.sundries || 0))) }}</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(exp.amount) }}</td>
+                </tr>
+                <tr v-if="reportData.transactions.expenses.length === 0">
+                  <td colspan="10" class="collectibles-empty-note">Walang rekord sa piniling saklaw ng petsa / No records in this period.</td>
                   </tr>
                 </tbody>
-                <tfoot>
-                  <tr class="total-row">
-                    <td colspan="9"><strong>Total Expenses</strong></td>
-                    <td class="text-right text-red"><strong>₱{{ reportData.summary.total_expenses.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</strong></td>
+              <tfoot v-if="reportData.transactions.expenses.length > 0">
+                <tr class="fcr-total-row">
+                  <td colspan="9"><strong>Total Expenses / Kabuuang Gastos</strong></td>
+                  <td class="mfr-col-amt text-right"><strong>{{ formatReportMoneyCompact(reportData.summary.total_expenses) }}</strong></td>
                   </tr>
                 </tfoot>
               </table>
-            </div>
-          </div>
+            <template #mobile>
+              <ReportMobileCards
+                :cards="expenseDetailsMobileCards"
+                :is-empty="reportData.transactions.expenses.length === 0"
+                :empty-text="REPORT_EMPTY_MOBILE_MSG"
+                :footer-rows="expenseDetailsMobileFooter"
+              />
+            </template>
+          </MachineryReportSheet>
           
           <!-- Bookings Summary -->
-          <div v-if="reportFilters.showBookings && reportData.transactions.bookings.length > 0" class="report-section report-section-card">
-            <div class="section-title">
-              <span class="section-icon">📅</span>
-              <h4>Bookings Summary</h4>
-              <span class="section-count">{{ reportData.transactions.bookings.length }} bookings</span>
-            </div>
-            <div class="table-container">
-              <table class="data-table">
+          <MachineryReportSheet
+            v-if="reportFilters.showBookings"
+            :title="$t('ui.bookingsSummary')"
+            subtitle="Buod ng mga Booking"
+            :show-machinery-type="false"
+            :barangay-name="reportBarangayNameForReport"
+            :period-label="formatReportPeriodCompact(reportData.period.start, reportData.period.end)"
+            :sheet-meta="reportSheetMeta"
+          >
+            <table class="collectibles-data-table farmer-clients-record-table mfr-bookings-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Booking #</th>
-                    <th>Machinery</th>
-                    <th>Farmer</th>
-                    <th>Status</th>
-                    <th class="text-right">Total Price</th>
-                    <th class="text-right">Paid</th>
-                    <th>Payment Status</th>
+                  <th class="mfr-col-date">
+                    {{ $t('ui.date') }}<br />
+                    <span class="th-tl">(Petsa)</span>
+                  </th>
+                  <th class="mfr-col-ref">
+                    Booking #<br />
+                    <span class="th-tl">(Numero ng Booking)</span>
+                  </th>
+                  <th class="mfr-col-mach">
+                    {{ $t('ui.machinery') }}<br />
+                    <span class="th-tl">(Makinarya)</span>
+                  </th>
+                  <th class="mfr-col-farmer">
+                    {{ $t('ui.farmer') }}<br />
+                    <span class="th-tl">(Magsasaka)</span>
+                  </th>
+                  <th class="mfr-col-status">
+                    {{ $t('ui.status') }}<br />
+                    <span class="th-tl">(Katayuan)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.totalPrice') }}<br />
+                    <span class="th-tl">(Kabuuang Presyo)</span>
+                  </th>
+                  <th class="mfr-col-amt text-right">
+                    {{ $t('ui.paid') }}<br />
+                    <span class="th-tl">(Nabayaran)</span>
+                  </th>
+                  <th class="mfr-col-status">
+                    Payment Status<br />
+                    <span class="th-tl">(Katayuan ng Bayad)</span>
+                  </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="bk in reportData.transactions.bookings" :key="'bk-' + bk.id">
-                    <td>{{ formatReportDate(bk.date) }}</td>
-                    <td>#{{ bk.booking_id }}</td>
-                    <td>{{ bk.machinery_name || '-' }}</td>
-                    <td>{{ bk.farmer_name || '-' }}</td>
-                    <td>
-                      <span class="badge" :class="'badge-' + (bk.status || '').toLowerCase().replace(' ', '-')">
-                        {{ bk.status }}
-                      </span>
-                    </td>
-                    <td class="text-right">₱{{ parseFloat(bk.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td class="text-right">₱{{ parseFloat(bk.total_paid || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
-                    <td>
-                      <span class="badge" :class="'badge-' + (bk.payment_status || '').toLowerCase()">
-                        {{ bk.payment_status || 'Unpaid' }}
-                      </span>
-                    </td>
+                  <td class="mfr-col-date">{{ formatReportDateCompact(bk.date) }}</td>
+                  <td class="mfr-col-ref">#{{ bk.booking_id }}</td>
+                  <td class="mfr-col-mach">{{ bk.machinery_name || '—' }}</td>
+                  <td class="mfr-col-farmer">{{ bk.farmer_name || '—' }}</td>
+                  <td class="mfr-col-status">{{ bk.status || '—' }}</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(bk.amount) }}</td>
+                  <td class="mfr-col-amt text-right">{{ formatReportMoneyCompact(bk.total_paid) }}</td>
+                  <td class="mfr-col-status">{{ bk.payment_status || 'Unpaid' }}</td>
+                </tr>
+                <tr v-if="reportData.transactions.bookings.length === 0">
+                  <td colspan="8" class="collectibles-empty-note">Walang rekord sa piniling saklaw ng petsa / No records in this period.</td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
+            <template #mobile>
+              <ReportMobileCards
+                :cards="bookingsSummaryMobileCards"
+                :is-empty="reportData.transactions.bookings.length === 0"
+                :empty-text="REPORT_EMPTY_MOBILE_MSG"
+              />
+            </template>
+          </MachineryReportSheet>
           
           <!-- Report Footer -->
           <div class="report-footer">
-            <p>This report was generated automatically by CALFFA Financial Management System</p>
+            <p>This report was generated automatically by CalFFA Financial Management System</p>
             <p class="footer-date">Report Date: {{ new Date().toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
           </div>
         </div>
@@ -1875,52 +2766,107 @@
     <div v-if="showVerifyDpModal && paymentActionBooking" class="modal-overlay" @click.self="closePaymentModals">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Verify Down Payment (20%)</h2>
+          <h2>{{ $t('ui.downPayment') }}</h2>
           <button type="button" class="btn-close" @click="closePaymentModals">×</button>
         </div>
         <div class="modal-body">
-          <p>Confirming will record <strong>₱{{ formatNumber(paymentActionBooking.down_payment_amount) }}</strong> as machinery income.</p>
-          <div class="context-grid payment-verify-grid">
-            <div><span class="ctx-label">Booking</span><strong>#{{ paymentActionBooking.id }}</strong></div>
-            <div><span class="ctx-label">Farmer</span><strong>{{ paymentActionBooking.farmer_name }}</strong></div>
-            <div><span class="ctx-label">Machinery</span><strong>{{ paymentActionBooking.machinery_name }}</strong></div>
-            <div><span class="ctx-label">Method</span><strong>{{ paymentActionBooking.down_payment_method }}</strong></div>
-          </div>
-          <div v-if="paymentActionBooking.down_payment_proof" class="proof-preview">
-            <img :src="paymentProofUrl(paymentActionBooking.down_payment_proof)" alt="Payment proof" />
-          </div>
+          <p>
+            Confirm
+            <template v-if="paymentActionBooking.down_payment_percent">{{ paymentActionBooking.down_payment_percent }}% </template>
+            down payment of
+            <strong>₱{{ formatNumber(paymentActionBooking.down_payment_amount) }}</strong>
+            for {{ paymentActionBooking.farmer_name }} ({{ paymentActionBooking.machinery_name }}).
+          </p>
           <div class="form-group auto-receipt-note">
-            <label>Official Receipt</label>
-            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Receipt prints automatically after verification.</small>
+            <label>{{ $t('ui.officialReceipt') }}</label>
+            <input type="text" class="filter-input" :value="$t('ui.receiptAutoGenerated')" disabled />
+            <small class="info-text">{{ $t('ui.receiptPrintsAfter') }}</small>
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
+            <button type="button" class="btn-secondary" @click="closePaymentModals">{{ $t('common.cancel') }}</button>
             <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmVerifyDownPayment">
-              {{ paymentActionLoading ? 'Verifying...' : 'Verify, Record Income & Print Receipt' }}
+              {{ paymentActionLoading ? 'Verifying...' : 'Verify Payment & Print Receipt' }}
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- DOWN PAYMENT REJECT MODAL -->
+    <!-- RECORD CASH DOWN PAYMENT MODAL (above header) -->
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showRecordDpModal && paymentActionBooking"
+          class="modal-overlay app-modal-overlay mf-record-dp-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closePaymentModals"
+        >
+          <div class="modal-content mf-record-dp-modal" @click.stop>
+            <div class="modal-header">
+              <h2>{{ $t('ui.recordCashDownPayment') }}</h2>
+              <button type="button" class="btn-close" :aria-label="$t('common.close')" @click="closePaymentModals">×</button>
+            </div>
+            <div class="modal-body">
+              <p class="mf-record-dp-meta">
+                <strong>{{ paymentActionBooking.farmer_name }}</strong>
+                <span>{{ paymentActionBooking.machinery_name }}</span>
+                <span>#{{ paymentActionBooking.id }}</span>
+              </p>
+              <div class="form-group">
+                <label>{{ $t('ui.downPayment') }}</label>
+                <input
+                  type="text"
+                  class="filter-input"
+                  :value="recordDpAmountDisplay"
+                  disabled
+                  readonly
+                />
+                <small v-if="paymentActionBooking.down_payment_percent" class="info-text">
+                  {{ $t('ui.downPaymentPercentLabel', { percent: paymentActionBooking.down_payment_percent }) }}
+                </small>
+              </div>
+              <div class="form-group">
+                <label>{{ $t('ui.paymentDate') }}</label>
+                <input v-model="recordDpDate" type="date" class="filter-input" />
+              </div>
+              <div class="form-group auto-receipt-note">
+                <label>{{ $t('ui.officialReceipt') }}</label>
+                <input type="text" class="filter-input" :value="$t('ui.receiptAutoGenerated')" disabled />
+                <small class="info-text">{{ $t('ui.receiptPrintsAfter') }}</small>
+              </div>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="paymentActionLoading || !recordDpDate"
+                  @click="confirmRecordCashDownPayment"
+                >
+                  {{ paymentActionLoading ? $t('ui.recordingCashDownPayment') : $t('ui.recordCashDownPaymentConfirm') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- REJECT PAYMENT MODAL -->
     <div v-if="showRejectDpModal && paymentActionBooking" class="modal-overlay" @click.self="closePaymentModals">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Reject Down Payment</h2>
+          <h2>{{ $t('common.reject') }}</h2>
           <button type="button" class="btn-close" @click="closePaymentModals">×</button>
         </div>
         <div class="modal-body">
-          <p>Booking #{{ paymentActionBooking.id }} — {{ paymentActionBooking.farmer_name }}</p>
+          <p>Reject this payment submission? The farmer may resubmit proof.</p>
           <div class="form-group">
-            <label>Rejection Reason *</label>
-            <textarea v-model="rejectPaymentReason" class="filter-input" rows="3" placeholder="Explain why payment was rejected"></textarea>
+            <label>{{ $t('ui.reason') }} *</label>
+            <textarea v-model="rejectPaymentReason" class="filter-input" rows="3" required></textarea>
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
-            <button type="button" class="btn-primary" :disabled="paymentActionLoading || !rejectPaymentReason.trim()" @click="confirmRejectDownPayment">
-              {{ paymentActionLoading ? 'Rejecting...' : 'Reject Payment' }}
+            <button type="button" class="btn-secondary" @click="closePaymentModals">{{ $t('common.cancel') }}</button>
+            <button type="button" class="btn-danger" :disabled="paymentActionLoading || !rejectPaymentReason.trim()" @click="confirmRejectDownPayment">
+              {{ paymentActionLoading ? 'Rejecting...' : $t('common.reject') }}
             </button>
           </div>
         </div>
@@ -1941,12 +2887,12 @@
             against balance due of <strong>₱{{ formatNumber(paymentActionBooking.remaining_balance) }}</strong>.
           </p>
           <div class="form-group auto-receipt-note">
-            <label>Official Receipt</label>
-            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Receipt prints automatically after verification.</small>
+            <label>{{ $t('ui.officialReceipt') }}</label>
+            <input type="text" class="filter-input" :value="$t('ui.receiptAutoGenerated')" disabled />
+            <small class="info-text">{{ $t('ui.receiptPrintsAfter') }}</small>
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closePaymentModals">Cancel</button>
+            <button type="button" class="btn-secondary" @click="closePaymentModals">{{ $t('common.cancel') }}</button>
             <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmVerifyFinalPayment">
               {{ paymentActionLoading ? 'Verifying...' : 'Verify Payment & Print Receipt' }}
             </button>
@@ -1955,79 +2901,29 @@
       </div>
     </div>
 
-    <!-- REFUND REJECT MODAL -->
-    <div v-if="showRejectRefundModal && refundActionTarget" class="modal-overlay" @click.self="closeRefundModals">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Reject Refund Request</h2>
-          <button type="button" class="btn-close" @click="closeRefundModals">×</button>
-        </div>
-        <div class="modal-body">
-          <p>{{ refundActionTarget.refund_number }} — Booking #{{ refundActionTarget.booking_id }} ({{ refundActionTarget.farmer_name }})</p>
-          <div class="form-group">
-            <label>Rejection Reason *</label>
-            <textarea v-model="rejectRefundReason" class="filter-input" rows="3" placeholder="Explain why the refund was rejected"></textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closeRefundModals">Cancel</button>
-            <button type="button" class="btn-primary" :disabled="paymentActionLoading || !rejectRefundReason.trim()" @click="confirmRejectRefund">
-              {{ paymentActionLoading ? 'Rejecting...' : 'Reject Refund' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- REFUND PROCESS MODAL -->
-    <div v-if="showProcessRefundModal && refundActionTarget" class="modal-overlay" @click.self="closeRefundModals">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Process Refund Payment</h2>
-          <button type="button" class="btn-close" @click="closeRefundModals">×</button>
-        </div>
-        <div class="modal-body">
-          <p>Release <strong>₱{{ formatNumber(refundActionTarget.refund_amount) }}</strong> to {{ refundActionTarget.farmer_name }}.</p>
-          <div class="form-group">
-            <label>Refund Date</label>
-            <input v-model="refundProcessDate" type="date" class="filter-input" />
-          </div>
-          <div class="form-group">
-            <label>Remarks</label>
-            <textarea v-model="refundProcessRemarks" class="filter-input" rows="2" placeholder="Optional notes for audit log"></textarea>
-          </div>
-          <div class="form-group auto-receipt-note">
-            <label>Official Receipt</label>
-            <input type="text" class="filter-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Refund receipt prints automatically after processing.</small>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closeRefundModals">Cancel</button>
-            <button type="button" class="btn-primary" :disabled="paymentActionLoading" @click="confirmProcessRefund">
-              {{ paymentActionLoading ? 'Processing...' : 'Process Refund & Print Receipt' }}
-            </button>
+    <!-- RECEIPT PRINT MODAL (teleported above member detail / other overlays) -->
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showReceiptModal && lastReceipt"
+          class="modal-overlay receipt-modal-overlay app-modal-overlay mf-receipt-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeReceiptModal"
+        >
+          <div
+            class="receipt-modal-box"
+            @click.stop
+          >
+            <PaymentReceiptPrint
+              :receipt="lastReceipt"
+              :auto-print="receiptAutoPrint"
+              :kind="receiptPrintKind"
+              @close="closeReceiptModal"
+            />
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- RECEIPT PRINT MODAL -->
-    <div v-if="showReceiptModal && lastReceipt" class="modal-overlay receipt-modal-overlay" @click.self="closeReceiptModal">
-      <div class="modal-content receipt-modal-content" :class="{ 'receipt-modal-expense': isExpenseReceipt }">
-        <ExpenseReceiptPrint
-          v-if="isExpenseReceipt"
-          :receipt="lastReceipt"
-          :auto-print="receiptAutoPrint"
-          @close="closeReceiptModal"
-        />
-        <PaymentReceiptPrint
-          v-else
-          :receipt="lastReceipt"
-          :auto-print="receiptAutoPrint"
-          :kind="lastReceipt?.module === 'machinery_refund' ? 'refund' : 'payment'"
-          @close="closeReceiptModal"
-        />
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
 
     <ProofPreviewModal
       :show="showProofPreview"
@@ -2036,133 +2932,330 @@
       @close="closeProofPreview"
     />
 
-    <!-- EXPENSE FORM MODAL -->
-    <div v-if="showExpenseForm" class="modal-overlay" @click.self="closeExpenseForm">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h2>{{ completingPendingExpense ? 'Record Transaction Expenses' : (editingExpense ? 'Edit Expense' : 'Record Manual Expense') }}</h2>
-          <button @click="closeExpenseForm" class="btn-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div v-if="completingPendingExpense && pendingExpenseContext" class="transaction-context-panel">
-            <h3>Transaction Details</h3>
-            <div class="context-grid">
-              <div><span class="ctx-label">Booking ID</span><strong>#{{ pendingExpenseContext.booking_id }}</strong></div>
-              <div><span class="ctx-label">Machinery</span><strong>{{ pendingExpenseContext.machinery_name }}</strong></div>
-              <div><span class="ctx-label">Operator</span><strong>{{ pendingExpenseContext.operator_name || '—' }}</strong></div>
-              <div><span class="ctx-label">Farmer</span><strong>{{ pendingExpenseContext.farmer_name || '—' }}</strong></div>
-              <div><span class="ctx-label">Service Date</span><strong>{{ formatDate(pendingExpenseContext.booking_date) }}</strong></div>
-              <div><span class="ctx-label">Location</span><strong>{{ pendingExpenseContext.service_location || '—' }}</strong></div>
-              <div><span class="ctx-label">Area / Qty</span><strong>{{ pendingExpenseContext.area_size }} {{ pendingExpenseContext.area_unit }}</strong></div>
-              <div><span class="ctx-label">Booking Total</span><strong>₱{{ formatNumber(pendingExpenseContext.booking_total) }}</strong></div>
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showGcashConfirmModal && gcashActionRow"
+          class="modal-overlay app-modal-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeGcashModals"
+        >
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>{{ $t('ui.gcashConfirmTitle') }}</h2>
+              <button type="button" class="btn-close" :aria-label="$t('common.close')" @click="closeGcashModals">×</button>
             </div>
-            <p class="context-hint">Fill in the actual expense amounts below. Labor cost will credit the assigned operator upon save.</p>
-          </div>
-
-          <div class="form-group">
-            <label>Machinery / Equipment *</label>
-            <select v-model="expenseForm.machinery_id" class="form-input" :disabled="completingPendingExpense">
-              <option value="">-- Select Machinery/Equipment --</option>
-              <option v-for="m in machinery" :key="m.id" :value="m.id">
-                {{ m.machinery_name }} ({{ m.machinery_type }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Date of Expense *</label>
-            <input v-model="expenseForm.date_of_expense" type="date" class="form-input" />
-          </div>
-
-          <div class="form-group">
-            <label>Payment Method</label>
-            <select v-model="expenseForm.payment_method" class="form-input">
-              <option value="Cash">Cash</option>
-              <option value="GCash">GCash</option>
-            </select>
-          </div>
-
-          <div class="form-group auto-receipt-note">
-            <label>Official Receipt</label>
-            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Receipt prints automatically after saving.</small>
-          </div>
-
-          <input v-if="completingPendingExpense" type="hidden" v-model="expenseForm.booking_id" />
-
-          <div class="expense-items-grid">
-            <div class="form-group">
-              <label>Fuel & Oil</label>
-              <TypedNumberInput v-model="expenseForm.fuel_and_oil" @input="updateTotal" />
+            <div class="modal-body">
+              <p class="section-hint">
+                {{ isGcashDownPaymentConfirm ? $t('ui.gcashConfirmHintDownPayment') : $t('ui.gcashConfirmHint') }}
+              </p>
+              <div class="transaction-context-panel">
+                <div class="context-grid">
+                  <div><span class="ctx-label">{{ $t('ui.farmer') }}</span><strong>{{ gcashActionRow.farmer_name }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.gcashTransactionType') }}</span><strong>{{ gcashTypeLabel(gcashActionRow.transaction_type) }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.refNo') }}</span><strong>{{ gcashActionRow.reference_number || gcashActionRow.reference_id }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.petsaNgBayad') }}</span><strong>{{ formatDate(gcashActionRow.payment_date) }}</strong></div>
+                </div>
+              </div>
+              <div v-if="gcashActionRow.proof_path" class="gcash-confirm-proof">
+                <button type="button" class="btn-secondary btn-sm" @click="openProofPreview(paymentProofUrl(gcashActionRow.proof_path))">
+                  {{ $t('common.viewProof') }}
+                </button>
+              </div>
+              <div class="form-group">
+                <label>{{ isGcashDownPaymentConfirm ? $t('ui.gcashAmountPaidFixed') : $t('ui.gcashAmountPaid') }} *</label>
+                <TypedNumberInput
+                  v-if="!isGcashDownPaymentConfirm"
+                  v-model="gcashConfirmAmount"
+                  :min="0"
+                  input-class="form-input"
+                  placeholder="0.00"
+                />
+                <input
+                  v-else
+                  type="text"
+                  class="form-input"
+                  :value="gcashFixedAmountDisplay"
+                  disabled
+                  readonly
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ $t('ui.remarks') }}</label>
+                <textarea v-model="gcashConfirmRemarks" class="form-input" :placeholder="$t('ui.optionalNotes')"></textarea>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn-primary" :disabled="gcashVerifyBusy" @click="confirmGcashPayment">
+                  {{ gcashVerifyBusy ? $t('common.processing') : $t('ui.gcashConfirmPayment') }}
+                </button>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Labor Cost (Operator & Helper)</label>
-              <TypedNumberInput v-model="expenseForm.labor_cost" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Per Diem (Incentive/hectare or hour)</label>
-              <TypedNumberInput v-model="expenseForm.per_diem" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Repair & Maintenance</label>
-              <TypedNumberInput v-model="expenseForm.repair_and_maintenance" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Office Supply (Ballpen, etc.)</label>
-              <TypedNumberInput v-model="expenseForm.office_supply" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Communication (Load, Internet)</label>
-              <TypedNumberInput v-model="expenseForm.communication_expense" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Utilities (Water & Electricity)</label>
-              <TypedNumberInput v-model="expenseForm.utilities_expense" @input="updateTotal" />
-            </div>
-            <div class="form-group">
-              <label>Sundries (Other Expenses)</label>
-              <TypedNumberInput v-model="expenseForm.sundries" @input="updateTotal" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Total Amount (Auto-Calculated) *</label>
-            <TypedNumberInput v-model="expenseForm.total_amount" readonly input-class="form-input total-input" />
-            <small class="calculated">₱{{ formatNumber(expenseForm.total_amount) }}</small>
-          </div>
-
-          <div class="modal-actions">
-            <button @click="closeExpenseForm" class="btn-secondary">Cancel</button>
-            <button @click="saveExpense" class="btn-success">
-              {{ completingPendingExpense ? 'Save & Print Receipt' : (editingExpense ? 'Update Expense' : 'Record Expense & Print Receipt') }}
-            </button>
           </div>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showGcashRejectModal && gcashActionRow"
+          class="modal-overlay app-modal-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeGcashModals"
+        >
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>{{ $t('common.reject') }}</h2>
+              <button type="button" class="btn-close" @click="closeGcashModals">×</button>
+            </div>
+            <div class="modal-body">
+              <p>{{ gcashActionRow.farmer_name }} · {{ gcashTypeLabel(gcashActionRow.transaction_type) }}</p>
+              <div class="form-group">
+                <label>{{ $t('ui.reason') }} *</label>
+                <textarea
+                  v-model="gcashRejectReason"
+                  class="form-input"
+                  rows="3"
+                  :placeholder="$t('ui.reason')"
+                  required
+                ></textarea>
+              </div>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="gcashVerifyBusy || !gcashRejectReason.trim()"
+                  @click="rejectGcashPayment"
+                >
+                  {{ gcashVerifyBusy ? $t('common.processing') : $t('common.reject') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showRejectRefundModal && refundActionTarget"
+          class="modal-overlay app-modal-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeRefundModals"
+        >
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>{{ $t('ui.rejectRefundRequest') }}</h2>
+              <button type="button" class="btn-close" @click="closeRefundModals">×</button>
+            </div>
+            <div class="modal-body">
+              <p>
+                {{ refundActionTarget.refund_number }} — Booking #{{ refundActionTarget.booking_id }}
+                ({{ refundActionTarget.farmer_name }})
+              </p>
+              <div class="form-group">
+                <label>{{ $t('ui.reason') }} *</label>
+                <textarea
+                  v-model="rejectRefundReason"
+                  class="form-input"
+                  rows="3"
+                  :placeholder="$t('ui.reason')"
+                ></textarea>
+              </div>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="paymentActionLoading || !rejectRefundReason.trim()"
+                  @click="confirmRejectRefund"
+                >
+                  {{ paymentActionLoading ? $t('common.processing') : $t('common.reject') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showProcessRefundModal && refundActionTarget"
+          class="modal-overlay app-modal-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeRefundModals"
+        >
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>{{ $t('ui.processRefundPayment') }}</h2>
+              <button type="button" class="btn-close" @click="closeRefundModals">×</button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Release <strong>₱{{ formatNumber(refundActionTarget.refund_amount) }}</strong>
+                to {{ refundActionTarget.farmer_name }}.
+              </p>
+              <div class="form-group">
+                <label>{{ $t('ui.petsaNgBayad') }}</label>
+                <input v-model="refundProcessDate" type="date" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label>{{ $t('ui.remarks') }}</label>
+                <textarea v-model="refundProcessRemarks" class="form-input" rows="2"></textarea>
+              </div>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="paymentActionLoading"
+                  @click="confirmProcessRefund"
+                >
+                  {{ paymentActionLoading ? $t('common.processing') : $t('ui.processRefundPrint') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- EXPENSE FORM MODAL (centered above header; scroll-locked backdrop) -->
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showExpenseForm"
+          class="modal-overlay app-modal-overlay mf-expense-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeExpenseForm"
+        >
+          <div class="modal-content modal-large mf-expense-modal" @click.stop>
+            <div class="modal-header">
+              <h2>{{ completingPendingExpense ? 'Record Transaction Expenses' : (editingExpense ? 'Edit Expense' : 'Record Manual Expense') }}</h2>
+              <button type="button" @click="closeExpenseForm" class="btn-close" :aria-label="$t('common.close')">×</button>
+            </div>
+            <div class="modal-body">
+              <div v-if="completingPendingExpense && pendingExpenseContext" class="transaction-context-panel">
+                <h3>Transaction Details</h3>
+                <div class="context-grid">
+                  <div><span class="ctx-label">{{ $t('ui.machinery') }}</span><strong>{{ pendingExpenseContext.machinery_name }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.operator') }}</span><strong>{{ pendingExpenseContext.operator_name || '—' }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.farmer') }}</span><strong>{{ pendingExpenseContext.farmer_name || '—' }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.serviceDate') }}</span><strong>{{ formatDate(pendingExpenseContext.booking_date) }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.location') }}</span><strong>{{ pendingExpenseContext.service_location || '—' }}</strong></div>
+                  <div><span class="ctx-label">{{ $t('ui.areaQty') }}</span><strong>{{ pendingExpenseContext.area_size }} {{ pendingExpenseContext.area_unit }}</strong></div>
+                  <div><span class="ctx-label">Booking Total</span><strong>₱{{ formatNumber(pendingExpenseContext.booking_total) }}</strong></div>
+                </div>
+                <p class="context-hint">Enter actual expense amounts. Labor cost credits the assigned operator on save.</p>
+              </div>
+
+              <div class="expense-meta-grid">
+                <div class="form-group">
+                  <label>{{ $t('ui.machineryEquipmentReq') }}</label>
+                  <select v-model="expenseForm.machinery_id" class="form-input" :disabled="completingPendingExpense">
+                    <option value="">-- Select Machinery/Equipment --</option>
+                    <option v-for="m in machinery" :key="m.id" :value="m.id">
+                      {{ m.machinery_name }} ({{ m.machinery_type }})
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Date of Expense *</label>
+                  <input v-model="expenseForm.date_of_expense" type="date" class="form-input" />
+                </div>
+
+                <div class="form-group">
+                  <label>{{ $t('ui.paymentMethod') }}</label>
+                  <select v-model="expenseForm.payment_method" class="form-input">
+                    <option value="Cash">{{ $t('ui.cash') }}</option>
+                    <option value="GCash">{{ $t('ui.gcash') }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <p class="auto-receipt-inline">Official receipt is auto-generated and prints after saving.</p>
+
+              <input v-if="completingPendingExpense" type="hidden" v-model="expenseForm.booking_id" />
+
+              <div class="expense-items-grid">
+                <div class="form-group">
+                  <label>{{ $t('ui.fuelAndOil') }}</label>
+                  <TypedNumberInput v-model="expenseForm.fuel_and_oil" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.laborCost') }}</label>
+                  <TypedNumberInput v-model="expenseForm.labor_cost" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.perDiem') }}</label>
+                  <TypedNumberInput v-model="expenseForm.per_diem" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.repairMaintenance') }}</label>
+                  <TypedNumberInput v-model="expenseForm.repair_and_maintenance" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.officeSupply') }}</label>
+                  <TypedNumberInput v-model="expenseForm.office_supply" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.communication') }}</label>
+                  <TypedNumberInput v-model="expenseForm.communication_expense" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.utilities') }}</label>
+                  <TypedNumberInput v-model="expenseForm.utilities_expense" @input="updateTotal" />
+                </div>
+                <div class="form-group">
+                  <label>{{ $t('ui.sundries') }}</label>
+                  <TypedNumberInput v-model="expenseForm.sundries" @input="updateTotal" />
+                </div>
+              </div>
+
+              <div class="form-group expense-total-group">
+                <label>Total Amount *</label>
+                <TypedNumberInput v-model="expenseForm.total_amount" readonly input-class="form-input total-input" />
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" @click="saveExpense" class="btn-success">
+                  {{ completingPendingExpense ? 'Save & Print Receipt' : (editingExpense ? 'Update Expense' : 'Record Expense & Print Receipt') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- INCOME FORM MODAL -->
     <div v-if="showIncomeForm" class="modal-overlay" @click.self="showIncomeForm = false">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Record Income</h2>
+          <h2>{{ editingManualIncomeId ? 'Edit Other Barangay Income' : 'Record Other Barangay Income' }}</h2>
           <button @click="showIncomeForm = false" class="btn-close">×</button>
         </div>
         <div class="modal-body">
+          <p class="modal-summary">
+            Record income from donations, rentals, fundraising, sales, or another source outside machinery bookings and association dues.
+          </p>
+
+          <div class="form-group">
+            <label>Income Source *</label>
+            <input
+              v-model="incomeForm.source_name"
+              type="text"
+              class="form-input"
+              maxlength="150"
+              placeholder="e.g. Donation, fundraising, product sales"
+            />
+          </div>
+
           <div class="form-group">
             <label>Date of Income *</label>
             <input v-model="incomeForm.date_of_income" type="date" class="form-input" />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Machinery ID *</label>
-              <TypedNumberInput v-model="incomeForm.machinery_id" :decimal="false" :min="1" />
-            </div>
-            <div class="form-group">
-              <label>Booking ID *</label>
-              <TypedNumberInput v-model="incomeForm.booking_id" :decimal="false" :min="1" />
-            </div>
           </div>
 
           <div class="form-group">
@@ -2171,144 +3264,80 @@
           </div>
 
           <div class="form-group">
-            <label>Remarks</label>
-            <textarea v-model="incomeForm.remarks" class="form-input" placeholder="Optional notes"></textarea>
+            <label>{{ $t('ui.remarks') }}</label>
+            <textarea v-model="incomeForm.remarks" class="form-input" :placeholder="$t('ui.optionalNotes')"></textarea>
           </div>
 
           <div class="modal-actions">
-            <button @click="showIncomeForm = false" class="btn-secondary">Cancel</button>
-            <button @click="saveIncome" class="btn-success">Record Income</button>
+            <button @click="showIncomeForm = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button
+              @click="saveIncome"
+              class="btn-success"
+              :disabled="!incomeForm.source_name.trim() || !incomeForm.date_of_income || Number(incomeForm.income_amount) <= 0"
+            >
+              {{ editingManualIncomeId ? 'Save Changes' : 'Record Income' }}
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- COLLECTION FORM MODAL -->
-    <div v-if="showCollectionForm" class="modal-overlay" @click.self="showCollectionForm = false">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h2>💳 Record Payment / Collection</h2>
-          <button @click="showCollectionForm = false" class="btn-close">×</button>
-        </div>
-        <div class="modal-body" v-if="editingCollection">
-          <!-- Receivable Details -->
-          <div class="form-group highlight-box">
-            <label>Account Receivable Details:</label>
-            <div class="details-grid">
-              <div><strong>Farmer:</strong> {{ editingCollection.farmer_name }}</div>
-              <div><strong>Machinery:</strong> {{ editingCollection.machinery_name }}</div>
-              <div><strong>Total Amount:</strong> ₱{{ formatNumber(editingCollection.total_price) }}</div>
-              <div v-if="editingCollection.pending_interest > 0"><strong>Includes Interest:</strong> ₱{{ formatNumber(editingCollection.pending_interest) }}</div>
-              <div><strong>Already Collected:</strong> ₱{{ formatNumber(editingCollection.amount_collected || 0) }}</div>
-              <div><strong>Current Balance:</strong> ₱{{ formatNumber(editingCollection.total_price - (editingCollection.amount_collected || 0)) }}</div>
-              <div><strong>Due Date:</strong> {{ formatManilaDateLabel(getDueDate(editingCollection.booking_date)) }} <span v-if="isOverdue" style="color: #ef4444; font-weight: bold;">⚠️ OVERDUE</span></div>
-            </div>
+    <!-- COLLECTION FORM MODAL (teleported above header; scroll-locked) -->
+    <Teleport to="body">
+      <div
+        v-if="showCollectionForm && editingCollection"
+        class="modal-overlay app-modal-overlay mf-collection-overlay"
+        :class="{ 'light-theme': isLight }"
+        style="z-index: 12050; opacity: 1; visibility: visible; display: flex; pointer-events: auto;"
+        @click.self="onCollectionOverlayBackdropClick"
+      >
+          <div class="modal-content mf-collection-modal pay-checkout-shell" @click.stop>
+            <PaymentCheckoutPanel
+              :is-light="isLight"
+              :kicker="$t('payCheckout.secureCheckout')"
+              :title="$t('payCheckout.collectMachinery')"
+              :payee="editingCollection.farmer_name"
+              :amount-due="remainingBalance"
+              :detail-rows="collectionDetailRows"
+              :due-meta="collectionDueMeta"
+              :overdue="isOverdue"
+              :payment-type="collectionForm.paymentType"
+              :amount="collectionForm.paymentAmount"
+              :date="collectionForm.collectionDate"
+              :method="collectionForm.payment_method || 'Cash'"
+              :methods="['Cash']"
+              :remarks="collectionForm.remarks"
+              :remaining-after="Math.max(0, remainingBalanceAfter)"
+              :show-partial-warning="showPartialWarning"
+              :submit-disabled="collectionSaving || !collectionForm.paymentAmount || collectionForm.paymentAmount <= 0 || showPartialWarning"
+              :loading="collectionSaving"
+              @cancel="closeCollectionForm"
+              @submit="saveCollection"
+              @update:payment-type="onCheckoutPaymentType"
+              @update:amount="collectionForm.paymentAmount = $event"
+              @update:date="collectionForm.collectionDate = $event"
+              @update:method="collectionForm.payment_method = $event"
+              @update:remarks="collectionForm.remarks = $event"
+              @amount-input="validatePaymentAmount"
+            >
+              <template #hint>
+                <p v-if="editingCollection.pending_interest > 0" class="pay-checkout-hint">
+                  {{ $t('payCheckout.pendingInterest', { amount: formatNumber(editingCollection.pending_interest) }) }}
+                </p>
+                <p v-else-if="collectionForm.paymentType === 'partial' && (editingCollection.machinery_interest_rate || 0) > 0" class="pay-checkout-hint">
+                  {{ $t('payCheckout.firstPartialInterest', { rate: formatInterestRateDisplay(editingCollection.machinery_interest_rate) }) }}
+                </p>
+              </template>
+            </PaymentCheckoutPanel>
           </div>
-
-          <!-- Payment Type Selection -->
-          <fieldset class="form-group payment-type-group">
-            <legend>Payment Type *</legend>
-            <div class="radio-group">
-              <label class="radio-label">
-                <input v-model="collectionForm.paymentType" type="radio" value="full" @change="setFullPaymentAmount" />
-                <span>Full Payment</span>
-                <small>(Pay complete balance)</small>
-              </label>
-              <label class="radio-label">
-                <input v-model="collectionForm.paymentType" type="radio" value="partial" />
-                <span>Partial Payment</span>
-                <small>(Pay partial amount)</small>
-              </label>
-            </div>
-          </fieldset>
-
-          <!-- Payment Amount -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Payment Amount *</label>
-              <TypedNumberInput
-                v-model="collectionForm.paymentAmount"
-                :readonly="collectionForm.paymentType === 'full'"
-                :placeholder="collectionForm.paymentType === 'full' ? 'Full balance ' + formatNumber(remainingBalance) : 'Enter partial amount'"
-                @input="validatePaymentAmount"
-              />
-              <small v-if="collectionForm.paymentType === 'full'" class="info-text" style="color: #059669; font-weight: 600;">
-                ✓ Auto-filled with full balance: ₱{{ formatNumber(remainingBalance) }}
-              </small>
-              <small v-if="showPartialWarning" class="warning-text">
-                ⚠️ This amount equals the remaining balance. Consider using Full Payment instead.
-              </small>
-            </div>
-            <div class="form-group">
-              <label>Collection Date *</label>
-              <input v-model="collectionForm.collectionDate" type="date" class="form-input" />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Payment Method *</label>
-              <select v-model="collectionForm.payment_method" class="form-input">
-                <option value="Cash">Cash</option>
-                <option value="GCash">GCash</option>
-              </select>
-            </div>
-          </div>
-
-          <div v-if="collectionForm.paymentType === 'partial'" class="form-group payment-interest-box">
-            <div class="interest-already-applied">
-              <small style="color: #1d4ed8;">
-                Auto Interest Rule: 2% (Partial). The system automatically adds 2% once, based on the full booking amount, when a partial payment is recorded.
-              </small>
-            </div>
-          </div>
-
-          <div class="form-group auto-receipt-note">
-            <label>Receipt Number</label>
-            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Receipt will print automatically after you save this collection.</small>
-          </div>
-
-          <div class="form-group">
-            <label>Remarks</label>
-            <textarea v-model="collectionForm.remarks" class="form-input" placeholder="Additional notes or details..."></textarea>
-          </div>
-
-          <!-- Summary -->
-          <div class="modal-summary">
-            <table class="summary-table">
-              <tr>
-                <td>Balance Due:</td>
-                <td class="amount">₱{{ formatNumber(remainingBalance) }}</td>
-              </tr>
-              <tr>
-                <td>Payment Amount:</td>
-                <td class="amount">₱{{ formatNumber(collectionForm.paymentAmount || 0) }}</td>
-              </tr>
-              <tr class="total-row">
-                <td><strong>Total Collection:</strong></td>
-                <td class="amount"><strong>₱{{ formatNumber(totalCollectionAmount) }}</strong></td>
-              </tr>
-              <tr v-if="collectionForm.paymentType === 'partial'" class="balance-row">
-                <td><strong>Remaining Balance After:</strong></td>
-                <td class="amount"><strong>₱{{ formatNumber(remainingBalanceAfter) }}</strong></td>
-              </tr>
-            </table>
-          </div>
-
-          <div class="modal-actions">
-            <button @click="showCollectionForm = false" class="btn-secondary">Cancel</button>
-            <button @click="saveCollection" class="btn-success">Record Collection &amp; Print Receipt</button>
-          </div>
-        </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- MONTHLY DUES COLLECTION MODAL -->
     <div v-if="showDuesForm" class="modal-overlay" @click.self="showDuesForm = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>💰 Collect Monthly Dues</h2>
+          <h2>{{ $t('ui.collectMonthlyDues') }}</h2>
           <button @click="showDuesForm = false" class="btn-close">×</button>
         </div>
         <div class="modal-body">
@@ -2320,10 +3349,10 @@
                 <div class="farmer-info">
                   <strong>{{ selectedFarmer.full_name }}</strong>
                   <small>{{ selectedFarmer.phone_number }}</small>
-                  <span v-if="selectedFarmer.dues_paid" class="status-paid">✅ Paid for current period</span>
-                  <span v-else class="status-unpaid">❌ Not paid for current period</span>
+                  <span v-if="selectedFarmer.dues_paid" class="status-paid">{{ $t('ui.paidThisCycle') }}</span>
+                  <span v-else class="status-unpaid">{{ $t('ui.unpaidThisCycle') }}</span>
                 </div>
-                <button @click="selectedFarmer = null; duesForm.farmer_id = ''" class="btn-change">Change</button>
+                <button @click="selectedFarmer = null; duesForm.farmer_id = ''" class="btn-change">{{ $t('common.change') }}</button>
               </div>
               <div v-else class="farmer-list">
                 <div class="farmer-search">
@@ -2339,8 +3368,8 @@
                     <div class="farmer-info">
                       <strong>{{ farmer.full_name }}</strong>
                       <small>{{ farmer.phone_number }}</small>
-                      <span v-if="farmer.dues_paid" class="status-badge paid">✅ Paid</span>
-                      <span v-else class="status-badge unpaid">❌ Unpaid</span>
+                      <span v-if="farmer.dues_paid" class="status-badge paid">{{ $t('ui.paid') }}</span>
+                      <span v-else class="status-badge unpaid">{{ $t('ui.unpaid') }}</span>
                     </div>
                   </div>
                 </div>
@@ -2355,17 +3384,17 @@
               <input v-model="duesForm.collection_date" type="date" class="form-input" />
             </div>
             <div class="form-group">
-              <label>Payment Method</label>
+              <label>{{ $t('ui.paymentMethod') }}</label>
               <select v-model="duesForm.payment_method" class="form-input">
-                <option value="Cash">Cash</option>
-                <option value="GCash">GCash</option>
+                <option value="Cash">{{ $t('ui.cash') }}</option>
+                <option value="GCash">{{ $t('ui.gcash') }}</option>
               </select>
             </div>
           </div>
 
           <!-- Amount Display -->
           <div v-if="selectedFarmer" class="form-group highlight-box">
-            <label>Collection Amount:</label>
+            <label>{{ $t('ui.duesAmount') }}:</label>
             <div class="amount-display">
               <span class="amount-large">₱120.00</span>
               <small>(Monthly dues for 6-month period)</small>
@@ -2374,20 +3403,20 @@
 
           <!-- Remarks -->
           <div v-if="selectedFarmer" class="form-group">
-            <label>Remarks</label>
-            <textarea v-model="duesForm.remarks" class="form-input" placeholder="Additional notes or details..."></textarea>
+            <label>{{ $t('ui.remarks') }}</label>
+            <textarea v-model="duesForm.remarks" class="form-input" :placeholder="$t('ui.optionalNotes')"></textarea>
           </div>
 
           <div v-if="selectedFarmer && !Number(selectedFarmer?.dues_paid)" class="form-group auto-receipt-note">
-            <label>Official Receipt</label>
-            <input type="text" class="form-input" value="Auto-generated (RCPT-YYYY-######)" disabled />
-            <small class="info-text">Receipt prints automatically after collection.</small>
+            <label>{{ $t('ui.officialReceipt') }}</label>
+            <input type="text" class="form-input" :value="$t('ui.receiptAutoGenerated')" disabled />
+            <small class="info-text">{{ $t('ui.receiptPrintsAfter') }}</small>
           </div>
 
           <div class="modal-actions">
-            <button @click="showDuesForm = false" class="btn-secondary">Cancel</button>
+            <button @click="showDuesForm = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button @click="collectMonthlyDues" class="btn-success" :disabled="!selectedFarmer || !duesForm.collection_date || Number(selectedFarmer?.dues_paid) || duesCollecting">
-              {{ duesCollecting ? 'Recording...' : 'Collect Dues & Print Receipt' }}
+              {{ duesCollecting ? $t('common.processing') : $t('ui.recordPayment') }}
             </button>
           </div>
         </div>
@@ -2395,35 +3424,72 @@
     </div>
 
     <!-- Alert Messages -->
-    <div v-if="alert.show" :class="['alert', 'alert-' + alert.type]">
-      <span class="alert-message">{{ alert.message }}</span>
-      <button @click="alert.show = false" class="alert-close">×</button>
-    </div>
+    <Teleport to="body">
+      <div
+        v-if="alert.show"
+        class="alert-center-stack mf-alert-stack"
+        :class="{ 'light-theme': isLight }"
+      >
+        <div :class="['alert', 'alert-' + alert.type]">
+          <span class="alert-message">{{ alert.message }}</span>
+          <button type="button" @click="alert.show = false" class="alert-close" :aria-label="$t('common.close')">×</button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/authStore';
 import { useMachineryStore } from '../stores/machineryStore';
+import { useDownPaymentStore } from '../stores/downPaymentStore';
 import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue';
-import ExpenseReceiptPrint from '../components/ExpenseReceiptPrint.vue';
+import PaymentCheckoutPanel from '../components/PaymentCheckoutPanel.vue';
+import MachineryReportSheet from '../components/MachineryReportSheet.vue';
+import ReportMobileCards from '../components/ReportMobileCards.vue';
+import PrintIcon from '../components/icons/PrintIcon.vue';
 import ProofPreviewModal from '../components/ProofPreviewModal.vue';
 import TypedNumberInput from '../components/TypedNumberInput.vue';
+import { useGcashPaymentStore } from '../stores/gcashPaymentStore';
+import { apiUrl } from '../utils/apiBase';
 import { useBackdropTheme } from '../composables/useBackdropTheme';
 import { useFinancialApi } from '../utils/financialApi';
 import { canVerifyMachineryPayment } from '../utils/roleAccess';
-import { getMachineryDueDateString, isMachineryOverdue, formatManilaDateLabel } from '../utils/philippineTime';
+import { getMachineryDueDateString, isMachineryOverdue, formatManilaDateLabel, getManilaTodayString, normalizeDateString } from '../utils/philippineTime';
+import { buildPrintableSheetHtml, getMachineryReportPrintStyles } from '../utils/machineryReportPrint';
+import { consumeNotificationDeepLink, scrollElementWhenReady } from '../utils/paymentHistoryFocus';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { t } = useI18n();
 const machineryStore = useMachineryStore();
+const downPaymentStore = useDownPaymentStore();
+const gcashStore = useGcashPaymentStore();
 const pendingDownPayments = ref([]);
 const pendingBalanceSubmissions = ref([]);
+const pendingGcashPayments = ref([]);
+const gcashHistoryRows = ref([]);
+const showGcashHistory = ref(false);
+const gcashHistoryBusy = ref(false);
+const gcashQr = ref(null);
+const gcashQrBusy = ref(false);
+const gcashQrFileInput = ref(null);
+const gcashPendingFile = ref(null);
+const gcashPendingPreview = ref('');
+const gcashVerifyBusy = ref(false);
+const showGcashConfirmModal = ref(false);
+const showGcashRejectModal = ref(false);
+const gcashActionRow = ref(null);
+const gcashConfirmAmount = ref('');
+const gcashConfirmRemarks = ref('');
+const gcashRejectReason = ref('');
 const pendingRefundRequests = ref([]);
 const showVerifyDpModal = ref(false);
+const showRecordDpModal = ref(false);
 const showRejectDpModal = ref(false);
 const showVerifyFinalModal = ref(false);
 const showRejectRefundModal = ref(false);
@@ -2435,25 +3501,35 @@ const refundProcessRemarks = ref('');
 const paymentActionBooking = ref(null);
 const verifyReceiptNumber = ref('');
 const rejectPaymentReason = ref('');
+const recordDpAmount = ref(null);
+const recordDpDate = ref('');
 const paymentActionLoading = ref(false);
+const showDownPaymentPanel = ref(false);
 const showReceiptModal = ref(false);
 const lastReceipt = ref(null);
 const receiptAutoPrint = ref(true);
 const showProofPreview = ref(false);
 const proofPreviewSrc = ref('');
 
-const isExpenseReceipt = computed(
-  () => lastReceipt.value?.module === 'machinery_expense'
-);
+const receiptPrintKind = computed(() => {
+  const module = String(lastReceipt.value?.module || '');
+  if (module === 'machinery_refund') return 'refund';
+  if (module === 'machinery_expense') return 'expense';
+  if (module === 'operator_labor') return 'labor';
+  if (module === 'share_capital_withdrawal') return 'withdrawal';
+  return 'payment';
+});
 
 const pendingPaymentsCount = computed(
-  () => pendingDownPayments.value.length + pendingRefundRequests.value.length
+  () => pendingRefundRequests.value.length
 );
 const { isDark } = useBackdropTheme();
 const isLight = computed(() => !isDark.value);
 const reportLogoUrl = 'https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3';
 
 const highlightedBookingId = ref(null);
+const highlightedRefundBookingId = ref(null);
+const highlightedGcashRef = ref(null);
 
 // Get current user role
 const userRole = computed(() => authStore.currentUser?.role);
@@ -2473,6 +3549,12 @@ const hasAccess = computed(() => {
 const isTreasurer = computed(() => userRole.value === 'treasurer');
 const isPresident = computed(() => userRole.value === 'president');
 const isPaymentVerifier = computed(() => ['treasurer', 'president'].includes(userRole.value));
+const downPaymentModuleOn = computed(() => downPaymentStore.isActive);
+const showDownPaymentQueueSection = computed(
+  () =>
+    showDownPaymentPanel.value ||
+    pendingDownPayments.value.length > 0
+);
 
 const canVerifyBookingPayment = (booking) =>
   canVerifyMachineryPayment(
@@ -2482,11 +3564,72 @@ const canVerifyBookingPayment = (booking) =>
     booking?.farmer_id
   );
 
+const canActOnRefund = (refund) => canVerifyBookingPayment(refund);
+
+const isRefundPendingReview = (refund) =>
+  ['Refund Requested', 'Under Review', 'Pending'].includes(String(refund?.refund_status || ''));
+
+const isRefundApproved = (refund) => String(refund?.refund_status || '') === 'Approved';
+
+const isHighlightedRefund = (refund) =>
+  highlightedRefundBookingId.value != null &&
+  String(highlightedRefundBookingId.value) === String(refund?.booking_id);
+
+const canRecordCashDownPayment = (booking) =>
+  ['Awaiting Down Payment', 'Payment Rejected'].includes(booking?.status);
+
+const recordDpAmountDisplay = computed(() => {
+  const booking = paymentActionBooking.value;
+  if (!booking) return '';
+  const amount = Number(booking.down_payment_amount ?? recordDpAmount.value);
+  if (!Number.isFinite(amount)) return '—';
+  const pct = booking.down_payment_percent
+    ? `${booking.down_payment_percent}% · `
+    : '';
+  return `${pct}₱${formatNumber(amount)}`;
+});
+
+const downPaymentQueueStatusLabel = (booking) => {
+  if (booking?.status === 'Awaiting Payment Verification') return t('ui.awaitingProofVerification');
+  if (booking?.status === 'Payment Rejected') return t('ui.paymentRejectedResubmit');
+  return t('ui.awaitingFarmerPayment');
+};
+
+const focusDownPaymentQueue = async () => {
+  showDownPaymentPanel.value = true;
+  activeTab.value = 'ar';
+  await loadPendingDownPayments();
+  await nextTick();
+  document.getElementById('down-payment-queue')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const focusRefundQueue = async () => {
+  activeTab.value = 'ar';
+  await loadBookingPayments();
+  await nextTick();
+  document.getElementById('down-payment-refunds')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 // Check if user is admin (sees only profit and reports tabs)
 const isAdmin = computed(() => userRole.value === 'admin');
 
 const { authHeaders, buildParams, financialGet, financialPost, financialPut, financialDelete } =
   useFinancialApi(authStore, selectedBarangayId, () => isAdmin.value);
+
+const resolveBarangayDisplayName = (barangayId) => {
+  if (barangayId == null || barangayId === '') return '';
+
+  const idStr = String(barangayId);
+  const fromList = barangays.value.find((b) => String(b.id) === idStr);
+  if (fromList?.name) return fromList.name;
+
+  const user = authStore.currentUser;
+  if (user?.barangay_name && String(user.barangay_id) === idStr) {
+    return user.barangay_name;
+  }
+
+  return '';
+};
 
 // Barangay tied to the report scope (admin = filter; others = user's barangay)
 const reportEffectiveBarangayId = computed(() => {
@@ -2500,10 +3643,10 @@ const reportBarangayNameForReport = computed(() => {
   const bid = reportEffectiveBarangayId.value;
   if (!bid) {
     if (isAdmin.value) return '(Pumili ng Barangay sa filter sa itaas)';
-    return '—';
+    const userName = authStore.currentUser?.barangay_name;
+    return userName || '—';
   }
-  const row = barangays.value.find((b) => String(b.id) === String(bid));
-  return row?.name || bid;
+  return resolveBarangayDisplayName(bid) || '—';
 });
 
 // Check if user can manage (only treasurer)
@@ -2573,10 +3716,14 @@ const expenseOperators = computed(() => {
 
 const filteredExpenses = computed(() => expenses.value);
 
-// Collection Form Computed Properties
+// Collection Form Computed Properties — Balance Due = amount still to collect
 const remainingBalance = computed(() => {
   if (!editingCollection.value) return 0;
-  return editingCollection.value.total_price - (editingCollection.value.amount_collected || 0);
+  const fromApi = parseFloat(editingCollection.value.remaining_balance);
+  if (Number.isFinite(fromApi) && fromApi >= 0) return fromApi;
+  const total = parseFloat(editingCollection.value.total_price) || 0;
+  const collected = parseFloat(editingCollection.value.amount_collected) || 0;
+  return Math.max(0, total - collected);
 });
 
 const totalCollectionAmount = computed(() => {
@@ -2589,6 +3736,24 @@ const remainingBalanceAfter = computed(() => {
   // Frontend preview excludes auto-interest because backend applies it server-side.
   const base = remainingBalance.value - (collectionForm.value.paymentAmount || 0);
   return base;
+});
+
+const collectionDetailRows = computed(() => {
+  const rec = editingCollection.value;
+  if (!rec) return [];
+  return [
+    { label: t('payCheckout.totalAmount'), value: `₱${formatNumber(rec.total_price)}` },
+    { label: t('payCheckout.alreadyCollected'), value: `₱${formatNumber(rec.amount_collected || 0)}` },
+    { label: t('ui.machinery'), value: rec.machinery_name || rec.machinery_type || '—' }
+  ];
+});
+
+const collectionDueMeta = computed(() => {
+  const rec = editingCollection.value;
+  if (!rec?.booking_date) return '';
+  const date = formatManilaDateLabel(getDueDate(rec.booking_date));
+  if (!date) return '';
+  return isOverdue.value ? t('payCheckout.dueOverdue', { date }) : t('payCheckout.dueOn', { date });
 });
 
 const showPartialWarning = computed(() => {
@@ -2633,12 +3798,12 @@ if (!hasAccess.value) {
 // Others (Treasurer, President, Auditor): See all tabs
 const activeTab = ref('expenses');
 const allTabs = [
-  { id: 'payments', label: 'Down Payments & Refunds', paymentVerifierOnly: true },
-  { id: 'expenses', label: 'Expenses' },
-  { id: 'income', label: 'Income' },
-  { id: 'ar', label: 'A/R & Collections' },
-  { id: 'profit', label: 'Profit Computation' },
-  { id: 'reports', label: 'Reports' }
+  { id: 'expenses', labelKey: 'ui.tabExpenses' },
+  { id: 'income', labelKey: 'ui.tabIncome' },
+  { id: 'ar', labelKey: 'ui.arCollections' },
+  { id: 'inventory', labelKey: 'ui.gcashQrCode', treasurerOnly: true },
+  { id: 'profit', labelKey: 'ui.profitComputation' },
+  { id: 'reports', labelKey: 'ui.tabReports' }
 ];
 
 const tabs = computed(() => {
@@ -2646,35 +3811,45 @@ const tabs = computed(() => {
     return allTabs.filter((tab) => ['profit', 'reports'].includes(tab.id));
   }
   let list = allTabs.filter((tab) => !tab.paymentVerifierOnly || isPaymentVerifier.value);
+  if (!canManage.value) {
+    list = list.filter((tab) => !tab.treasurerOnly);
+  }
   if (!canCollectDues.value) {
     list = list.filter((tab) => tab.id !== 'dues');
   }
   return list.map((tab) => {
-    if (tab.id === 'payments' && pendingPaymentsCount.value > 0) {
-      return { ...tab, badge: pendingPaymentsCount.value };
+    if (tab.id === 'ar' && isPaymentVerifier.value) {
+      const badge =
+        pendingBalanceSubmissions.value.length +
+        pendingDownPayments.value.length +
+        pendingRefundRequests.value.length;
+      if (badge > 0) return { ...tab, badge };
     }
-    if (tab.id === 'ar' && isPaymentVerifier.value && pendingBalanceSubmissions.value.length > 0) {
-      return { ...tab, badge: pendingBalanceSubmissions.value.length };
+    if (tab.id === 'inventory' && pendingGcashPayments.value.length > 0) {
+      return { ...tab, badge: pendingGcashPayments.value.length };
     }
     return tab;
   });
 });
 
-// Set default active tab based on role
+// Set default active tab based on role (skip when the URL already targets a tab, e.g. /association-dues)
 watch(() => userRole.value, (role) => {
+  if (route.path === '/association-dues' || route.query.tab) return;
   if (role === 'admin') {
     activeTab.value = 'profit';
-  } else if ((role === 'treasurer' || role === 'president') && !route.query.tab) {
-    activeTab.value = 'payments';
+  } else if (role === 'treasurer' || role === 'president') {
+    activeTab.value = 'ar';
   }
 }, { immediate: true });
 
 watch(activeTab, (tab) => {
-  if (tab === 'payments' && isPaymentVerifier.value) {
-    loadBookingPayments();
-  }
   if (tab === 'ar' && isPaymentVerifier.value) {
     loadPendingBalanceSubmissions();
+    loadPendingDownPayments();
+    loadBookingPayments();
+  }
+  if (tab === 'inventory' && canManage.value) {
+    loadGcashInventory();
   }
   if (tab === 'expenses') {
     loadExpenses();
@@ -2687,6 +3862,19 @@ const income = ref([]);
 const machinery = ref([]);
 const arList = ref([]);
 const collections = ref([]);
+const collectionsSearchQuery = ref('');
+const filteredCollections = computed(() => {
+  const query = collectionsSearchQuery.value.trim().toLowerCase();
+  if (!query) return collections.value;
+  return collections.value.filter((col) => {
+    return [
+      col.farmer_name,
+      col.farmer_reference,
+      col.receipt_number,
+      col.booking_id
+    ].some((value) => String(value || '').toLowerCase().includes(query));
+  });
+});
 const collectionsSummary = ref({
   total_receivables: 0,
   total_collected: 0,
@@ -2704,6 +3892,8 @@ const bookingUsageLeaders = ref([]);
 // Report data
 const reportData = ref(null);
 const reportLoading = ref(false);
+const selectedReportType = ref(null);
+let reportRequestId = 0;
 const lastReportRequest = ref(null);
 const reportFilters = ref({
   showSummary: true,
@@ -2772,6 +3962,160 @@ const serviceLedgerTotals = computed(() => {
     },
     { totalAmount: 0, cashCollection: 0, accountsReceivable: 0 }
   );
+});
+
+const REPORT_EMPTY_MOBILE_MSG =
+  'Walang rekord sa piniling saklaw ng petsa / No records in this period.';
+
+const expenseOthersAmount = (exp) =>
+  (parseFloat(exp.office_supply || 0) || 0) +
+  (parseFloat(exp.communication_expense || 0) || 0) +
+  (parseFloat(exp.utilities_expense || 0) || 0) +
+  (parseFloat(exp.sundries || 0) || 0);
+
+const summaryMobileCards = computed(() => {
+  const data = reportData.value;
+  if (!data) return [];
+  const s = data.summary;
+  const c = data.counts;
+  return [
+    {
+      id: 'summary-expenses',
+      rows: [
+        { label: t('ui.module'), value: t('ui.totalExpenses') },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(s.total_expenses), strong: true },
+        { label: t('ui.recorded'), value: `${c.expenses}` }
+      ]
+    },
+    {
+      id: 'summary-income',
+      rows: [
+        { label: t('ui.module'), value: t('ui.totalIncome') },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(s.total_income), strong: true },
+        { label: t('ui.recorded'), value: `${c.income}` }
+      ]
+    },
+    {
+      id: 'summary-collections',
+      rows: [
+        { label: t('ui.module'), value: t('ui.collections') },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(s.total_collections), strong: true },
+        { label: t('ui.recorded'), value: `${c.collections}` }
+      ]
+    },
+    {
+      id: 'summary-net',
+      rows: [
+        { label: t('ui.module'), value: t('ui.netProfit') },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(s.net_profit), strong: true },
+        { label: t('ui.recorded'), value: s.net_profit >= 0 ? t('ui.netProfit') : t('ui.lossDetected') }
+      ]
+    }
+  ];
+});
+
+const distributionMobileCards = computed(() => {
+  const data = reportData.value;
+  if (!data?.summary?.distribution) return [];
+  const d = data.summary.distribution;
+  return [
+    {
+      id: 'dist-org',
+      rows: [
+        { label: t('ui.profitDistAlloc'), value: t('ui.organization') },
+        { label: t('common.share'), value: '30%' },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(d.organization_share), strong: true }
+      ]
+    },
+    {
+      id: 'dist-training',
+      rows: [
+        { label: t('ui.profitDistAlloc'), value: t('ui.training') },
+        { label: t('common.share'), value: '20%' },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(d.training_share), strong: true }
+      ]
+    },
+    {
+      id: 'dist-members',
+      rows: [
+        { label: t('ui.profitDistAlloc'), value: t('nav.members') },
+        { label: t('common.share'), value: '50%' },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(d.members_share), strong: true }
+      ]
+    },
+    {
+      id: 'dist-per-member',
+      rows: [
+        { label: t('ui.profitDistAlloc'), value: t('ui.perMemberCount', { count: d.member_count }) },
+        { label: t('common.share'), value: '—' },
+        { label: t('ui.amount'), value: formatReportMoneyCompact(d.per_member_share), strong: true }
+      ]
+    }
+  ];
+});
+
+const allTransactionsMobileCards = computed(() => {
+  const rows = reportData.value?.transactions?.all || [];
+  return rows.map((txn) => {
+    const sign = txn.transaction_type === 'Expense' ? '-' : '+';
+    return {
+      id: `${txn.id}-${txn.transaction_type}`,
+      rows: [
+        { label: 'Date', value: formatReportDateCompact(txn.date) },
+        { label: 'Type', value: txn.transaction_type || '—' },
+        { label: 'Machinery', value: txn.machinery_name || '—' },
+        { label: 'Description', value: txn.description || '—' },
+        { label: 'Farmer', value: txn.farmer_name || '—' },
+        { label: 'Amount', value: `${sign}${formatReportMoneyCompact(txn.amount)}`, strong: true }
+      ]
+    };
+  });
+});
+
+const expenseDetailsMobileCards = computed(() => {
+  const rows = reportData.value?.transactions?.expenses || [];
+  return rows.map((exp) => ({
+    id: `exp-${exp.id}`,
+    rows: [
+      { label: 'Date', value: formatReportDateCompact(exp.date) },
+      { label: 'Machinery', value: exp.machinery_name || '—' },
+      { label: 'Particulars', value: exp.description || '—' },
+      { label: 'Ref #', value: exp.reference_number || '—' },
+      { label: t('ui.fuelAndOil'), value: formatReportMoneyCompact(exp.fuel_and_oil) },
+      { label: t('ui.labor'), value: formatReportMoneyCompact(exp.labor_cost) },
+      { label: t('ui.perDiem'), value: formatReportMoneyCompact(exp.per_diem) },
+      { label: 'R&M', value: formatReportMoneyCompact(exp.repair_and_maintenance) },
+      { label: 'Others', value: formatReportMoneyCompact(expenseOthersAmount(exp)) },
+      { label: 'Total', value: formatReportMoneyCompact(exp.amount), strong: true }
+    ]
+  }));
+});
+
+const expenseDetailsMobileFooter = computed(() => {
+  if (!reportData.value?.transactions?.expenses?.length) return [];
+  return [
+    {
+      label: 'Total Expenses / Kabuuang Gastos',
+      value: formatReportMoneyCompact(reportData.value.summary.total_expenses)
+    }
+  ];
+});
+
+const bookingsSummaryMobileCards = computed(() => {
+  const rows = reportData.value?.transactions?.bookings || [];
+  return rows.map((bk) => ({
+    id: `bk-${bk.id}`,
+    rows: [
+      { label: 'Date', value: formatReportDateCompact(bk.date) },
+      { label: 'Booking #', value: `#${bk.booking_id}` },
+      { label: 'Machinery', value: bk.machinery_name || '—' },
+      { label: 'Farmer', value: bk.farmer_name || '—' },
+      { label: 'Status', value: bk.status || '—' },
+      { label: 'Total Price', value: formatReportMoneyCompact(bk.amount), strong: true },
+      { label: 'Paid', value: formatReportMoneyCompact(bk.total_paid), strong: true },
+      { label: 'Payment Status', value: bk.payment_status || 'Unpaid' }
+    ]
+  }));
 });
 
 const formatReportMoney = (num) => {
@@ -2844,7 +4188,10 @@ const printOrientation = ref('landscape');
 
 const showExpenseForm = ref(false);
 const showIncomeForm = ref(false);
+const manualIncomeList = ref([]);
+const editingManualIncomeId = ref(null);
 const showCollectionForm = ref(false);
+const collectionSaving = ref(false);
 const editingExpense = ref(null);
 const editingCollection = ref(null);
 
@@ -2875,9 +4222,8 @@ const expenseForm = ref({
 });
 
 const incomeForm = ref({
-  date_of_income: '',
-  machinery_id: '',
-  booking_id: '',
+  source_name: '',
+  date_of_income: new Date().toISOString().split('T')[0],
   income_amount: '',
   remarks: ''
 });
@@ -2937,36 +4283,62 @@ const selectedFarmerTotalPaid = computed(() => {
 const paidFarmersCount = computed(() => eligibleFarmers.value.filter(farmer => Number(farmer.dues_paid)).length);
 const unpaidFarmersCount = computed(() => eligibleFarmers.value.filter(farmer => !Number(farmer.dues_paid)).length);
 const currentPeriodLabel = computed(() => formatDuesCoverage(currentPeriod.value.start, currentPeriod.value.end));
-// Consolidated income records (direct income + collections + monthly dues)
+// Consolidated income records (API income + collections fallback + monthly dues)
 const consolidatedIncomeRecords = computed(() => {
   const records = [];
-  
-  // Add direct income records
+  const seenCollectionIds = new Set();
+
+  // Machinery payments (including down payments), bookings, and manual income from API
   if (income.value) {
-    records.push(...income.value);
+    for (const row of income.value) {
+      if (row.income_type === 'Association Dues') continue;
+      const incomeId = String(row.income_id || '');
+      if (incomeId.startsWith('COL-')) {
+        seenCollectionIds.add(incomeId.replace('COL-', ''));
+      }
+      records.push({
+        ...row,
+        id: row.income_id || `income-${row.booking_id || row.dues_id || Math.random()}`,
+        income_type: row.income_type === 'Down Payment'
+          ? 'Down Payment'
+          : (row.income_type || 'Income'),
+        payment_status: row.payment_status || 'Paid',
+        remarks: row.remarks || (
+          row.income_type === 'Down Payment'
+            ? (row.machinery_name ? `Down payment verified — ${row.machinery_name}` : 'Down payment verified')
+            : ''
+        )
+      });
+    }
   }
-  
-  // Add collection transactions as income
+
+  // Fallback: balance/final collections not already in /income (never include down payments here)
   if (collections.value) {
-    records.push(...collections.value.map(col => ({
-      id: `collection-${col.id}`,
-      income_id: col.id,
-      income_type: 'Collection',
-      date_of_income: col.collection_date,
-      farmer_name: col.farmer_name || '-',
-      machinery_name: col.machinery_name || 'Machinery Booking',
-      machinery_type: col.machinery_type || '',
-      booking_id: col.booking_id || col.id,
-      income_amount: col.collection_amount,
-      original_amount: col.original_amount || col.total_price,
-      payment_status: 'Collected',
-      remarks: col.remarks || '',
-      period_start: null,
-      period_end: null
-    })));
+    for (const col of collections.value) {
+      const colId = String(col.id);
+      if (seenCollectionIds.has(colId)) continue;
+      if (/down payment/i.test(String(col.remarks || ''))) continue;
+      records.push({
+        id: `collection-${col.id}`,
+        income_id: col.id,
+        income_type: 'Machinery Collection',
+        date_of_income: col.collection_date,
+        farmer_name: col.farmer_name || '-',
+        machinery_name: col.machinery_name || 'Machinery Booking',
+        machinery_type: col.machinery_type || '',
+        booking_id: col.booking_id || col.id,
+        income_amount: col.collection_amount,
+        original_amount: col.original_amount || col.total_price,
+        payment_status: 'Collected',
+        remarks: col.remarks || '',
+        receipt_number: col.receipt_number || null,
+        period_start: null,
+        period_end: null
+      });
+    }
   }
-  
-  // Add monthly dues as income
+
+  // Association dues
   if (monthlyDues.value) {
     records.push(...monthlyDues.value.map(dues => ({
       id: `dues-${dues.id}`,
@@ -2986,38 +4358,69 @@ const consolidatedIncomeRecords = computed(() => {
       period_end: dues.period_end || null
     })));
   }
-  
-  // Filter by income source
+
   let filtered = records;
   if (filters.value.income_source === 'machinery') {
-    filtered = records.filter(r => r.income_type === 'Collection');
+    filtered = records.filter(r =>
+      ['Collection', 'Machinery Collection', 'Machinery Booking', 'Down Payment'].includes(r.income_type)
+    );
   } else if (filters.value.income_source === 'dues') {
     filtered = records.filter(r => r.income_type === 'Association Dues');
+  } else if (filters.value.income_source === 'manual') {
+    filtered = records.filter(r => r.income_type === 'Manual Income');
   }
-  
-  // Filter by date range
+
   if (filters.value.start_date) {
     filtered = filtered.filter(r => new Date(r.date_of_income) >= new Date(filters.value.start_date));
   }
   if (filters.value.end_date) {
     filtered = filtered.filter(r => new Date(r.date_of_income) <= new Date(filters.value.end_date));
   }
-  
-  // Sort by date (most recent first)
+
   return filtered.sort((a, b) => new Date(b.date_of_income || 0) - new Date(a.date_of_income || 0));
 });
 
 const incomeSourceBreakdown = computed(() => {
   const sourceMap = new Map();
   for (const row of consolidatedIncomeRecords.value) {
-    const source = row?.income_type || 'Income';
-    const current = sourceMap.get(source) || { source, count: 0, total: 0 };
+    let kind = 'income';
+    let name = '';
+    if (isDownPaymentIncome(row)) {
+      kind = 'downPayment';
+      name = row?.machinery_name || '';
+    } else if (isCollectionIncome(row)) {
+      kind = 'balanceCollection';
+      name = row?.machinery_name || '';
+    } else if (String(row?.income_type || '') === 'Manual Income') {
+      kind = 'otherIncome';
+      name = row?.machinery_name || row?.source_name || '';
+    } else if (isDuesIncome(row)) {
+      kind = 'dues';
+      name = '';
+    } else {
+      name = row?.income_type || '';
+    }
+    const id = `${kind}|${name}`;
+    const current = sourceMap.get(id) || { id, kind, name, count: 0, total: 0 };
     current.count += 1;
     current.total += parseFloat(row?.income_amount || 0);
-    sourceMap.set(source, current);
+    sourceMap.set(id, current);
   }
   return Array.from(sourceMap.values()).sort((a, b) => b.total - a.total);
 });
+
+const formatIncomeSourceItem = (item) => {
+  if (!item) return '';
+  if (item.kind === 'downPayment') {
+    return item.name ? t('ui.downPaymentNamed', { name: item.name }) : t('ui.downPayment');
+  }
+  if (item.kind === 'balanceCollection') {
+    return item.name ? t('ui.balanceCollectionNamed', { name: item.name }) : t('ui.balanceCollection');
+  }
+  if (item.kind === 'dues') return t('ui.associationDues');
+  if (item.kind === 'otherIncome') return item.name || t('ui.otherIncome');
+  return item.name || t('ui.income');
+};
 
 const duesForm = ref({
   farmer_id: '',
@@ -3027,11 +4430,29 @@ const duesForm = ref({
 });
 
 // Methods
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = '/api';
 
 const formatNumber = (num) => {
   if (!num) return '0.00';
   return parseFloat(num).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const formatInterestRateDisplay = (rate) => {
+  const n = parseFloat(rate);
+  if (!Number.isFinite(n) || n <= 0) return '0';
+  return Number.isInteger(n) ? String(n) : String(n);
+};
+
+const formatAreaUnit = (hint) => {
+  if (!hint) return '';
+  const value = String(hint).toLowerCase();
+  if (value.includes('hectare')) return t('ui.hectareUnit');
+  return hint;
+};
+
+const reportTypeLabel = (type) => {
+  const keys = { monthly: 'ui.monthly', quarterly: 'ui.quarterly', annual: 'ui.annual' };
+  return t(keys[type] || 'ui.monthly');
 };
 
 const formatDate = (date) => {
@@ -3041,17 +4462,133 @@ const formatDate = (date) => {
 
 const formatRoleLabel = (role) => {
   const value = String(role || '').toLowerCase();
-  if (!value) return 'Member';
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  if (!value) return t('common.member');
+  const map = {
+    farmer: t('ui.farmer'),
+    treasurer: t('ui.treasurer'),
+    president: t('ui.president'),
+    admin: t('ui.admin'),
+    operator: t('ui.operator'),
+    member: t('common.member')
+  };
+  return map[value] || (value.charAt(0).toUpperCase() + value.slice(1));
 };
 
 const formatDuesCoverage = (start, end) => {
-  if (!start || !end) return 'Current 6-month cycle';
+  if (!start || !end) return t('ui.currentSixMonthCycle');
   return `${formatDate(start)} - ${formatDate(end)}`;
 };
 
 const isDuesIncome = (record) => {
   return String(record?.income_type || '').toLowerCase().includes('dues');
+};
+
+const isDownPaymentIncome = (record) => {
+  const type = String(record?.income_type || '').toLowerCase();
+  const paymentType = String(record?.payment_type || '').toLowerCase();
+  return type.includes('down payment') || paymentType === 'down_payment';
+};
+
+const isCollectionIncome = (record) => {
+  const type = String(record?.income_type || '').toLowerCase();
+  return type.includes('collection') || type.includes('machinery booking');
+};
+
+const getIncomeReceivedLabel = (record) => {
+  if (isDownPaymentIncome(record)) return t('ui.downPayment');
+  if (isCollectionIncome(record)) return t('ui.amountCollected');
+  if (isDuesIncome(record)) return t('ui.amountCollected');
+  return t('ui.amountReceived');
+};
+
+const getIncomePaymentStatusLabel = (record) => {
+  if (isDownPaymentIncome(record)) return t('ui.verified');
+  const status = record?.payment_status || 'Paid';
+  const map = {
+    'Partial Payment': t('ui.partialPayment'),
+    Paid: t('ui.paid'),
+    Verified: t('ui.verified'),
+    Unpaid: t('ui.unpaid')
+  };
+  return map[status] || status;
+};
+
+const getIncomePaymentStatusClass = (record) => {
+  const label = getIncomePaymentStatusLabel(record);
+  return String(label || 'paid').toLowerCase().replace(/\s+/g, '-');
+};
+
+const getIncomeReceiptNumber = (record) => {
+  const receipt = String(record?.receipt_number || '').trim();
+  return receipt.startsWith('RCPT-') ? receipt : '';
+};
+
+const formatIncomeMachinery = (record) => {
+  if (isDuesIncome(record)) return t('ui.associationDues');
+  if (record?.machinery_name) {
+    return `${record.machinery_name}${record.machinery_type ? ` (${record.machinery_type})` : ''}`;
+  }
+  if (record?.income_type === 'Manual Income') return record.machinery_name || t('ui.otherSource');
+  return '—';
+};
+
+const stripBookingRef = (text) => {
+  return String(text || '')
+    .replace(/\s*[·•\-–—]?\s*Booking\s*#?\s*\d+/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s*[·•]\s*$/g, '')
+    .trim();
+};
+
+const formatIncomeTypeLabel = (type) => {
+  const value = String(type || '').trim();
+  const map = {
+    'Down Payment': t('ui.downPayment'),
+    'Machinery Collection': t('ui.balanceCollection'),
+    'Association Dues': t('ui.associationDues'),
+    'Manual Income': t('ui.otherManualIncome'),
+    Income: t('ui.income')
+  };
+  return map[value] || value || t('ui.income');
+};
+
+const formatIncomeFrom = (record) => {
+  if (isDownPaymentIncome(record)) {
+    const machine = formatIncomeMachinery(record);
+    const method = record?.payment_method ? String(record.payment_method) : '';
+    const pctMatch = String(record?.remarks || '').match(/(\d+(?:\.\d+)?)%\s+down payment/i)
+    const dpLabel = pctMatch
+      ? t('ui.downPaymentPct20', { percent: pctMatch[1] })
+      : t('ui.downPayment')
+    return [dpLabel, machine !== '—' ? machine : '', method]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  if (isCollectionIncome(record)) {
+    const machine = formatIncomeMachinery(record);
+    return [t('ui.balanceCollection'), machine !== '—' ? machine : '']
+      .filter(Boolean)
+      .join(' · ');
+  }
+  if (isDuesIncome(record)) {
+    return `${t('ui.associationDues')} · ${formatDuesCoverage(record.period_start, record.period_end)}`;
+  }
+  if (String(record?.income_type || '') === 'Manual Income') {
+    return record?.machinery_name || record?.source_name || t('ui.otherIncome');
+  }
+  return record?.remarks || formatIncomeTypeLabel(record?.income_type);
+};
+
+const viewIncomeReceipt = async (record) => {
+  const receiptNumber = getIncomeReceiptNumber(record);
+  if (!receiptNumber) {
+    showAlert('No official receipt is available for this income record yet.', 'error');
+    return;
+  }
+  await viewReceipt(receiptNumber, {
+    autoPrint: false,
+    paymentForOverride: formatIncomeFrom(record)
+  });
 };
 
 const getIncomeRowKey = (record) => {
@@ -3115,7 +4652,7 @@ const loadPendingBalanceSubmissions = async () => {
   }
 };
 
-const loadBookingPayments = async () => {
+const loadPendingDownPayments = async () => {
   if (!isPaymentVerifier.value || !authStore.currentUser?.id) return;
   try {
     const barangayScope = isAdmin.value && selectedBarangayId.value ? selectedBarangayId.value : null;
@@ -3123,13 +4660,383 @@ const loadBookingPayments = async () => {
       authStore.currentUser.id,
       barangayScope
     );
+  } catch (e) {
+    console.error('Failed to load pending down payments:', e);
+  }
+};
+
+const gcashTypeLabel = (type) =>
+  type === 'loan' ? t('ui.gcashTxnLoan') : t('ui.gcashTxnMachinery');
+
+const isHighlightedGcashRow = (row) => {
+  const mark = highlightedGcashRef.value;
+  if (mark == null || mark === '') return false;
+  return String(row?.id) === String(mark) || String(row?.reference_id) === String(mark);
+};
+
+const gcashHistoryNote = (row) => {
+  if (!row) return '';
+  if (row.status === 'rejected') return row.rejection_reason || '';
+  return row.receipt_number || row.remarks || '';
+};
+
+const loadGcashHistory = async () => {
+  if (!canManage.value) return;
+  gcashHistoryBusy.value = true;
+  try {
+    gcashHistoryRows.value = await gcashStore.fetchHistory();
+  } catch (e) {
+    console.error('Failed to load GCash history:', e);
+  } finally {
+    gcashHistoryBusy.value = false;
+  }
+};
+
+const scrollToGcashRow = (id) => {
+  return scrollElementWhenReady(`[data-gcash-id="${id}"]`, nextTick);
+};
+
+const openGcashHistoryPanel = async (sid) => {
+  showGcashHistory.value = true;
+  await loadGcashHistory();
+  if (sid) {
+    highlightedGcashRef.value = String(sid);
+    await scrollToGcashRow(sid);
+    return;
+  }
+  await nextTick();
+  document.getElementById('gcash-history')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const toggleGcashHistory = async () => {
+  if (showGcashHistory.value) {
+    showGcashHistory.value = false;
+    return;
+  }
+  await openGcashHistoryPanel();
+};
+
+const gcashDisplaySrc = computed(() => {
+  if (gcashPendingPreview.value) return gcashPendingPreview.value;
+  if (gcashQr.value?.image_path) return paymentProofUrl(gcashQr.value.image_path);
+  return '';
+});
+
+const loadGcashInventory = async () => {
+  if (!canManage.value) return;
+  try {
+    gcashQr.value = await gcashStore.fetchQr();
+    pendingGcashPayments.value = await gcashStore.fetchPending();
+  } catch (e) {
+    console.error('Failed to load GCash inventory:', e);
+  }
+};
+
+const clearGcashPendingQr = () => {
+  gcashPendingFile.value = null;
+  if (gcashPendingPreview.value) {
+    URL.revokeObjectURL(gcashPendingPreview.value);
+    gcashPendingPreview.value = '';
+  }
+  if (gcashQrFileInput.value) gcashQrFileInput.value.value = '';
+};
+
+const onGcashQrFileSelect = (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  const ok = (file.type || '').startsWith('image/') || /\.(jpe?g|png|gif|webp|jfif)$/i.test(file.name);
+  if (!ok) {
+    showAlert(t('ui.gcashImageOnly'), 'error');
+    return;
+  }
+  clearGcashPendingQr();
+  gcashPendingFile.value = file;
+  gcashPendingPreview.value = URL.createObjectURL(file);
+};
+
+const saveGcashQr = async () => {
+  if (!gcashPendingFile.value || gcashQrBusy.value) return;
+  gcashQrBusy.value = true;
+  try {
+    gcashQr.value = await gcashStore.uploadQr(gcashPendingFile.value);
+    clearGcashPendingQr();
+    showAlert(t('ui.gcashQrSaved'), 'success');
+  } catch (e) {
+    showAlert(e.message || t('ui.gcashImageOnly'), 'error');
+  } finally {
+    gcashQrBusy.value = false;
+  }
+};
+
+const deleteGcashQr = async () => {
+  gcashQrBusy.value = true;
+  try {
+    await gcashStore.deleteQr();
+    gcashQr.value = null;
+    clearGcashPendingQr();
+    showAlert(t('ui.gcashQrDeleted'), 'success');
+  } catch (e) {
+    showAlert(e.message || t('ui.gcashQrDeleted'), 'error');
+  } finally {
+    gcashQrBusy.value = false;
+  }
+};
+
+const openGcashConfirm = (row) => {
+  gcashActionRow.value = row;
+  const fixed = resolveGcashFixedAmount(row);
+  gcashConfirmAmount.value = fixed != null ? fixed : '';
+  gcashConfirmRemarks.value = '';
+  showGcashRejectModal.value = false;
+  showGcashConfirmModal.value = true;
+};
+
+const resolveGcashFixedAmount = (row) => {
+  if (!row) return null;
+  if (row.is_down_payment && row.expected_amount != null) {
+    const n = parseFloat(row.expected_amount);
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+  }
+  const dp = parseFloat(row.down_payment_amount);
+  if (
+    row.transaction_type === 'machinery' &&
+    Number.isFinite(dp) &&
+    dp > 0 &&
+    !row.down_payment_verified_at &&
+    ['Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected'].includes(row.booking_status)
+  ) {
+    return Math.round(dp * 100) / 100;
+  }
+  return null;
+};
+
+const isGcashDownPaymentConfirm = computed(() => resolveGcashFixedAmount(gcashActionRow.value) != null);
+
+const gcashFixedAmountDisplay = computed(() => {
+  const n = resolveGcashFixedAmount(gcashActionRow.value);
+  if (n == null) return '';
+  const pct = gcashActionRow.value?.down_payment_percent;
+  return pct ? `${pct}% · ₱${formatNumber(n)}` : `₱${formatNumber(n)}`;
+});
+
+const openGcashReject = (row) => {
+  gcashActionRow.value = row;
+  gcashRejectReason.value = '';
+  showGcashConfirmModal.value = false;
+  showGcashRejectModal.value = true;
+};
+
+const closeGcashModals = () => {
+  showGcashConfirmModal.value = false;
+  showGcashRejectModal.value = false;
+  gcashActionRow.value = null;
+  gcashConfirmAmount.value = '';
+  gcashConfirmRemarks.value = '';
+  gcashRejectReason.value = '';
+};
+
+const applyGcashNotificationDeepLink = async () => {
+  const highlight = route.query.highlight;
+  const sid = route.query.sid;
+  const type = String(route.query.type || '');
+  const view = String(route.query.view || '');
+  const focus = String(route.query.focus || '');
+  const wantsHistory =
+    view === 'history' ||
+    type === 'gcash-history' ||
+    focus === 'gcash-rejected' ||
+    focus === 'gcash-verified';
+  const isGcashLink = ['gcash-loan', 'gcash-booking', 'gcash-history'].includes(type) || wantsHistory;
+  if (!isGcashLink) return;
+  if (!highlight && !sid && !wantsHistory) return;
+  if (!canManage.value) return;
+
+  activeTab.value = 'inventory';
+  await loadGcashInventory();
+
+  const findPending = () =>
+    pendingGcashPayments.value.find((item) =>
+      (sid && String(item.id) === String(sid)) ||
+      (highlight && String(item.reference_id) === String(highlight)) ||
+      (highlight && String(item.id) === String(highlight))
+    );
+
+  if (wantsHistory) {
+    highlightedGcashRef.value = sid || highlight || null;
+    await openGcashHistoryPanel(sid || highlight);
+    consumeNotificationDeepLink(router, route, () => {
+      highlightedGcashRef.value = null;
+    });
+    return;
+  }
+
+  let pendingRow = findPending();
+  for (let i = 0; !pendingRow && i < 6; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await loadGcashInventory();
+    pendingRow = findPending();
+  }
+
+  highlightedGcashRef.value = String(sid || pendingRow?.id || highlight || '');
+
+  if (pendingRow) {
+    await scrollToGcashRow(pendingRow.id);
+    consumeNotificationDeepLink(router, route, () => {
+      highlightedGcashRef.value = null;
+    });
+    return;
+  }
+
+  // Pending submission not in queue — still land on GCash tab and try to center any matching row
+  await scrollToGcashRow(sid || highlight);
+  consumeNotificationDeepLink(router, route, () => {
+    highlightedGcashRef.value = null;
+  });
+};
+
+const applyBookingNotificationDeepLink = async () => {
+  const highlight = route.query.highlight;
+  const type = String(route.query.type || '');
+  const open = String(route.query.open || '');
+  const isRefundLink = type === 'refund' || open === 'refund';
+  if (!highlight || (type !== 'booking' && type !== 'refund')) return;
+
+  activeTab.value = 'ar';
+
+  if (isRefundLink) {
+    highlightedRefundBookingId.value = highlight;
+    highlightedBookingId.value = null;
+    if (isPaymentVerifier.value) {
+      await loadBookingPayments();
+    }
+    await nextTick();
+    const scrolled = await scrollElementWhenReady(
+      [
+        `#down-payment-refunds [data-booking-id="${highlight}"]`,
+        `[data-refund-id][data-booking-id="${highlight}"]`,
+        '#down-payment-refunds'
+      ],
+      nextTick
+    );
+    if (!scrolled) {
+      document.getElementById('down-payment-refunds')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    consumeNotificationDeepLink(router, route, () => {
+      highlightedRefundBookingId.value = null;
+    });
+    return;
+  }
+
+  highlightedBookingId.value = highlight;
+
+  if (isPaymentVerifier.value) {
+    await loadPendingDownPayments();
+    await loadBookingPayments();
+    const inDpQueue = pendingDownPayments.value.some(
+      (b) => String(b.id) === String(highlight)
+    );
+    if (inDpQueue || open === 'dp') {
+      showDownPaymentPanel.value = true;
+    }
+  }
+
+  await loadARData();
+  await scrollElementWhenReady(
+    [
+      `[data-dp-booking-id="${highlight}"]`,
+      `[data-booking-id="${highlight}"]`
+    ],
+    nextTick
+  );
+
+  consumeNotificationDeepLink(router, route, () => {
+    highlightedBookingId.value = null;
+  });
+};
+
+watch(
+  () => [route.query.tab, route.query.highlight, route.query.type, route.query.sid, route.query.view, route.query.focus, route.query.nav, route.query.open],
+  () => {
+    applyGcashNotificationDeepLink();
+    applyBookingNotificationDeepLink();
+  }
+);
+
+const confirmGcashPayment = async () => {
+  if (!gcashActionRow.value) return;
+  const fixed = resolveGcashFixedAmount(gcashActionRow.value);
+  const amount = fixed != null ? fixed : parseFloat(gcashConfirmAmount.value);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showAlert(t('ui.gcashEnterAmount'), 'error');
+    return;
+  }
+  gcashVerifyBusy.value = true;
+  try {
+    const data = await gcashStore.confirmPayment(
+      gcashActionRow.value.id,
+      amount,
+      gcashConfirmRemarks.value
+    );
+    closeGcashModals();
+    await loadGcashInventory();
+    loadARData();
+    loadCollections();
+    loadIncome();
+    loadProfitSummary();
+    if (showGcashHistory.value) await loadGcashHistory();
+    await loadPendingDownPayments();
+
+    const receiptNo = data.receipt_number || null;
+    if (receiptNo) {
+      // Show official receipt immediately (same as cash down payment / collection verify)
+      await showReceiptAfterVerify(receiptNo);
+    } else {
+      showAlert(t('ui.gcashPaymentVerified'), 'success');
+    }
+  } catch (e) {
+    showAlert(e.message || t('ui.gcashEnterAmount'), 'error');
+  } finally {
+    gcashVerifyBusy.value = false;
+  }
+};
+
+const rejectGcashPayment = async () => {
+  if (!gcashActionRow.value) return;
+  const reason = String(gcashRejectReason.value || '').trim();
+  if (!reason) {
+    showAlert(t('ui.rejectionReasonRequired'), 'error');
+    return;
+  }
+  gcashVerifyBusy.value = true;
+  try {
+    await gcashStore.rejectPayment(gcashActionRow.value.id, reason);
+    showAlert(t('ui.gcashProofRejected'), 'success');
+    closeGcashModals();
+    await loadGcashInventory();
+    if (showGcashHistory.value) await loadGcashHistory();
+  } catch (e) {
+    showAlert(e.message || t('ui.gcashProofRejected'), 'error');
+  } finally {
+    gcashVerifyBusy.value = false;
+  }
+};
+
+const loadBookingPayments = async () => {
+  if (!isPaymentVerifier.value || !authStore.currentUser?.id) {
+    pendingRefundRequests.value = [];
+    return;
+  }
+  try {
+    const barangayScope = isAdmin.value && selectedBarangayId.value ? selectedBarangayId.value : null;
     pendingRefundRequests.value = await machineryStore.fetchRefundRequests(
       authStore.currentUser.id,
       'active',
       barangayScope
     );
   } catch (e) {
-    console.error('Failed to load booking payments:', e);
+    console.error('Failed to load refund requests:', e);
+    pendingRefundRequests.value = [];
   }
 };
 
@@ -3212,6 +5119,12 @@ const confirmProcessRefund = async () => {
 };
 
 const showReceiptAfterVerify = async (receiptNumber) => {
+  // After save/verify: open receipt (auto-print on desktop non-dues so workflow stays fast)
+  await viewReceipt(receiptNumber, { autoPrint: true });
+};
+
+/** Open receipt for on-screen review (no auto-print). Prefer this for View buttons. */
+const viewReceipt = async (receiptNumber, options = {}) => {
   if (!receiptNumber) return;
   try {
     lastReceipt.value = await machineryStore.fetchReceipt(receiptNumber);
@@ -3222,14 +5135,33 @@ const showReceiptAfterVerify = async (receiptNumber) => {
     if (!lastReceipt.value.collector_name) {
       lastReceipt.value.collector_name = authStore.currentUser?.full_name || 'Treasurer';
     }
-    if (!lastReceipt.value.payment_for) {
-      lastReceipt.value.payment_for = lastReceipt.value.remarks || 'Association dues';
+    if (options.paymentForOverride) {
+      lastReceipt.value.payment_for = stripBookingRef(options.paymentForOverride);
+    } else if (!lastReceipt.value.payment_for || /^(20%\s*)?down payment$/i.test(String(lastReceipt.value.payment_for || lastReceipt.value.remarks || '').trim())) {
+      // Prefer clearer down-payment / machinery context when receipt only has a short remark
+      lastReceipt.value.payment_for = stripBookingRef(lastReceipt.value.payment_for || lastReceipt.value.remarks || 'Payment');
     }
-    receiptAutoPrint.value = true;
+    if (!lastReceipt.value.payment_for) {
+      lastReceipt.value.payment_for = stripBookingRef(lastReceipt.value.remarks || 'Association dues');
+    } else {
+      lastReceipt.value.payment_for = stripBookingRef(lastReceipt.value.payment_for);
+    }
+    if (lastReceipt.value.remarks) {
+      lastReceipt.value.remarks = stripBookingRef(lastReceipt.value.remarks);
+    }
+    const isDuesReceiptContext = activeTab.value === 'dues' || route.path === '/association-dues';
+    const wantAutoPrint = options.autoPrint === true;
+    if (wantAutoPrint && isDuesReceiptContext && !isMobile.value) {
+      const kind = lastReceipt.value?.module === 'machinery_refund' ? 'refund' : 'payment';
+      await mountAndPrintPaymentReceipt(lastReceipt.value, { kind });
+      return;
+    }
+    // View always shows the modal first. Auto-print only when explicitly requested after verify/save.
+    receiptAutoPrint.value = wantAutoPrint && !isDuesReceiptContext && !isMobile.value;
     showReceiptModal.value = true;
   } catch (e) {
     console.error('Failed to load receipt:', e);
-    showAlert(e.message || 'Dues saved but receipt could not be loaded. Try Print from the history table.', 'error');
+    showAlert(e.message || 'Could not load receipt. Try again from the receipt list.', 'error');
   }
 };
 
@@ -3240,8 +5172,8 @@ const closeReceiptModal = () => {
 
 const paymentProofUrl = (path) => {
   if (!path) return '';
-  const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  return path.startsWith('http') ? path : `${base}${path}`;
+  if (/^https?:\/\//i.test(path) || path.startsWith('data:') || path.startsWith('blob:')) return path;
+  return apiUrl(path);
 };
 
 const openProofPreview = (src) => {
@@ -3265,6 +5197,16 @@ const openVerifyDownPaymentModal = (booking) => {
   showVerifyDpModal.value = true;
 };
 
+const openRecordCashDownPaymentModal = (booking) => {
+  paymentActionBooking.value = booking;
+  recordDpAmount.value = booking.down_payment_amount != null
+    ? Number(booking.down_payment_amount)
+    : null;
+  // Default payment date to when this cash payment is being listed/recorded
+  recordDpDate.value = getManilaTodayString();
+  showRecordDpModal.value = true;
+};
+
 const openRejectDownPaymentModal = (booking) => {
   paymentActionBooking.value = booking;
   rejectPaymentReason.value = '';
@@ -3273,12 +5215,15 @@ const openRejectDownPaymentModal = (booking) => {
 
 const closePaymentModals = () => {
   showVerifyDpModal.value = false;
+  showRecordDpModal.value = false;
   showRejectDpModal.value = false;
   showVerifyFinalModal.value = false;
   paymentActionBooking.value = null;
   paymentSubmissionTarget.value = null;
   verifyReceiptNumber.value = '';
   rejectPaymentReason.value = '';
+  recordDpAmount.value = null;
+  recordDpDate.value = '';
 };
 
 const confirmVerifyDownPayment = async () => {
@@ -3291,13 +5236,53 @@ const confirmVerifyDownPayment = async () => {
     });
     showAlert('Down payment verified and recorded in Income.', 'success');
     closePaymentModals();
+    await loadPendingDownPayments();
     await loadBookingPayments();
-    loadIncome();
-    loadProfitSummary();
-    loadARData();
+    await Promise.all([
+      loadIncome(),
+      loadCollections(),
+      loadProfitSummary(),
+      loadARData()
+    ]);
     if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
   } catch (e) {
     showAlert(e.message || 'Verification failed', 'error');
+  } finally {
+    paymentActionLoading.value = false;
+  }
+};
+
+const confirmRecordCashDownPayment = async () => {
+  if (!paymentActionBooking.value) return;
+  const amount = parseFloat(
+    paymentActionBooking.value.down_payment_amount ?? recordDpAmount.value
+  );
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showAlert(t('ui.gcashEnterAmount'), 'error');
+    return;
+  }
+  const paymentDate = normalizeDateString(recordDpDate.value) || getManilaTodayString();
+  paymentActionLoading.value = true;
+  try {
+    const data = await machineryStore.recordCashDownPayment(paymentActionBooking.value.id, {
+      recorded_by: authStore.currentUser.id,
+      amount,
+      payment_method: 'Cash',
+      payment_date: paymentDate
+    });
+    showAlert(t('ui.cashDownPaymentRecorded'), 'success');
+    closePaymentModals();
+    await loadPendingDownPayments();
+    await loadBookingPayments();
+    await Promise.all([
+      loadIncome(),
+      loadCollections(),
+      loadProfitSummary(),
+      loadARData()
+    ]);
+    if (data.receipt_number) await showReceiptAfterVerify(data.receipt_number);
+  } catch (e) {
+    showAlert(e.message || 'Failed to record down payment', 'error');
   } finally {
     paymentActionLoading.value = false;
   }
@@ -3373,6 +5358,7 @@ const confirmRejectDownPayment = async () => {
     });
     showAlert('Payment rejected. Farmer may resubmit.', 'success');
     closePaymentModals();
+    await loadPendingDownPayments();
     await loadBookingPayments();
   } catch (e) {
     showAlert(e.message || 'Rejection failed', 'error');
@@ -3392,7 +5378,7 @@ const loadExpenses = async () => {
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id }),
       ...(filters.value.operator_id && { operator_id: filters.value.operator_id })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses?${params}`, {
       headers: authHeaders()
     });
@@ -3527,17 +5513,22 @@ const loadIncome = async () => {
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/income?${params}`, {
       headers: authHeaders()
     });
     const data = await response.json();
     
     if (data.success) {
-      income.value = data.income;
+      income.value = data.income || [];
+    } else {
+      income.value = [];
+      console.error('Failed to load income:', data.message);
+      showAlert(data.message || 'Failed to load income records', 'error');
     }
   } catch (error) {
     console.error('Error loading income:', error);
+    income.value = [];
     showAlert('Failed to load income records', 'error');
   }
 };
@@ -3548,7 +5539,7 @@ const loadProfitSummary = async () => {
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`, {
       headers: authHeaders()
     });
@@ -3568,7 +5559,7 @@ const loadExpenseBreakdown = async () => {
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`, {
       headers: authHeaders()
     });
@@ -3672,15 +5663,23 @@ const saveExpense = async () => {
 
 const saveIncome = async () => {
   try {
-    const response = await financialPost(`${API_BASE_URL}/machinery-financial/income`, incomeForm.value);
-    
+    if (!incomeForm.value.source_name.trim() || !incomeForm.value.date_of_income || Number(incomeForm.value.income_amount) <= 0) {
+      showAlert('Enter the income source, date, and a valid amount.', 'error');
+      return;
+    }
+
+    const response = editingManualIncomeId.value
+      ? await financialPut(`${API_BASE_URL}/machinery-financial/manual-income/${editingManualIncomeId.value}`, incomeForm.value)
+      : await financialPost(`${API_BASE_URL}/machinery-financial/income`, incomeForm.value);
+
     const data = await response.json();
-    
+
     if (data.success) {
-      showAlert('Income recorded successfully', 'success');
+      showAlert(editingManualIncomeId.value ? 'Income updated successfully' : 'Income recorded successfully', 'success');
       showIncomeForm.value = false;
       resetIncomeForm();
       loadIncome();
+      loadManualIncome();
       loadProfitSummary();
     } else {
       showAlert(data.message || 'Failed to save income', 'error');
@@ -3746,7 +5745,7 @@ const loadARData = async () => {
     const params = buildParams({
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/ar?${params}`, {
       headers: authHeaders()
     });
@@ -3771,7 +5770,7 @@ const loadCollections = async () => {
     const params = buildParams({
       ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
-
+    
     const response = await fetch(`${API_BASE_URL}/machinery-financial/collections?${params}`, {
       headers: authHeaders()
     });
@@ -3786,17 +5785,81 @@ const loadCollections = async () => {
   }
 };
 
-const recordCollection = (ar) => {
-  editingCollection.value = ar;
+const collectionCloseArmed = ref(false);
+let collectionCloseArmTimer = null;
+
+const openRecordCollection = async (ar) => {
+  if (collectionCloseArmTimer) {
+    clearTimeout(collectionCloseArmTimer);
+    collectionCloseArmTimer = null;
+  }
+  collectionCloseArmed.value = false;
+
+  // Plain snapshot so the modal is not tied to a table row proxy that may re-render away
+  const totalPrice = parseFloat(ar.total_price) || 0;
+  const remainingFromApi = parseFloat(ar.remaining_balance);
+  const remaining =
+    Number.isFinite(remainingFromApi) && remainingFromApi >= 0
+      ? remainingFromApi
+      : Math.max(0, totalPrice - (parseFloat(ar.amount_collected) || 0));
+  const collectedRaw = parseFloat(ar.amount_collected);
+  const amountCollected =
+    Number.isFinite(collectedRaw) && collectedRaw >= 0
+      ? collectedRaw
+      : Math.max(0, totalPrice - remaining);
+
+  editingCollection.value = {
+    id: ar.id,
+    booking_id: ar.booking_id ?? ar.id,
+    machinery_id: ar.machinery_id,
+    farmer_name: ar.farmer_name,
+    machinery_name: ar.machinery_name,
+    total_price: totalPrice,
+    accounts_receivable: parseFloat(ar.accounts_receivable ?? ar.total_price) || totalPrice,
+    amount_collected: amountCollected,
+    remaining_balance: remaining,
+    pending_interest: parseFloat(ar.pending_interest) || 0,
+    machinery_interest_rate: parseFloat(ar.machinery_interest_rate) || 0,
+    booking_date: ar.booking_date,
+    last_payment_date: ar.last_payment_date,
+    last_receipt_number: ar.last_receipt_number
+  };
+
   collectionForm.value = {
     paymentType: 'full',
-    paymentAmount: parseFloat(ar.remaining_balance) || 0,
+    paymentAmount: remaining,
     collectionDate: new Date().toISOString().split('T')[0],
     payment_method: 'Cash',
     receiptNumber: '',
     remarks: ''
   };
+
+  await nextTick();
   showCollectionForm.value = true;
+  await nextTick();
+
+  // Prevent the same click that opened the modal from instantly closing via backdrop
+  collectionCloseArmTimer = setTimeout(() => {
+    collectionCloseArmed.value = true;
+    collectionCloseArmTimer = null;
+  }, 350);
+};
+
+const recordCollection = openRecordCollection;
+
+const closeCollectionForm = () => {
+  if (collectionCloseArmTimer) {
+    clearTimeout(collectionCloseArmTimer);
+    collectionCloseArmTimer = null;
+  }
+  collectionCloseArmed.value = false;
+  showCollectionForm.value = false;
+  editingCollection.value = null;
+};
+
+const onCollectionOverlayBackdropClick = () => {
+  if (!collectionCloseArmed.value) return;
+  closeCollectionForm();
 };
 
 const deleteCollection = async (id) => {
@@ -3824,6 +5887,11 @@ const setFullPaymentAmount = () => {
   collectionForm.value.paymentAmount = remainingBalance.value;
 };
 
+const onCheckoutPaymentType = (type) => {
+  collectionForm.value.paymentType = type;
+  if (type === 'full') setFullPaymentAmount();
+};
+
 const validatePaymentAmount = () => {
   if (collectionForm.value.paymentType === 'full') {
     // For full payment, always match remaining balance
@@ -3843,6 +5911,8 @@ const validatePaymentAmount = () => {
 };
 
 const saveCollection = async () => {
+  if (collectionSaving.value) return;
+  collectionSaving.value = true;
   try {
     // Validation
     if (!collectionForm.value.collectionDate) {
@@ -3892,6 +5962,7 @@ const saveCollection = async () => {
       );
       
       showCollectionForm.value = false;
+      editingCollection.value = null;
       resetCollectionForm();
       loadCollections();
       loadARData();
@@ -3904,6 +5975,8 @@ const saveCollection = async () => {
   } catch (error) {
     console.error('Error saving collection:', error);
     showAlert('Failed to record collection', 'error');
+  } finally {
+    collectionSaving.value = false;
   }
 };
 
@@ -3944,9 +6017,9 @@ const generateProfitDistributionRecord = async () => {
     }
 
     const response = await financialPost(`${API_BASE_URL}/machinery-financial/profit-distribution/generate`, {
-      start_date: filters.value.start_date || null,
-      end_date: filters.value.end_date || null,
-      distribution_period: `${filters.value.start_date || 'beginning'} to ${filters.value.end_date || 'present'}`
+        start_date: filters.value.start_date || null,
+        end_date: filters.value.end_date || null,
+        distribution_period: `${filters.value.start_date || 'beginning'} to ${filters.value.end_date || 'present'}`
     });
 
     const data = await response.json();
@@ -3962,18 +6035,40 @@ const generateProfitDistributionRecord = async () => {
   }
 };
 
+const selectTab = (tabId, event) => {
+  activeTab.value = tabId;
+  event?.currentTarget?.blur?.();
+};
+
+const selectOrientation = (orientation, event) => {
+  printOrientation.value = orientation;
+  event?.currentTarget?.blur?.();
+};
+
+const selectReportType = (type, event) => {
+  selectedReportType.value = type;
+  // Clear sticky :hover/:focus on touch so .active styles paint immediately
+  event?.currentTarget?.blur?.();
+  generateReport(type);
+};
+
 const generateReport = async (type, options = {}) => {
   const { silent = false } = options;
   if (!authStore.currentUser?.id) {
     showAlert('User not authenticated', 'error');
     return;
   }
-  
+
+  // Select immediately so active fill is instant (before any await)
+  selectedReportType.value = type;
+  const requestId = ++reportRequestId;
   reportLoading.value = true;
   try {
     const response = await fetch(buildReportApiUrl({ type }), { headers: authHeaders() });
     const data = await response.json();
-    
+
+    if (requestId !== reportRequestId) return;
+
     if (data.success) {
       reportData.value = data.report;
       lastReportRequest.value = { type };
@@ -3984,10 +6079,13 @@ const generateReport = async (type, options = {}) => {
       showAlert(data.message || 'Failed to generate report', 'error');
     }
   } catch (error) {
+    if (requestId !== reportRequestId) return;
     console.error('Error generating report:', error);
     showAlert('Failed to generate report', 'error');
   } finally {
-    reportLoading.value = false;
+    if (requestId === reportRequestId) {
+      reportLoading.value = false;
+    }
   }
 };
 
@@ -4102,7 +6200,9 @@ const generateReportCustom = async (options = {}) => {
     showAlert('Please select both start and end dates', 'error');
     return;
   }
-  
+
+  selectedReportType.value = 'custom';
+  const requestId = ++reportRequestId;
   reportLoading.value = true;
   try {
     const response = await fetch(
@@ -4114,7 +6214,9 @@ const generateReportCustom = async (options = {}) => {
       { headers: authHeaders() }
     );
     const data = await response.json();
-    
+
+    if (requestId !== reportRequestId) return;
+
     if (data.success) {
       reportData.value = data.report;
       lastReportRequest.value = {
@@ -4129,319 +6231,201 @@ const generateReportCustom = async (options = {}) => {
       showAlert(data.message || 'Failed to generate report', 'error');
     }
   } catch (error) {
+    if (requestId !== reportRequestId) return;
     console.error('Error generating report:', error);
     showAlert('Failed to generate report', 'error');
   } finally {
-    reportLoading.value = false;
+    if (requestId === reportRequestId) {
+      reportLoading.value = false;
+    }
   }
 };
 
-// Print report function — opens popup with report content for printing
+// Print report — iframe print that also works on mobile Safari/Chrome
 let reportPrintFrame = null;
+let reportPrintBlobUrl = null;
+
+const removeMobilePrintOverlay = () => {
+  const overlay = document.getElementById('machinery-mobile-print-overlay');
+  if (overlay) overlay.remove();
+  document.documentElement.classList.remove('machinery-print-preview-open');
+  document.body.classList.remove('machinery-print-preview-open');
+  document.documentElement.style.removeProperty('overflow');
+  document.body.style.removeProperty('overflow');
+};
 
 const removeReportPrintFrame = () => {
+  removeMobilePrintOverlay();
   if (reportPrintFrame) {
     reportPrintFrame.remove();
     reportPrintFrame = null;
   }
-};
-
-/** Clone report DOM and replace fill-in inputs with printed underline text (inputs don't serialize in outerHTML). */
-const buildPrintableReportHtml = (root) => {
-  const clone = root.cloneNode(true);
-  const sheetFields = [
-    ['contactPerson', reportSheetMeta.value.contactPerson],
-    ['croppingPeriod', reportSheetMeta.value.croppingPeriod],
-    ['fcaAddress', reportSheetMeta.value.fcaAddress],
-    ['contactNumber', reportSheetMeta.value.contactNumber]
-  ];
-
-  for (const [field, value] of sheetFields) {
-    clone.querySelectorAll(`[data-sheet-field="${field}"]`).forEach((input) => {
-      const span = document.createElement('span');
-      span.className = 'collectibles-meta-fill collectibles-meta-fill-printed';
-      span.textContent = value || '';
-      if (!value) span.innerHTML = '&nbsp;';
-      const line = input.closest('.sheet-fill-line');
-      if (line) {
-        line.replaceWith(span);
-      } else {
-        input.replaceWith(span);
-      }
-    });
+  if (reportPrintBlobUrl) {
+    URL.revokeObjectURL(reportPrintBlobUrl);
+    reportPrintBlobUrl = null;
   }
-
-  // Never print the mobile card layout — desktop table only
-  clone.querySelectorAll('.fcr-mobile-list').forEach((el) => el.remove());
-
-  return clone.outerHTML;
 };
 
-/** Self-contained print CSS — iframe cannot rely on Vue scoped styles or viewport media queries. */
-const getMachineryReportPrintStyles = (orientation) => {
-  const pageSize = orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait';
-  return `
-    @page { size: ${pageSize}; margin: 8mm; }
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #0f172a;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+const buildPrintableReportHtml = (root) => buildPrintableSheetHtml(root, reportSheetMeta.value);
+
+const waitForPrintFrameAssets = (doc) => {
+  const images = Array.from(doc.images || []);
+  if (!images.length) return Promise.resolve();
+  return Promise.all(
+    images.map(
+      (img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true });
+              img.addEventListener('error', resolve, { once: true });
+            })
+    )
+  );
+};
+
+const isMobilePrintDevice = () =>
+  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 0 && window.matchMedia('(max-width: 900px)').matches) ||
+  window.matchMedia('(max-width: 768px)').matches;
+
+const getPrintPageMetrics = () => {
+  const landscape = printOrientation.value === 'landscape';
+  return {
+    landscape,
+    orientationLabel: landscape ? 'Landscape' : 'Portrait',
+    pageWidth: landscape ? 1123 : 794,
+    pageHeight: landscape ? 794 : 1123
+  };
+};
+
+const buildReportPrintMarkup = (printableHtml, { mobilePreview = false } = {}) => {
+  const { landscape, pageWidth, pageHeight } = getPrintPageMetrics();
+  const printStyles = getMachineryReportPrintStyles(printOrientation.value);
+
+  // Screen-only preview chrome — does not change @media print / printed output
+  const mobilePreviewStyles = mobilePreview
+    ? `
+    @media screen {
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #94a3b8 !important;
+        overflow-x: hidden !important;
+        min-height: 100% !important;
+      }
+      body {
+        padding: 12px 0 28px !important;
+      }
+      .mobile-print-stage {
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+      .mobile-print-page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: ${pageWidth}px;
+        min-height: ${pageHeight}px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28);
+        border-radius: 2px;
+        transform-origin: top left;
+        overflow: hidden;
+      }
+      .mobile-print-page #printable-report {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        box-sizing: border-box !important;
+      }
+      .mobile-print-page #printable-report .collectibles-form-sheet {
+        margin: 8px 0 12px !important;
+        padding: 12px 12px 14px !important;
+        border-radius: 8px !important;
+      }
+      .mobile-print-page #printable-report .collectibles-table-wrap,
+      .mobile-print-page #printable-report .fcr-responsive-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100% !important;
+      }
+      .mobile-print-page #printable-report table {
+        max-width: none;
+      }
     }
-    #printable-report {
-      margin: 0 !important;
-      padding: 0 !important;
-      border: none !important;
-      box-shadow: none !important;
-      background: #fff !important;
-      width: 100%;
+    @media print {
+      html, body {
+        background: #fff !important;
+        padding: 0 !important;
+      }
+      .mobile-print-stage {
+        display: block !important;
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .mobile-print-page {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        margin: 0 !important;
+        overflow: visible !important;
+      }
+      .mobile-print-page #printable-report {
+        padding: 0 !important;
+      }
     }
-    #printable-report .report-header {
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-      color: #fff;
-      padding: 16px 20px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    #printable-report .report-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    #printable-report .report-logo-image {
-      width: 52px;
-      height: 52px;
-      object-fit: contain;
-    }
-    #printable-report .report-meta { text-align: right; }
-    #printable-report .report-meta h3 { margin: 0 0 6px; font-size: 1.1rem; }
-    #printable-report .report-period-long,
-    #printable-report .report-generated { margin: 4px 0; font-size: 0.85rem; opacity: 0.92; }
-    #printable-report .report-footer {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-      text-align: center;
-      color: #64748b;
-      font-size: 11px;
-    }
-    #printable-report .collectibles-form-sheet {
-      margin: 16px 0 20px;
-      padding: 18px 20px 20px;
-      background: #fff;
-      border: 2px solid #0f172a;
-      border-radius: 12px;
-      box-shadow: none;
-      page-break-inside: avoid;
-    }
-    #printable-report .collectibles-form-title-block {
-      text-align: center;
-      margin-bottom: 14px;
-    }
-    #printable-report .collectibles-main-title {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #0f172a;
-    }
-    #printable-report .collectibles-main-subtitle {
-      margin: 5px 0 0;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #334155;
-    }
-    #printable-report .collectibles-meta-box {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-      background: #f8fafc;
-    }
-    #printable-report .collectibles-meta-split {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 24px;
-      align-items: start;
-    }
-    #printable-report .collectibles-meta-col {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-width: 0;
-    }
-    #printable-report .collectibles-meta-col-left {
-      padding-right: 12px;
-      border-right: 1px solid #cbd5e1;
-    }
-    #printable-report .collectibles-meta-col-right { padding-left: 4px; }
-    #printable-report .collectibles-meta-field-block {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      width: 100%;
-    }
-    #printable-report .collectibles-meta-label-sm {
-      font-size: 0.72rem;
-      font-weight: 800;
-      color: #0f172a;
-      line-height: 1.25;
-    }
-    #printable-report .collectibles-meta-fill,
-    #printable-report .collectibles-meta-fill-printed {
-      display: block;
-      width: 100%;
-      min-height: 22px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #1e293b;
-      border-bottom: 1px solid #334155;
-      padding: 2px 4px 4px;
-      line-height: 1.3;
-    }
-    #printable-report .sheet-fill-line,
-    #printable-report .sheet-fill-input { display: none !important; }
-    #printable-report .collectibles-table-wrap,
-    #printable-report .fcr-responsive-wrap {
-      overflow: visible !important;
-      width: 100%;
-    }
-    #printable-report .fcr-mobile-list { display: none !important; }
-    #printable-report .fcr-desktop-table {
-      display: block !important;
-      width: 100% !important;
-    }
-    #printable-report .collectibles-data-table,
-    #printable-report .farmer-clients-record-table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-      table-layout: fixed !important;
-      font-size: 0.62rem !important;
-      display: table !important;
-    }
-    #printable-report .farmer-clients-record-table thead { display: table-header-group !important; }
-    #printable-report .farmer-clients-record-table tbody { display: table-row-group !important; }
-    #printable-report .farmer-clients-record-table tfoot { display: table-footer-group !important; }
-    #printable-report .farmer-clients-record-table tr { display: table-row !important; }
-    #printable-report .collectibles-data-table th,
-    #printable-report .collectibles-data-table td,
-    #printable-report .farmer-clients-record-table th,
-    #printable-report .farmer-clients-record-table td {
-      display: table-cell !important;
-      border: 1px solid #1e293b !important;
-      padding: 4px 3px !important;
-      vertical-align: middle !important;
-      line-height: 1.25 !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-    }
-    #printable-report .collectibles-data-table th,
-    #printable-report .farmer-clients-record-table th {
-      background: #e2e8f0 !important;
-      font-weight: 800 !important;
-      color: #0f172a !important;
-      text-align: center !important;
-      font-size: 0.58rem !important;
-    }
-    #printable-report .farmer-clients-record-table td {
-      font-weight: 600 !important;
-      color: #0f172a !important;
-      font-size: 0.62rem !important;
-    }
-    #printable-report .farmer-clients-record-table .th-tl {
-      display: block;
-      margin-top: 2px;
-      font-size: 0.85em;
-      font-weight: 600;
-      color: #475569;
-      line-height: 1.15;
-    }
-    #printable-report .farmer-clients-record-table .fcr-col-client { width: 11%; text-align: left !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-loc { width: 10%; text-align: left !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-cat { width: 6%; text-align: center !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-date { width: 7%; text-align: center !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-fee { width: 9%; text-align: right !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-area { width: 7%; text-align: center !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-hrs { width: 5%; text-align: center !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-amt { width: 9%; text-align: right !important; }
-    #printable-report .farmer-clients-record-table .fcr-col-rcpt { width: 7%; text-align: center !important; }
-    #printable-report .farmer-clients-record-table .text-right { text-align: right !important; }
-    #printable-report .farmer-clients-record-table .fcr-total-row td {
-      background: #f1f5f9 !important;
-      font-weight: 800 !important;
-      border-top: 2px solid #0f172a !important;
-    }
-    #printable-report .collectibles-list-table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-      table-layout: fixed !important;
-      font-size: 0.68rem !important;
-      display: table !important;
-    }
-    #printable-report .collectibles-list-table thead { display: table-header-group !important; }
-    #printable-report .collectibles-list-table tbody { display: table-row-group !important; }
-    #printable-report .collectibles-list-table tfoot { display: table-footer-group !important; }
-    #printable-report .collectibles-list-table tr { display: table-row !important; }
-    #printable-report .collectibles-list-table th,
-    #printable-report .collectibles-list-table td {
-      display: table-cell !important;
-      border: 1px solid #1e293b !important;
-      padding: 5px 4px !important;
-      vertical-align: middle !important;
-      line-height: 1.25 !important;
-      word-wrap: break-word !important;
-    }
-    #printable-report .collectibles-list-table th {
-      background: #e2e8f0 !important;
-      font-weight: 800 !important;
-      text-align: center !important;
-      font-size: 0.62rem !important;
-    }
-    #printable-report .collectibles-list-table td {
-      font-weight: 600 !important;
-      font-size: 0.68rem !important;
-    }
-    #printable-report .collectibles-list-table .col-client { width: 22%; text-align: left !important; }
-    #printable-report .collectibles-list-table .col-ar { width: 15%; text-align: right !important; }
-    #printable-report .collectibles-list-table .col-cash { width: 18%; text-align: right !important; }
-    #printable-report .collectibles-list-table .col-date { width: 14%; text-align: center !important; }
-    #printable-report .collectibles-list-table .col-rcpt { width: 14%; text-align: center !important; }
-    #printable-report .collectibles-list-table .col-bal { width: 17%; text-align: right !important; }
-    #printable-report .collectibles-list-table .text-right { text-align: right !important; }
-    #printable-report .collectibles-list-table .fcr-total-row td {
-      background: #f1f5f9 !important;
-      font-weight: 800 !important;
-      border-top: 2px solid #0f172a !important;
-    }
-    #printable-report .collectibles-empty-note {
-      text-align: center;
-      color: #64748b;
-      padding: 12px !important;
-    }
-    #printable-report .report-plain-section,
-    #printable-report .report-section {
-      page-break-inside: avoid;
-      margin-bottom: 16px;
-    }
-    #printable-report .report-plain-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    #printable-report .report-plain-table th,
-    #printable-report .report-plain-table td {
-      border: 1px solid #e5e7eb;
-      padding: 8px 10px;
-    }
-    #printable-report .text-right { text-align: right; }
-  `;
+  `
+    : '';
+
+  const bodyHtml = mobilePreview
+    ? `<div class="mobile-print-stage"><div class="mobile-print-page" data-orientation="${landscape ? 'landscape' : 'portrait'}">${printableHtml}</div></div>`
+    : printableHtml;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>CalFFA Machinery Financial Report</title>
+  <style>${printStyles}${mobilePreviewStyles}</style>
+</head>
+<body>
+  ${bodyHtml}
+</body>
+</html>`;
+};
+
+const fitMobilePrintPreview = (iframe, pageWidth, pageHeight) => {
+  const doc = iframe.contentDocument;
+  if (!doc) return;
+  const stage = doc.querySelector('.mobile-print-stage');
+  const page = doc.querySelector('.mobile-print-page');
+  if (!stage || !page) return;
+
+  const viewportW = Math.max(280, iframe.clientWidth || doc.documentElement.clientWidth || 320);
+  const available = Math.max(260, viewportW - 16);
+  const scale = Math.min(1, available / pageWidth);
+
+  page.style.transform = 'none';
+  const naturalHeight = Math.max(pageHeight, page.scrollHeight || pageHeight);
+  const left = Math.max(0, (viewportW - pageWidth * scale) / 2);
+
+  page.style.transformOrigin = 'top left';
+  page.style.transform = `scale(${scale})`;
+  page.style.left = `${left}px`;
+  page.style.top = '0';
+  stage.style.height = `${Math.ceil(naturalHeight * scale)}px`;
 };
 
 const printReport = async () => {
@@ -4449,27 +6433,182 @@ const printReport = async () => {
     showAlert('No report data to print', 'error');
     return;
   }
-  
+
   const printContents = document.getElementById('printable-report');
   if (!printContents) {
     showAlert('Report content not found', 'error');
     return;
   }
-  await nextTick();
+
+  const mobile = isMobilePrintDevice();
+  const { landscape, orientationLabel, pageWidth, pageHeight } = getPrintPageMetrics();
+
+  // Build sync while still in the click gesture (needed for mobile print reliability)
+  const printableHtml = buildPrintableReportHtml(printContents);
+  const printMarkup = buildReportPrintMarkup(printableHtml, { mobilePreview: mobile });
 
   removeReportPrintFrame();
 
+  // Mobile: visible same-page A4 preview (scaled) + Print/Close bar
+  if (mobile) {
+    const overlay = document.createElement('div');
+    overlay.id = 'machinery-mobile-print-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', 'Print preview');
+    overlay.style.cssText = [
+      'position:fixed',
+      'inset:0',
+      'z-index:2147483000',
+      'display:flex',
+      'flex-direction:column',
+      'background:#64748b',
+      'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
+      'box-sizing:border-box'
+    ].join(';');
+
+    const bar = document.createElement('div');
+    bar.style.cssText = [
+      'flex:0 0 auto',
+      'display:flex',
+      'flex-wrap:wrap',
+      'gap:8px',
+      'align-items:center',
+      'padding:10px 12px',
+      'background:#0f172a',
+      'color:#fff',
+      'font-family:Segoe UI,Arial,sans-serif',
+      'box-shadow:0 2px 10px rgba(0,0,0,0.25)'
+    ].join(';');
+
+    const titleWrap = document.createElement('div');
+    titleWrap.style.cssText = 'flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:2px';
+
+    const hint = document.createElement('span');
+    hint.textContent = 'Print preview';
+    hint.style.cssText =
+      'font-size:13px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+
+    const sub = document.createElement('span');
+    sub.textContent = `${orientationLabel} · Tap Print when ready`;
+    sub.style.cssText = 'font-size:11px;font-weight:500;opacity:0.78;line-height:1.2';
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;flex:0 0 auto;gap:8px;align-items:center;margin-left:auto';
+
+    const orientChip = document.createElement('span');
+    orientChip.textContent = orientationLabel;
+    orientChip.style.cssText = [
+      'flex:0 0 auto',
+      'border-radius:999px',
+      'padding:6px 10px',
+      'font-size:11px',
+      'font-weight:700',
+      'letter-spacing:0.02em',
+      landscape ? 'background:#1d4ed8;color:#eff6ff' : 'background:#166534;color:#ecfdf5'
+    ].join(';');
+
+    const printBtn = document.createElement('button');
+    printBtn.type = 'button';
+    printBtn.textContent = 'Print';
+    printBtn.style.cssText =
+      'flex:0 0 auto;border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px;background:#16a34a;color:#fff';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText =
+      'flex:0 0 auto;border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px;background:#e2e8f0;color:#0f172a';
+
+    const frameWrap = document.createElement('div');
+    frameWrap.style.cssText = [
+      'flex:1 1 auto',
+      'min-height:0',
+      'position:relative',
+      'background:#94a3b8'
+    ].join(';');
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('title', 'Machinery financial report print');
+    iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;background:#94a3b8';
+
+    titleWrap.appendChild(hint);
+    titleWrap.appendChild(sub);
+    actions.appendChild(orientChip);
+    actions.appendChild(printBtn);
+    actions.appendChild(closeBtn);
+    bar.appendChild(titleWrap);
+    bar.appendChild(actions);
+    frameWrap.appendChild(iframe);
+    overlay.appendChild(bar);
+    overlay.appendChild(frameWrap);
+    document.body.appendChild(overlay);
+    document.documentElement.classList.add('machinery-print-preview-open');
+    document.body.classList.add('machinery-print-preview-open');
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    reportPrintFrame = iframe;
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    const iframeWindow = iframe.contentWindow;
+    if (!iframeDoc || !iframeWindow) {
+      removeReportPrintFrame();
+      showAlert('Unable to prepare print preview', 'error');
+      return;
+    }
+
+    iframeDoc.open();
+    iframeDoc.write(printMarkup);
+    iframeDoc.close();
+
+    const syncFit = () => fitMobilePrintPreview(iframe, pageWidth, pageHeight);
+    syncFit();
+    window.setTimeout(syncFit, 50);
+    window.setTimeout(syncFit, 250);
+
+    const onResize = () => syncFit();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    const stopFitListeners = () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+
+    const triggerPrint = () => {
+      try {
+        iframeWindow.focus();
+        iframeWindow.print();
+      } catch (error) {
+        console.error('Mobile print failed:', error);
+        showAlert('Tap Print again, or use your browser Share / Print menu.', 'error');
+      }
+    };
+
+    printBtn.addEventListener('click', triggerPrint);
+    closeBtn.addEventListener('click', () => {
+      stopFitListeners();
+      removeReportPrintFrame();
+    });
+
+    // Keep preview open; user taps Print with a fresh gesture
+    return;
+  }
+
+  await nextTick();
+
   const iframe = document.createElement('iframe');
+  iframe.setAttribute('title', 'Machinery financial report print');
   iframe.setAttribute('aria-hidden', 'true');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.border = '0';
-  iframe.style.opacity = '0';
-  iframe.style.pointerEvents = 'none';
-  // Match A4 width so table-layout: fixed computes the same as on desktop screen
-  iframe.style.width = printOrientation.value === 'landscape' ? '1123px' : '794px';
-  iframe.style.height = '1px';
+  iframe.style.cssText = [
+    'position:fixed',
+    'top:0',
+    'left:0',
+    `width:${pageWidth}px`,
+    `height:${pageHeight}px`,
+    'border:0',
+    'opacity:0.01',
+    'z-index:-1',
+    'pointer-events:none'
+  ].join(';');
 
   document.body.appendChild(iframe);
   reportPrintFrame = iframe;
@@ -4483,33 +6622,33 @@ const printReport = async () => {
     return;
   }
 
-  const printableHtml = buildPrintableReportHtml(printContents);
-
-  const printMarkup = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>CALFFA Machinery Financial Report</title>
-  <style>${getMachineryReportPrintStyles(printOrientation.value)}</style>
-</head>
-<body>
-  ${printableHtml}
-</body>
-</html>`;
-
   iframeDoc.open();
   iframeDoc.write(printMarkup);
   iframeDoc.close();
 
-  window.setTimeout(() => {
+  const cleanup = () => {
+    removeReportPrintFrame();
+    iframeWindow.removeEventListener('afterprint', cleanup);
+  };
+  iframeWindow.addEventListener('afterprint', cleanup, { once: true });
+  window.setTimeout(cleanup, 120000);
+
+  try {
+    await waitForPrintFrameAssets(iframeDoc);
+  } catch (_) {
+    /* ignore asset wait errors */
+  }
+
+  await new Promise((resolve) => window.setTimeout(resolve, 80));
+
+  try {
     iframeWindow.focus();
     iframeWindow.print();
-  }, 350);
-
-  iframeWindow.addEventListener('afterprint', removeReportPrintFrame, { once: true });
-
-  // Fallback cleanup for browsers that do not reliably fire afterprint
-  window.setTimeout(removeReportPrintFrame, 60000);
+  } catch (error) {
+    console.error('Print failed:', error);
+    showAlert('Unable to print this report. Please try again.', 'error');
+    cleanup();
+  }
 };
 
 const resetExpenseForm = () => {
@@ -4532,13 +6671,73 @@ const resetExpenseForm = () => {
 };
 
 const resetIncomeForm = () => {
+  editingManualIncomeId.value = null;
   incomeForm.value = {
-    date_of_income: '',
-    machinery_id: '',
-    booking_id: '',
+    source_name: '',
+    date_of_income: new Date().toISOString().split('T')[0],
     income_amount: '',
     remarks: ''
   };
+};
+
+const openManualIncomeForm = () => {
+  resetIncomeForm();
+  showIncomeForm.value = true;
+};
+
+const loadManualIncome = async () => {
+  try {
+    const params = buildParams({});
+    const response = await fetch(`${API_BASE_URL}/machinery-financial/manual-income?${params}`, {
+      headers: authHeaders()
+    });
+    const data = await response.json();
+    if (data.success) {
+      manualIncomeList.value = data.manual_income || [];
+    }
+  } catch (error) {
+    console.error('Error loading manual income:', error);
+  }
+};
+
+const toLocalDateInput = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const openEditManualIncome = (entry) => {
+  editingManualIncomeId.value = entry.id;
+  incomeForm.value = {
+    source_name: entry.source_name || '',
+    date_of_income: toLocalDateInput(entry.date_of_income),
+    income_amount: entry.income_amount,
+    remarks: entry.remarks || ''
+  };
+  showIncomeForm.value = true;
+};
+
+const deleteManualIncome = async (entry) => {
+  if (!confirm(`Delete manual income "${entry.source_name}" (₱${formatNumber(entry.income_amount)})? This cannot be undone.`)) {
+    return;
+  }
+  try {
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/manual-income/${entry.id}`);
+    const data = await response.json();
+    if (data.success) {
+      showAlert('Manual income deleted successfully', 'success');
+      loadIncome();
+      loadManualIncome();
+      loadProfitSummary();
+    } else {
+      showAlert(data.message || 'Failed to delete manual income', 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting manual income:', error);
+    showAlert('Failed to delete manual income', 'error');
+  }
 };
 
 const showAlert = (message, type = 'success') => {
@@ -4693,18 +6892,18 @@ const selectFarmer = (farmer) => {
   selectedFarmer.value = farmer;
   duesForm.value.farmer_id = farmer.id;
 };
-
-// Watch for admin barangay filter changes
 watch(selectedBarangayId, () => {
   if (isAdmin.value) {
     loadProfitSummary();
     loadExpenseBreakdown();
     loadBookingUsageStats();
+    loadManualIncome();
     if (activeTab.value === 'reports' && lastReportRequest.value) {
       refreshCurrentReport();
     } else {
       reportData.value = null;
       lastReportRequest.value = null;
+      selectedReportType.value = null;
     }
   }
 });
@@ -4716,13 +6915,11 @@ const applyMachineryFilterRefresh = () => {
   if (activeTab.value === 'expenses') {
     loadExpenses();
   }
-  if (activeTab.value === 'payments') {
-    loadBookingPayments();
-  }
   if (activeTab.value === 'ar') {
     loadARData();
     loadCollections();
     if (isPaymentVerifier.value) loadPendingBalanceSubmissions();
+    if (isPaymentVerifier.value) loadPendingDownPayments();
   }
 };
 
@@ -4730,13 +6927,19 @@ watch(() => filters.value.machinery_id, applyMachineryFilterRefresh);
 
 const getDefaultTabForRole = () => {
   if (isAdmin.value) return 'profit';
-  if (isTreasurer.value) return 'payments';
-  if (isPresident.value) return 'payments';
+  if (isTreasurer.value) return 'ar';
+  if (isPresident.value) return 'ar';
   return 'expenses';
 };
 
+// /association-dues is the dedicated URL for the dues tab
+const requestedTabFromRoute = () => {
+  if (route.path === '/association-dues') return 'dues';
+  return route.query.tab === 'monthly-dues' ? 'dues' : route.query.tab;
+};
+
 const resolveTabFromQuery = (tabQuery) => {
-  const validTabs = ['payments', 'expenses', 'income', 'dues', 'ar', 'profit', 'reports'];
+  const validTabs = ['expenses', 'income', 'dues', 'ar', 'inventory', 'profit', 'reports'];
   const requestedTab = tabQuery === 'monthly-dues' ? 'dues' : tabQuery;
 
   if (!requestedTab || !validTabs.includes(requestedTab)) {
@@ -4747,27 +6950,71 @@ const resolveTabFromQuery = (tabQuery) => {
     return getDefaultTabForRole();
   }
 
-  if (requestedTab === 'payments' && !isPaymentVerifier.value) {
+  if (requestedTab === 'inventory' && !canManage.value) {
     return getDefaultTabForRole();
   }
 
   return requestedTab;
 };
 
-const isDuesOnlyView = computed(() => {
-  const requestedTab = route.query.tab === 'monthly-dues' ? 'dues' : route.query.tab;
-  return requestedTab === 'dues' && canCollectDues.value;
-});
+const isDuesOnlyView = computed(() => requestedTabFromRoute() === 'dues' && canCollectDues.value);
+
+// Mobile detection — member detail renders as centered modal on small screens (Share Capital pattern)
+const isMobile = ref(false);
+let mobileMql = null;
+function updateIsMobile(e) {
+  isMobile.value = e && typeof e.matches === 'boolean'
+    ? e.matches
+    : (typeof window !== 'undefined' && window.innerWidth <= 768);
+}
+
+const showFarmerModal = computed(() => isMobile.value && !!selectedFarmer.value && activeTab.value === 'dues');
+const anyAppModalOpen = computed(() =>
+  showExpenseForm.value ||
+  showCollectionForm.value ||
+  showFarmerModal.value ||
+  showDuesForm.value ||
+  showGcashConfirmModal.value ||
+  showGcashRejectModal.value ||
+  showVerifyDpModal.value ||
+  showRecordDpModal.value ||
+  showRejectDpModal.value ||
+  showRejectRefundModal.value ||
+  showProcessRefundModal.value ||
+  (showReceiptModal.value && lastReceipt.value) ||
+  alert.value.show
+);
+
+function closeFarmerModal() {
+  selectedFarmer.value = null;
+  duesForm.value.farmer_id = '';
+}
+
+watch(anyAppModalOpen, (open) => {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('app-modal-open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}, { immediate: true });
 
 // Watch for changes to refresh consolidated income
 watch([income, collections, monthlyDues], () => {
   // This will trigger the consolidatedIncomeRecords computed property to update
 }, { deep: true });
 
+// Old link: /machinery-financial?tab=dues → new dedicated URL
+const redirectLegacyDuesUrl = () => {
+  if (route.path === '/machinery-financial' && ['dues', 'monthly-dues'].includes(String(route.query.tab || ''))) {
+    router.replace('/association-dues');
+    return true;
+  }
+  return false;
+};
+
 watch(
-  () => route.query.tab,
-  (tab) => {
-    activeTab.value = resolveTabFromQuery(tab);
+  () => [route.path, route.query.tab],
+  () => {
+    if (redirectLegacyDuesUrl()) return;
+    activeTab.value = resolveTabFromQuery(requestedTabFromRoute());
   },
   { immediate: true }
 );
@@ -4784,12 +7031,20 @@ const handleKeyDown = (e) => {
 };
 
 onMounted(async () => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    mobileMql = window.matchMedia('(max-width: 768px)');
+    isMobile.value = mobileMql.matches;
+    if (mobileMql.addEventListener) mobileMql.addEventListener('change', updateIsMobile);
+    else if (mobileMql.addListener) mobileMql.addListener(updateIsMobile);
+  }
+
   // Listen for Ctrl+P
   window.addEventListener('keydown', handleKeyDown);
 
   if (hasAccess.value) {
     loadExpenses();
     loadIncome();
+    loadManualIncome();
     loadARData();
     loadCollections();
     loadProfitSummary();
@@ -4801,49 +7056,100 @@ onMounted(async () => {
     loadEligibleFarmers();
     loadDuesSummary();
     if (isPaymentVerifier.value) {
-      loadBookingPayments();
       loadPendingBalanceSubmissions();
+      loadPendingDownPayments();
+      loadBookingPayments();
+      downPaymentStore.fetchStatus(selectedBarangayId.value || null);
     }
-    if (isAdmin.value) {
-      loadBarangays();
+    if (canManage.value) {
+      loadGcashInventory();
     }
+    loadBarangays();
   }
 
-  // Handle notification highlight
-  if (route.query.highlight && route.query.type === 'booking') {
-    highlightedBookingId.value = route.query.highlight;
-    // Switch to AR tab
-    activeTab.value = 'ar';
-    await nextTick();
-    setTimeout(() => {
-      const el = document.querySelector(`[data-booking-id="${route.query.highlight}"]`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      setTimeout(() => { highlightedBookingId.value = null; }, 6000);
-    }, 500);
+  // Handle notification highlight (also watched for in-page re-clicks via route.query.nav)
+  if (
+    route.query.highlight &&
+    ['gcash-loan', 'gcash-booking', 'gcash-history'].includes(String(route.query.type || ''))
+  ) {
+    await applyGcashNotificationDeepLink();
+  } else if (route.query.view === 'history' && (route.query.sid || route.query.focus)) {
+    await applyGcashNotificationDeepLink();
+  } else if (
+    route.query.highlight &&
+    ['booking', 'refund'].includes(String(route.query.type || ''))
+  ) {
+    await applyBookingNotificationDeepLink();
   }
 });
 
 onBeforeUnmount(() => {
+  clearGcashPendingQr();
+  if (collectionCloseArmTimer) {
+    clearTimeout(collectionCloseArmTimer);
+    collectionCloseArmTimer = null;
+  }
+  if (mobileMql) {
+    if (mobileMql.removeEventListener) mobileMql.removeEventListener('change', updateIsMobile);
+    else if (mobileMql.removeListener) mobileMql.removeListener(updateIsMobile);
+  }
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('app-modal-open');
+    document.body.style.overflow = '';
+  }
   window.removeEventListener('keydown', handleKeyDown);
   removeReportPrintFrame();
 });
 </script>
 
 <style scoped>
-/* Notification highlight for table rows */
+@import '../styles/compact-data-table.css';
+
+/* Notification highlight: dark fill in dark mode so white card text stays readable */
 .notification-highlight-row {
   animation: highlightRowPulse 2s ease-in-out 3;
-  background: #fef2f2 !important;
-  outline: 2px solid #ef4444;
+  background: rgba(127, 29, 29, 0.42) !important;
+  outline: 2px solid #f87171;
   outline-offset: -2px;
 }
 
 .notification-highlight-row td {
+  background: rgba(127, 29, 29, 0.42) !important;
+  color: var(--text-main, #eefde6);
+  font-weight: 600;
+}
+
+.fin-mobile-card.notification-highlight-row,
+.fin-mobile-card.notification-highlight-row .fin-mobile-card-name,
+.fin-mobile-card.notification-highlight-row .fin-mobile-meta-row {
+  color: var(--text-main, #eefde6);
+}
+
+.fin-mobile-card.notification-highlight-row .fin-mobile-label {
+  color: var(--text-muted, rgba(220, 238, 211, 0.78));
+}
+
+.financial-container.light-theme .notification-highlight-row {
+  background: #fef2f2 !important;
+  outline-color: #ef4444;
+}
+
+.financial-container.light-theme .notification-highlight-row td {
   background: #fef2f2 !important;
   color: #991b1b;
-  font-weight: 600;
+}
+
+.financial-container.light-theme .fin-mobile-card.notification-highlight-row {
+  background: #fff1f2 !important;
+}
+
+.financial-container.light-theme .fin-mobile-card.notification-highlight-row .fin-mobile-card-name,
+.financial-container.light-theme .fin-mobile-card.notification-highlight-row .fin-mobile-meta-row {
+  color: #14532d;
+}
+
+.financial-container.light-theme .fin-mobile-card.notification-highlight-row .fin-mobile-label {
+  color: #64748b;
 }
 
 @keyframes highlightRowPulse {
@@ -4868,13 +7174,19 @@ onBeforeUnmount(() => {
   --lime: #a3e635;
   --red: #f87171;
   
-  min-height: 100vh;
-  padding: 28px;
+  min-height: 0;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 2rem;
+  margin: 0 -1.5rem;
+  width: calc(100% + 3rem);
   background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
   position: relative;
   isolation: isolate;
   overflow: visible;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  border-radius: 18px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   color: var(--text-main);
 }
 
@@ -4933,72 +7245,435 @@ onBeforeUnmount(() => {
   z-index: 1;
 }
 
-.page-header {
-  margin-bottom: 28px;
-  padding: 36px 40px;
-  background: linear-gradient(135deg, rgba(28, 41, 31, 0.94) 0%, rgba(35, 54, 40, 0.9) 56%, rgba(48, 78, 62, 0.84) 100%);
-  border-radius: 26px;
-  border: 1px solid var(--glass-line);
-  box-shadow:
-    18px 18px 34px rgba(8, 14, 10, 0.5),
-    -14px -14px 26px rgba(42, 61, 46, 0.4),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.34);
+.page-header,
+.page-header-split {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 14px;
   position: relative;
+  overflow: hidden;
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+
+.machinery-financial-page > .page-header.page-header-split {
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header-actions {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.gcash-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 233, 188, 0.42);
+  background: linear-gradient(125deg, rgba(239, 120, 50, 0.88), rgba(105, 179, 111, 0.86));
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gcash-qr-card {
+  margin-bottom: 20px;
   overflow: hidden;
 }
 
-.header-content {
+.gcash-qr-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 16px;
+  align-items: start;
+}
+
+.gcash-qr-visual {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 760px;
-  margin-left: 0;
-  margin-right: auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.gcash-qr-frame {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 280px;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.gcash-qr-preview {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  display: block;
+}
+
+.gcash-qr-empty {
+  width: 100%;
+  max-width: 280px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed rgba(190, 235, 203, 0.35);
+  opacity: 0.85;
+}
+
+.gcash-qr-caption,
+.gcash-qr-meta {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.88;
+}
+
+.gcash-qr-info {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gcash-qr-heading {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.gcash-qr-info .gcash-qr-meta {
+  text-align: left;
+}
+
+.gcash-qr-file-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.gcash-qr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gcash-qr-choose,
+.gcash-qr-delete,
+.gcash-qr-save,
+.gcash-qr-history {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gcash-qr-choose {
+  border: 1px dashed rgba(190, 235, 203, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+}
+
+.gcash-qr-history {
+  border: 1px solid rgba(190, 235, 203, 0.35);
+  background: rgba(74, 222, 128, 0.12);
+  color: inherit;
+}
+
+.gcash-qr-delete {
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+  background: rgba(127, 29, 29, 0.35) !important;
+  color: #fecaca !important;
+  box-shadow: none !important;
+}
+
+.gcash-qr-text-btn {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.gcash-confirm-proof {
+  margin: 12px 0;
+}
+
+@media (min-width: 720px) {
+  .gcash-qr-layout {
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+    gap: 24px;
+    padding: 20px 22px;
+    align-items: center;
+  }
+
+  .gcash-qr-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .gcash-qr-choose,
+  .gcash-qr-delete,
+  .gcash-qr-save,
+  .gcash-qr-history {
+    width: auto;
+    min-width: 160px;
+  }
+}
+
+.financial-container.light-theme .gcash-qr-choose,
+.financial-container.light-theme .gcash-qr-history {
+  background: #fff;
+  border-color: #cfe6d6;
+  color: #14532d;
+}
+
+.financial-container.light-theme .gcash-qr-history {
+  background: #ecfdf3;
+}
+
+.financial-container.light-theme .gcash-qr-delete {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fecaca !important;
+}
+
+.financial-container.light-theme .gcash-header-btn {
+  color: #fff;
+}
+
+.page-header-text,
+.header-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: none;
+  margin: 0;
   align-items: flex-start;
   text-align: left;
 }
 
-.page-header::before {
+.page-header::before,
+.page-header-split::before {
   content: '';
   position: absolute;
-  inset: -35% -10% auto auto;
-  width: 240px;
-  height: 240px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(45, 212, 191, 0.22) 0%, rgba(45, 212, 191, 0) 68%);
-  pointer-events: none;
-}
-
-.page-header::after {
-  content: '';
-  position: absolute;
-  inset: auto auto -50% -8%;
+  top: -62px;
+  right: -72px;
   width: 220px;
   height: 220px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(163, 230, 53, 0.18) 0%, rgba(163, 230, 53, 0) 70%);
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 68%);
   pointer-events: none;
 }
 
-.page-header h1 {
-  font-size: 38px;
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.9px;
-  margin: 0;
-  background: linear-gradient(90deg, #86efac 0%, #4ade80 45%, #22c55e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.page-header::after,
+.page-header-split::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
+  pointer-events: none;
+}
+
+.page-header h1,
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.15rem;
+  color: #eefde6;
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
 }
 
 .page-subtitle {
-  color: var(--text-muted);
+  color: rgba(229, 235, 231, 0.82);
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.45;
-  font-weight: 500;
+  font-weight: 700;
+}
+
+/* Mobile card lists — hidden on desktop (shown at ≤768px) */
+.fin-mobile-list {
+  display: none;
+}
+
+.fin-desktop-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fin-desktop-empty {
+  display: block;
+}
+
+.fin-mobile-empty {
+  padding: 1.25rem 0.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.fin-mobile-card {
+  padding: 0.7rem 0.75rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 211, 178, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.fin-mobile-card.selected {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.12);
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25);
+  cursor: pointer;
+}
+
+.fin-mobile-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.fin-mobile-card-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-main, #ecfdf5);
+  word-break: break-word;
+}
+
+.fin-mobile-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  margin-bottom: 0.55rem;
+}
+
+.fin-mobile-meta-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.fin-mobile-label {
+  flex-shrink: 0;
+  min-width: 4.8rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(229, 235, 231, 0.55);
+}
+
+.fin-mobile-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(190, 235, 203, 0.12);
+}
+
+.fin-mobile-action {
+  flex: 1 1 auto;
+  min-height: 40px;
+  min-width: 0;
+  justify-content: center;
+  font-size: 0.78rem !important;
+  padding: 0.45rem 0.65rem !important;
+}
+
+.fin-mobile-action-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.fin-action-edit {
+  color: #052e16;
+  background: linear-gradient(135deg, #dcfce7, #86efac);
+  border-color: #15803d;
+}
+
+.fin-action-print {
+  color: #0c4a6e;
+  background: linear-gradient(135deg, #e0f2fe, #7dd3fc);
+  border-color: #0284c7;
+}
+
+.fin-action-delete {
+  color: #7f1d1d;
+  background: linear-gradient(135deg, #fee2e2, #fca5a5);
+  border-color: #dc2626;
+}
+
+.tools-card.filters-section {
+  border-radius: 14px;
 }
 
 .access-denied {
@@ -5041,9 +7716,9 @@ onBeforeUnmount(() => {
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .distribution-actions {
@@ -5056,16 +7731,15 @@ onBeforeUnmount(() => {
 .summary-card {
   background: linear-gradient(145deg, rgba(32, 48, 37, 0.96), rgba(24, 36, 28, 0.94));
   border: 1px solid rgba(190, 235, 203, 0.24);
-  border-radius: 18px;
-  padding: 22px 24px;
+  border-radius: 12px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   box-shadow:
-    12px 12px 24px rgba(8, 13, 10, 0.52),
-    0 0 0 1px rgba(20, 32, 24, 0.5),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -20px 24px rgba(0, 0, 0, 0.2);
+    8px 8px 16px rgba(8, 13, 10, 0.4),
+    0 0 0 1px rgba(20, 32, 24, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.06);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -5144,89 +7818,150 @@ onBeforeUnmount(() => {
 
 .card-label {
   color: #111;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 1.1px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   text-shadow: none;
 }
 
 .card-amount {
-  font-size: 33px;
+  font-size: 1.2rem;
   font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.7px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #1a5c2a;
   text-shadow: none;
 }
 
 .tabs-container {
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 10px;
   margin-bottom: 26px;
-  flex-wrap: nowrap;
   width: 100%;
 }
 
 .tab {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 22px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
   border: 1px solid rgba(134, 239, 172, 0.35);
   background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(220, 252, 231, 0.9));
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 800;
   color: #14532d;
   border-radius: 14px;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
   min-height: 52px;
-  flex: 1 1 0;
   text-align: center;
   box-shadow: 0 8px 16px rgba(3, 16, 10, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
-.tab-inner {
+.tab-label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.tab-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  color: currentColor;
-}
-
-.tab-label {
-  line-height: 1.25;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  line-height: 1.3;
+  white-space: normal;
+  text-align: center;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   min-width: 1.25rem;
   height: 1.25rem;
-  margin-left: 0.4rem;
+  margin-left: 0.35rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: #dc2626;
-  color: #fff;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1;
+  border: 1.5px solid #7f1d1d !important;
+  box-shadow: 0 1px 2px rgba(127, 29, 29, 0.25);
 }
 
+/* Keep red badge when active — white chip + forced-white tab text was invisible */
 .tab.active .tab-badge {
-  background: #fff;
-  color: #166534;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #7f1d1d !important;
+}
+
+.dp-queue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: visible !important;
+}
+
+.dp-queue-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1px rgba(127, 29, 29, 0.35);
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Light mode: white chip + dark red number (readable on green/orange primary buttons) */
+html body.glass-light .financial-container .dp-queue-btn .dp-queue-badge,
+html body .financial-container.light-theme .dp-queue-btn .dp-queue-badge,
+.financial-container.light-theme .dp-queue-btn .dp-queue-badge,
+body.glass-light .financial-container .dp-queue-badge {
+  background: #ffffff !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border: 1.5px solid #991b1b !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html body.glass-light .financial-container .dp-queue-btn:hover .dp-queue-badge,
+html body.glass-light .financial-container .dp-queue-btn:active .dp-queue-badge,
+html body.glass-light .financial-container .dp-queue-btn:focus .dp-queue-badge,
+html body .financial-container.light-theme .dp-queue-btn:hover .dp-queue-badge,
+html body .financial-container.light-theme .dp-queue-btn:active .dp-queue-badge,
+.financial-container.light-theme .dp-queue-btn:hover .dp-queue-badge,
+.financial-container.light-theme .dp-queue-btn:active .dp-queue-badge,
+.dp-queue-btn:hover .dp-queue-badge,
+.dp-queue-btn:active .dp-queue-badge,
+.dp-queue-btn:focus .dp-queue-badge,
+.dp-queue-btn:focus-visible .dp-queue-badge {
+  background: #ffffff !important;
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+  border-color: #7f1d1d !important;
 }
 
 .btn-link-inline {
@@ -5259,45 +7994,149 @@ onBeforeUnmount(() => {
   margin: 12px 0;
 }
 
+.dp-verify-modal {
+  width: min(22.5rem, calc(100vw - 1.5rem));
+  max-width: min(22.5rem, calc(100vw - 1.5rem));
+  border-radius: 14px;
+}
+
+.dp-verify-modal .modal-header {
+  padding: 0.7rem 0.9rem;
+}
+
+.dp-verify-modal .modal-header h2 {
+  font-size: 0.95rem;
+}
+
+.dp-verify-modal .btn-close {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.15rem;
+}
+
+.dp-verify-modal .modal-body {
+  padding: 0.7rem 0.9rem 0.85rem;
+}
+
+.dp-verify-modal .modal-body > p {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.dp-verify-modal .payment-verify-grid {
+  margin: 0 0 0.55rem;
+  gap: 0.4rem 0.65rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.dp-verify-modal .ctx-label {
+  font-size: 0.65rem;
+  margin-bottom: 0.1rem;
+}
+
+.dp-verify-modal .payment-verify-grid strong {
+  font-size: 0.8rem;
+}
+
+.dp-verify-modal .proof-preview img {
+  max-width: 140px;
+  max-height: 140px;
+  margin: 0 0 0.55rem;
+}
+
+.dp-verify-modal .form-group {
+  margin-bottom: 0.55rem;
+}
+
+.dp-verify-modal .form-group label {
+  font-size: 0.72rem;
+  margin-bottom: 0.25rem;
+}
+
+.dp-verify-modal .filter-input {
+  min-height: 34px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.dp-verify-modal .info-text {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+}
+
+.dp-verify-modal .modal-actions {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+}
+
+.dp-verify-modal .modal-actions .btn-primary {
+  width: 100%;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+}
+
 .payment-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.tab:hover {
+.tab:hover:not(.active) {
   background: linear-gradient(135deg, rgba(220, 252, 231, 1), rgba(187, 247, 208, 0.96));
   border-color: rgba(22, 163, 74, 0.45);
   transform: translateY(-2px);
   box-shadow: 0 12px 20px rgba(3, 16, 10, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-.tab.active {
+.tab.active,
+.tab.active:hover,
+.tab.active:focus,
+.tab.active:focus-visible,
+.tab.active:active {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%);
   border-color: rgba(167, 243, 208, 0.65);
   color: #ffffff;
   box-shadow: 0 12px 22px rgba(6, 78, 35, 0.35), inset 0 1px 0 rgba(220, 252, 231, 0.22);
-}
-
-.tab.active .tab-icon {
-  color: #ffffff;
+  transform: none;
+  filter: none;
+  transition: none;
 }
 
 @media (max-width: 768px) {
   .tabs-container {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
+    margin-bottom: 14px;
   }
 
   .tab {
-    padding: 12px 16px;
-    font-size: 0.9375rem;
-    min-height: 48px;
-    flex: 1 1 calc(50% - 10px);
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 0.72rem;
+    min-height: 40px;
+    white-space: normal;
+    border-radius: 10px;
+    line-height: 1.2;
   }
 
   .tab-label {
-    white-space: normal;
-    text-align: center;
+    gap: 0.25rem;
+    font-size: inherit;
+  }
+
+  .tab-badge {
+    min-width: 1.1rem;
+    height: 1.1rem;
+    margin-left: 0.15rem;
+    font-size: 0.65rem;
   }
 }
 
@@ -5313,7 +8152,11 @@ onBeforeUnmount(() => {
     inset 1px 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -26px 30px rgba(0, 0, 0, 0.2);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .tab-content::before {
@@ -5345,7 +8188,7 @@ onBeforeUnmount(() => {
 
 .section-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-main);
 }
@@ -5561,9 +8404,9 @@ onBeforeUnmount(() => {
 }
 
 .summary-container > .summary-card {
-  min-height: 148px;
+  min-height: 108px;
   height: 100%;
-  padding: 20px 16px;
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5676,6 +8519,31 @@ onBeforeUnmount(() => {
   transform: translateY(-1px);
 }
 
+.ar-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ar-row-actions .btn-sm {
+  min-height: 32px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.fin-mobile-card-actions.ar-mobile-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.fin-mobile-card-actions.ar-mobile-actions .fin-mobile-action {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
 .status-badge {
   display: inline-block;
   padding: 0.08rem 0.28rem;
@@ -5693,8 +8561,14 @@ onBeforeUnmount(() => {
 }
 
 .status-badge.partial-payment {
-  background: rgba(74, 222, 128, 0.2);
-  color: #d1fae5;
+  background: rgba(245, 208, 154, 0.35);
+  color: #f5e6c8;
+}
+
+.status-badge.verified {
+  background: rgba(74, 222, 128, 0.22);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
 .status-badge.unpaid {
@@ -5725,6 +8599,13 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(74, 222, 128, 0.35);
 }
 
+.income-table .badge-down-payment,
+.badge-down-payment {
+  background: rgba(167, 243, 208, 0.92);
+  color: #14532d;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+
 .income-table .badge-collection {
   background: rgba(96, 165, 250, 0.2);
   color: #bfdbfe;
@@ -5732,29 +8613,145 @@ onBeforeUnmount(() => {
 }
 
 .actions-cell {
-  display: inline-flex;
-  gap: 0.25rem;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .actions-cell .table-action-btn {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.actions-cell .table-action-btn + .table-action-btn {
+  margin-left: 0.25rem;
 }
 
 .actions-cell .table-action-btn svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.financial-container th.actions-col,
+.financial-container td.actions-cell {
+  text-align: center !important;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px 20px;
+  color: var(--text-soft);
+}
+
+.empty-state-hint {
+  margin: 8px auto 0;
+  max-width: 36rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+  opacity: 0.9;
+}
+
+.fin-mobile-empty .empty-state-hint {
+  margin-top: 6px;
+}
+
+.ar-tab-desc {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+.collections-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+
+.collections-search {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: min(18rem, 100%);
+  flex: 1 1 16rem;
+  max-width: 22rem;
+  padding: 0 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  background: rgba(8, 20, 14, 0.35);
+}
+
+.collections-search-icon {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  color: rgba(187, 247, 208, 0.75);
+  flex-shrink: 0;
+}
+
+.collections-search-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.collections-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 38px;
+  padding: 0.35rem 0 !important;
+  font-size: 0.88rem;
+  color: inherit;
+}
+
+.collections-note {
+  margin: 4px 0 0;
+  max-width: 40rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+
+.ar-list-note {
+  margin: 0 0 12px;
+}
+
+.income-amount-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.income-amount-kind {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #bbf7d0;
+}
+
+.income-dp-amount {
+  font-weight: 700;
+}
+
+.interest-due-hint {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
   color: var(--text-soft);
 }
 
@@ -5772,35 +8769,35 @@ onBeforeUnmount(() => {
 .profit-breakdown {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 12px;
   align-items: start;
 }
 
 .breakdown-card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(190, 235, 203, 0.18);
-  border-radius: 14px;
-  padding: 20px 22px;
+  border-radius: 12px;
+  padding: 12px 14px;
   backdrop-filter: blur(6px);
 }
 
 .breakdown-card h3 {
-  margin: 0 0 14px 0;
-  font-size: 16px;
+  margin: 0 0 8px 0;
+  font-size: 0.78rem;
   color: #b6f7cb;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.35px;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
+  padding-bottom: 6px;
 }
 
 .amount {
-  font-size: 29px;
+  font-size: 1.25rem;
   font-weight: 900;
   color: #4ade80;
   margin: 0;
-  text-shadow: 0 0 12px rgba(74, 222, 128, 0.35);
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
 }
 
 .amount.negative {
@@ -5810,16 +8807,16 @@ onBeforeUnmount(() => {
 .expense-items {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .expense-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 15px;
+  font-size: 0.78rem;
 }
 
 .expense-item span:first-child {
@@ -5830,7 +8827,7 @@ onBeforeUnmount(() => {
 .expense-item span:last-child {
   color: #86efac;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 0.78rem;
   font-family: monospace;
 }
 
@@ -5838,25 +8835,25 @@ onBeforeUnmount(() => {
   font-weight: 800;
   border-top: 1px solid rgba(190, 235, 203, 0.3);
   border-bottom: none;
-  margin-top: 4px;
-  padding-top: 8px;
+  margin-top: 2px;
+  padding-top: 6px;
 }
 
 .expense-item.total span:first-child {
   color: #eefde6;
-  font-size: 14px;
+  font-size: 0.78rem;
 }
 
 .expense-item.total span:last-child {
   color: #4ade80;
-  font-size: 16px;
+  font-size: 0.85rem;
 }
 
 .profit {
   background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(34, 197, 94, 0.08));
   border: 1px solid rgba(52, 211, 153, 0.25);
-  padding: 20px 22px;
-  border-radius: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
 }
 
 .profit-distribution-section {
@@ -5875,9 +8872,8 @@ onBeforeUnmount(() => {
 
 .distribution-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 360px));
-  gap: 32px;
-  
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin-top: 20px;
   justify-content: center;
 }
@@ -5965,6 +8961,26 @@ onBeforeUnmount(() => {
   color: #4ade80;
   background: rgba(74, 222, 128, 0.14);
   border-color: rgba(74, 222, 128, 0.35);
+}
+
+.distribution-card.per-member-card {
+  background: linear-gradient(160deg, rgba(125, 211, 252, 0.12) 0%, rgba(22, 35, 27, 0.9) 60%);
+  border-color: rgba(125, 211, 252, 0.28);
+}
+
+.distribution-card.per-member-card::before {
+  background: linear-gradient(90deg, #0284c7, #7dd3fc);
+}
+
+.distribution-card.per-member-card .distribution-icon {
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.14);
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+.distribution-card.per-member-card .distribution-content .amount {
+  color: #7dd3fc;
+  text-shadow: 0 0 14px rgba(125, 211, 252, 0.35);
 }
 
 .distribution-content {
@@ -6090,7 +9106,7 @@ onBeforeUnmount(() => {
   transform: translateY(-2px);
 }
 
-.modal-overlay {
+.modal-overlay:not(.app-modal-overlay) {
   position: fixed;
   top: 0;
   left: 0;
@@ -6214,8 +9230,26 @@ onBeforeUnmount(() => {
 
 .expense-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.55rem 0.65rem;
+}
+
+.expense-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.65rem;
+}
+
+.auto-receipt-inline {
+  margin: 0 0 0.55rem;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  line-height: 1.35;
+}
+
+.expense-total-group {
+  margin-top: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .total-input {
@@ -6247,48 +9281,73 @@ onBeforeUnmount(() => {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.alert {
+.alert-center-stack {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 16px 20px;
-  border-radius: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 13000;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  z-index: 10060;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
-  animation: slideUp 0.3s ease-out;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  isolation: isolate;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  min-width: 320px;
-  max-width: 520px;
+  gap: 0.6rem;
+  width: min(420px, calc(100vw - 2rem));
+  pointer-events: none;
 }
 
-@keyframes slideUp {
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 14px;
+  text-align: left;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+  pointer-events: auto;
+  animation: alert-pop-in 0.18s ease-out;
+  isolation: isolate;
+  min-width: 0;
+}
+
+@keyframes alert-pop-in {
   from {
-    transform: translateY(100px);
     opacity: 0;
+    transform: scale(0.94);
   }
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: scale(1);
   }
 }
 
 .alert-success {
-  background: #ecfdf5 !important;
-  color: #14532d !important;
-  border-color: #86efac !important;
+  background: rgba(6, 95, 70, 0.94) !important;
+  color: #d1fae5 !important;
+  border: none !important;
+  border-left: 4px solid #10b981 !important;
 }
 
 .alert-error {
-  background: #fef2f2 !important;
+  background: rgba(127, 29, 29, 0.94) !important;
+  color: #fecaca !important;
+  border: none !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.alert-center-stack.light-theme .alert-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-left: 4px solid #16a34a !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
+}
+
+.alert-center-stack.light-theme .alert-error {
+  background: #fee2e2 !important;
   color: #991b1b !important;
-  border-color: #fca5a5 !important;
+  border-left: 4px solid #dc2626 !important;
+  box-shadow: 0 8px 24px rgba(153, 27, 27, 0.15) !important;
 }
 
 .alert-message {
@@ -6858,7 +9917,9 @@ onBeforeUnmount(() => {
   padding: 0.1rem 0.45rem;
   border-radius: 999px;
   background: #e5e7eb;
+  color: #1f2937;
   font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .section-hint {
@@ -6868,34 +9929,41 @@ onBeforeUnmount(() => {
 }
 
 .transaction-context-panel {
-  margin-bottom: 1rem;
-  padding: 1rem;
+  margin-bottom: 0.65rem;
+  padding: 0.65rem 0.75rem;
   border-radius: 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: rgba(15, 35, 24, 0.72);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: var(--text-main);
 }
 
 .transaction-context-panel h3 {
-  margin: 0 0 0.75rem;
-  font-size: 0.95rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  color: var(--text-main);
 }
 
 .context-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.65rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.4rem 0.75rem;
+}
+
+.context-grid strong {
+  color: var(--text-main);
+  font-size: 0.82rem;
 }
 
 .ctx-label {
   display: block;
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: 0.68rem;
+  color: var(--text-soft);
 }
 
 .context-hint {
-  margin: 0.75rem 0 0;
-  font-size: 0.85rem;
-  color: #166534;
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-soft);
 }
 
 .btn-sm {
@@ -6909,14 +9977,31 @@ onBeforeUnmount(() => {
   color: #991b1b;
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.18rem 0.52rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
 .badge-paid {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(74, 222, 128, 0.16);
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
 .badge-unpaid {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.35);
 }
 
 .text-red {
@@ -7014,32 +10099,41 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 14px 18px;
+  padding: 8px 10px;
   border: 1px solid rgba(150, 203, 171, 0.38);
-  border-radius: 10px;
+  border-radius: 8px;
   background: linear-gradient(138deg,
     rgba(174, 112, 35, 0.76) 0%,
     rgba(124, 166, 74, 0.72) 100%);
   color: #f7fff9;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.12s ease, border-color 0.12s ease;
   flex: 1;
-  min-width: 80px;
+  min-width: 0;
+  min-height: 40px;
 }
 
-.report-type-btn:hover {
+.report-type-btn:hover:not(.active) {
   border-color: rgba(182, 238, 201, 0.58);
   transform: translateY(-1px);
   filter: brightness(1.06) saturate(1.04);
 }
 
-.report-type-btn.active {
+.report-type-btn.active,
+.report-type-btn.active:hover,
+.report-type-btn.active:focus,
+.report-type-btn.active:focus-visible,
+.report-type-btn.active:active {
   border-color: rgba(196, 246, 213, 0.76);
   background: linear-gradient(138deg,
     rgba(221, 126, 33, 0.92) 0%,
     rgba(102, 182, 102, 0.9) 100%);
   color: #ffffff;
   box-shadow: 0 8px 20px rgba(62, 116, 72, 0.28);
+  transition: none;
+  filter: none;
+  transform: none;
+  opacity: 1;
 }
 
 .report-type-btn:disabled {
@@ -7047,46 +10141,55 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
+.report-type-btn.active:disabled {
+  opacity: 1;
+  cursor: pointer;
+}
+
 .report-type-btn .btn-icon {
-  font-size: 1.45rem;
-  margin-bottom: 4px;
+  font-size: 1rem;
+  margin-bottom: 2px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .report-type-btn .btn-text {
-  font-size: 1.125rem;
-  font-weight: 800;
-  line-height: 1.25;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .custom-date-toggle {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(148, 196, 165, 0.26);
 }
 
 .checkbox-inline {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   cursor: pointer;
-  font-size: 1.125rem;
+  font-size: 0.72rem;
   color: #ecfdf5;
-  font-weight: 700;
+  font-weight: 600;
+  min-height: 28px;
+  line-height: 1.2;
 }
 
 .checkbox-inline input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  margin: 0;
   accent-color: #16a34a;
 }
 
 .custom-date-inputs {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 12px;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px;
   background: rgba(12, 32, 23, 0.58);
   border-radius: 8px;
   border: 1px solid rgba(132, 182, 150, 0.24);
@@ -7145,28 +10248,30 @@ onBeforeUnmount(() => {
 .filter-checkboxes {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 3px;
   align-items: stretch;
 }
 
 @media (min-width: 1180px) {
   .filter-checkboxes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
   }
 }
 
 .filter-checkbox {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 6px;
   box-sizing: border-box;
   width: 100%;
-  min-height: 56px;
-  padding: 12px 14px;
+  min-height: 28px;
+  height: auto;
+  padding: 4px 8px;
   background: linear-gradient(140deg,
     rgba(18, 42, 31, 0.9) 0%,
     rgba(23, 51, 38, 0.92) 100%);
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1px solid rgba(136, 186, 153, 0.32);
   cursor: pointer;
   transition: all 0.2s;
@@ -7178,27 +10283,27 @@ onBeforeUnmount(() => {
   background: linear-gradient(140deg,
     rgba(22, 50, 36, 0.95) 0%,
     rgba(26, 59, 43, 0.97) 100%);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .filter-checkbox span {
   flex: 1;
   min-width: 0;
   color: #ffffff;
-  font-weight: 700;
-  font-size: 1.0625rem;
+  font-weight: 600;
+  font-size: 0.72rem;
   letter-spacing: 0.01em;
-  line-height: 1.35;
+  line-height: 1.2;
   white-space: normal;
   word-break: break-word;
   overflow: visible;
 }
 
 .filter-checkbox input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  margin-top: 1px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  margin: 0;
   flex-shrink: 0;
   accent-color: #16a34a;
 }
@@ -7220,7 +10325,7 @@ onBeforeUnmount(() => {
 
 .orientation-label {
   display: block;
-  font-size: 1.0625rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #d8f3e3;
   margin-bottom: 8px;
@@ -7233,27 +10338,32 @@ onBeforeUnmount(() => {
 
 .orient-btn {
   flex: 1;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border: 1px solid rgba(143, 194, 162, 0.4);
   border-radius: 8px;
   background: linear-gradient(135deg,
     rgba(173, 108, 40, 0.78),
     rgba(93, 168, 96, 0.78));
   cursor: pointer;
-  font-size: 1.0625rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   line-height: 1.25;
-  transition: all 0.2s;
+  transition: transform 0.12s ease, border-color 0.12s ease;
   text-align: center;
   color: #f6fff9;
+  min-height: 36px;
 }
 
-.orient-btn:hover {
+.orient-btn:hover:not(.active) {
   border-color: rgba(191, 242, 207, 0.72);
   transform: translateY(-1px);
 }
 
-.orient-btn.active {
+.orient-btn.active,
+.orient-btn.active:hover,
+.orient-btn.active:focus,
+.orient-btn.active:focus-visible,
+.orient-btn.active:active {
   border-color: rgba(201, 248, 215, 0.82);
   background: linear-gradient(135deg,
     rgba(220, 123, 31, 0.95),
@@ -7261,28 +10371,37 @@ onBeforeUnmount(() => {
   color: #ffffff;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(55, 110, 68, 0.3);
+  transition: none;
+  filter: none;
+  transform: none;
 }
 
 .btn-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 13px 16px;
+  gap: 6px;
+  padding: 8px 12px;
   border: 1px solid rgba(152, 203, 171, 0.45);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1.125rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   line-height: 1.25;
   transition: all 0.2s;
   color: #f6fff9;
-  box-shadow: 0 6px 16px rgba(7, 15, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(7, 15, 11, 0.25);
+  min-height: 36px;
 }
 
 .btn-action.print {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: white;
+}
+
+.btn-action.print.btn-action-icon {
+  padding: 8px 10px;
+  min-width: 36px;
 }
 
 .btn-action.print:hover {
@@ -7318,7 +10437,7 @@ onBeforeUnmount(() => {
 }
 
 .btn-action .btn-icon {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
@@ -7334,6 +10453,10 @@ onBeforeUnmount(() => {
 
 .report-display {
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: linear-gradient(180deg, #f6fdf9 0%, #eefaf3 48%, #f2fbf6 100%);
   border-radius: 20px;
   padding: 28px;
@@ -7550,13 +10673,17 @@ onBeforeUnmount(() => {
 @media (max-width: 720px) {
   .collectibles-meta-split {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 4px;
+  }
+
+  .collectibles-meta-col {
+    gap: 3px;
   }
 
   .collectibles-meta-col-left {
     padding-right: 0;
     border-right: none;
-    padding-bottom: 10px;
+    padding-bottom: 4px;
     border-bottom: 1px solid #cbd5e1;
   }
 
@@ -7819,6 +10946,46 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+/* Machinery financial report tables (Summary, Distribution, Transactions, Expenses, Bookings) */
+.mfr-summary-table .mfr-col-item { width: 50%; text-align: left; }
+.mfr-summary-table .mfr-col-amt { width: 25%; text-align: right; }
+.mfr-summary-table .mfr-col-rec { width: 25%; text-align: center; }
+
+.mfr-distribution-table .mfr-col-alloc { width: 45%; text-align: left; }
+.mfr-distribution-table .mfr-col-share { width: 15%; text-align: center; }
+.mfr-distribution-table .mfr-col-amt { width: 40%; text-align: right; }
+
+.mfr-transactions-table .mfr-col-date { width: 11%; text-align: center; }
+.mfr-transactions-table .mfr-col-type { width: 12%; text-align: center; }
+.mfr-transactions-table .mfr-col-mach { width: 14%; text-align: left; }
+.mfr-transactions-table .mfr-col-desc { width: 28%; text-align: left; }
+.mfr-transactions-table .mfr-col-farmer { width: 18%; text-align: left; }
+.mfr-transactions-table .mfr-col-amt { width: 17%; text-align: right; }
+
+.mfr-expense-table .mfr-col-date { width: 8%; text-align: center; }
+.mfr-expense-table .mfr-col-mach { width: 10%; text-align: left; }
+.mfr-expense-table .mfr-col-desc { width: 16%; text-align: left; }
+.mfr-expense-table .mfr-col-ref { width: 7%; text-align: center; }
+.mfr-expense-table .mfr-col-sm { width: 9%; text-align: right; }
+.mfr-expense-table .mfr-col-amt { width: 11%; text-align: right; }
+
+.mfr-bookings-table .mfr-col-date { width: 10%; text-align: center; }
+.mfr-bookings-table .mfr-col-ref { width: 9%; text-align: center; }
+.mfr-bookings-table .mfr-col-mach { width: 14%; text-align: left; }
+.mfr-bookings-table .mfr-col-farmer { width: 16%; text-align: left; }
+.mfr-bookings-table .mfr-col-status { width: 12%; text-align: center; }
+.mfr-bookings-table .mfr-col-amt { width: 13%; text-align: right; }
+
+.mfr-expense-table .fcr-total-row td,
+.mfr-bookings-table .fcr-total-row td,
+.mfr-transactions-table .fcr-total-row td,
+.mfr-summary-table .fcr-total-row td,
+.mfr-distribution-table .fcr-total-row td {
+  background: #f1f5f9;
+  font-weight: 800;
+  border-top: 2px solid #0f172a;
+}
+
 /* Farmer Clients Transaction Record — fluid table + mobile cards */
 .farmer-clients-record-sheet {
   margin-top: 0;
@@ -7955,6 +11122,11 @@ onBeforeUnmount(() => {
   word-break: break-word;
 }
 
+.fcr-mobile-value-strong {
+  font-weight: 800;
+  color: #0f172a;
+}
+
 .fcr-mobile-empty {
   margin: 0;
   padding: 16px;
@@ -7966,13 +11138,279 @@ onBeforeUnmount(() => {
   background: #f8fafc;
 }
 
-@media (max-width: 768px) {
-  .fcr-desktop-table {
-    display: none;
+@media (max-width: 1100px) {
+  :deep(.fcr-desktop-table) {
+    display: none !important;
   }
 
-  .fcr-mobile-list {
-    display: block;
+  :deep(.fcr-mobile-list) {
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  :deep(.collectibles-table-wrap),
+  :deep(.fcr-responsive-wrap) {
+    overflow: visible;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .collectibles-form-sheet {
+    padding: 12px 10px 14px;
+    margin: 14px 0 18px;
+    border-radius: 10px;
+  }
+
+  .report-display {
+    padding: 12px 8px;
+    border-radius: 12px;
+    overflow-x: hidden;
+  }
+
+  .report-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .report-header .report-logo,
+  .report-header .report-meta {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .report-header .report-logo {
+    flex-direction: column;
+  }
+
+  .report-generator-panel {
+    padding: 14px 12px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+  }
+
+  .report-options-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .report-option-card {
+    padding: 14px 12px;
+  }
+
+  .report-option-card h4 {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+  }
+
+  .report-type-buttons {
+    flex-direction: column;
+  }
+
+  .report-type-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .custom-date-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .custom-date-toggle {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .checkbox-inline {
+    min-height: 26px;
+    gap: 5px;
+    font-size: 0.68rem;
+  }
+
+  .checkbox-inline input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+  }
+
+  .date-input-group {
+    width: 100%;
+  }
+
+  .filter-checkboxes {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-machinery-filter-bar {
+    margin-bottom: 14px;
+  }
+
+  .reports-machinery-filter-bar .filter-group {
+    width: 100%;
+  }
+
+  .reports-machinery-filter-bar .filter-input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .action-buttons .btn-action {
+    flex: 1 1 calc(50% - 4px);
+    width: auto;
+    min-width: 0;
+    justify-content: center;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+
+  .action-buttons .btn-action.print {
+    flex: 0 0 auto;
+  }
+
+  .orientation-toggle {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .orient-btn {
+    width: auto;
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+
+  .report-type-buttons {
+    gap: 6px;
+  }
+
+  .report-type-btn {
+    padding: 7px 6px;
+    min-height: 38px;
+    font-size: 0.72rem;
+  }
+
+  .report-option-card {
+    padding: 12px;
+  }
+
+  .report-option-card h4 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+
+  .financial-container .tab-content {
+    padding: 14px 10px;
+    border-radius: 14px;
+    overflow: visible;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+  }
+
+  .profit-breakdown {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .breakdown-card,
+  .profit.breakdown-card,
+  .profit {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .breakdown-card h3 {
+    font-size: 0.72rem;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+  }
+
+  .amount {
+    font-size: 1.05rem;
+  }
+
+  .expense-item {
+    padding: 3px 0;
+    font-size: 0.72rem;
+  }
+
+  .expense-item span:last-child,
+  .expense-item.total span:last-child {
+    font-size: 0.72rem;
+  }
+
+  .usage-leaders-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .usage-leaders-card .section-subheader h3 {
+    font-size: 0.85rem;
+  }
+
+  .fin-mobile-card {
+    padding: 0.55rem 0.6rem 0.5rem;
+  }
+
+  .fin-mobile-card-name {
+    font-size: 0.85rem;
+  }
+
+  .fin-mobile-label {
+    font-size: 0.58rem;
+    min-width: 4rem;
+  }
+
+  .fin-mobile-meta-row {
+    font-size: 0.72rem;
+  }
+
+  .filter-checkbox {
+    min-height: 26px;
+    padding: 3px 7px;
+    gap: 5px;
+  }
+
+  .filter-checkbox span {
+    font-size: 0.68rem;
+    line-height: 1.15;
+  }
+
+  .filter-checkbox input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+  }
+
+  .filter-checkboxes {
+    gap: 2px;
   }
 }
 
@@ -8038,7 +11476,7 @@ onBeforeUnmount(() => {
     border-radius: 14px;
   }
 
-  .farmer-clients-record-sheet.collectibles-form-sheet {
+  .collectibles-form-sheet {
     padding: 14px 12px;
   }
 
@@ -8057,38 +11495,67 @@ onBeforeUnmount(() => {
     border-radius: 10px;
   }
 
-  .farmer-clients-record-sheet.collectibles-form-sheet {
+  .collectibles-form-sheet {
     padding: 10px 8px;
     border-width: 1px;
   }
 
   .collectibles-form-title-block {
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
 
   .collectibles-main-title {
-    font-size: 1rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
   }
 
   .collectibles-main-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    margin-top: 1px;
   }
 
   .collectibles-meta-box-compact {
-    padding: 8px;
+    padding: 4px 6px;
+    margin-bottom: 6px;
   }
 
   .collectibles-meta-label-sm {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
+    line-height: 1.15;
   }
 
-  .collectibles-meta-fill,
+  .collectibles-meta-fill {
+    font-size: 0.62rem;
+    min-height: 14px;
+    line-height: 1.15;
+    padding: 0 2px 1px;
+  }
+
+  /* Keep contact fill fields as visible compact textboxes on small screens */
+  .sheet-fill-line {
+    min-height: 28px;
+    padding: 0;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #ffffff;
+  }
+
   .sheet-fill-input {
+    font-size: 0.68rem;
+    min-height: 26px;
+    line-height: 1.2;
+    padding: 4px 8px;
+  }
+
+  .fcr-mobile-label {
+    flex: 0 0 42%;
+    max-width: 42%;
     font-size: 0.68rem;
   }
 
-  .sheet-fill-line {
-    min-height: 26px;
+  .fcr-mobile-value {
+    font-size: 0.75rem;
   }
 }
 
@@ -8301,10 +11768,10 @@ onBeforeUnmount(() => {
 .barangay-context {
   background: rgba(22, 163, 74, 0.14);
   border: 1px solid rgba(74, 222, 128, 0.24);
-  border-radius: 12px;
-  padding: 12px 20px;
-  margin-bottom: 20px;
-  text-align: center;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  text-align: left;
   backdrop-filter: blur(10px);
 }
 
@@ -8313,7 +11780,8 @@ onBeforeUnmount(() => {
   border-color: rgba(74, 222, 128, 0.2);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  text-align: left;
 }
 
 .context-badge {
@@ -8332,7 +11800,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 2px;
+  padding: 10px 12px;
+  min-height: 0;
 }
 
 .summary-cards > .summary-card .card-content {
@@ -8341,67 +11811,76 @@ onBeforeUnmount(() => {
 
 .summary-cards > .summary-card .card-label {
   color: #111827;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  margin-bottom: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 
 .summary-cards > .summary-card .card-amount {
   color: #111827;
-  font-size: clamp(1.85rem, 4.2vw, 2.25rem);
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 /* Expense Breakdown readability — dark mode only */
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item {
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
-  font-weight: 800;
+  font-weight: 700;
   color: #effbe8;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.15px;
+  font-size: 0.78rem;
 }
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
-  font-weight: 900;
-  font-size: 15px;
+  font-weight: 800;
+  font-size: 0.78rem;
   color: #f8fff5;
 }
 
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
 .financial-container:not(.light-theme) .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .admin-filter {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 0;
+  width: 100%;
 }
 
 .admin-filter label {
   font-weight: 700;
-  color: var(--text-main);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-soft);
 }
 
 .barangay-select {
-  padding: 10px 14px;
+  padding: 7px 10px;
   border: 1px solid rgba(190, 235, 203, 0.35);
   border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 650;
   color: #f3ffef;
   background: rgba(25, 37, 29, 0.96);
-  min-width: 270px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  min-height: 36px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 14px rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 
 .barangay-select:focus {
@@ -8415,50 +11894,548 @@ onBeforeUnmount(() => {
   color: #142016;
 }
 
-/* Profit distribution cards: centered 3-column layout with wider spacing */
+/* Profit distribution cards: 2×2 compact grid */
 .profit-distribution-section .distribution-grid {
-  grid-template-columns: repeat(3, minmax(250px, 320px));
-  column-gap: 56px;
-  row-gap: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 14px;
   justify-content: center;
   align-items: stretch;
   width: 100%;
-  margin-top: 28px;
+  max-width: 720px;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 1200px) {
   .profit-distribution-section .distribution-grid {
-    grid-template-columns: repeat(2, minmax(240px, 320px));
-    column-gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 14px;
+    row-gap: 12px;
+    max-width: 640px;
   }
 }
 
 @media (max-width: 768px) {
   .profit-distribution-section .distribution-grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    margin-left: auto;
-    margin-right: auto;
-    row-gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    column-gap: 8px;
+    row-gap: 8px;
   }
 
-  .page-header {
-    padding: 26px 20px;
-    border-radius: 20px;
+  .profit-distribution-section {
+    margin-top: 22px;
+    padding-top: 16px;
   }
 
+  .profit-distribution-section h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .distribution-card {
+    padding: 10px 8px 10px;
+    border-radius: 12px;
+    gap: 0;
+  }
+
+  .distribution-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+  }
+
+  .distribution-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .distribution-content h4 {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .distribution-content .percentage {
+    font-size: 0.7rem;
+    padding: 1px 8px;
+    margin-bottom: 6px;
+  }
+
+  .distribution-content .amount {
+    font-size: 0.95rem;
+    line-height: 1.15;
+  }
+
+  /* ===== Mobile page layout (aligned with Machinery Management) ===== */
+  .financial-container.machinery-financial-page,
+  .financial-container.page-container {
+    margin: 0 -0.75rem;
+    width: calc(100% + 1.5rem);
+    max-width: none;
+    padding: 0.75rem;
+    border-radius: 0;
+    overflow: visible;
+    min-height: 0;
+    touch-action: pan-y;
+  }
+
+  .page-header,
+  .page-header-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.15rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .page-header-actions {
+    width: 100%;
+    margin-top: 0.45rem;
+  }
+
+  .gcash-header-btn {
+    width: 100%;
+  }
+
+  .page-header::after,
+  .page-header-split::after {
+    display: none;
+  }
+
+  .page-header-text,
   .header-content {
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
   }
 
-  .page-header h1 {
-    font-size: 30px;
-    line-height: 1.12;
+  .page-header h1,
+  .page-title {
+    font-size: 1.2rem !important;
+    margin: 0;
+    line-height: 1.25;
+    color: #eefde6;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
   }
 
   .page-subtitle {
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .summary-cards,
+  .summary-cards.stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .stats-grid:not(.summary-cards) {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .summary-card,
+  .stat-card {
+    padding: 8px 10px;
+    gap: 4px;
+    border-radius: 10px;
+    min-height: 0;
+  }
+
+  .summary-cards > .summary-card {
+    padding: 8px 10px;
+    gap: 2px;
+  }
+
+  .summary-card .card-label,
+  .summary-cards > .summary-card .card-label,
+  .stat-label {
+    font-size: 0.58rem !important;
+    margin-bottom: 1px;
+  }
+
+  .summary-card .card-amount,
+  .summary-cards > .summary-card .card-amount,
+  .stat-value {
+    font-size: 0.92rem !important;
+    line-height: 1.15;
+  }
+
+  .summary-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .summary-container > .summary-card {
+    min-height: 0;
+    padding: 10px 12px;
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 8px;
+  }
+
+  .summary-container > .summary-card .card-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .summary-container > .summary-card .card-amount {
+    font-size: 1.05rem;
+  }
+
+  .barangay-context {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+
+  .barangay-context .admin-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .barangay-context .barangay-select {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
+  }
+
+  .filters-section,
+  .tools-card.filters-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.4rem;
+    margin-bottom: 0.55rem;
+    padding: 0.4rem 0.45rem;
+    border-radius: 10px;
+    align-items: stretch;
+  }
+
+  .filters-section .filter-group {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+    gap: 0.15rem;
+  }
+
+  /* Full-width fields that need more room (first select on expense/income) */
+  .filters-section .filter-group:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .filters-section .filter-label {
+    display: none;
+  }
+
+  .filters-section .filter-input,
+  .filters-section .toolbar-input,
+  .filters-section .toolbar-select {
+    width: 100%;
+    min-height: 30px;
+    height: 30px;
+    font-size: 0.72rem;
+    border-radius: 7px;
+    padding: 0.2rem 0.4rem;
+    line-height: 1.2;
+  }
+
+  .filters-section .filter-actions {
+    margin-left: 0;
+    grid-column: 1 / -1;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    align-self: stretch;
+  }
+
+  .filters-section .filter-actions .btn-secondary,
+  .filters-section .filter-actions .btn-secondary-outline {
+    width: 100%;
+    min-height: 30px;
+    height: 30px;
+    padding: 0.2rem 0.45rem;
+    justify-content: center;
+    font-size: 0.72rem;
+    border-radius: 7px;
+    line-height: 1.1;
+  }
+
+  .section-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .section-header h2 {
+    font-size: 0.92rem;
+    line-height: 1.2;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .section-header .btn-primary,
+  .section-header .btn-secondary {
+    width: auto;
+    min-height: 30px;
+    height: 30px;
+    padding: 0.2rem 0.55rem;
+    justify-content: center;
+    font-size: 0.72rem;
+    border-radius: 7px;
+    white-space: nowrap;
+  }
+
+  .section-header .dp-queue-btn.btn-primary {
+    height: auto !important;
+    min-height: 32px;
+    max-height: none;
+    padding: 0.25rem 0.6rem;
+    overflow: visible !important;
+    gap: 0.35rem;
+  }
+
+  .section-header .dp-queue-btn .dp-queue-badge {
+    min-width: 1.2rem;
+    height: 1.2rem;
+    font-size: 0.68rem;
+    flex-shrink: 0;
+  }
+
+  .view-only-badge {
+    font-size: 0.65rem;
+    align-self: center;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .expense-section-title {
+    font-size: 0.95rem;
+  }
+
+  .section-hint,
+  .info-text {
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .pending-expense-alert {
+    font-size: 0.8rem;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  /* Dual-render: hide tables, show stacked cards */
+  .fin-desktop-table,
+  .fin-desktop-empty {
+    display: none !important;
+  }
+
+  .fin-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+  }
+
+  .fin-mobile-list .amount-cell {
+    font-size: 0.82rem;
+    font-family: inherit;
+  }
+
+  .fin-mobile-meta-row > span:last-child {
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .table-container {
+    overflow-x: visible;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .fin-mobile-card-actions.payment-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fin-mobile-card-actions.payment-actions .fin-mobile-action,
+  .fin-mobile-card-actions.payment-actions .btn-sm {
+    width: 100%;
+  }
+
+  .btn-sm,
+  .btn-primary-small {
+    min-height: 40px;
+    font-size: 0.78rem !important;
+    padding: 0.45rem 0.7rem !important;
+  }
+
+  .form-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .form-inline .input,
+  .form-inline .btn {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .action-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tab-content .card-header {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .tab-content .card-title {
+    font-size: 0.95rem;
+  }
+
+  .filter-section {
+    padding: 10px 12px;
+  }
+
+  .filter-section .input,
+  .filter-section .filter-input {
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.82rem;
+  }
+
+  .modal-overlay .modal-content:not(.mf-expense-modal):not(.mf-collection-modal):not(.receipt-modal-box):not(.receipt-modal-content),
+  .modal-content.modal-large:not(.mf-expense-modal):not(.mf-collection-modal) {
+    width: calc(100% - 1rem) !important;
+    max-width: calc(100% - 1rem) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 0.5rem;
+    border-radius: 14px;
+    padding: 14px 12px;
+  }
+
+  .modal-overlay .modal-content.dp-verify-modal {
+    width: min(22.5rem, calc(100vw - 1.5rem)) !important;
+    max-width: min(22.5rem, calc(100vw - 1.5rem)) !important;
+    padding: 0;
+  }
+
+  .profit-breakdown {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .usage-leaders-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-cards,
+  .summary-cards.stats-grid,
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .summary-cards > .summary-card .card-amount,
+  .summary-card .card-amount {
+    font-size: 0.85rem !important;
+  }
+
+  .page-header h1,
+  .page-title {
+    font-size: 1.1rem !important;
+  }
+
+  .fin-mobile-card {
+    padding: 0.65rem 0.7rem;
+  }
+
+  .fin-mobile-card-name {
+    font-size: 0.9rem;
+  }
+
+  .fin-mobile-label {
+    min-width: 4.2rem;
+    font-size: 0.62rem;
+  }
+
+  .filters-section,
+  .tools-card.filters-section {
+    gap: 0.3rem 0.35rem;
+    padding: 0.35rem 0.4rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .filters-section .filter-input,
+  .filters-section .toolbar-input,
+  .filters-section .toolbar-select,
+  .filters-section .filter-actions .btn-secondary,
+  .filters-section .filter-actions .btn-secondary-outline {
+    min-height: 28px;
+    height: 28px;
+    font-size: 0.68rem;
+  }
+
+  .section-header h2 {
+    font-size: 0.86rem;
+  }
+
+  .section-header .btn-primary,
+  .section-header .btn-secondary {
+    min-height: 28px;
+    height: 28px;
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+  }
+}
+
+@media print {
+  .fin-mobile-list {
+    display: none !important;
+  }
+
+  .fin-desktop-table,
+  .fin-desktop-empty {
+    display: block !important;
   }
 }
 
@@ -8505,6 +12482,17 @@ onBeforeUnmount(() => {
 .auto-interest-note {
   flex: 1 1 auto;
   text-align: right;
+}
+
+.auto-interest-indicator {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  background: rgba(32, 48, 37, 0.72);
+  color: #d1fae5;
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .stats-grid {
@@ -8784,10 +12772,15 @@ onBeforeUnmount(() => {
 .usage-leaders-card {
   background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(22, 35, 27, 0.88));
   border: 1px solid var(--glass-line);
-  border-radius: 16px;
-  padding: 18px 20px;
-  margin-bottom: 20px;
-  box-shadow: 12px 12px 22px rgba(8, 13, 10, 0.42);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: 8px 8px 16px rgba(8, 13, 10, 0.35);
+}
+
+.usage-leaders-card .section-subheader h3 {
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .tab-content .data-table th.text-right,
@@ -8829,6 +12822,10 @@ onBeforeUnmount(() => {
   display: block;
   color: #bfdbfe;
   line-height: 1.45;
+}
+
+.interest-already-applied small {
+  color: inherit;
 }
 
 .font-semibold {
@@ -8877,6 +12874,10 @@ tr.selected {
   }
 
   :global(body.printing-machinery-report) #printable-report .report-header,
+  :global(body.printing-machinery-report) #printable-report .report-refresh-overlay {
+    display: none !important;
+  }
+
   :global(body.printing-machinery-report) #printable-report .summary-card,
   :global(body.printing-machinery-report) #printable-report .dist-item,
   :global(body.printing-machinery-report) #printable-report .badge,
@@ -8917,85 +12918,178 @@ tr.selected {
   opacity: 0.28;
 }
 
-.financial-container.light-theme .page-header {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
-  border: 2px solid #86efac;
-  box-shadow: 0 10px 28px rgba(22, 101, 52, 0.12);
+.financial-container.light-theme .page-header,
+.financial-container.light-theme .page-header-split {
+  background: #ffffff;
+  border-color: #bbf7d0;
 }
 
-.financial-container.light-theme .page-header h1 {
-  background: linear-gradient(90deg, #065f46 0%, #15803d 45%, #22c55e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.financial-container.light-theme .page-header h1,
+.financial-container.light-theme .page-title {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: #052e16;
 }
 
 .financial-container.light-theme .page-subtitle {
   color: #14532d;
-  font-size: 17px;
+}
+
+.financial-container.light-theme .fin-mobile-card {
+  background: #ffffff;
+  border-color: #bbf7d0;
+}
+
+.financial-container.light-theme .fin-mobile-card-name {
+  color: #052e16;
+}
+
+.financial-container.light-theme .fin-mobile-label {
+  color: #64748b;
+}
+
+.financial-container.light-theme .fin-mobile-meta-row {
+  color: #14532d;
+}
+
+.financial-container.light-theme .fin-mobile-card-actions {
+  border-top-color: #dcfce7;
+}
+
+.financial-container.light-theme .fin-mobile-empty {
+  color: #64748b;
 }
 
 .financial-container.light-theme .tabs-container .tab {
   background: #ffffff !important;
   color: #052e16 !important;
-  border: 1.5px solid #bbf7d0 !important;
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
-  filter: none !important;
+  border-color: #bbf7d0 !important;
 }
 
-.financial-container.light-theme .tabs-container .tab .tab-icon {
-  color: #166534 !important;
-}
-
-.financial-container.light-theme .tabs-container .tab:hover {
+.financial-container.light-theme .tabs-container .tab:hover:not(.active) {
   background: #f0fdf4 !important;
   color: #052e16 !important;
   border-color: #86efac !important;
 }
 
-.financial-container.light-theme .tabs-container .tab.active {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+.financial-container.light-theme .tabs-container .tab.active,
+.financial-container.light-theme .tabs-container .tab.active:hover,
+.financial-container.light-theme .tabs-container .tab.active:focus,
+.financial-container.light-theme .tabs-container .tab.active:focus-visible {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
   color: #ffffff !important;
-  border-color: #15803d !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.22) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
-.financial-container.light-theme .tabs-container .tab.active .tab-icon {
+.financial-container.light-theme .tabs-container .tab.active :is(.tab-label, .tab-icon, span:not(.tab-badge)) {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container.light-theme .tabs-container .tab .tab-badge,
+.financial-container.light-theme .tabs-container .tab.active .tab-badge {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #7f1d1d !important;
 }
 
 .financial-container:not(.light-theme) .tabs-container .tab {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  border: 2px solid #16a34a !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+  background: linear-gradient(155deg, rgba(28, 48, 38, 0.94), rgba(18, 34, 26, 0.97)) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border-color: rgba(134, 239, 172, 0.28) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab .tab-icon,
 .financial-container:not(.light-theme) .tabs-container .tab .tab-label {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab:hover {
-  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+.financial-container:not(.light-theme) .tabs-container .tab:hover:not(.active) {
+  background: linear-gradient(155deg, rgba(36, 68, 52, 0.96), rgba(24, 48, 36, 0.98)) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border-color: rgba(74, 222, 128, 0.42) !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab.active {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  border-color: #15803d !important;
-  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
+.financial-container:not(.light-theme) .tabs-container .tab.active,
+.financial-container:not(.light-theme) .tabs-container .tab.active:hover,
+.financial-container:not(.light-theme) .tabs-container .tab.active:focus,
+.financial-container:not(.light-theme) .tabs-container .tab.active:focus-visible {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(167, 243, 208, 0.65) !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.45), 0 8px 18px rgba(6, 78, 35, 0.4) !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
-.financial-container:not(.light-theme) .tabs-container .tab.active .tab-icon,
-.financial-container:not(.light-theme) .tabs-container .tab.active .tab-label {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+.financial-container:not(.light-theme) .tabs-container .tab.active .tab-label,
+.financial-container:not(.light-theme) .tabs-container .tab.active :is(.tab-icon, span:not(.tab-badge)) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.financial-container:not(.light-theme) .tabs-container .tab .tab-badge,
+.financial-container:not(.light-theme) .tabs-container .tab.active .tab-badge {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #7f1d1d !important;
+}
+
+.financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate) {
+  background: linear-gradient(155deg, rgba(28, 48, 38, 0.94), rgba(18, 34, 26, 0.97)) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border-color: rgba(134, 239, 172, 0.28) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  filter: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+.financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate) :is(.btn-text, .btn-icon, span) {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+}
+
+.financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate):hover:not(.active):not(:disabled) {
+  background: linear-gradient(155deg, rgba(36, 68, 52, 0.96), rgba(24, 48, 36, 0.98)) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border-color: rgba(74, 222, 128, 0.42) !important;
+}
+
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active),
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):hover,
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):focus,
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):focus-visible,
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):active {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(167, 243, 208, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.45), 0 8px 22px rgba(6, 78, 35, 0.45), inset 0 1px 0 rgba(220, 252, 231, 0.18) !important;
+  opacity: 1 !important;
+  transition: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active) :is(.btn-text, .btn-icon, span) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container:not(.light-theme) .tab-content h2 {
@@ -9019,20 +13113,20 @@ tr.selected {
 
 .financial-container:not(.light-theme) .filter-checkbox {
   background: linear-gradient(140deg, rgba(18, 42, 31, 0.95) 0%, rgba(23, 51, 38, 0.98) 100%) !important;
-  border: 1.5px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
 .financial-container:not(.light-theme) .filters-section,
 .financial-container:not(.light-theme) .reports-machinery-filter-bar {
   background: rgba(28, 42, 33, 0.92) !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
 .financial-container:not(.light-theme) .filter-input,
 .financial-container:not(.light-theme) .form-input-sm {
   background: rgba(20, 48, 38, 0.92) !important;
   color: #ffffff !important;
-  border: 1.5px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
 .financial-container:not(.light-theme) :is(
@@ -9054,24 +13148,20 @@ tr.selected {
 
 .financial-container.light-theme .denied-content {
   background: #fffef9;
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.1);
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .summary-card {
   background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%);
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .summary-card:hover {
   border-color: #4ade80;
-  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.14);
 }
 
 .financial-container.light-theme .card-label {
   color: #166534;
-  font-size: 14px;
 }
 
 .financial-container.light-theme .card-amount {
@@ -9096,18 +13186,16 @@ tr.selected {
 
 .financial-container.light-theme .tab-content {
   background: #fffef9;
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.1);
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .filters-section {
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border: 2px solid #bbf7d0;
+  border-color: #bbf7d0;
 }
 
 .financial-container.light-theme .filter-label {
   color: #14532d;
-  font-size: 14px;
 }
 
 .financial-container.light-theme .filter-input,
@@ -9115,20 +13203,17 @@ tr.selected {
 .financial-container.light-theme .barangay-select {
   background: #ffffff;
   color: #052e16;
-  border: 1.5px solid #cbd5e1;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
 }
 
 .financial-container.light-theme .filter-input:focus,
 .financial-container.light-theme .filter-select-glass:focus {
   border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .financial-container.light-theme .table-container {
   background: #ffffff;
-  border: 2px solid #bbf7d0;
-  box-shadow: 0 4px 16px rgba(22, 101, 52, 0.08);
+  border-color: #bbf7d0;
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) thead {
@@ -9139,15 +13224,13 @@ tr.selected {
   color: #052e16;
   background: transparent;
   border-bottom-color: #86efac;
-  font-size: 0.58rem;
-  font-weight: 600;
+
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 0.625rem;
-  font-weight: 500;
+
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) tbody tr:nth-child(even) {
@@ -9168,7 +13251,7 @@ tr.selected {
 
 .financial-container.light-theme .summary-container > .summary-card {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .summary-container > .summary-card .card-label {
@@ -9198,8 +13281,7 @@ tr.selected {
 
 .financial-container.light-theme .distribution-card {
   background: #fffef9;
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .distribution-card.org {
@@ -9254,11 +13336,27 @@ tr.selected {
   border-color: #86efac;
 }
 
+.financial-container.light-theme .distribution-card.per-member-card {
+  background: #ffffff;
+  border-color: #7dd3fc;
+}
+
+.financial-container.light-theme .distribution-card.per-member-card .distribution-icon {
+  color: #0369a1;
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+}
+
+.financial-container.light-theme .distribution-card.per-member-card .distribution-content .amount {
+  color: #0369a1;
+  text-shadow: none;
+}
+
 .financial-container.light-theme .btn-secondary,
 .financial-container.light-theme .btn-secondary-outline {
   background: #ffffff;
   color: #14532d;
-  border: 1.5px solid #86efac;
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .btn-secondary:hover,
@@ -9273,15 +13371,72 @@ tr.selected {
   border-color: #15803d;
 }
 
-.financial-container.light-theme .status-badge.full-payment,
-.financial-container.light-theme .status-badge.partial-payment {
+.financial-container.light-theme .status-badge.full-payment {
   color: #166534;
   background: #dcfce7;
+}
+
+.financial-container.light-theme .status-badge.partial-payment {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+}
+
+.financial-container.light-theme .status-badge.verified {
+  color: #14532d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
 }
 
 .financial-container.light-theme .status-badge.unpaid {
   color: #991b1b;
   background: #fee2e2;
+}
+
+.financial-container.light-theme .income-amount-kind,
+.financial-container.light-theme .income-dp-amount {
+  color: #14532d;
+}
+
+.financial-container.light-theme .badge-down-payment,
+.financial-container.light-theme .income-table .badge-down-payment {
+  background: #bbf7d0;
+  color: #14532d;
+  border-color: #86efac;
+}
+
+.financial-container.light-theme .collections-note,
+.financial-container.light-theme .empty-state-hint,
+.financial-container.light-theme .ar-tab-desc {
+  color: #166534;
+}
+
+.financial-container.light-theme .collections-search {
+  background: #ffffff;
+  border-color: #bbf7d0;
+}
+
+.financial-container.light-theme .collections-search-icon {
+  color: #166534;
+}
+
+.financial-container.light-theme .collections-search-input {
+  color: #14532d;
+}
+
+.financial-container.light-theme .auto-interest-indicator {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.financial-container.light-theme .interest-already-applied,
+.financial-container.light-theme .interest-already-applied small {
+  color: #1d4ed8;
+}
+
+.financial-container.light-theme .interest-due-hint {
+  color: #166534;
 }
 
 .financial-container.light-theme .barangay-context,
@@ -9293,14 +13448,13 @@ tr.selected {
 .financial-container.light-theme .report-option-card,
 .financial-container.light-theme .actions-card {
   background: #fffef9 !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
   color: #14532d !important;
 }
 
 .financial-container.light-theme .filter-checkbox {
   background: #ffffff !important;
-  border: 1.5px solid #86efac !important;
-  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.06) !important;
+  border-color: #86efac !important;
 }
 
 .financial-container.light-theme .filter-checkbox:hover {
@@ -9311,38 +13465,17 @@ tr.selected {
 .financial-container.light-theme .filter-checkbox span {
   color: #000000 !important;
   text-shadow: none !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
-  overflow: visible !important;
-  -webkit-line-clamp: unset !important;
+
 }
 
 .financial-container.light-theme .report-option-card h4,
 .financial-container.light-theme .orientation-label,
 .financial-container.light-theme .checkbox-inline {
   color: #052e16 !important;
-  font-weight: 800 !important;
-}
-
-.financial-container.light-theme .report-option-card h4 {
-  font-size: 1.375rem !important;
-}
-
-.financial-container.light-theme .orientation-label {
-  font-size: 1.0625rem !important;
-}
-
-.financial-container.light-theme .checkbox-inline span {
-  font-size: 1.125rem !important;
 }
 
 .financial-container.light-theme .report-type-btn .btn-text {
   color: #052e16 !important;
-  font-size: 1.125rem !important;
-}
-
-.financial-container.light-theme .report-type-btn.active .btn-text {
-  color: #14532d !important;
 }
 
 .financial-container.light-theme .orient-btn,
@@ -9350,35 +13483,49 @@ tr.selected {
 .financial-container.light-theme .btn-action.clear {
   background: #ffffff !important;
   color: #052e16 !important;
-  border: 2px solid #15803d !important;
-  opacity: 1 !important;
-  font-size: 1.0625rem !important;
+  border-color: #15803d !important;
 }
 
-.financial-container.light-theme .orient-btn.active {
-  background: #dcfce7 !important;
-  color: #14532d !important;
-  border-color: #15803d !important;
+.financial-container.light-theme .report-type-btn.active,
+.financial-container.light-theme .orient-btn.active,
+.financial-container.light-theme .report-type-btn.active:hover,
+.financial-container.light-theme .orient-btn.active:hover,
+.financial-container.light-theme .report-type-btn.active:focus,
+.financial-container.light-theme .orient-btn.active:focus {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 12px rgba(22, 101, 52, 0.25) !important;
+  opacity: 1 !important;
+  transition: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.financial-container.light-theme .report-type-btn.active .btn-text,
+.financial-container.light-theme .report-type-btn.active :is(.btn-icon, span),
+.financial-container.light-theme .orient-btn.active :is(span, .btn-text) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .financial-container.light-theme .btn-action.print {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
   color: #ffffff !important;
-  border: 2px solid #14532d !important;
-  opacity: 1 !important;
-  font-size: 1.125rem !important;
+  border-color: #14532d !important;
+
 }
 
 .financial-container.light-theme .btn-action.print:disabled {
   background: #e2e8f0 !important;
   color: #334155 !important;
-  border: 2px solid #94a3b8 !important;
-  opacity: 1 !important;
+  border-color: #94a3b8 !important;
 }
 
 .financial-container.light-theme .breakdown-card {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   color: #14532d;
 }
 
@@ -9415,9 +13562,8 @@ tr.selected {
 
 .financial-container.light-theme .modal-content {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   color: #14532d;
-  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.16);
 }
 
 .financial-container.light-theme .modal-header {
@@ -9431,42 +13577,37 @@ tr.selected {
 .financial-container.light-theme .form-group label,
 .financial-container.light-theme .form-label {
   color: #14532d;
-  font-size: 14px;
-  font-weight: 700;
+
 }
 
 .financial-container.light-theme :is(.input, .form-input, textarea, select) {
   background: #ffffff;
   color: #052e16;
-  border: 1.5px solid #cbd5e1;
+  border-color: #cbd5e1;
 }
 
-.financial-container.light-theme .empty-state {
-  color: #166534;
+.financial-container.light-theme .empty-state-hint {
+  color: #3f6212;
 }
 
 .financial-container.light-theme .view-only-badge {
   color: #14532d;
   background: #fef9c3;
-  border: 1px solid #fbbf24;
+  border-color: #fbbf24;
 }
 
 /* Expense breakdown — force dark readable text (beats nth-child dark rules) */
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item {
-  padding: 8px 0;
   border-bottom-color: #e2e8f0;
 }
 
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:first-child {
-  font-weight: 700;
-  font-size: 15px;
+
   color: #052e16 !important;
-  letter-spacing: 0.01em;
 }
 
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item span:last-child {
-  font-weight: 800;
-  font-size: 15px;
+
   color: #15803d !important;
 }
 
@@ -9477,20 +13618,17 @@ tr.selected {
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:first-child,
 .financial-container.light-theme .profit-breakdown .breakdown-card:nth-child(2) .expense-item.total span:last-child {
   color: #052e16 !important;
-  font-weight: 900;
-  font-size: 16px;
+
 }
 
 /* Most Used Machinery card */
 .financial-container.light-theme .usage-leaders-card {
   background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%);
-  border: 2px solid #86efac;
-  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
+  border-color: #86efac;
 }
 
 .financial-container.light-theme .usage-leaders-card .section-subheader h3 {
   color: #052e16;
-  font-size: 18px;
 }
 
 .financial-container.light-theme .tab-content .data-table thead {
@@ -9499,43 +13637,41 @@ tr.selected {
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) th:not(:last-child),
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) td:not(:last-child) {
-  border-right: 1px solid #64748b !important;
+  border-right-color: #64748b !important;
 }
 
 .financial-container.light-theme :is(.expenses-table, .income-table, .ar-table, .collections-table) th:not(:last-child) {
-  border-right: 2px solid #15803d !important;
+  border-right-color: #15803d !important;
 }
 
 .financial-container.light-theme .tab-content .data-table th:not(:last-child),
 .financial-container.light-theme .tab-content .data-table td:not(:last-child) {
-  border-right: 1px solid #64748b !important;
+  border-right-color: #64748b !important;
 }
 
 .financial-container.light-theme .tab-content .data-table th:not(:last-child) {
-  border-right: 2px solid #15803d !important;
+  border-right-color: #15803d !important;
 }
 
 .financial-container.light-theme .usage-leaders-card .data-table th:not(:last-child),
 .financial-container.light-theme .usage-leaders-card .data-table td:not(:last-child) {
-  border-right: 1px solid #64748b !important;
+  border-right-color: #64748b !important;
 }
 
 .financial-container.light-theme .usage-leaders-card .data-table th:not(:last-child) {
-  border-right: 2px solid #15803d !important;
+  border-right-color: #15803d !important;
 }
 
 .financial-container.light-theme .tab-content .data-table th {
   color: #052e16;
   border-bottom-color: #86efac;
-  font-size: 0.58rem;
-  font-weight: 600;
+
 }
 
 .financial-container.light-theme .tab-content .data-table td {
   color: #14532d;
   border-bottom-color: #e2e8f0;
-  font-size: 0.625rem;
-  font-weight: 500;
+
 }
 
 .financial-container.light-theme .tab-content .data-table tbody tr:nth-child(even) {
@@ -9552,7 +13688,6 @@ tr.selected {
 
 .financial-container.light-theme .usage-table td small {
   color: #166534;
-  font-size: 13px;
 }
 
 .financial-container.light-theme .section-subheader h3 {
@@ -9577,8 +13712,7 @@ tr.selected {
 .financial-container.light-theme .barangay-select {
   background: #ffffff;
   color: #052e16;
-  border: 1.5px solid #cbd5e1;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
 }
 
 .financial-container.light-theme .admin-filter label {
@@ -9595,19 +13729,3191 @@ tr.selected {
 
 .financial-container.light-theme .expense-item span:first-child {
   color: #052e16 !important;
-  font-weight: 700;
-  font-size: 15px;
+
 }
 
 .financial-container.light-theme .expense-item span:last-child {
   color: #15803d !important;
-  font-weight: 800;
-  font-size: 15px;
+
 }
 
 .financial-container.light-theme .expense-item.total span:last-child {
   color: #065f46 !important;
 }
 
-@import '../styles/compact-data-table.css';
+/* ===== Association Dues — Share Capital aligned tools + detail modal ===== */
+.sc-tools-card.tools-card {
+  --tools-h: 40px;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
+
+.sc-tools-card .tools-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.sc-tools-card .search-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--tools-h);
+}
+
+.sc-tools-card .search-icon-wrap {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.25rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(186, 240, 200, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sc-tools-card .search-svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.sc-tools-card .toolbar-input.search-input-main {
+  width: 100%;
+  height: var(--tools-h);
+  min-height: var(--tools-h);
+  padding: 0 0.75rem 0 2.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  background: rgba(10, 18, 14, 0.55);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.sc-tools-card .toolbar-input.search-input-main::placeholder {
+  color: var(--text-soft);
+  opacity: 0.9;
+}
+
+.sc-tools-card .toolbar-input.search-input-main:focus {
+  outline: none;
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15);
+}
+
+.btn-primary-action {
+  padding: 12px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.24), rgba(96, 165, 250, 0.18));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.34), rgba(96, 165, 250, 0.28));
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.payment-form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+
+.dues-collection-panel {
+  margin: 0.75rem 0 0.85rem;
+}
+
+.dues-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+
+.dues-form-grid .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.dues-form-grid .inline-label {
+  margin-bottom: 0;
+}
+
+.dues-lifetime-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dues-lifetime-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+  line-height: 1.2;
+}
+
+.dues-lifetime-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #bbf7d0;
+  font-family: ui-monospace, 'Courier New', monospace;
+  line-height: 1.2;
+}
+
+.ad-member-detail-card .card-body {
+  padding: 0.85rem 0.95rem 1rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.ad-member-detail-card .form-group {
+  margin-bottom: 0.55rem;
+}
+
+.ad-member-detail-card .form-group label:not(.inline-label) {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+  margin-bottom: 0.3rem;
+}
+
+.ad-member-detail-card .section-title {
+  margin: 0.65rem 0 0.4rem;
+  font-size: 0.62rem;
+  padding-bottom: 0.35rem;
+}
+
+@media (min-width: 769px) {
+  .ad-member-detail-card .card-body {
+    padding: 1rem 1.15rem 1.1rem;
+  }
+
+  .ad-member-detail-card .farmer-summary {
+    margin-bottom: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+  }
+
+  .ad-member-detail-card .farmer-name {
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 0.2rem;
+  }
+
+  .ad-member-detail-card .farmer-meta {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .ad-member-detail-card .stats-grid.compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ad-member-detail-card .stats-grid.compact .stat-card {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+  }
+
+  .ad-member-detail-card .stats-grid.compact .stat-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.15rem;
+  }
+
+  .ad-member-detail-card .stats-grid.compact .stat-value {
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  .ad-member-detail-card .stats-grid.compact .stat-value-sm {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .dues-collection-panel {
+    margin: 0.55rem 0 0.75rem;
+    padding: 0 0.1rem;
+  }
+
+  .dues-form-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem 0.55rem;
+    align-items: end;
+  }
+
+  .dues-form-grid .input,
+  .dues-form-grid select.input {
+    min-height: 36px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.82rem;
+    border-radius: 8px;
+  }
+
+  .dues-form-grid .inline-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+
+  .dues-collect-btn {
+    min-height: 36px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .dues-lifetime-total {
+    margin-top: 0.55rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .dues-lifetime-value {
+    font-size: 1rem;
+  }
+
+  .ad-member-detail-card .dues-remarks-group {
+    margin-top: 0.55rem;
+  }
+
+  .ad-member-detail-card .dues-remarks-input {
+    min-height: 52px;
+    font-size: 0.82rem;
+    margin-top: 0;
+  }
+
+  .ad-member-detail-card .auto-receipt-note {
+    margin-bottom: 0.5rem;
+  }
+
+  .ad-member-detail-card .auto-receipt-note .input {
+    min-height: 36px;
+    font-size: 0.82rem;
+  }
+
+  .ad-member-detail-card .info-text {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin-bottom: 0.45rem;
+  }
+
+  .ad-member-detail-card .table-container {
+    padding: 0.45rem 0.55rem 0.65rem !important;
+  }
+}
+
+.financial-container.light-theme .dues-lifetime-total {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.financial-container.light-theme .dues-lifetime-label {
+  color: #166534;
+}
+
+.financial-container.light-theme .dues-lifetime-value {
+  color: #052e16;
+}
+
+.dues-history-mobile {
+  display: none;
+}
+
+.dues-history-desktop {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ad-detail-portal:not(.app-modal-overlay),
+.ad-detail-panel:not(.modal-content) {
+  display: contents;
+}
+
+.sc-detail-overlay.app-modal-overlay {
+  z-index: 11050;
+}
+
+.sc-detail-modal.modal-content {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100vw - 2rem));
+  max-width: min(560px, calc(100vw - 2rem));
+  max-height: min(88dvh, calc(100vh - 2rem));
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-line-strong);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.sc-detail-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.sc-detail-modal-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.sc-detail-close {
+  background: none;
+  border: none;
+  color: var(--text-main);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  opacity: 0.8;
+}
+
+.sc-detail-close:hover {
+  opacity: 1;
+}
+
+.sc-detail-modal .card-body.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0.85rem 0.9rem 1rem;
+}
+
+.sc-detail-modal .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.62rem;
+  table-layout: fixed;
+}
+
+.sc-detail-modal .data-table thead {
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.sc-detail-modal .data-table th {
+  padding: 0.28rem 0.32rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 2px solid rgba(74, 222, 128, 0.2);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.12;
+}
+
+.sc-detail-modal .data-table td {
+  padding: 0.26rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-weight: 500;
+  font-size: 0.6rem;
+  line-height: 1.15;
+}
+
+.sc-detail-modal .data-table th:not(:last-child),
+.sc-detail-modal .data-table td:not(:last-child) {
+  border-right: 1.5px solid #94a3b8;
+}
+
+.sc-detail-modal .data-table td.amount {
+  color: #b7f7c8;
+  font-weight: 600;
+  font-family: ui-monospace, 'Courier New', monospace;
+}
+
+.sc-detail-overlay.light-theme {
+  --glass-panel: #ffffff;
+  --glass-line: rgba(34, 197, 94, 0.28);
+  --glass-line-strong: rgba(22, 101, 52, 0.35);
+  --text-main: #052e16;
+  --text-muted: #14532d;
+  --text-soft: #166534;
+  --green: #15803d;
+}
+
+.sc-detail-overlay.light-theme .sc-detail-modal.modal-content {
+  background: #ffffff;
+  border-color: #86efac;
+}
+
+.sc-detail-overlay.light-theme .sc-detail-modal-header {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.sc-detail-overlay.light-theme .sc-detail-close {
+  color: #052e16;
+}
+
+.sc-detail-overlay.light-theme .farmer-summary {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.sc-detail-overlay.light-theme .farmer-name {
+  color: #052e16;
+}
+
+.sc-detail-overlay.light-theme .farmer-meta {
+  color: #166534;
+}
+
+.sc-detail-overlay.light-theme .stat-card {
+  background: #ffffff;
+  border-color: #86efac;
+}
+
+.sc-detail-overlay.light-theme .stat-label {
+  color: #166534;
+}
+
+.sc-detail-overlay.light-theme .stat-value {
+  color: #052e16;
+}
+
+.sc-detail-overlay.light-theme .section-title {
+  color: #15803d;
+  border-bottom-color: #bbf7d0;
+}
+
+.sc-detail-overlay.light-theme .inline-label {
+  color: #166534;
+}
+
+.sc-detail-overlay.light-theme .badge-paid {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+.sc-detail-overlay.light-theme .badge-unpaid {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+.sc-detail-overlay.light-theme .input {
+  background: #ffffff;
+  color: #000000;
+  border-color: #94a3b8;
+}
+
+.sc-detail-overlay.light-theme .data-table thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.sc-detail-overlay.light-theme .data-table th {
+  color: #000000;
+  border-bottom-color: #86efac;
+}
+
+.sc-detail-overlay.light-theme .data-table td {
+  color: #000000;
+  border-bottom-color: #e2e8f0;
+}
+
+.sc-detail-overlay.light-theme .data-table td.amount {
+  color: #15803d;
+}
+
+.sc-detail-overlay.light-theme .fin-mobile-card {
+  background: #ffffff;
+  border-color: #bbf7d0;
+}
+
+.sc-detail-overlay.light-theme .fin-mobile-card-name,
+.sc-detail-overlay.light-theme .fin-mobile-meta-row {
+  color: #052e16;
+}
+
+.sc-detail-overlay.light-theme .fin-mobile-label {
+  color: #166534;
+}
+
+.sc-detail-overlay.light-theme .fin-mobile-card-actions {
+  border-top-color: #bbf7d0;
+}
+
+.financial-container.light-theme .sc-tools-card.tools-card {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.financial-container.light-theme .sc-tools-card .search-icon-wrap {
+  color: #166534;
+}
+
+.financial-container.light-theme .sc-tools-card .toolbar-input.search-input-main {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #94a3b8;
+}
+
+.financial-container.light-theme .sc-tools-card .toolbar-input.search-input-main::placeholder {
+  color: #64748b;
+}
+
+.financial-container.light-theme .btn-primary-action {
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border-color: #14532d;
+}
+
+/* Association Dues — light surfaces (match Share Capital) */
+.financial-container.light-theme.association-dues-view :is(
+  .stats-grid .stat-card,
+  .tab-content .card,
+  .ad-member-detail-card
+) {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.financial-container.light-theme .stats-grid .stat-card {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  box-shadow: 0 8px 18px rgba(22, 101, 52, 0.08) !important;
+}
+
+.financial-container.light-theme .stats-grid .stat-label {
+  color: #166534 !important;
+}
+
+.financial-container.light-theme .stats-grid .stat-value {
+  color: #052e16 !important;
+}
+
+.financial-container.light-theme .tab-content .card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+.financial-container.light-theme .tab-content .card-header {
+  background: #f0fdf4 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+.financial-container.light-theme .tab-content .card-title {
+  color: #052e16 !important;
+}
+
+.financial-container.light-theme .farmer-summary {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.financial-container.light-theme .farmer-name {
+  color: #052e16 !important;
+}
+
+.financial-container.light-theme .farmer-meta {
+  color: #166534 !important;
+}
+
+.financial-container.light-theme .section-title {
+  color: #15803d !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+.financial-container.light-theme .table-container {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  box-shadow: none !important;
+}
+
+.financial-container.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+.financial-container.light-theme .fin-mobile-card.selected {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+}
+
+.financial-container.light-theme .fin-mobile-card-name {
+  color: #052e16 !important;
+}
+
+.financial-container.light-theme .fin-mobile-meta-row {
+  color: #14532d !important;
+}
+
+.financial-container.light-theme .fin-mobile-label {
+  color: #64748b !important;
+}
+
+.financial-container.light-theme .badge-paid {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+.financial-container.light-theme .badge-unpaid {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+@media (max-width: 768px) {
+  .association-dues-view.financial-container {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.65rem 0.9rem !important;
+    box-sizing: border-box;
+  }
+
+  .association-dues-view .tab-content {
+    padding: 0.8rem 0.9rem !important;
+  }
+
+  .ad-member-detail-card {
+    display: none;
+  }
+
+  .dues-history-desktop {
+    display: none !important;
+  }
+
+  .dues-history-mobile {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .association-dues-view .tab-content .card-header {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .association-dues-view .tab-content .card-title {
+    font-size: 0.88rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .association-dues-view .tab-content .card-header .btn-primary-action {
+    flex-shrink: 0;
+    align-self: center;
+    margin-left: 0;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+    border-radius: 9px;
+    min-height: 34px;
+  }
+
+  .association-dues-view .sc-tools-card.tools-card {
+    --tools-h: 36px;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .association-dues-view .sc-tools-card .search-icon-wrap {
+    width: 2.1rem;
+  }
+
+  .association-dues-view .sc-tools-card .search-svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .association-dues-view .sc-tools-card .toolbar-input.search-input-main {
+    font-size: 0.8rem;
+    padding-left: 2.1rem;
+    border-radius: 9px;
+  }
+
+  .association-dues-view .table-container {
+    padding: 0.55rem 0.85rem 0.75rem !important;
+  }
+
+  .association-dues-view .stats-grid:not(.compact),
+  .sc-detail-modal .stats-grid:not(.compact) {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .association-dues-view .stats-grid.compact,
+  .sc-detail-modal .stats-grid.compact {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem;
+    margin: 0.5rem 0 0.6rem;
+  }
+
+  .association-dues-view .stats-grid.compact > .stat-card:last-child:nth-child(odd),
+  .sc-detail-modal .stats-grid.compact > .stat-card:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .association-dues-view .stats-grid:not(.compact) > .stat-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .association-dues-view .stats-grid.compact .stat-card,
+  .sc-detail-modal .stats-grid.compact .stat-card {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+  }
+
+  .association-dues-view .stats-grid.compact .stat-label,
+  .sc-detail-modal .stats-grid.compact .stat-label {
+    font-size: 0.56rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .association-dues-view .stats-grid.compact .stat-value,
+  .sc-detail-modal .stats-grid.compact .stat-value {
+    font-size: 0.92rem;
+    line-height: 1.15;
+  }
+
+  .association-dues-view .stats-grid.compact .stat-value-sm,
+  .sc-detail-modal .stats-grid.compact .stat-value-sm {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .dues-collection-panel {
+    margin: 0.5rem 0 0.65rem;
+  }
+
+  .dues-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem 0.45rem;
+    align-items: end;
+  }
+
+  .dues-form-grid .input,
+  .dues-form-grid select.input,
+  .dues-collect-btn {
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.82rem;
+  }
+
+  .payment-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .payment-form-grid .input,
+  .payment-form-grid .btn {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .sc-detail-modal.modal-content {
+    width: calc(100vw - 1.2rem);
+    max-width: calc(100vw - 1.2rem);
+    max-height: calc(100dvh - 1.2rem);
+  }
+
+  .sc-detail-modal .dues-collection-panel {
+    margin: 0.45rem 0 0.6rem;
+  }
+
+  .sc-detail-modal .dues-lifetime-total {
+    margin-top: 0.45rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .sc-detail-modal .dues-lifetime-value {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .association-dues-view .tab-content .card-header {
+    padding: 0.7rem 0.85rem !important;
+  }
+
+  .association-dues-view .table-container {
+    padding: 0.5rem 0.7rem 0.7rem !important;
+  }
+}
+</style>
+
+<style>
+/* Kill sticky touch :hover / :focus masking selected buttons on this page */
+.financial-container :is(.tab.active, .report-type-btn.active, .orient-btn.active),
+.financial-container :is(.tab.active, .report-type-btn.active, .orient-btn.active):hover,
+.financial-container :is(.tab.active, .report-type-btn.active, .orient-btn.active):focus,
+.financial-container :is(.tab.active, .report-type-btn.active, .orient-btn.active):focus-visible,
+.financial-container :is(.tab.active, .report-type-btn.active, .orient-btn.active):active {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Report mobile layout — unscoped so child components (MachineryReportSheet, ReportMobileCards) are covered */
+#printable-report {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#printable-report .collectibles-form-sheet,
+#printable-report .collectibles-table-wrap,
+#printable-report .fcr-responsive-wrap,
+#printable-report .fcr-mobile-list,
+#printable-report .fcr-mobile-card,
+#printable-report .fcr-mobile-totals {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#printable-report .fcr-mobile-card,
+#printable-report .fcr-mobile-totals {
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+#printable-report .fcr-mobile-card {
+  margin-bottom: 12px;
+}
+
+#printable-report .fcr-mobile-totals {
+  margin-top: 4px;
+}
+
+#printable-report .fcr-mobile-totals-title {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+  background: #f1f5f9;
+  border-bottom: 2px solid #0f172a;
+  color: #0f172a;
+}
+
+#printable-report .fcr-mobile-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#printable-report .fcr-mobile-row:last-child {
+  border-bottom: none;
+}
+
+#printable-report .fcr-mobile-label {
+  flex: 0 0 46%;
+  max-width: 46%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #475569;
+  line-height: 1.4;
+  text-align: left;
+}
+
+#printable-report .fcr-mobile-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+@media (max-width: 1100px) {
+  #printable-report .fcr-desktop-table {
+    display: none !important;
+  }
+
+  #printable-report .fcr-mobile-list {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #printable-report .collectibles-table-wrap,
+  #printable-report .fcr-responsive-wrap {
+    overflow: visible;
+    width: 100%;
+  }
+
+  #printable-report .collectibles-meta-split {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  #printable-report .collectibles-meta-col {
+    gap: 4px !important;
+  }
+
+  #printable-report .collectibles-meta-col-left {
+    padding-right: 0 !important;
+    border-right: none !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  #printable-report .collectibles-meta-col-right {
+    padding-left: 0 !important;
+  }
+}
+
+/* Mobile screen preview only — compact A4-like density (print CSS unchanged) */
+@media screen and (max-width: 768px) {
+  #printable-report.report-display {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 6px !important;
+    border-radius: 10px !important;
+    overflow-x: hidden !important;
+    transform: none !important;
+  }
+
+  /* Header — compact centered block */
+  #printable-report .report-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+  }
+
+  #printable-report .report-header .report-logo,
+  #printable-report .report-header .report-meta {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  #printable-report .report-header .report-logo {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  #printable-report .report-logo-image {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 2px !important;
+    border-width: 1px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  #printable-report .logo-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  #printable-report .report-cfa-line {
+    margin: 0 !important;
+    font-size: 0.62rem !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #printable-report .report-doc-title {
+    margin: 0 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.01em !important;
+  }
+
+  #printable-report .report-meta h3 {
+    margin: 0 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.2 !important;
+  }
+
+  #printable-report .report-period-long {
+    margin: 2px 0 0 !important;
+    font-size: 0.62rem !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #printable-report .report-generated {
+    margin: 2px 0 0 !important;
+    font-size: 0.58rem !important;
+    line-height: 1.25 !important;
+    opacity: 0.9 !important;
+  }
+
+  /* Information / meta block — tight rows (title, CFA info, contact fields) */
+  #printable-report .collectibles-meta-box,
+  #printable-report .collectibles-meta-box-compact {
+    padding: 4px 6px !important;
+    margin-bottom: 6px !important;
+    border-radius: 6px !important;
+  }
+
+  #printable-report .collectibles-meta-split {
+    gap: 4px !important;
+  }
+
+  #printable-report .collectibles-meta-col {
+    gap: 3px !important;
+  }
+
+  #printable-report .collectibles-meta-col-left {
+    padding-bottom: 4px !important;
+    margin-bottom: 0 !important;
+  }
+
+  #printable-report .collectibles-meta-col-right {
+    padding-top: 0 !important;
+    gap: 3px !important;
+  }
+
+  #printable-report .collectibles-meta-field-block {
+    gap: 0 !important;
+    margin: 0 !important;
+  }
+
+  #printable-report .collectibles-meta-label-sm,
+  #printable-report .collectibles-meta-label {
+    font-size: 0.55rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #printable-report .collectibles-meta-fill,
+  #printable-report .collectibles-meta-value {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 14px !important;
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+    padding: 0 2px 1px !important;
+    margin: 0 !important;
+  }
+
+  /* Visible compact textboxes for Contact Person / Cropping / Address / Phone */
+  #printable-report .sheet-fill-line {
+    min-height: 28px !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 2px 0 0 !important;
+    border: 1px solid #94a3b8 !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    align-items: center !important;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  #printable-report .sheet-fill-line:focus-within {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+  }
+
+  #printable-report .sheet-fill-input,
+  #printable-report input.sheet-fill-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+    padding: 4px 8px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+  }
+
+  #printable-report .sheet-fill-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  #printable-report .collectibles-meta-col-right .sheet-fill-line {
+    margin-top: 2px !important;
+  }
+
+  #printable-report .collectibles-form-title-block {
+    margin-bottom: 4px !important;
+    text-align: center !important;
+  }
+
+  #printable-report .collectibles-main-title {
+    margin: 0 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.15 !important;
+  }
+
+  #printable-report .collectibles-main-subtitle {
+    margin: 1px 0 0 !important;
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+  }
+
+  #printable-report .collectibles-form-sheet {
+    width: 100% !important;
+    margin: 6px 0 8px !important;
+    padding: 6px 6px 8px !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+  }
+
+  /* Summary cards inside report */
+  #printable-report .report-summary-grid {
+    gap: 6px !important;
+    margin: 0 0 8px !important;
+  }
+
+  #printable-report .report-summary-grid > .summary-card {
+    padding: 6px 8px !important;
+    min-height: 0 !important;
+    border-radius: 8px !important;
+  }
+
+  #printable-report .report-summary-grid > .summary-card .summary-label,
+  #printable-report .report-summary-grid > .summary-card .card-label {
+    font-size: 0.58rem !important;
+    margin-bottom: 1px !important;
+    line-height: 1.15 !important;
+  }
+
+  #printable-report .report-summary-grid > .summary-card .summary-value,
+  #printable-report .report-summary-grid > .summary-card .card-amount {
+    font-size: 0.85rem !important;
+    line-height: 1.15 !important;
+  }
+
+  #printable-report .report-summary-grid > .summary-card .summary-count {
+    font-size: 0.55rem !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Mobile record cards */
+  #printable-report .fcr-mobile-list,
+  #printable-report .fcr-mobile-card,
+  #printable-report .fcr-mobile-totals {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #printable-report .fcr-mobile-card {
+    margin-bottom: 6px !important;
+    border-radius: 6px !important;
+  }
+
+  #printable-report .fcr-mobile-totals {
+    margin-top: 2px !important;
+    border-radius: 6px !important;
+  }
+
+  #printable-report .fcr-mobile-totals-title {
+    padding: 5px 8px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+  }
+
+  #printable-report .fcr-mobile-row {
+    gap: 6px !important;
+    padding: 4px 8px !important;
+  }
+
+  #printable-report .fcr-mobile-label {
+    flex: 0 0 42% !important;
+    max-width: 42% !important;
+    font-size: 0.58rem !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #printable-report .fcr-mobile-value {
+    font-size: 0.66rem !important;
+    line-height: 1.2 !important;
+  }
+
+  #printable-report .fcr-mobile-empty {
+    padding: 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Plain / table sections still shown in preview */
+  #printable-report .report-plain-section {
+    margin: 8px 0 !important;
+  }
+
+  #printable-report .report-plain-section .section-title {
+    margin-bottom: 4px !important;
+  }
+
+  #printable-report .report-plain-table th,
+  #printable-report .report-plain-table td,
+  #printable-report .collectibles-data-table th,
+  #printable-report .collectibles-data-table td {
+    font-size: 0.62rem !important;
+    padding: 3px 4px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Footer */
+  #printable-report .report-footer {
+    margin-top: 8px !important;
+    padding: 6px 2px 2px !important;
+    font-size: 0.58rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #printable-report .report-footer p {
+    margin: 0 0 2px !important;
+  }
+
+  #printable-report .report-footer .footer-date {
+    margin: 0 !important;
+    font-size: 0.55rem !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  #printable-report.report-display {
+    padding: 6px 4px !important;
+  }
+
+  #printable-report .report-logo-image {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  #printable-report .report-doc-title {
+    font-size: 0.76rem !important;
+  }
+
+  #printable-report .collectibles-main-title {
+    font-size: 0.76rem !important;
+  }
+
+  #printable-report .fcr-mobile-label {
+    flex: 0 0 40% !important;
+    max-width: 40% !important;
+    font-size: 0.55rem !important;
+  }
+
+  #printable-report .fcr-mobile-value {
+    font-size: 0.62rem !important;
+  }
+}
+
+@media print {
+  #printable-report .fcr-mobile-list {
+    display: none !important;
+  }
+
+  #printable-report .fcr-desktop-table {
+    display: block !important;
+  }
+}
+
+.mf-record-dp-overlay.app-modal-overlay {
+  z-index: 12100 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  inset: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px !important;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal.modal-content {
+  width: min(380px, calc(100vw - 24px));
+  max-width: 380px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .modal-header {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .modal-header h2 {
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .btn-close {
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .modal-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mf-record-dp-overlay .mf-record-dp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-soft, #6b7280);
+}
+
+.mf-record-dp-overlay .mf-record-dp-meta strong {
+  color: var(--text-main, #111827);
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .form-group {
+  margin: 0;
+  gap: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .form-group label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .filter-input {
+  min-height: 34px;
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .filter-input:disabled {
+  opacity: 0.9;
+  cursor: default;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .info-text {
+  font-size: 0.68rem;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .modal-actions {
+  margin-top: 4px;
+  padding-top: 0;
+  display: flex;
+  justify-content: stretch;
+  gap: 0;
+}
+
+.mf-record-dp-overlay .mf-record-dp-modal .modal-actions .btn-primary {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 0.82rem;
+  border-radius: 8px;
+}
+
+.mf-record-dp-overlay.light-theme {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal.modal-content {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal .modal-header {
+  border-bottom: 1px solid #eef2f0;
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal .modal-header h2 {
+  color: #14532d;
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-meta strong {
+  color: #111827;
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal .form-group label {
+  color: #374151;
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal .filter-input {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.mf-record-dp-overlay.light-theme .mf-record-dp-modal .filter-input:disabled {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.mf-collection-overlay.app-modal-overlay {
+  z-index: 12050 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  inset: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem 1.15rem !important;
+}
+
+.mf-collection-overlay .mf-collection-modal.modal-content,
+.mf-collection-overlay.app-modal-overlay .modal-content.pay-checkout-shell {
+  width: min(26.5rem, calc(100vw - 2.25rem)) !important;
+  max-width: min(26.5rem, calc(100vw - 2.25rem)) !important;
+  max-height: min(92dvh, calc(100dvh - 2rem)) !important;
+  margin: auto !important;
+  padding: 1.35rem 1.5rem 1.25rem !important;
+  overflow: auto !important;
+  background: #102018;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #ecfdf5;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+  box-sizing: border-box !important;
+}
+
+.pay-checkout-hint {
+  margin: 0;
+  padding: 0.38rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  color: #fde68a;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.mf-collection-overlay .mf-collection-modal .modal-header {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.mf-collection-overlay .mf-collection-modal .modal-header h2 {
+  font-size: 0.98rem;
+  color: #ecfdf5;
+}
+
+.mf-collection-overlay .mf-collection-modal .btn-close {
+  color: #bbf7d0;
+}
+
+.mf-collection-overlay .mf-collection-modal .modal-body {
+  padding: 0.65rem 0.85rem 0.8rem;
+}
+
+.mf-collection-overlay .mf-collection-modal .form-group {
+  margin-bottom: 0;
+}
+
+.mf-collection-overlay .mf-collection-modal .form-group label,
+.mf-collection-overlay .mf-collection-modal .payment-type-group legend {
+  margin-bottom: 0.25rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  color: #d1fae5;
+}
+
+.mf-collection-overlay .mf-collection-modal .form-input,
+.mf-collection-overlay .mf-collection-modal textarea.form-input {
+  min-height: 34px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.82rem;
+  background: rgba(8, 20, 14, 0.88);
+  color: #ecfdf5;
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.mf-collection-overlay .mf-collection-modal textarea.collection-remarks {
+  min-height: 52px;
+  resize: vertical;
+}
+
+.collection-context-panel {
+  margin-bottom: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(15, 35, 24, 0.72);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #ecfdf5;
+}
+
+.collection-context-panel h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: #ecfdf5;
+}
+
+.collection-context-panel .context-grid strong,
+.collection-context-panel .ctx-label {
+  color: inherit;
+}
+
+.collection-context-panel .ctx-label {
+  color: #86efac;
+}
+
+.overdue-inline {
+  margin-left: 0.35rem;
+  color: #fca5a5;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.collection-meta-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr;
+  gap: 0.45rem 0.55rem;
+  margin-bottom: 0.45rem;
+}
+
+.mf-collection-overlay .payment-type-group {
+  margin-bottom: 0.45rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+}
+
+.mf-collection-overlay .radio-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.mf-collection-overlay .radio-label {
+  gap: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  margin: 0;
+  color: #ecfdf5;
+  background: rgba(8, 20, 14, 0.55);
+  border: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.mf-collection-overlay .radio-label span {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mf-collection-overlay .radio-label small {
+  display: none;
+}
+
+.collection-ok-hint {
+  color: #86efac !important;
+  font-weight: 600;
+  font-size: 0.68rem;
+}
+
+.collection-interest-note,
+.mf-collection-overlay .auto-receipt-inline {
+  margin: 0 0 0.45rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: #bbf7d0;
+}
+
+.collection-summary-panel {
+  margin: 0.35rem 0 0.45rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  background: rgba(8, 20, 14, 0.72);
+  border: 1px solid rgba(74, 222, 128, 0.22);
+}
+
+.collection-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.22rem 0;
+  font-size: 0.78rem;
+  color: #d1fae5;
+}
+
+.collection-summary-row strong {
+  color: #ecfdf5;
+  font-weight: 800;
+}
+
+.collection-summary-row.total {
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.22);
+  color: #86efac;
+}
+
+.collection-summary-row.total strong {
+  color: #86efac;
+}
+
+.mf-collection-overlay .mf-collection-modal .modal-actions {
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.18);
+  justify-content: stretch;
+}
+
+.mf-collection-overlay .mf-collection-modal .modal-actions .btn-success {
+  width: 100%;
+  min-height: 38px;
+}
+
+.mf-collection-overlay.light-theme {
+  --text-main: #052e16;
+  --text-soft: #166534;
+  --green: #15803d;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal.modal-content {
+  background: #ffffff;
+  border-color: #86efac;
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .pay-checkout-hint {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .modal-header {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .modal-header h2 {
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .btn-close {
+  color: #14532d;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .form-group label,
+.mf-collection-overlay.light-theme .mf-collection-modal .payment-type-group legend {
+  color: #14532d;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .form-input,
+.mf-collection-overlay.light-theme .mf-collection-modal textarea.form-input {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #cbd5e1;
+}
+
+.mf-collection-overlay.light-theme .collection-context-panel {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .collection-context-panel h3,
+.mf-collection-overlay.light-theme .collection-context-panel .context-grid strong {
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .collection-context-panel .ctx-label {
+  color: #166534;
+}
+
+.mf-collection-overlay.light-theme .payment-type-group {
+  background: #f8fafc;
+  border-color: #bbf7d0;
+}
+
+.mf-collection-overlay.light-theme .radio-label {
+  background: #ffffff;
+  border-color: #bbf7d0;
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .collection-ok-hint {
+  color: #15803d !important;
+}
+
+.mf-collection-overlay.light-theme .collection-interest-note,
+.mf-collection-overlay.light-theme .auto-receipt-inline {
+  color: #166534;
+}
+
+.mf-collection-overlay.light-theme .collection-summary-panel {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.mf-collection-overlay.light-theme .collection-summary-row {
+  color: #14532d;
+}
+
+.mf-collection-overlay.light-theme .collection-summary-row strong {
+  color: #052e16;
+}
+
+.mf-collection-overlay.light-theme .collection-summary-row.total,
+.mf-collection-overlay.light-theme .collection-summary-row.total strong {
+  color: #15803d;
+}
+
+.mf-collection-overlay.light-theme .mf-collection-modal .modal-actions {
+  border-top-color: #bbf7d0;
+  background: #ffffff;
+}
+
+@media (max-width: 720px) {
+  .collection-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mf-collection-overlay .mf-collection-modal.modal-content,
+  .mf-collection-overlay.app-modal-overlay .modal-content.pay-checkout-shell {
+    width: min(100%, calc(100vw - 2rem)) !important;
+    max-width: min(100%, calc(100vw - 2rem)) !important;
+    max-height: min(92dvh, calc(100dvh - 1.75rem)) !important;
+    padding: 1.2rem 1.35rem 1.15rem !important;
+  }
+
+  .mf-collection-overlay .mf-collection-modal .modal-header {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .mf-collection-overlay .mf-collection-modal .modal-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .mf-collection-overlay .mf-collection-modal .modal-body {
+    padding: 0.5rem 0.65rem 0.65rem;
+  }
+
+  .collection-context-panel {
+    padding: 0.45rem 0.5rem;
+  }
+
+  .mf-collection-overlay .radio-group-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mf-collection-overlay .warning-text {
+  color: #fcd34d;
+  font-size: 0.68rem;
+}
+
+.mf-collection-overlay.light-theme .warning-text {
+  color: #b45309;
+}
+
+.mf-expense-overlay.app-modal-overlay {
+  z-index: 11060 !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mf-expense-overlay .mf-expense-modal.modal-content {
+  width: min(42rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(42rem, calc(100vw - 1.5rem)) !important;
+  max-height: min(88dvh, calc(100dvh - 1.5rem)) !important;
+  margin: auto !important;
+  background: #14261c;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #ecfdf5;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.mf-expense-overlay .mf-expense-modal .modal-header {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.mf-expense-overlay .mf-expense-modal .modal-header h2 {
+  font-size: 1rem;
+  color: #ecfdf5;
+}
+
+.mf-expense-overlay .mf-expense-modal .btn-close {
+  color: #bbf7d0;
+}
+
+.mf-expense-overlay .mf-expense-modal .modal-body {
+  padding: 0.7rem 0.9rem 0.85rem;
+}
+
+.mf-expense-overlay .mf-expense-modal .form-group {
+  margin-bottom: 0;
+}
+
+.mf-expense-overlay .mf-expense-modal .form-group label {
+  margin-bottom: 0.28rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  color: #d1fae5;
+}
+
+.mf-expense-overlay .mf-expense-modal .form-input {
+  min-height: 36px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+  background: rgba(8, 20, 14, 0.88);
+  color: #ecfdf5;
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.mf-expense-overlay .mf-expense-modal .form-input:disabled {
+  opacity: 0.75;
+  color: #bbf7d0;
+}
+
+.mf-expense-overlay .mf-expense-modal .total-input,
+.mf-expense-overlay .mf-expense-modal .total-input:readonly {
+  background: rgba(74, 222, 128, 0.14);
+  color: #86efac;
+}
+
+.mf-expense-overlay .mf-expense-modal .modal-actions {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.18);
+  justify-content: stretch;
+}
+
+.mf-expense-overlay .mf-expense-modal .modal-actions .btn-success {
+  width: 100%;
+  min-height: 40px;
+}
+
+.mf-expense-overlay.light-theme {
+  --text-main: #052e16;
+  --text-soft: #166534;
+  --text-muted: #14532d;
+  --green: #15803d;
+  --glass-panel: #ffffff;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal.modal-content {
+  background: #ffffff;
+  border-color: #86efac;
+  color: #052e16;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .modal-header {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .modal-header h2 {
+  color: #052e16;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .btn-close {
+  color: #14532d;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .form-group label {
+  color: #14532d;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .form-input {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #cbd5e1;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .form-input:disabled {
+  background: #f8fafc;
+  color: #166534;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .total-input,
+.mf-expense-overlay.light-theme .mf-expense-modal .total-input:readonly {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #4ade80;
+}
+
+.mf-expense-overlay.light-theme .transaction-context-panel {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #052e16;
+}
+
+.mf-expense-overlay.light-theme .transaction-context-panel h3,
+.mf-expense-overlay.light-theme .context-grid strong {
+  color: #052e16;
+}
+
+.mf-expense-overlay.light-theme .ctx-label,
+.mf-expense-overlay.light-theme .context-hint,
+.mf-expense-overlay.light-theme .auto-receipt-inline {
+  color: #166534;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .modal-actions {
+  border-top-color: #bbf7d0;
+  background: #ffffff;
+}
+
+@media (max-width: 720px) {
+  .expense-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mf-expense-overlay .mf-expense-modal.modal-content {
+    width: min(100%, calc(100vw - 1rem)) !important;
+    max-width: min(100%, calc(100vw - 1rem)) !important;
+    max-height: min(92dvh, calc(100dvh - 1rem)) !important;
+  }
+
+  .mf-expense-overlay .mf-expense-modal .modal-header {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .mf-expense-overlay .mf-expense-modal .modal-header h2 {
+    font-size: 0.92rem;
+    line-height: 1.25;
+  }
+
+  .mf-expense-overlay .mf-expense-modal .modal-body {
+    padding: 0.55rem 0.7rem 0.7rem;
+  }
+
+  .expense-items-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 0.45rem;
+  }
+
+  .transaction-context-panel {
+    padding: 0.5rem 0.55rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .context-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 0.45rem;
+  }
+
+  .context-hint {
+    display: none;
+  }
+
+  .mf-expense-overlay .mf-expense-modal .form-input {
+    min-height: 34px;
+    padding: 0.32rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .mf-expense-overlay .mf-expense-modal .form-group label {
+    font-size: 0.62rem;
+    margin-bottom: 0.18rem;
+  }
+
+  .auto-receipt-inline {
+    margin-bottom: 0.4rem;
+    font-size: 0.68rem;
+  }
+}
+
+.mf-receipt-overlay.app-modal-overlay {
+  z-index: 12000 !important;
+  padding: max(0.5rem, env(safe-area-inset-top, 0px))
+    max(0.5rem, env(safe-area-inset-right, 0px))
+    max(0.5rem, env(safe-area-inset-bottom, 0px))
+    max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mf-receipt-overlay .receipt-modal-box {
+  width: min(440px, calc(100vw - 1.25rem)) !important;
+  max-width: min(440px, calc(100vw - 1.25rem)) !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  display: block !important;
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32) !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+.mf-receipt-overlay .receipt-modal-box.receipt-modal-expense {
+  width: min(720px, calc(100vw - 1.25rem)) !important;
+  max-width: min(720px, calc(100vw - 1.25rem)) !important;
+}
+
+.mf-receipt-overlay :deep(.receipt-print-root) {
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.mf-receipt-overlay :deep(.payment-receipt),
+.mf-receipt-overlay :deep(.expense-receipt) {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible !important;
+  border-width: 1.5px;
+}
+
+.mf-receipt-overlay :deep(.receipt-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+  position: static;
+  background: transparent;
+}
+
+.mf-receipt-overlay :deep(.btn-print),
+.mf-receipt-overlay :deep(.btn-close) {
+  min-height: 34px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+}
+
+.income-history-card .card-header {
+  margin-bottom: 8px;
+}
+
+.financial-container.light-theme .mf-receipt-overlay .receipt-modal-box,
+.mf-receipt-overlay.light-theme .receipt-modal-box {
+  background: #ffffff;
+  border: 1px solid #bbf7d0;
+}
+
+@media (max-width: 420px) {
+  .mf-receipt-overlay .receipt-modal-box {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    padding: 6px 8px !important;
+  }
+
+  .mf-receipt-overlay :deep(.receipt-actions) {
+    justify-content: stretch;
+  }
+
+  .mf-receipt-overlay :deep(.btn-print),
+  .mf-receipt-overlay :deep(.btn-close) {
+    flex: 1 1 auto;
+  }
+}
+
+.mf-alert-stack.alert-center-stack {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Above collection/expense modals (12050) so success/error stay centered in front */
+  z-index: 14000 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(420px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.mf-alert-stack .alert {
+  pointer-events: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+}
+
+.mf-alert-stack .alert-success {
+  background: rgba(6, 95, 70, 0.94);
+  color: #d1fae5;
+  border-left: 4px solid #10b981;
+}
+
+.mf-alert-stack .alert-error {
+  background: rgba(127, 29, 29, 0.94);
+  color: #fecaca;
+  border-left: 4px solid #ef4444;
+}
+
+.mf-alert-stack.light-theme .alert-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border-left: 4px solid #16a34a;
+}
+
+.mf-alert-stack.light-theme .alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #dc2626;
+}
+
+.mf-alert-stack .alert-message {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.mf-alert-stack .alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+@media (min-width: 769px) {
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page {
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    border-radius: 14px !important;
+    min-height: 0 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-header,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-header-split {
+    margin-bottom: 10px !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page h1.page-title,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-title {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+    margin: 0 0 2px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-subtitle {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .barangay-context {
+    margin-bottom: 8px !important;
+    padding: 6px 10px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .context-badge {
+    font-size: 0.78rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .admin-filter label,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .barangay-select {
+    font-size: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .barangay-select {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 4px 10px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-cards.stats-grid,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid:not(.compact) {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-cards > .summary-card,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid:not(.compact) .stat-card {
+    padding: 7px 10px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+    min-height: 0 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-cards > .summary-card .card-label,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid:not(.compact) .stat-label {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-cards > .summary-card .card-amount,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid:not(.compact) .stat-value {
+    font-size: 1.05rem !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid.compact {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid.compact .stat-card {
+    padding: 7px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid.compact .stat-label {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid.compact .stat-value {
+    font-size: 0.95rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .stats-grid.compact .stat-value-sm {
+    font-size: 0.78rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tabs-container {
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab {
+    min-height: 32px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab:hover:not(.active) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-label {
+    line-height: 1.2 !important;
+    gap: 0.2rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-badge {
+    min-width: 1.1rem !important;
+    height: 1.1rem !important;
+    font-size: 0.65rem !important;
+    margin-left: 0.25rem !important;
+    font-weight: 800 !important;
+  }
+
+  html body.glass-light .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab .tab-badge,
+  html body.glass-light .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab.active .tab-badge,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page.light-theme .tab .tab-badge,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page.light-theme .tab.active .tab-badge {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: 1.5px solid #7f1d1d !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header {
+    margin-bottom: 10px !important;
+    gap: 8px 12px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header h2 {
+    font-size: 1rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header:has(.section-desc) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header:has(.section-desc) h2 {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(.section-desc, .ar-tab-desc, .collections-note, .ar-list-note) {
+    width: 100% !important;
+    margin: 0 0 6px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    font-weight: 500 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header :is(.btn-primary, .btn-secondary, .view-only-badge) {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-header .dp-queue-btn {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 32px !important;
+  }
+
+  html body.glass-light .financial-container.machinery-financial-page.machinery-ui.glass-module-page .dp-queue-btn .dp-queue-badge,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page.light-theme .dp-queue-btn .dp-queue-badge {
+    background: #ffffff !important;
+    color: #991b1b !important;
+    -webkit-text-fill-color: #991b1b !important;
+    border: 1.5px solid #991b1b !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-subheader.collections-header {
+    align-items: center !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filters-section.tools-card,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filters-section {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 6px 8px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-group {
+    flex: 0 1 148px !important;
+    min-width: 120px !important;
+    max-width: 170px !important;
+    gap: 3px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-actions {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    margin-left: auto !important;
+    grid-column: unset !important;
+    width: auto !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-actions :is(.btn-secondary, .btn-secondary-outline) {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card-header .card-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card-header :is(.btn-primary-action, .btn, .btn-primary) {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .distribution-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .expense-section-block {
+    margin-bottom: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .expense-section-title {
+    font-size: 0.95rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-hint {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-count {
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    min-width: 1.25rem !important;
+    font-weight: 700 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .fin-desktop-table:has(.gcash-table) {
+    max-height: min(26rem, 50vh) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .gcash-table :is(th, td) {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .gcash-table th {
+    font-size: 9px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .proof-view-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 3px 7px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    line-height: 1.2 !important;
+    min-height: 26px !important;
+    border-width: 1px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .fin-desktop-table {
+    display: block !important;
+    width: 100% !important;
+    max-height: min(36rem, 62vh) !important;
+    overflow: auto !important;
+    border-radius: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table,
+    .income-table,
+    .ar-table,
+    .collections-table,
+    .usage-table,
+    .tab-content .data-table
+  ) {
+    width: max-content !important;
+    min-width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    font-size: 11px !important;
+    font-family: inherit !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table th,
+    .income-table th,
+    .ar-table th,
+    .collections-table th,
+    .usage-table th,
+    .tab-content .data-table th
+  ) {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    padding: 5px 7px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    font-family: inherit !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-transform: none !important;
+    letter-spacing: 0.01em !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(74, 222, 128, 0.28) !important;
+    background: rgba(22, 38, 28, 0.98) !important;
+    box-shadow: 0 1px 0 rgba(74, 222, 128, 0.18) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table td,
+    .income-table td,
+    .ar-table td,
+    .collections-table td,
+    .usage-table td,
+    .tab-content .data-table td
+  ) {
+    padding: 5px 7px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    font-family: inherit !important;
+    line-height: 1.3 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: break-word !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table td.amount-cell,
+    .income-table td.amount-cell,
+    .ar-table td.amount-cell,
+    .collections-table td.amount-cell,
+    .usage-table td.amount-cell,
+    .tab-content .data-table td.amount-cell,
+    .tab-content table.data-table tbody td.amount
+  ) {
+    white-space: nowrap !important;
+    word-break: normal !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table th:not(:last-child),
+    .income-table th:not(:last-child),
+    .ar-table th:not(:last-child),
+    .collections-table th:not(:last-child),
+    .usage-table th:not(:last-child),
+    .tab-content .data-table th:not(:last-child),
+    .expenses-table td:not(:last-child),
+    .income-table td:not(:last-child),
+    .ar-table td:not(:last-child),
+    .collections-table td:not(:last-child),
+    .usage-table td:not(:last-child),
+    .tab-content .data-table td:not(:last-child)
+  ) {
+    border-right: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table tbody tr:nth-child(even),
+    .income-table tbody tr:nth-child(even),
+    .ar-table tbody tr:nth-child(even),
+    .collections-table tbody tr:nth-child(even),
+    .usage-table tbody tr:nth-child(even),
+    .tab-content .data-table tbody tr:nth-child(even)
+  ) {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table tbody tr:hover,
+    .income-table tbody tr:hover,
+    .ar-table tbody tr:hover,
+    .collections-table tbody tr:hover,
+    .usage-table tbody tr:hover,
+    .tab-content .data-table tbody tr:hover
+  ) {
+    background: rgba(74, 222, 128, 0.1) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table th.actions-col,
+    .expenses-table td.actions-cell,
+    .income-table th.actions-col,
+    .income-table td.actions-cell,
+    .ar-table th.actions-col,
+    .ar-table td.actions-cell,
+    .collections-table th.actions-col,
+    .collections-table td.actions-cell,
+    .tab-content .data-table th.actions-col,
+    .tab-content .data-table td.actions-cell
+  ) {
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .amount-cell,
+    .tab-content table.data-table tbody td.amount,
+    .tab-content .data-table td.text-right
+  ) {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+    font-weight: 700 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table .badge,
+    .income-table .badge,
+    .ar-table .badge,
+    .collections-table .badge,
+    .tab-content .data-table .badge,
+    .status-badge,
+    .badge
+  ) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    line-height: 1.2 !important;
+    border-radius: 999px !important;
+    border-width: 1px !important;
+    white-space: normal !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    word-break: break-word !important;
+    text-align: center !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table td .btn-sm,
+    .income-table td .btn-sm,
+    .ar-table td .btn-sm,
+    .collections-table td .btn-sm,
+    .tab-content .data-table td .btn-sm,
+    .tab-content .data-table td .btn-primary,
+    .ar-row-actions .btn-sm
+  ) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 3px 7px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    line-height: 1.2 !important;
+    min-height: 26px !important;
+    border-width: 1px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page td.members-action-row {
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page td.members-action-row .table-action-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    vertical-align: middle !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page td.members-action-row .table-action-btn + .table-action-btn {
+    margin-left: 4px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page.light-theme :is(
+    .expenses-table th,
+    .income-table th,
+    .ar-table th,
+    .collections-table th,
+    .usage-table th,
+    .tab-content .data-table th
+  ) {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+    border-bottom-color: #16a34a !important;
+    box-shadow: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page.light-theme :is(
+    .expenses-table td,
+    .income-table td,
+    .ar-table td,
+    .collections-table td,
+    .usage-table td,
+    .tab-content .data-table td
+  ) {
+    border-bottom-color: rgba(148, 163, 184, 0.35) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-subheader {
+    margin-bottom: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .section-subheader h3 {
+    font-size: 0.9rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .view-only-badge {
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-label {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .filter-input,
+    .filter-select-glass,
+    .input,
+    select.input
+  ) {
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page textarea.input {
+    height: auto !important;
+    min-height: 52px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .table-container {
+    border-width: 1px !important;
+    border-radius: 10px !important;
+    padding: 6px 8px 8px !important;
+    border-color: rgba(148, 163, 184, 0.45) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card {
+    border-radius: 12px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab-content .card-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 0.95rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-section {
+    padding: 8px 12px 6px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-container {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-container > .summary-card {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-container > .summary-card:hover {
+    transform: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-container > .summary-card .card-label {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .summary-container > .summary-card .card-amount {
+    font-size: 1.05rem !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .auto-interest-indicator {
+    margin: 0 0 8px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(.ar-section, .collections-section) {
+    margin-top: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .collections-header {
+    margin-bottom: 6px !important;
+    gap: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .collections-search {
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .collections-search-input {
+    font-size: 13px !important;
+    min-height: 30px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .expenses-table th.actions-col,
+    .income-table th.actions-col,
+    .ar-table th.actions-col,
+    .collections-table th.actions-col,
+    .tab-content .data-table th.actions-col
+  ) {
+    width: auto !important;
+    min-width: 96px !important;
+    white-space: normal !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .ar-table th.actions-col,
+    .ar-table td.actions-cell,
+    .collections-table th.actions-col,
+    .collections-table td.actions-cell
+  ) {
+    min-width: 148px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .ar-row-actions,
+    td.payment-actions
+  ) {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    width: auto !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page td.payment-actions {
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    vertical-align: middle !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .ar-row-actions :is(.btn-sm, .btn-primary, .btn-secondary, .btn-secondary-outline) {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .amount-cell.balance.highlight {
+    display: inline-block !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .profit-breakdown {
+    gap: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .breakdown-card {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .breakdown-card h3 {
+    font-size: 0.68rem !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .breakdown-card .amount {
+    font-size: 1rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .expense-item {
+    padding: 2px 0 !important;
+    font-size: 0.72rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .expense-item span:last-child {
+    font-size: 0.72rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .usage-leaders-card {
+    margin-top: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .report-type-buttons {
+    gap: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .report-type-btn {
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .report-type-btn .btn-text {
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .distribution-actions {
+    margin-top: 10px !important;
+    gap: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-secondary-outline,
+    .btn-success,
+    .btn-danger,
+    .btn-primary-action,
+    .btn-muted
+  ) {
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    min-height: 32px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(.btn-sm, .btn-small, .btn-primary-small) {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    min-height: 28px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .empty-message {
+    padding: 12px 10px !important;
+    font-size: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .empty-title {
+    font-size: 0.95rem !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .empty-text {
+    font-size: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .info-banner {
+    padding: 8px 12px !important;
+    margin-bottom: 10px !important;
+    font-size: 12px !important;
+    border-width: 1px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .gcash-qr-card {
+    margin-bottom: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .gcash-qr-layout {
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .gcash-header-btn {
+    min-height: 32px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    border-width: 1px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .sc-detail-modal.modal-content {
+    border-radius: 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .sc-detail-modal-header {
+    padding: 10px 12px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .sc-detail-modal-header h2 {
+    font-size: 0.95rem !important;
+  }
+
+  body.glass-dark .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-secondary-outline,
+    .btn-success,
+    .btn-danger,
+    .btn-primary-action,
+    .btn-muted,
+    .tab,
+    .report-type-btn
+  ),
+  body.glass-light .financial-container.machinery-financial-page.machinery-ui.glass-module-page :is(
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-secondary-outline,
+    .btn-success,
+    .btn-danger,
+    .btn-primary-action,
+    .btn-muted,
+    .tab,
+    .report-type-btn
+  ) {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+  }
+
+  body.glass-dark .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab,
+  body.glass-light .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab {
+    border-width: 1px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tabs-container {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .tab {
+    font-size: 10px !important;
+    padding: 5px 6px !important;
+    min-height: 30px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .profit-breakdown {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
 </style>

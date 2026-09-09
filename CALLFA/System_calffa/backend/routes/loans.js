@@ -5,6 +5,12 @@ const { verifyToken, authorizeRoles, verifyLoanBarangayAccess } = require('../mi
 const { buildBarangayFilter } = require('../utils/barangayHelpers');
 const { getRequestUser, canAccessBarangay, getScopedBarangayId, assertFarmerAccess, isAdmin } = require('../utils/requestUser');
 const { generateReceiptNumber, recordPaymentReceipt } = require('../services/receipt-service');
+const { mergeGcashEventsIntoHistory } = require('../services/gcash-payment-service');
+const {
+  isLoansEnabledForBarangay,
+  getLoanModuleStatus,
+  setLoansEnabledForBarangay
+} = require('../services/loan-module-service');
 const {
   getTodayDateString,
   getManilaReferenceDate,
@@ -203,38 +209,32 @@ const markLoansAsOverdueByDueDate = async () => {
 
 // Helper function to check if farmer/officer can apply for loan
 const canApplyForLoan = async (farmerId) => {
-  // Check for unsettled loans
-  const [unsettledLoans] = await pool.execute(
-    `SELECT id FROM loans 
-     WHERE farmer_id = ? 
-     AND status IN ('pending', 'approved', 'active', 'overdue')`,
+  const [pendingLoans] = await pool.execute(
+    `SELECT id FROM loans WHERE farmer_id = ? AND status = 'pending'`,
     [farmerId]
   );
-  
-  if (unsettledLoans.length > 0) {
-    return { allowed: false, reason: 'You have an unsettled loan. Please complete your existing loan before applying for a new one.' };
+  if (pendingLoans.length > 0) {
+    return {
+      allowed: false,
+      reason: 'You already have a pending loan application.'
+    };
   }
-  
-  // Check if farmer/officer already had an APPROVED loan in the last 6 months (rejected loans don't count)
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  // Use local date string instead of ISO string to avoid timezone issues
-  const sixMonthsAgoStr = String(sixMonthsAgo.getFullYear()).padStart(4, '0') + '-' + 
-                          String(sixMonthsAgo.getMonth() + 1).padStart(2, '0') + '-' + 
-                          String(sixMonthsAgo.getDate()).padStart(2, '0');
-  
-  const [recentLoans] = await pool.execute(
-    `SELECT id FROM loans 
-     WHERE farmer_id = ? 
-     AND application_date >= ?
-     AND status IN ('approved', 'active', 'paid', 'overdue')`,
-    [farmerId, sixMonthsAgoStr]
+
+  const [unpaidLoans] = await pool.execute(
+    `SELECT id FROM loans
+     WHERE farmer_id = ?
+       AND status IN ('approved', 'active', 'overdue')
+       AND remaining_balance > 0`,
+    [farmerId]
   );
-  
-  if (recentLoans.length > 0) {
-    return { allowed: false, reason: 'You have already availed a loan in the last 6 months. Each person can only apply once every 6 months.' };
+
+  if (unpaidLoans.length > 0) {
+    return {
+      allowed: false,
+      reason: 'You have an outstanding loan balance. Please settle your existing loan before applying for a new one.'
+    };
   }
-  
+
   return { allowed: true };
 };
 
@@ -291,6 +291,78 @@ const getFarmerBarangay = async (farmerId) => {
   );
   return farmers.length > 0 ? farmers[0].barangay_id : null;
 };
+
+// GET /api/loans/module-status — loan module on/off for user's barangay
+router.get('/module-status', verifyToken, async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    if (user.role === 'admin') {
+      return res.json({
+        success: true,
+        barangay_id: null,
+        enabled: true,
+        admin_unrestricted: true
+      });
+    }
+
+    const barangayId = user.barangay_id;
+    if (!barangayId) {
+      return res.json({
+        success: true,
+        barangay_id: null,
+        enabled: true,
+        message: 'No barangay assigned; loan module treated as active.'
+      });
+    }
+
+    const status = await getLoanModuleStatus(barangayId);
+    res.json({ success: true, ...status });
+  } catch (error) {
+    console.error('Error fetching loan module status:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch loan module status' });
+  }
+});
+
+// PATCH /api/loans/module-status — President toggles loan module for assigned barangay
+router.patch('/module-status', verifyToken, authorizeRoles(['president']), async (req, res) => {
+  try {
+    const barangayId = req.user?.barangay_id;
+    if (!barangayId) {
+      return res.status(400).json({
+        success: false,
+        message: 'President must have an assigned barangay to manage the loan module.'
+      });
+    }
+
+    const enabled = req.body?.enabled;
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Request body must include enabled (boolean).'
+      });
+    }
+
+    const status = await setLoansEnabledForBarangay(barangayId, enabled);
+
+    res.json({
+      success: true,
+      ...status,
+      message: enabled
+        ? 'Loan module is now active. Members can apply for loans.'
+        : 'Loaning is temporarily off. Loan pages remain visible but new applications are blocked.'
+    });
+  } catch (error) {
+    console.error('Error updating loan module status:', error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to update loan module status'
+    });
+  }
+});
 
 // GET /api/loans - Get all loans with barangay filtering
 router.get('/', async (req, res) => {
@@ -478,9 +550,19 @@ router.get('/eligibility/:farmerId', async (req, res) => {
     if (!(await assertFarmerAccess(user, farmerId, res))) return;
     
     const barangayId = await getFarmerBarangay(farmerId);
-    
+
+    if (!(await isLoansEnabledForBarangay(barangayId))) {
+      return res.json({
+        success: true,
+        allowed: false,
+        reason: 'Loaning is temporarily off.',
+        barangay_id: barangayId,
+        loans_enabled: false
+      });
+    }
+
     const eligibility = await canApplyForLoan(farmerId);
-    res.json({ success: true, ...eligibility, barangay_id: barangayId });
+    res.json({ success: true, ...eligibility, barangay_id: barangayId, loans_enabled: true });
   } catch (error) {
     console.error('Error checking eligibility:', error);
     res.status(500).json({ success: false, message: 'Failed to check eligibility' });
@@ -685,16 +767,29 @@ router.get('/:id', async (req, res) => {
     
     // Get payment history
     const [payments] = await pool.execute(
-      `SELECT * FROM loan_payments 
-       WHERE loan_id = ? 
-       ORDER BY payment_date DESC`,
+      `SELECT lp.*, f.full_name AS recorded_by_name
+       FROM loan_payments lp
+       LEFT JOIN farmers f ON lp.recorded_by = f.id
+       WHERE lp.loan_id = ? 
+       ORDER BY lp.payment_date ASC, lp.id ASC`,
       [id]
     );
+
+    let history = payments;
+    try {
+      history = await mergeGcashEventsIntoHistory(pool, {
+        transactionType: 'loan',
+        referenceId: id,
+        payments
+      });
+    } catch (mergeErr) {
+      console.error('Error merging GCash events into loan history:', mergeErr);
+    }
     
     res.json({ 
       success: true, 
       loan,
-      payments 
+      payments: history
     });
   } catch (error) {
     console.error('Error fetching loan details:', error);
@@ -781,7 +876,14 @@ router.post('/', verifyToken, async (req, res) => {
         message: 'You can only create loan applications for farmers in your assigned barangay.'
       });
     }
-    
+
+    if (req.user.role !== 'admin' && !(await isLoansEnabledForBarangay(barangayId))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Loaning is temporarily off.'
+      });
+    }
+
     const application_date = getTodayDateString();
     
     // Calculate total amount with interest (1%)
@@ -809,23 +911,6 @@ router.post('/', verifyToken, async (req, res) => {
         remarks || null
       ]
     );
-    
-    // Log activity with barangay context
-    try {
-      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [targetFarmerId]);
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'loan_application', ?, ?)`,
-        [
-          targetFarmerId,
-          barangayId,
-          `${farmer[0]?.full_name || 'Farmer'} applied for ${loan_type} loan of ₱${loan_amount}`,
-          JSON.stringify({ loan_id: result.insertId, loan_type, loan_amount })
-        ]
-      );
-    } catch (logErr) {
-      console.error('Error logging loan application:', logErr);
-    }
     
     console.log(`✓ Loan application created: ID ${result.insertId} for farmer ${targetFarmerId}`);
     
@@ -974,25 +1059,6 @@ router.put('/:id/approve', verifyToken, verifyLoanBarangayAccess, async (req, re
       return res.status(404).json({ success: false, message: 'Loan not found' });
     }
 
-    // Log approval activity
-    try {
-      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [loan.farmer_id]);
-      const [approverInfo] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [actorId]);
-      
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'loan_approval', ?, ?)`,
-        [
-          loan.farmer_id,
-          loan.barangay_id,
-          `${farmer[0]?.full_name || 'User'} loan approved by ${approverInfo[0]?.full_name || 'Admin'}`,
-          JSON.stringify({ loan_id: id, approved_by: actorId, approval_date })
-        ]
-      );
-    } catch (logErr) {
-      console.error('Error logging loan approval:', logErr);
-    }
-
     res.json({ 
       success: true, 
       message: 'Loan approved successfully',
@@ -1117,23 +1183,6 @@ router.put('/:id/reject', verifyToken, verifyLoanBarangayAccess, async (req, res
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Loan not found' });
-    }
-
-    // Log rejection activity
-    try {
-      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [loan.farmer_id]);
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'loan_rejection', ?, ?)`,
-        [
-          loan.farmer_id,
-          loan.barangay_id,
-          `${farmer[0]?.full_name || 'User'} loan rejected`,
-          JSON.stringify({ loan_id: id, rejected_by: actorId, reason: rejection_reason })
-        ]
-      );
-    } catch (logErr) {
-      console.error('Error logging loan rejection:', logErr);
     }
 
     res.json({ 
@@ -1553,31 +1602,6 @@ router.post('/:id/payment', verifyToken, verifyLoanBarangayAccess, async (req, r
 
     if (updateResult.affectedRows === 0) {
       return res.status(500).json({ success: false, message: 'Failed to update loan' });
-    }
-
-    // Log payment activity
-    try {
-      const [farmer] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [loan.farmer_id]);
-      const [recorder] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [actorId]);
-      
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'loan_payment', ?, ?)`,
-        [
-          loan.farmer_id,
-          loan.barangay_id,
-          `Payment of ₱${parseFloat(amount).toLocaleString()} recorded by ${recorder[0]?.full_name || 'Admin'}`,
-          JSON.stringify({ 
-            loan_id: id, 
-            payment_amount: parseFloat(amount),
-            new_balance: newRemainingBalance,
-            recorded_by: actorId,
-            payment_date
-          })
-        ]
-      );
-    } catch (logErr) {
-      console.error('Error logging payment:', logErr);
     }
 
     const loanTypeLabel = (loan.loan_type || 'Loan').charAt(0).toUpperCase() + (loan.loan_type || 'loan').slice(1);

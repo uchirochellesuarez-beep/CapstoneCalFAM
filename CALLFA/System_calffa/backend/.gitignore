@@ -1,0 +1,18 @@
+# Secrets — never commit to GitHub
+.env
+.env.local
+.env.*.local
+
+# User-uploaded files (photos, receipts, announcements)
+uploads/
+
+# Farmer CSV/JSON foundation for expense forecast — live data, not source code
+data/user_expense_historical/**
+!data/user_expense_historical/.gitkeep
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*

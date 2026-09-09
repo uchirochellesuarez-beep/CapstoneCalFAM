@@ -1,0 +1,491 @@
+/* Dues / Payments + Share Capital tables — readable, contained, responsive */
+
+.financial-container:is(.share-capital-page, .share-capital-withdrawal-page) {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content,
+:is(.share-capital-page, .share-capital-withdrawal-page) .card,
+:is(.share-capital-page, .share-capital-withdrawal-page) .table-container,
+:is(.share-capital-page, .share-capital-withdrawal-page) .fin-desktop-table,
+:is(.share-capital-page, .share-capital-withdrawal-page) .contribution-history-desktop {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page).financial-container,
+.dues-payments-page.financial-container {
+  overflow-x: clip;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.dues-payments-page .ledger-view .stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .table-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  padding: 0.75rem 1.15rem 1.1rem;
+  box-sizing: border-box;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .fin-desktop-table,
+:is(.share-capital-page, .share-capital-withdrawal-page) .contribution-history-desktop {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(32rem, 64vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 222, 128, 0.45) transparent;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .fin-desktop-table::-webkit-scrollbar,
+:is(.share-capital-page, .share-capital-withdrawal-page) .contribution-history-desktop::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .fin-desktop-table::-webkit-scrollbar-thumb,
+:is(.share-capital-page, .share-capital-withdrawal-page) .contribution-history-desktop::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.4);
+  border-radius: 999px;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table,
+:is(.share-capital-page, .share-capital-withdrawal-page) table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table thead {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0.7rem 0.85rem !important;
+  text-align: left;
+  font-weight: 700 !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.3 !important;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: var(--text-main);
+  background: rgba(22, 38, 28, 0.98);
+  border-bottom: 1px solid rgba(74, 222, 128, 0.28) !important;
+  border-right: none !important;
+  box-shadow: 0 1px 0 rgba(74, 222, 128, 0.22);
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table td {
+  padding: 0.72rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  vertical-align: middle;
+  color: var(--text-main);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: none !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table th:not(:last-child),
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table td:not(:last-child) {
+  border-right: none !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table tbody tr {
+  height: 3rem;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table tbody tr:hover {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content table.data-table tbody td.amount,
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table td.td-amount {
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI', sans-serif;
+  text-align: right;
+  white-space: nowrap;
+  color: #b7f7c8;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content table.data-table tbody td.amount,
+:is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table td.td-amount {
+  color: #15803d !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-amount,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-status,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-actions,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-print {
+  text-align: right;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-status,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-actions,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-print {
+  text-align: center;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .td-date {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .td-status,
+:is(.share-capital-page, .share-capital-withdrawal-page) .td-actions,
+:is(.share-capital-page, .share-capital-withdrawal-page) .th-actions,
+:is(.share-capital-page, .share-capital-withdrawal-page) .actions-cell {
+  text-align: center !important;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .td-method {
+  text-transform: capitalize;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .cell-clip {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .table-empty {
+  text-align: center !important;
+  padding: 1.6rem 1rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: var(--text-soft) !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.2rem;
+  padding: 0.18rem 0.55rem !important;
+  border-radius: 999px;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .data-table .btn-small {
+  font-size: 0.75rem !important;
+  padding: 0.32rem 0.7rem !important;
+  line-height: 1.2;
+  min-height: 32px;
+  border-radius: 8px;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) td.actions-cell .table-action-btn,
+.financial-container:is(.share-capital-page, .share-capital-withdrawal-page) td.actions-cell .table-action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 8px !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) td.actions-cell .table-action-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* Column proportions — ledger tables */
+.ledger-table-payments col.col-date { width: 16%; }
+.ledger-table-payments col.col-type { width: 26%; }
+.ledger-table-payments col.col-amount { width: 14%; }
+.ledger-table-payments col.col-status { width: 14%; }
+.ledger-table-payments col.col-receipt { width: 22%; }
+.ledger-table-payments col.col-actions { width: 8%; }
+
+.ledger-table-withdrawals col.col-date { width: 16%; }
+.ledger-table-withdrawals col.col-amount { width: 16%; }
+.ledger-table-withdrawals col.col-remarks { width: 36%; }
+.ledger-table-withdrawals col.col-receipt { width: 24%; }
+.ledger-table-withdrawals col.col-actions { width: 8%; }
+
+.ledger-table-dues col.col-date { width: 16%; }
+.ledger-table-dues col.col-period { width: 32%; }
+.ledger-table-dues col.col-amount { width: 14%; }
+.ledger-table-dues col.col-method { width: 14%; }
+.ledger-table-dues col.col-receipt { width: 24%; }
+
+.ledger-table-members col.col-ref { width: 16%; }
+.ledger-table-members col.col-member { width: 34%; }
+.ledger-table-members col.col-status { width: 14%; }
+.ledger-table-members col.col-amount { width: 20%; }
+.ledger-table-members col.col-actions { width: 16%; }
+
+.share-capital-withdrawal-page.financial-container {
+  overflow-x: clip;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.ledger-table-withdrawal-members col.col-ref { width: 11%; }
+.ledger-table-withdrawal-members col.col-member { width: 22%; }
+.ledger-table-withdrawal-members col.col-share { width: 14%; }
+.ledger-table-withdrawal-members col.col-seed { width: 14%; }
+.ledger-table-withdrawal-members col.col-withdrawn { width: 14%; }
+.ledger-table-withdrawal-members col.col-available { width: 15%; }
+.ledger-table-withdrawal-members col.col-actions { width: 10%; }
+
+.ledger-table-withdrawal-members {
+  min-width: 34rem;
+}
+
+.ledger-table-withdrawal-history {
+  min-width: 0;
+  width: 100%;
+}
+
+.ledger-table-withdrawal-history col.col-date { width: 16%; }
+.ledger-table-withdrawal-history col.col-amount { width: 16%; }
+.ledger-table-withdrawal-history col.col-remarks { width: 34%; }
+.ledger-table-withdrawal-history col.col-receipt { width: 22%; }
+.ledger-table-withdrawal-history col.col-actions { width: 12%; }
+
+.share-capital-withdrawal-page .withdrawal-history-desktop {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(14rem, 38vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.ledger-table-contributions {
+  min-width: 0;
+  width: 100%;
+}
+
+.ledger-table-contributions col.col-date { width: 14%; }
+.ledger-table-contributions col.col-type { width: 18%; }
+.ledger-table-contributions col.col-amount { width: 12%; }
+.ledger-table-contributions col.col-status { width: 13%; }
+.ledger-table-contributions col.col-receipt { width: 18%; }
+.ledger-table-contributions col.col-print { width: 10%; }
+.ledger-table-contributions col.col-actions { width: 15%; }
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .card-title {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .card-header .btn-primary-action,
+:is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .card-header .ledger-dues-total {
+  flex-shrink: 0;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-value {
+  text-align: right;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .badge {
+  text-transform: capitalize;
+}
+
+@media (max-width: 1100px) {
+  .dues-payments-page .ledger-view .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dues-payments-page .ledger-view .stats-grid,
+  .dues-payments-page .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .tab-content .card-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .table-container {
+    overflow: visible;
+    padding: 0.55rem 0.75rem 0.8rem !important;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-desktop-table,
+  :is(.share-capital-page, .share-capital-withdrawal-page) .contribution-history-desktop {
+    max-height: none;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-card {
+    padding: 0.85rem 0.9rem 0.8rem;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-card-name {
+    font-size: 0.95rem;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-label {
+    font-size: 0.68rem;
+    min-width: 4.5rem;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-meta-row {
+    font-size: 0.82rem;
+  }
+
+  :is(.share-capital-page, .share-capital-withdrawal-page) .fin-mobile-action {
+    min-height: 44px;
+    font-size: 0.82rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dues-payments-page .ledger-view .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+body.glass-light :is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table th {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 0.7rem 0.85rem !important;
+  line-height: 1.3 !important;
+}
+
+body.glass-light :is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table td {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.72rem 0.85rem !important;
+  line-height: 1.35 !important;
+}
+
+body.glass-light :is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table .badge {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 0.18rem 0.55rem !important;
+}
+
+body.glass-light :is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table th:not(:last-child),
+body.glass-light :is(.share-capital-page, .share-capital-withdrawal-page).light-theme .tab-content .data-table td:not(:last-child) {
+  border-right: none !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th:not(:last-child),
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table td:not(:last-child) {
+  border-right: none !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  font-weight: 500 !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th {
+  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.28) !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .table-container {
+  border: none !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table :is(th, td) {
+  font-weight: 500;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th {
+  font-weight: 700 !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .data-table td.actions {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page) .data-table td .input {
+  width: 100%;
+  max-width: 100%;
+  min-height: 36px;
+  height: 36px;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.45rem;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page).light-theme .table-empty {
+  color: #166534 !important;
+}
+
+:is(.share-capital-page, .share-capital-withdrawal-page).light-theme .fin-mobile-value {
+  color: #052e16;
+}
+
+@media (max-width: 1100px) and (min-width: 769px) {
+  .dues-payments-page .ledger-table {
+    min-width: 42rem;
+  }
+}

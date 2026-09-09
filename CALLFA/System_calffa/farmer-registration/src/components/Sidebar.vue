@@ -1,12 +1,22 @@
 <template>
   <div class="sidebar-wrapper" v-if="!isNonMember">
+    <!-- Backdrop behind the mobile drawer -->
+    <transition name="drawer-backdrop">
+      <div
+        v-if="mobileOpen"
+        class="mobile-nav-backdrop"
+        aria-hidden="true"
+        @click="$emit('close-mobile')"
+      ></div>
+    </transition>
+
     <!-- Sidebar Navigation -->
     <nav
       class="sidebar"
-      :class="{ collapsed: isCollapsed, 'farmer-theme': isFarmer, 'light-theme': isLight }"
+      :class="{ collapsed: isCollapsed, 'mobile-open': mobileOpen, 'farmer-theme': isFarmer && isLight, 'light-theme': isLight }"
     >
       <div class="backdrop-sidebar" :class="backdropThemeClass"></div>
-      <!-- CALFFA LOGO HEADER -->
+      <!-- CalFFA logo header -->
     <div class="sidebar-header">
       <div class="calffa-logo-container">
         <div class="logo-img-wrap">
@@ -14,13 +24,13 @@
           <div class="logo-ring-inner"></div>
           <img
             src="https://tse1.mm.bing.net/th/id/OIP.6bwLRZ62anox4000YCXuQwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
-            alt="CaLFFA Logo"
+            alt="CalFFA"
             class="calffa-logo-img"
           />
         </div>
         <div class="calffa-text">
-          <div class="calffa-brand">CaLFFA</div>
-          <div class="calffa-tagline">Cooperative Farmers</div>
+          <div class="calffa-brand">{{ t('brand.name') }}</div>
+          <div class="calffa-tagline">{{ t('brand.tagline') }}</div>
           <div class="calffa-divider"></div>
         </div>
       </div>
@@ -28,283 +38,92 @@
       <button 
         class="toggle-btn"
         @click="toggleSidebar"
-        :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-        :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        :title="isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')"
+        :aria-label="isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')"
       >
         <span class="toggle-icon" :class="{ rotated: isCollapsed }">›</span>
       </button>
     </div>
 
-    <!-- Navigation Sections with Grouped Items -->
+    <!-- Navigation -->
     <div class="nav-sections">
-      <!-- FARM MANAGEMENT Section -->
-      <div class="nav-section">
-        <div class="section-header">
-          <span class="section-title">FARM MANAGEMENT</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            v-for="item in farmManagementItems"
-            :key="item.route"
-            :class="{ active: isActiveRoute(item.route) }"
-            @click="handleMenuClick(item)"
+      <ul class="nav-list">
+        <li
+          v-for="item in navItems"
+          :key="`${item.route}-${item.key}`"
+          :class="{ active: isItemActive(item) }"
+          @click="handleMenuClick(item)"
+        >
+          <router-link
+            class="nav-link"
+            :to="item.to ?? item.route"
+            :aria-label="t(item.key)"
+            active-class=""
+            exact-active-class=""
           >
-            <router-link class="nav-link" :to="item.route" :aria-label="item.text">
-              <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
-              <span class="text">{{ item.text }}</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- OPERATIONS Section -->
-      <div class="nav-section" v-if="operationsItems.length">
-        <div class="section-header">
-          <span class="section-title">OPERATIONS</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            v-for="item in operationsItems"
-            :key="item.route"
-            :class="{ active: isActiveRoute(item.route) }"
-            @click="handleMenuClick(item)"
-          >
-            <router-link class="nav-link" :to="item.route" :aria-label="item.text">
-              <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
-              <span class="text">{{ item.text }}</span>
-              <span 
-                v-if="item.badge" 
-                class="nav-badge"
-              >
-                {{ item.badge }}
-              </span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Community Section (Farmers and eligible officers) -->
-      <div class="nav-section" v-if="canCommunity && communityItems.length">
-        <div class="section-header">
-          <span class="section-title">COMMUNITY</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            v-for="item in communityItems"
-            :key="item.route"
-            :class="{ active: isActiveRoute(item.route) }"
-            @click="handleMenuClick(item)"
-          >
-            <router-link class="nav-link" :to="item.route" :aria-label="item.text">
-              <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
-              <span class="text">{{ item.text }}</span>
-              <span 
-                v-if="item.badge" 
-                class="nav-badge"
-              >
-                {{ item.badge }}
-              </span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Member Management Section (Admin and President only) -->
-      <div class="nav-section" v-if="canManageMembers">
-        <div class="section-header">
-          <span class="section-title">MEMBER MANAGEMENT</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/farmers-table') }"
-            @click="handleMenuClick({ text: 'Members', route: '/farmers-table' })"
-          >
-            <router-link class="nav-link" to="/farmers-table" aria-label="Members">
-              <MembersIcon class="icon-component" size="20" color="currentColor"></MembersIcon>
-              <span class="text">Members</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Loan Management Section (Treasurer and President only) -->
-      <div class="nav-section" v-if="canManageLoans && !isAdmin">
-        <div class="section-header">
-          <span class="section-title">LOAN MANAGEMENT</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/admin-loans') }"
-            @click="handleMenuClick({ text: 'Loan Management', route: '/admin-loans' })"
-          >
-            <router-link class="nav-link" to="/admin-loans" aria-label="Loan Management">
-              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
-              <span class="text">Loan Management</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Association Dues Section (President and Treasurer only) -->
-      <div class="nav-section" v-if="canCollectMonthlyDues && !isAdmin">
-        <div class="section-header">
-          <span class="section-title">COLLECTIONS</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/seed-fertilizer-plan') }"
-            @click="handleMenuClick({ text: 'Seed & Fertilizer Plan', route: '/seed-fertilizer-plan' })"
-          >
-            <router-link class="nav-link" to="/seed-fertilizer-plan" aria-label="Seed & Fertilizer Plan">
-              <BankIcon class="icon-component" size="20" color="currentColor"></BankIcon>
-              <span class="text">Seed & Fertilizer Plan</span>
-            </router-link>
-          </li>
-          <li
-            :class="{ active: isActiveRoute('/machinery-financial') && ['monthly-dues', 'dues'].includes(route.query.tab) }"
-            @click="handleMenuClick({ text: 'Association Dues', route: '/machinery-financial?tab=dues' })"
-          >
-            <router-link class="nav-link" to="/machinery-financial?tab=dues" aria-label="Association Dues">
-              <MoneyIcon class="icon-component" size="20" color="currentColor"></MoneyIcon>
-              <span class="text">Association Dues</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Machinery Management Section (President only) -->
-      <div class="nav-section" v-if="isPresident && !isAdmin">
-        <div class="section-header">
-          <span class="section-title">MACHINERY MANAGEMENT</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/machinery-management') }"
-            @click="handleMenuClick({ text: 'Machinery Management System', route: '/machinery-management' })"
-          >
-            <router-link class="nav-link" to="/machinery-management" aria-label="Machinery Management System">
-              <MachineryIcon class="icon-component" size="20" color="currentColor"></MachineryIcon>
-              <span class="text">Machinery Management System</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Farmer Income Section (President, Officers, Agriculturist) -->
-      <div class="nav-section" v-if="canAccessFarmerIncomeHub && !isAdmin">
-        <div class="section-header">
-          <span class="section-title">KITA NG MAGSASAKA</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/farmer-income-hub') }"
-            @click="handleMenuClick({ text: 'Farmer Income Records', route: '/farmer-income-hub' })"
-          >
-            <router-link class="nav-link" to="/farmer-income-hub" aria-label="Farmer Income Records">
-              <DocumentIcon class="icon-component" size="20" color="currentColor"></DocumentIcon>
-              <span class="text">Farmer Income Records</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Members Summary (Agriculturist) -->
-      <div class="nav-section" v-if="canViewMembersSummary">
-        <div class="section-header">
-          <span class="section-title">MEMBERS</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            :class="{ active: isActiveRoute('/members-summary') }"
-            @click="handleMenuClick({ text: 'Members Summary', route: '/members-summary' })"
-          >
-            <router-link class="nav-link" to="/members-summary" aria-label="Members Summary">
-              <MembersIcon class="icon-component" size="20" color="currentColor"></MembersIcon>
-              <span class="text">Members Summary</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Insights Section -->
-      <div class="nav-section">
-        <div class="section-header">
-          <span class="section-title">INSIGHTS</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            v-for="item in insightsItems"
-            :key="item.route"
-            :class="{ active: isActiveRoute(item.route) }"
-            @click="handleMenuClick(item)"
-          >
-            <router-link class="nav-link" :to="item.route" :aria-label="item.text">
-              <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
-              <span class="text">{{ item.text }}</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Admin Section (if admin) -->
-      <div class="nav-section" v-if="isAdmin">
-        <div class="section-header">
-          <span class="section-title">ADMIN</span>
-        </div>
-        <ul class="nav-list">
-          <li
-            v-for="item in adminItems"
-            :key="item.route"
-            :class="{ active: isActiveRoute(item.route) }"
-            @click="handleMenuClick(item)"
-          >
-            <router-link class="nav-link" :to="item.route" :aria-label="item.text">
-              <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
-              <span class="text">{{ item.text }}</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
+            <component :is="item.icon" class="icon-component" size="20" color="currentColor"></component>
+            <span class="text">{{ t(item.key) }}</span>
+            <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
+          </router-link>
+        </li>
+      </ul>
     </div>
   </nav>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { useAuthStore } from "../stores/authStore";
-import { canBookMachinery, canApplyOfficerLoan } from "../utils/roleAccess";
+import { canBookMachinery, canApplyOfficerLoan, canViewDuesPaymentsLedger } from "../utils/roleAccess";
 import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
-import MachineryIcon from "./icons/MachineryIcon.vue";
 import MoneyIcon from "./icons/MoneyIcon.vue";
 import MembersIcon from "./icons/MembersIcon.vue";
 import DocumentIcon from "./icons/DocumentIcon.vue";
 import ApprovalIcon from "./icons/ApprovalIcon.vue";
-import BankIcon from "./icons/BankIcon.vue";
 import NewsIcon from "./icons/NewsIcon.vue";
 import AnnouncementIcon from "./icons/AnnouncementIcon.vue";
 import FarmIcon from "./icons/FarmIcon.vue";
-import SettingsIcon from "./icons/SettingsIcon.vue";
+import LoanApplyIcon from "./icons/LoanApplyIcon.vue";
+import LoanApplicationsIcon from "./icons/LoanApplicationsIcon.vue";
+import CoinsIcon from "./icons/CoinsIcon.vue";
+import ChartLineIcon from "./icons/ChartLineIcon.vue";
+import AnalyticsIcon from "./icons/AnalyticsIcon.vue";
+import MachineryInventoryIcon from "./icons/MachineryInventoryIcon.vue";
+import BookingIcon from "./icons/BookingIcon.vue";
+import DuesIcon from "./icons/DuesIcon.vue";
+import SeedIcon from "./icons/SeedIcon.vue";
+import BarangayIcon from "./icons/BarangayIcon.vue";
 
-const emit = defineEmits(['menu-click', 'active-menu', 'toggle']);
+const props = defineProps({
+  mobileOpen: {
+    type: Boolean,
+    default: false
+  },
+  collapsed: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['menu-click', 'active-menu', 'toggle', 'close-mobile']);
 
 const route = useRoute();
 const authStore = useAuthStore();
+const { t } = useI18n();
 const { backdropThemeClass, isDark } = useBackdropTheme();
 const isLight = computed(() => !isDark.value);
-const isCollapsed = ref(false);
+// Collapse state is owned by AuthenticatedLayout (driven by the header hamburger)
+const isCollapsed = computed(() => props.collapsed);
 
 const currentUser = computed(() => authStore.currentUser);
 const isAdmin = computed(() => currentUser.value?.role === 'admin');
 const isPresident = computed(() => currentUser.value?.role === 'president');
 const isOperator = computed(() => currentUser.value?.role === 'operator');
 const isFarmer = computed(() => currentUser.value?.role === 'farmer');
-const isOfficer = computed(() => {
-  const role = currentUser.value?.role;
-  return ['president', 'treasurer', 'auditor', 'agriculturist'].includes(role);
-});
 const canManageApprovals = computed(() => {
   const role = currentUser.value?.role;
   return ['operator', 'operation_manager', 'business_manager'].includes(role);
@@ -312,11 +131,6 @@ const canManageApprovals = computed(() => {
 const canManageFinancial = computed(() => {
   const role = currentUser.value?.role;
   return ['admin', 'president', 'treasurer'].includes(role);
-});
-const canManageMembers = computed(() => {
-  // Admin and President can manage members
-  const role = currentUser.value?.role;
-  return ['admin', 'president'].includes(role);
 });
 
 const canViewMembersSummary = computed(() => {
@@ -334,32 +148,11 @@ const canCollectMonthlyDues = computed(() => {
   const role = currentUser.value?.role;
   return ['president', 'treasurer'].includes(role);
 });
-const canAccessFarmerIncome = computed(() => {
-  // All officers (President, Treasurer, Auditor) can view eligible farmer income records
-  // Agriculturist and Admin excluded
-  const role = currentUser.value?.role;
-  return ['president', 'treasurer', 'auditor'].includes(role);
-});
-const canVerifyFarmerIncome = computed(() => {
-  // Only President can verify submitted income records
-  const role = currentUser.value?.role;
-  return role === 'president';
-});
-const canReviewFarmerIncome = computed(() => {
-  // Only Agriculturist can review and manage distribution for eligible records
-  const role = currentUser.value?.role;
-  return role === 'agriculturist';
-});
 
 const canAccessFarmerIncomeHub = computed(() => {
   // President, Officers, and Agriculturist can access the farmer income hub
   const role = currentUser.value?.role;
   return ['president', 'treasurer', 'auditor', 'agriculturist'].includes(role);
-});
-
-const canCommunity = computed(() => {
-  const role = currentUser.value?.role;
-  return role === 'farmer' || canApplyOfficerLoan(role);
 });
 
 // Check if user is a non-member - non-members don't have sidebar access
@@ -371,89 +164,148 @@ const isNonMember = computed(() => {
 const handleMenuClick = (item) => {
   emit('menu-click', { route: item.route, item });
   emit('active-menu', { activeRoute: item.route, item });
+  // Always close the mobile drawer after choosing a menu item
+  emit('close-mobile');
 };
 
 // Toggle sidebar collapse
 const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value;
-  emit('toggle', { isCollapsed: isCollapsed.value });
+  emit('toggle', { isCollapsed: !props.collapsed });
 };
 
-// Navigation items organized by category
-const farmManagementItems = [
-  { text: "Dashboard", route: "/dashboard", icon: DashboardIcon },
-];
-
-const operationsItems = computed(() => {
-  const items = [];
+const navItems = computed(() => {
   const role = currentUser.value?.role;
-  
-  // Machinery Booking for farmers and eligible officers (not agriculturist)
-  if (!isAdmin.value && canBookMachinery(role)) {
-    items.push({ text: "Machinery Booking", route: "/machinery-booking", icon: MachineryIcon });
-  }
-  
-  // Machinery Approval for operators, operation managers, business managers, and admins
-  if (canManageApprovals.value && !isAdmin.value) {
-    items.push({ text: "Machinery Approval", route: "/machinery-approval", icon: ApprovalIcon });
+  const items = [];
+
+  const add = (item, visible = true) => {
+    if (visible) items.push(item);
+  };
+
+  if (isAdmin.value) {
+    add({ key: 'nav.dashboard', route: '/dashboard', icon: DashboardIcon });
+    add({ key: 'nav.members', route: '/farmers-table', icon: MembersIcon });
+    add({ key: 'nav.barangays', route: '/barangays', icon: BarangayIcon });
+    add({ key: 'nav.machineryManagement', route: '/machinery-management', icon: MachineryInventoryIcon });
+    add({ key: 'nav.machineryFinancial', route: '/machinery-financial', icon: MoneyIcon });
+    add({ key: 'nav.loanManagement', route: '/admin-loans', icon: LoanApplicationsIcon });
+    add({ key: 'nav.shareCapital', route: '/share-capital', icon: CoinsIcon });
+    add({ key: 'nav.withdrawal', route: '/share-capital-withdrawals', icon: MoneyIcon });
+    add({ key: 'nav.news', route: '/news', icon: NewsIcon });
+    add({ key: 'nav.announcements', route: '/announcement', icon: AnnouncementIcon });
+    add({ key: 'nav.financialOverview', route: '/financial-overview', icon: AnalyticsIcon });
+    return items;
   }
 
-  if (isOperator.value) {
-    items.push({ text: "Operator Dashboard", route: "/operator-dashboard", icon: DashboardIcon });
-  }
+  add({ key: 'nav.dashboard', route: '/dashboard', icon: DashboardIcon });
 
-  // Machinery Financial for admin, president, and treasurer; Loan Portfolio for officers (admin has it under ADMIN)
-  if (canManageFinancial.value) {
-    items.push({ text: "Machinery Financial", route: "/machinery-financial", icon: MoneyIcon });
-    if (!isAdmin.value) {
-      items.push({ text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon });
-    }
-  }
+  add(
+    { key: 'nav.members', route: '/farmers-table', icon: MembersIcon },
+    isPresident.value
+  );
 
-  // Share Capital for farmer + officers (admin has it under ADMIN section)
-  if (['farmer', 'treasurer', 'president'].includes(role)) {
-    items.push({ text: 'Share Capital', route: '/share-capital', icon: BankIcon });
-  }
-  
+  add(
+    { key: 'nav.machineryManagement', route: '/machinery-management', icon: MachineryInventoryIcon },
+    isPresident.value && !isAdmin.value
+  );
+
+  add(
+    { key: 'nav.machineryBooking', route: '/machinery-booking', icon: BookingIcon },
+    !isAdmin.value && canBookMachinery(role)
+  );
+
+  add(
+    { key: 'nav.machineryApproval', route: '/machinery-approval', icon: ApprovalIcon },
+    canManageApprovals.value && !isAdmin.value
+  );
+
+  add(
+    { key: 'nav.operatorDashboard', route: '/operator-dashboard', icon: AnalyticsIcon },
+    isOperator.value
+  );
+
+  add({ key: 'nav.loans', route: '/loan', icon: LoanApplyIcon }, role === 'farmer');
+  add(
+    { key: 'nav.loans', route: '/officer-loans', icon: LoanApplyIcon },
+    role !== 'farmer' && canApplyOfficerLoan(role)
+  );
+
+  add(
+    { key: 'nav.farmIncome', route: '/farmer-income', icon: FarmIcon },
+    role === 'farmer' || ['president', 'treasurer', 'auditor'].includes(role)
+  );
+
+  add(
+    {
+      key: 'nav.duesPayments',
+      route: '/dues-payments',
+      icon: CoinsIcon
+    },
+    canViewDuesPaymentsLedger(role)
+  );
+
+  add(
+    { key: 'nav.machineryFinancial', route: '/machinery-financial', icon: MoneyIcon },
+    canManageFinancial.value
+  );
+
+  add(
+    { key: 'nav.loanManagement', route: '/admin-loans', icon: LoanApplicationsIcon },
+    canManageLoans.value && !isAdmin.value
+  );
+
+  add(
+    {
+      key: 'nav.shareCapital',
+      route: '/share-capital',
+      icon: CoinsIcon
+    },
+    role === 'treasurer'
+  );
+
+  add(
+    { key: 'nav.withdrawal', route: '/share-capital-withdrawals', icon: MoneyIcon },
+    role === 'treasurer'
+  );
+
+  add(
+    { key: 'nav.seedFertilizerPlan', route: '/seed-fertilizer-plan', icon: SeedIcon },
+    canCollectMonthlyDues.value && !isAdmin.value
+  );
+
+  add(
+    { key: 'nav.associationDues', route: '/association-dues', icon: DuesIcon },
+    canCollectMonthlyDues.value && !isAdmin.value
+  );
+
+  add(
+    { key: 'nav.farmerIncomeRecords', route: '/farmer-income-hub', icon: DocumentIcon },
+    canAccessFarmerIncomeHub.value && !isAdmin.value
+  );
+
+  add(
+    { key: 'nav.membersSummary', route: '/members-summary', icon: ChartLineIcon },
+    canViewMembersSummary.value
+  );
+
+  add({ key: 'nav.news', route: '/news', icon: NewsIcon });
+  add({ key: 'nav.announcements', route: '/announcement', icon: AnnouncementIcon });
+
+  add(
+    { key: 'nav.financialOverview', route: '/financial-overview', icon: AnalyticsIcon },
+    canManageFinancial.value
+  );
+
   return items;
 });
 
-const communityItems = computed(() => {
-  const role = currentUser.value?.role;
-  const items = [];
-  
-  // Loans - different route for officers vs farmers
-  if (role === 'farmer') {
-    items.push({ text: "Loans", route: "/loan", icon: MoneyIcon });
-  } else if (canApplyOfficerLoan(role)) {
-    items.push({ text: "Loans", route: "/officer-loans", icon: MoneyIcon });
+const isItemActive = (item) => {
+  if (route.path === '/share-capital') {
+    const itemPath = String(item.route || item.to?.path || '').split('?')[0];
+    return itemPath === '/share-capital';
   }
-  
-  // Kita sa Pagsasaka - for farmers and officers (except admin/agriculturist)
-  if (role === 'farmer') {
-    items.push({ text: "Kita sa Pagsasaka", route: "/farmer-income", icon: FarmIcon });
-  } else if (['president', 'treasurer', 'auditor'].includes(role)) {
-    items.push({ text: "Kita sa Pagsasaka", route: "/farmer-income", icon: FarmIcon });
-  }
-  
-  return items;
-});
 
-const insightsItems = [
-  { text: "News", route: "/news", icon: NewsIcon, badge: null },
-  { text: "Announcements", route: "/announcement", icon: AnnouncementIcon, badge: null },
-];
-
-const adminItems = [
-  { text: "Barangays", route: "/barangays", icon: BankIcon, badge: null },
-  { text: "Loan Management", route: "/admin-loans", icon: MoneyIcon, badge: null },
-  { text: "Machinery Management", route: "/machinery-management", icon: MachineryIcon, badge: null },
-  { text: "Financial Overview", route: "/financial-overview", icon: MoneyIcon, badge: null },
-  { text: "Share Capital", route: "/share-capital", icon: BankIcon, badge: null },
-];
-
-const isActiveRoute = (path) => {
-  return route.path === path || route.path.startsWith(path + '/');
+  const path = String(item.route || item.to?.path || '').split('?')[0];
+  return route.path === path || route.path.startsWith(`${path}/`);
 };
 </script>
 
@@ -469,7 +321,11 @@ const isActiveRoute = (path) => {
   top: 70px;
   left: 0;
   width: 260px;
+  /* Prefer dynamic viewport so mobile browser chrome doesn't clip the last items */
   height: calc(100vh - 70px);
+  height: calc(100dvh - 70px);
+  max-height: calc(100vh - 70px);
+  max-height: calc(100dvh - 70px);
   background: linear-gradient(
     168deg,
     #0b1610 0%,
@@ -489,16 +345,11 @@ const isActiveRoute = (path) => {
     inset 1px 0 0 rgba(0, 0, 0, 0.45);
   border-right: 1px solid rgba(52, 90, 68, 0.45);
   z-index: 999;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  /* Scroll only .nav-sections — nested overflow on .sidebar makes mobile scroll fight */
+  overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Ensure sidebar stays fixed and doesn't resize */
   will-change: width;
   backface-visibility: hidden;
-  transform: translateZ(0);
-  /* Prevent sidebar from moving during scroll */
   position: fixed !important;
 }
 
@@ -577,6 +428,7 @@ const isActiveRoute = (path) => {
   justify-content: space-between;
   gap: 0.5rem;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .sidebar-header::before {
@@ -665,13 +517,8 @@ const isActiveRoute = (path) => {
   justify-content: center;
 }
 
-.sidebar.collapsed .section-header {
-  display: none;
-}
-
 .sidebar.collapsed .text,
-.sidebar.collapsed .nav-badge,
-.sidebar.collapsed .section-header {
+.sidebar.collapsed .nav-badge {
   display: none;
 }
 
@@ -869,66 +716,29 @@ const isActiveRoute = (path) => {
   background: linear-gradient(90deg, rgba(252, 211, 77, 0.6), rgba(74, 222, 128, 0.35), transparent);
 }
 
-/* Navigation Sections */
+/* Navigation */
 .nav-sections {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 1.15rem 0 1.65rem;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(134, 239, 172, 0.35) transparent;
+  padding: 1rem 0 max(1.75rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)));
   position: relative;
   z-index: 1;
 }
 
-.nav-section {
-  margin-bottom: 1.65rem;
+.nav-sections::-webkit-scrollbar {
+  width: 4px;
 }
 
-.nav-section:last-child {
-  margin-bottom: 1rem;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  padding: 0.55rem 1rem;
-  margin: 0 0.85rem 0.65rem;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.08px;
-  color: rgba(220, 242, 228, 0.9);
-  border: 1px solid rgba(100, 140, 118, 0.28);
-  border-radius: 14px;
-  background: linear-gradient(152deg, rgba(28, 48, 36, 0.88), rgba(18, 32, 26, 0.9));
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(186, 220, 198, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
-}
-
-.sidebar.farmer-theme .section-header {
-  color: rgba(255, 244, 224, 0.92);
-  border: 1px solid rgba(210, 170, 125, 0.3);
-  background: linear-gradient(152deg, rgba(92, 62, 40, 0.88), rgba(68, 44, 28, 0.9));
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 230, 200, 0.1),
-    inset 0 -1px 0 rgba(30, 18, 10, 0.35);
-}
-
-.section-icon {
-  display: none;
-}
-
-.section-icon-component {
-  display: none;
-}
-
-.section-title {
-  flex: 1;
+.nav-sections::-webkit-scrollbar-thumb {
+  background: rgba(134, 239, 172, 0.35);
+  border-radius: 999px;
 }
 
 .nav-list {
@@ -1226,12 +1036,6 @@ const isActiveRoute = (path) => {
   box-shadow: none;
 }
 
-.sidebar.light-theme .section-header {
-  color: #000000;
-  background: linear-gradient(152deg, #f3f4f6, #e5e7eb);
-  border-color: #d1d5db;
-}
-
 .sidebar.light-theme .toggle-btn {
   color: #000000;
   background: #ffffff;
@@ -1262,6 +1066,8 @@ const isActiveRoute = (path) => {
     width: 192px;
     top: 70px;
     height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 70px);
   }
 
   .sidebar.collapsed {
@@ -1318,23 +1124,7 @@ const isActiveRoute = (path) => {
   }
 
   .nav-sections {
-    padding: 10px 0 12px;
-  }
-
-  .nav-section {
-    margin-bottom: 16px;
-  }
-
-  .section-header {
-    padding: 7px 10px;
-    margin: 0 8px 6px;
-    font-size: 11px;
-    gap: 6px;
-    letter-spacing: 0.8px;
-  }
-
-  .section-icon {
-    display: none;
+    padding: 10px 0 max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
   }
 
   .nav-list {
@@ -1383,6 +1173,8 @@ const isActiveRoute = (path) => {
     width: 210px;
     top: 70px;
     height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 70px);
   }
 
   .sidebar.collapsed {
@@ -1434,19 +1226,7 @@ const isActiveRoute = (path) => {
   }
 
   .nav-sections {
-    padding: 14px 0 16px;
-  }
-
-  .nav-section {
-    margin-bottom: 22px;
-  }
-
-  .section-header {
-    padding: 8px 12px;
-    margin: 0 10px 7px;
-    font-size: 11.5px;
-    gap: 8px;
-    letter-spacing: 0.9px;
+    padding: 14px 0 max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
   }
 
   .nav-list {
@@ -1495,6 +1275,8 @@ const isActiveRoute = (path) => {
     width: 240px;
     top: 70px;
     height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 70px);
   }
 
   .sidebar.collapsed {
@@ -1545,18 +1327,7 @@ const isActiveRoute = (path) => {
   }
 
   .nav-sections {
-    padding: 18px 0;
-  }
-
-  .nav-section {
-    margin-bottom: 32px;
-  }
-
-  .section-header {
-    padding: 11px 18px;
-    margin-bottom: 10px;
-    font-size: 13px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 18px 0 max(1.75rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)));
   }
 
   .nav-list {
@@ -1608,6 +1379,8 @@ const isActiveRoute = (path) => {
     width: 260px;
     top: 70px;
     height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 70px);
   }
 
   .sidebar.collapsed {
@@ -1639,7 +1412,7 @@ const isActiveRoute = (path) => {
   }
 
   .nav-sections {
-    padding: 20px 0;
+    padding: 20px 0 max(1.75rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)));
   }
 
   .nav-link {
@@ -1669,18 +1442,7 @@ const isActiveRoute = (path) => {
   }
 
   .nav-sections {
-    padding: 12px 0;
-  }
-
-  .nav-section {
-    margin-bottom: 14px;
-  }
-
-  .section-header {
-    padding: 8px 16px;
-    margin-bottom: 4px;
-    font-size: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px 0 max(1.75rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
   }
 
   .nav-link {
@@ -1707,6 +1469,166 @@ const isActiveRoute = (path) => {
   .icon-component :deep(svg) {
     width: 17px;
     height: 17px;
+  }
+}
+
+/* ===================== MOBILE NAVIGATION DRAWER ===================== */
+/* Backdrop shown behind the drawer (mobile/tablet only) */
+.mobile-nav-backdrop {
+  display: none;
+}
+
+.drawer-backdrop-enter-active,
+.drawer-backdrop-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-backdrop-enter-from,
+.drawer-backdrop-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 1024px) {
+  .mobile-nav-backdrop {
+    display: block;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(4, 10, 7, 0.58);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 998;
+  }
+
+  /* Hidden off-canvas by default; slides in when opened */
+  .sidebar {
+    transform: translate3d(-105%, 0, 0);
+    visibility: hidden;
+    transition:
+      transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0.32s;
+    will-change: transform;
+    box-shadow: 24px 0 48px rgba(4, 12, 8, 0.6);
+    height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 70px);
+    overflow: hidden;
+  }
+
+  .sidebar.mobile-open {
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+  }
+
+  /* Tablet: comfortable drawer width with backdrop beside it */
+  .sidebar,
+  .sidebar.collapsed {
+    width: min(340px, 88vw);
+  }
+
+  /* The desktop collapse toggle makes no sense in drawer mode */
+  .toggle-btn {
+    display: none;
+  }
+
+  /* Drawer is always fully expanded on mobile */
+  .sidebar.collapsed .calffa-text {
+    display: flex;
+  }
+
+  .sidebar.collapsed .text,
+  .sidebar.collapsed .nav-badge {
+    display: inline-block;
+  }
+
+  .sidebar.collapsed .nav-link {
+    justify-content: flex-start;
+    padding: 11px 12px;
+    gap: 11px;
+  }
+
+  .sidebar.collapsed .sidebar-header {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .sidebar.collapsed .calffa-logo-container {
+    flex: 1;
+    justify-content: flex-start;
+  }
+
+  .nav-sections {
+    padding-bottom: max(2.25rem, calc(1.5rem + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+/* Phones: full-screen drawer with large touch-friendly items */
+@media (max-width: 768px) {
+  .sidebar,
+  .sidebar.collapsed {
+    width: 100%;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px 12px;
+  }
+
+  .nav-sections {
+    padding: 10px 0 max(2.5rem, calc(1.75rem + env(safe-area-inset-bottom, 0px)));
+  }
+
+  .nav-list {
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .sidebar .nav-link,
+  .sidebar.collapsed .nav-link {
+    padding: 12px 14px;
+    font-size: 15px;
+    gap: 12px;
+    min-height: 52px;
+    border-radius: 14px;
+  }
+
+  .sidebar .text {
+    font-size: 15px;
+  }
+
+  .sidebar .icon-component {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 12px;
+  }
+
+  .sidebar .icon-component :deep(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    min-width: 20px;
+  }
+
+  .calffa-brand {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .calffa-tagline {
+    font-size: 10px;
+  }
+
+  .logo-img-wrap,
+  .calffa-logo-img {
+    width: 52px;
+    height: 52px;
   }
 }
 </style>

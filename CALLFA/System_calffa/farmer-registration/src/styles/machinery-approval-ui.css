@@ -1,0 +1,420 @@
+/* Machinery Approval — stable global layout (loaded from main.js) */
+
+.page-container.machinery-approval-page.machinery-approval-ui {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .stat-icon-wrap,
+.page-container.machinery-approval-page.machinery-approval-ui .stat-glyph {
+  display: none !important;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .stats-grid--machinery-approval {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .machinery-table-container {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(24rem, 55vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .machinery-loans-table {
+  min-width: 52rem;
+  width: 100%;
+  table-layout: fixed !important;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .action-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .machinery-loans-table .btn {
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+  line-height: 1.2 !important;
+  border-radius: 5px !important;
+  white-space: nowrap !important;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px 6px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .mach-sub,
+.page-container.machinery-approval-page.machinery-approval-ui .mach-pay-meta small {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .ma-tools-card {
+  --tools-h: 28px;
+}
+
+.page-container.machinery-approval-page.machinery-approval-ui .tabs.machinery-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding-bottom: 0;
+  overflow-x: visible;
+}
+
+@media (max-width: 768px) {
+  .page-container.machinery-approval-page.machinery-approval-ui .stats-grid--machinery-approval {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1199px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stats-grid--machinery-approval {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 8px 12px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .page-header,
+  html body .page-container.machinery-approval-page.machinery-approval-ui .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .btn-primary {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stats-group--machinery-approval {
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stats-grid--machinery-approval {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    gap: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    align-items: stretch !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stat-card:hover {
+    transform: none !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stat-label {
+    font-size: 8px !important;
+    margin: 0 0 1px !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stat-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .card.machinery-bookings-card {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .card-title {
+    font-size: 0.82rem !important;
+    margin: 0 0 4px !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .loan-guidance-text {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+    margin: 0 0 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .tab {
+    padding: 4px 8px !important;
+    min-height: 28px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .tab.active {
+    box-shadow: none !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .banner-inline-alert {
+    margin-bottom: 6px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .tools-card.ma-tools-card {
+    padding: 5px 8px !important;
+    margin-bottom: 6px !important;
+    border-radius: 8px !important;
+    --tools-h: 28px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .filters-row.machinery-filters {
+    gap: 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .filters-row label {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .input-shell input,
+  html body .page-container.machinery-approval-page.machinery-approval-ui .ma-tools-card .toolbar-input {
+    min-height: 28px !important;
+    height: 28px !important;
+    max-height: 28px !important;
+    padding: 0 8px 0 1.25rem !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .mach-clear-filters-btn {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    transform: none !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .machinery-table-container {
+    border-width: 1px !important;
+    margin-top: 0 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .machinery-loans-table.loans-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .machinery-loans-table.loans-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .machinery-loans-table .machinery-td-stack strong {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .mach-loan-status,
+  html body .page-container.machinery-approval-page.machinery-approval-ui .mach-loan-pay {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    line-height: 1.2 !important;
+    border-radius: 999px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stats-grid--machinery-approval {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stats-grid.stats-grid--machinery-approval {
+    display: grid !important;
+    width: 100% !important;
+  }
+
+  html body .page-container.machinery-approval-page.machinery-approval-ui .stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+/* Light mode — colors only */
+body.glass-light .page-container.machinery-approval-page.machinery-approval-ui.light-theme .input-shell input,
+body.glass-light .page-container.machinery-approval-page.machinery-approval-ui.light-theme .ma-tools-card .toolbar-input {
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .page-container.machinery-approval-page.machinery-approval-ui.light-theme .tools-card.ma-tools-card {
+  background: #ffffff !important;
+  border: 1px solid #86efac !important;
+}
+
+/* Status tabs — compact grid (loan-page style), layout lock */
+html body .page-container.machinery-approval-page.machinery-approval-ui .tabs.machinery-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  margin-bottom: 6px !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  overflow: visible !important;
+  flex-wrap: nowrap !important;
+}
+
+html body .page-container.machinery-approval-page.machinery-approval-ui .tabs.machinery-tabs .tab {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 28px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 4px 6px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  border-radius: 6px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  box-shadow: none !important;
+  transform: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+@media (min-width: 769px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui .tabs.machinery-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 992px) {
+  html body .page-container.machinery-approval-page.machinery-approval-ui .tabs.machinery-tabs {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+body.glass-dark html body .page-container.machinery-approval-page.machinery-approval-ui:not(.light-theme) .tabs.machinery-tabs .tab:not(.active) {
+  background: rgba(14, 30, 22, 0.92) !important;
+  border-color: rgba(100, 200, 130, 0.22) !important;
+  color: rgba(220, 252, 231, 0.82) !important;
+  -webkit-text-fill-color: rgba(220, 252, 231, 0.82) !important;
+}
+
+body.glass-dark html body .page-container.machinery-approval-page.machinery-approval-ui:not(.light-theme) .tabs.machinery-tabs .tab:not(.active):hover {
+  background: rgba(22, 48, 34, 0.96) !important;
+  border-color: rgba(134, 239, 172, 0.35) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+html body .page-container.machinery-approval-page.machinery-approval-ui:not(.light-theme) .tabs.machinery-tabs .tab.active {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+body.glass-light html body .page-container.machinery-approval-page.machinery-approval-ui.light-theme .tabs.machinery-tabs .tab:not(.active) {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  box-shadow: none !important;
+}
+
+body.glass-light html body .page-container.machinery-approval-page.machinery-approval-ui.light-theme .tabs.machinery-tabs .tab:not(.active):hover {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+body.glass-light html body .page-container.machinery-approval-page.machinery-approval-ui.light-theme .tabs.machinery-tabs .tab.active {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border-color: #166534 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}

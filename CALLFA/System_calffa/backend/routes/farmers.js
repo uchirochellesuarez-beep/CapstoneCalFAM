@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -14,7 +15,7 @@ const pool = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const { getUserBarangayContext, getBarangayOfficers, getBarangayFarmers } = require('../utils/barangayHelpers');
 const { buildListBarangayScope, canAccessBarangay, assertFarmerAccess } = require('../utils/requestUser');
-const { hasFarmersEmailColumn } = require('../utils/googleAuth');
+const { hasFarmersEmailColumn, hasFarmersGoogleIdColumn, ensureFarmersEmailColumn } = require('../utils/googleAuth');
 const REFERENCE_NUMBER_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/;
 
 // Configure multer for profile picture uploads
@@ -34,7 +35,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: function (req, file, cb) {
     const allowedTypes = /jpeg|jpg|png|gif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -183,8 +184,16 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Reference number format must be 00-00-00-000-000000.' });
     }
 
+    const hasEmailColumn = await hasFarmersEmailColumn(pool);
+    const hasGoogleIdColumn = await hasFarmersGoogleIdColumn(pool);
+    const extraFields = [
+      hasEmailColumn ? 'email' : null,
+      hasGoogleIdColumn ? 'google_id' : null
+    ].filter(Boolean);
+    const extraSelect = extraFields.length ? `, ${extraFields.join(', ')}` : '';
+
     const [rows] = await pool.execute(
-      `SELECT id, reference_number, full_name, date_of_birth, address, phone_number, educational_status, role, barangay_id, status, membership_status, password_hash, profile_picture, land_area, primary_crop
+      `SELECT id, reference_number, full_name, date_of_birth, address, phone_number, educational_status, role, barangay_id, status, membership_status, password_hash, profile_picture, land_area${extraSelect}
        FROM farmers WHERE reference_number = ?`,
       [normalizedReferenceNumber]
     );
@@ -214,33 +223,33 @@ router.post('/login', async (req, res) => {
       barangayContext = barangays[0] || null;
     }
 
-    const { password_hash, ...farmerData } = farmer;
+    const { password_hash, google_id, ...farmerData } = farmer;
+    farmerData.google_linked = Boolean(google_id);
+
+    // One active session per account — new login invalidates older browsers/tabs
+    const { startUserSession } = require('../services/session-service');
+    const sessionId = await startUserSession(pool, farmer.id);
 
     const token = jwt.sign(
-      { id: farmer.id, reference_number: farmer.reference_number, role: farmer.role, barangay_id: farmer.barangay_id, membership_status: farmer.membership_status },
-      process.env.JWT_SECRET || 'your-secret-key',
+      {
+        id: farmer.id,
+        reference_number: farmer.reference_number,
+        role: farmer.role,
+        barangay_id: farmer.barangay_id,
+        membership_status: farmer.membership_status,
+        sid: sessionId
+      },
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
-
-    // Log login activity
-    try {
-      const ipAddress = req.ip || req.connection.remoteAddress;
-      const userAgent = req.get('user-agent');
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, ip_address, user_agent)
-         VALUES (?, ?, 'login', ?, ?, ?)`,
-        [farmer.id, farmer.barangay_id, `${farmer.full_name} logged in`, ipAddress, userAgent]
-      );
-    } catch (logErr) {
-      console.error('Error logging login activity:', logErr);
-    }
 
     res.json({ 
       success: true, 
       message: 'Login successful!', 
       farmer: farmerData, 
       barangay: barangayContext,
-      token 
+      token,
+      session_id: sessionId
     });
 
   } catch (err) {
@@ -249,8 +258,21 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * POST /logout — clear active session for this account (this browser/token only).
+ */
+router.post('/logout', verifyToken, async (req, res) => {
+  try {
+    const { clearUserSession } = require('../services/session-service');
+    await clearUserSession(pool, req.user.id, req.sessionId);
+    res.json({ success: true, message: 'Logged out successfully.' });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ success: false, message: 'Error logging out.' });
+  }
+});
+
 // IMPORTANT: GET routes with specific paths must come BEFORE routes with parameters (:id)
-// This ensures /pending is matched before /:id
 
 // -----------------------------
 // GET PENDING FARMERS (ADMIN)
@@ -266,7 +288,7 @@ router.get('/pending', async (req, res) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         userBarangayId = decoded.barangay_id;
 
         // Get full user info
@@ -388,15 +410,15 @@ router.get('/:id/profile', verifyToken, async (req, res) => {
 
     if (!(await assertFarmerAccess(req.user, farmerId, res))) return;
 
-    // Check if email column exists
-    const hasEmailColumn = await hasFarmersEmailColumn(pool);
-    
-    // Build select fields dynamically
-    const emailField = hasEmailColumn ? 'f.email,' : '';
+    await ensureFarmersEmailColumn(pool);
 
-    // Get farmer with barangay information
+    const hasEmailColumn = await hasFarmersEmailColumn(pool);
+    const hasGoogleIdColumn = await hasFarmersGoogleIdColumn(pool);
+    const emailField = hasEmailColumn ? 'f.email,' : '';
+    const googleIdField = hasGoogleIdColumn ? 'f.google_id,' : '';
+
     const [farmers] = await pool.execute(
-      `SELECT f.id, f.reference_number, f.full_name, ${emailField} f.date_of_birth, f.address, 
+      `SELECT f.id, f.reference_number, f.full_name, ${emailField} ${googleIdField} f.date_of_birth, f.address, 
               f.phone_number, f.educational_status, f.role, f.status, f.land_area, 
               f.farm_location, f.profile_picture, f.barangay_id, f.membership_status,
               b.name as barangay_name, b.location as barangay_location
@@ -410,7 +432,15 @@ router.get('/:id/profile', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Farmer not found' });
     }
 
-    res.json({ success: true, farmer: farmers[0] });
+    const farmer = farmers[0];
+    farmer.google_linked = Boolean(farmer.google_id);
+    if (!farmer.email && typeof farmer.google_id === 'string' && farmer.google_id.includes('@')) {
+      farmer.email = farmer.google_id;
+    }
+    farmer.email = farmer.email || null;
+    delete farmer.google_id;
+
+    res.json({ success: true, farmer });
   } catch (err) {
     console.error('Error fetching farmer profile:', err.message);
     res.status(500).json({ success: false, message: 'Error fetching farmer profile', error: err.message });
@@ -515,7 +545,6 @@ router.put('/:id/profile', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
 
-    updates.push('last_activity = CURRENT_TIMESTAMP');
     values.push(farmerId);
     
     const [result] = await pool.execute(
@@ -535,18 +564,6 @@ router.put('/:id/profile', verifyToken, async (req, res) => {
        WHERE f.id = ?`,
       [farmerId]
     );
-
-    // Log profile update activity
-    try {
-      const updatedFields = Object.keys(req.body).join(', ');
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, activity_type, activity_description, metadata)
-         VALUES (?, 'profile_update', ?, ?)`,
-        [farmerId, `Profile updated: ${updatedFields}`, JSON.stringify({ updated_fields: Object.keys(req.body) })]
-      );
-    } catch (logErr) {
-      console.error('Error logging profile update:', logErr);
-    }
 
     res.json({ success: true, message: 'Profile updated successfully', farmer: farmer[0] });
   } catch (err) {
@@ -572,7 +589,7 @@ router.post('/:id/approve', async (req, res) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         const [approvers] = await pool.execute('SELECT role, barangay_id FROM farmers WHERE id = ?', [decoded.id]);
         
         if (approvers.length > 0) {
@@ -659,17 +676,6 @@ router.post('/:id/approve', async (req, res) => {
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Member not found' });
 
-    // Log approval activity
-    try {
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'membership_change', ?, ?)`,
-        [farmerId, targetBarangayId, `${farmer[0].full_name} account approved by ${approverRole}`, JSON.stringify({ status: 'approved', previous_status: 'pending', role: targetRole, barangay_id: targetBarangayId })]
-      );
-    } catch (logErr) {
-      console.error('Error logging approval activity:', logErr);
-    }
-
     res.json({ success: true, message: 'Member approved successfully' });
   } catch (err) {
     console.error('Error approving member:', err.message);
@@ -693,7 +699,7 @@ router.post('/:id/reject', async (req, res) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         const [rejectors] = await pool.execute('SELECT role, barangay_id FROM farmers WHERE id = ?', [decoded.id]);
         
         if (rejectors.length > 0) {
@@ -734,18 +740,6 @@ router.post('/:id/reject', async (req, res) => {
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Member not found' });
 
-    // Log rejection activity
-    try {
-      const [farmerData] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [farmerId]);
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'membership_change', ?, ?)`,
-        [farmerId, farmer[0].barangay_id, `${farmerData[0]?.full_name || 'Member'} account rejected by ${rejectorRole}`, JSON.stringify({ status: 'rejected', previous_status: 'pending' })]
-      );
-    } catch (logErr) {
-      console.error('Error logging rejection activity:', logErr);
-    }
-
     res.json({ success: true, message: 'Member rejected successfully' });
   } catch (err) {
     console.error(err);
@@ -775,7 +769,7 @@ router.put('/:id/membership-status', async (req, res) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         const [changers] = await pool.execute('SELECT role, barangay_id FROM farmers WHERE id = ?', [decoded.id]);
         
         if (changers.length > 0) {
@@ -818,17 +812,6 @@ router.put('/:id/membership-status', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Farmer not found' });
     }
 
-    // Log membership status change activity
-    try {
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, barangay_id, activity_type, activity_description, metadata)
-         VALUES (?, ?, 'membership_change', ?, ?)`,
-        [farmerId, farmer[0].barangay_id, `Membership status changed from ${farmer[0].current_membership_status} to ${membership_status} by ${changerRole}`, JSON.stringify({ membership_status, previous_status: farmer[0].current_membership_status, changed_by: changerRole })]
-      );
-    } catch (logErr) {
-      console.error('Error logging membership status change:', logErr);
-    }
-
     console.log(`✓ Updated membership status for farmer ${farmerId} (${farmer[0].full_name}) to: ${membership_status}`);
 
     res.json({ 
@@ -866,18 +849,6 @@ router.put('/:id/status', async (req, res) => {
 
     const [result] = await pool.execute('UPDATE farmers SET status = ? WHERE id = ?', [status, farmerId]);
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Farmer not found' });
-
-    // Log status change activity
-    try {
-      const [farmerData] = await pool.execute('SELECT full_name FROM farmers WHERE id = ?', [farmerId]);
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, activity_type, activity_description, metadata)
-         VALUES (?, 'membership_change', ?, ?)`,
-        [farmerId, `${farmerData[0]?.full_name || 'Member'} status changed to ${status}`, JSON.stringify({ status, action: 'status_update' })]
-      );
-    } catch (logErr) {
-      console.error('Error logging status change:', logErr);
-    }
 
     res.json({ success: true, message: `Status updated to ${status}`, status });
   } catch (err) {
@@ -927,7 +898,7 @@ router.put('/:id/role', async (req, res) => {
 });
 
 // PUT UPDATE FARMER MEMBERSHIP STATUS
-// NOTE: membership-status route is defined above with authorization + audit logging.
+// NOTE: membership-status route is defined above with authorization.
 
 // ----------------------------
 // DELETE FARMER (ADMIN)
@@ -999,7 +970,7 @@ router.post('/:id/profile-picture', upload.single('profile_picture'), async (req
 
     // Update database with new profile picture path
     const [result] = await pool.execute(
-      'UPDATE farmers SET profile_picture = ?, last_activity = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE farmers SET profile_picture = ? WHERE id = ?',
       [profilePicturePath, farmerId]
     );
 
@@ -1015,17 +986,6 @@ router.post('/:id/profile-picture', upload.single('profile_picture'), async (req
       if (fs.existsSync(oldFilePath)) {
         fs.unlinkSync(oldFilePath);
       }
-    }
-
-    // Log activity
-    try {
-      await pool.execute(
-        `INSERT INTO activity_logs (farmer_id, activity_type, activity_description, metadata)
-         VALUES (?, 'profile_update', 'Profile picture updated', ?)`,
-        [farmerId, JSON.stringify({ filename: req.file.filename })]
-      );
-    } catch (logErr) {
-      console.error('Error logging profile picture update:', logErr);
     }
 
     res.json({ 

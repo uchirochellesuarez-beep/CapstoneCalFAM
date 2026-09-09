@@ -12,6 +12,9 @@ const {
   STATUS_NOTIFICATION_TYPES,
   OPERATOR_NOTIFICATION_TYPES,
   TREASURER_NOTIFICATION_TYPES,
+  PRESIDENT_NOTIFICATION_TYPES,
+  AGRICULTURIST_NOTIFICATION_TYPES,
+  FARMER_INCOME_NOTIFICATION_TYPES,
   formatLocalDate,
   upsertNotification,
   purgeOrphanedNotifications
@@ -23,21 +26,29 @@ const {
   normalizeDateString,
   daysBetween
 } = require('../utils/philippinesTime');
+const {
+  overdueInterestRateDecimal,
+  overdueInterestSeasonLabel
+} = require('../services/machinery-interest-service');
 
-const FARMER_NOTIFICATION_TYPES = ['1_day', 'overdue_penalty', ...STATUS_NOTIFICATION_TYPES, ...ASSISTANCE_NOTIFICATION_TYPES];
+const FARMER_NOTIFICATION_TYPES = ['1_day', 'overdue_penalty', ...STATUS_NOTIFICATION_TYPES, ...ASSISTANCE_NOTIFICATION_TYPES, ...FARMER_INCOME_NOTIFICATION_TYPES];
 const VISIBLE_NOTIFICATION_TYPES = [...FARMER_NOTIFICATION_TYPES, ...ANNOUNCEMENT_NOTIFICATION_TYPES, ...OPERATOR_NOTIFICATION_TYPES];
 const VISIBLE_NOTIFICATION_TYPES_SQL = VISIBLE_NOTIFICATION_TYPES.map((value) => `'${value}'`).join(', ');
+const GCASH_PERSONAL_TYPES_SQL = "'gcash_payment_verified', 'gcash_payment_rejected'";
+const ANNOUNCEMENT_OR_GCASH_SQL = `(n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')) OR n.notification_type IN (${GCASH_PERSONAL_TYPES_SQL})`;
 const normalizeRole = (role) => (role || '').toLowerCase();
 
 const isFarmerRole = (role) => normalizeRole(role) === 'farmer';
 const isOperatorRole = (role) => normalizeRole(role) === 'operator';
 const isTreasurerRole = (role) => normalizeRole(role) === 'treasurer';
+const isPresidentRole = (role) => normalizeRole(role) === 'president';
+const isAgriculturistRole = (role) => normalizeRole(role) === 'agriculturist';
 const isManagerRole = (role) => ['operation_manager', 'business_manager'].includes(normalizeRole(role));
 
 const buildNotificationVisibilityClause = (role) => {
   if (isFarmerRole(role)) {
     return {
-      clause: `n.notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL})`,
+      clause: `(n.notification_type IN (${VISIBLE_NOTIFICATION_TYPES_SQL}) OR n.notification_type IN (${GCASH_PERSONAL_TYPES_SQL}))`,
       params: []
     };
   }
@@ -45,7 +56,7 @@ const buildNotificationVisibilityClause = (role) => {
   if (isOperatorRole(role)) {
     const operatorTypesSql = OPERATOR_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
     return {
-      clause: `(n.notification_type IN (${operatorTypesSql}) OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      clause: `(n.notification_type IN (${operatorTypesSql}) OR ${ANNOUNCEMENT_OR_GCASH_SQL})`,
       params: []
     };
   }
@@ -53,20 +64,36 @@ const buildNotificationVisibilityClause = (role) => {
   if (isTreasurerRole(role)) {
     const treasurerTypesSql = TREASURER_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
     return {
-      clause: `(n.notification_type IN (${treasurerTypesSql}) OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      clause: `(n.notification_type IN (${treasurerTypesSql}) OR ${ANNOUNCEMENT_OR_GCASH_SQL})`,
+      params: []
+    };
+  }
+
+  if (isPresidentRole(role)) {
+    const presidentTypesSql = PRESIDENT_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
+    return {
+      clause: `(n.notification_type IN (${presidentTypesSql}) OR ${ANNOUNCEMENT_OR_GCASH_SQL})`,
+      params: []
+    };
+  }
+
+  if (isAgriculturistRole(role)) {
+    const agriculturistTypesSql = AGRICULTURIST_NOTIFICATION_TYPES.map((v) => `'${v}'`).join(', ');
+    return {
+      clause: `(n.notification_type IN (${agriculturistTypesSql}) OR ${ANNOUNCEMENT_OR_GCASH_SQL})`,
       params: []
     };
   }
 
   if (isManagerRole(role)) {
     return {
-      clause: `(n.reference_type = 'machinery_booking' OR (n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')))`,
+      clause: `(n.reference_type = 'machinery_booking' OR ${ANNOUNCEMENT_OR_GCASH_SQL})`,
       params: []
     };
   }
 
   return {
-    clause: `n.reference_type = 'announcement' AND n.notification_type IN ('announcement_posted')`,
+    clause: `(${ANNOUNCEMENT_OR_GCASH_SQL})`,
     params: []
   };
 };
@@ -108,7 +135,7 @@ router.get('/', verifyToken, async (req, res) => {
       WHERE n.farmer_id = ?
         AND n.trigger_date <= ?
         AND ${visibility.clause}
-      ORDER BY n.is_read ASC, n.trigger_date DESC
+      ORDER BY n.is_read ASC, n.created_at DESC, n.trigger_date DESC, n.id DESC
       LIMIT 50
     `;
     const params = [userId, todayStr, ...visibility.params];
@@ -402,7 +429,7 @@ async function generateDueDateNotifications(testDate = null) {
     const [overdueBookings] = await pool.execute(`
       SELECT mb.id, mb.farmer_id, mb.total_price, mb.total_paid, mb.pending_interest,
              mb.booking_date, mb.payment_status,
-             mi.machinery_name, f.full_name
+             mi.machinery_name, mi.interest_rate, f.full_name
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
@@ -432,8 +459,11 @@ async function generateDueDateNotifications(testDate = null) {
       if (daysOverdue < 1) continue;
 
       const monthsOverdue = Math.floor(daysOverdue / 30.44);
-      const rate = monthsOverdue <= 6 ? 0.02 : 0.04;
-      const seasonLabel = monthsOverdue <= 6 ? 'Season 1 (0-6mo): 2%' : 'Season 2 (6+mo): 4%';
+      const machineryInterestRate = parseFloat(booking.interest_rate) || 0;
+      const rate = overdueInterestRateDecimal(machineryInterestRate, monthsOverdue);
+      const seasonLabel = overdueInterestSeasonLabel(machineryInterestRate, monthsOverdue);
+
+      if (rate <= 0) continue;
 
       const originalPrice = parseFloat(booking.total_price) - (parseFloat(booking.pending_interest) || 0);
       const interestAmt = parseFloat((originalPrice * rate).toFixed(2));

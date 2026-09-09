@@ -1,5 +1,5 @@
 <template>
-  <div class="foundation-panel">
+  <div class="foundation-panel" :class="{ 'light-theme': isLight }">
     <div class="foundation-panel-head">
       <span class="foundation-title-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -7,11 +7,8 @@
         </svg>
       </span>
       <div>
-        <h3 v-if="showTitle" class="foundation-title">Pundasyong datos (lumang gastos)</h3>
-        <p class="foundation-desc">
-          Mag-upload ng <strong>listahan ng nakaraang kabuuang gastos</strong> (hal. nakaraang mga season bago gamitin ang app)
-          bilang batayan ng modelo. Tinatanggap: <code>.json</code> o <code>.csv</code> — hanggang 120 na puntos.
-        </p>
+        <h3 v-if="showTitle" class="foundation-title">{{ $t('ui.foundationTitle') }}</h3>
+        <p class="foundation-desc">{{ $t('ui.foundationDesc') }}</p>
       </div>
     </div>
 
@@ -32,7 +29,7 @@
           <code>2026</code>), ginagamit iyan para ipwesto ang puntos sa timeline.
         </p>
         <pre class="format-sample"><code>{{ jsonExample }}</code></pre>
-        <p class="format-id-note">ID na ginagamit: <strong>{{ farmerId }}</strong></p>
+        <p v-if="!hideIdNote" class="format-id-note">{{ $t('ui.usedIdColon') }} <strong>{{ farmerId }}</strong></p>
         <p class="foundation-format">
           <strong>CSV:</strong> dapat may column na <code>farmer_id</code> at <code>total_expenses</code>; opsyonal na
           <code>period_index</code>. Puwede ang <code>80,000</code> na may kuwit sa Excel export.
@@ -58,7 +55,7 @@
         Kasalukuyan: <strong>{{ summary.count }}</strong> puntong naka-save
         <span v-if="summary.updated_at">(huling update: {{ formatShortDate(summary.updated_at) }})</span>
       </p>
-      <p v-else class="foundation-status muted">Walang naka-upload na pundasyon para sa ID na ito.</p>
+      <p v-else class="foundation-status muted">{{ $t('ui.noFoundation') }}</p>
     </div>
 
     <p class="foundation-file-hint">
@@ -83,22 +80,6 @@
         </span>
         {{ loading ? 'Pinoproseso…' : 'Pumili ng file at i-upload' }}
       </button>
-      <button
-        type="button"
-        class="btn-foundation secondary"
-        :disabled="loading || !summary?.count"
-        @click="clearFoundation"
-      >
-        <span class="btn-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
-            <path d="M10 11v6M14 11v6" />
-          </svg>
-        </span>
-        Alisin ang pundasyon
-      </button>
     </div>
   </div>
 </template>
@@ -109,7 +90,9 @@ import { useAuthStore } from '../stores/authStore'
 
 const props = defineProps({
   farmerId: { type: Number, required: true },
-  showTitle: { type: Boolean, default: true }
+  showTitle: { type: Boolean, default: true },
+  hideIdNote: { type: Boolean, default: false },
+  isLight: { type: Boolean, default: false }
 })
 
 const jsonExample = computed(() => {
@@ -117,7 +100,7 @@ const jsonExample = computed(() => {
   return `{ "farmer_id": ${id}, "points": [ { "farmer_id": ${id}, "total_expenses": 45000, "period_index": 1 }, { "farmer_id": ${id}, "total_expenses": 52000 } ] }`
 })
 
-const emit = defineEmits(['uploaded', 'cleared'])
+const emit = defineEmits(['uploaded'])
 
 const authStore = useAuthStore()
 const fileInputRef = ref(null)
@@ -240,31 +223,6 @@ const onFileSelected = async (ev) => {
   } finally {
     loading.value = false
     ev.target.value = ''
-  }
-}
-
-const clearFoundation = async () => {
-  if (!props.farmerId || !summary.value?.count) return
-  loading.value = true
-  foundationError.value = ''
-  foundationSuccess.value = ''
-  try {
-    const res = await fetch(
-      `/api/farmer-income/expense-history-foundation/${props.farmerId}`,
-      {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${authStore.token}` }
-      }
-    )
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi naalis.')
-    foundationSuccess.value = data.message || 'Naalis.'
-    await fetchSummary()
-    emit('cleared')
-  } catch (e) {
-    foundationError.value = e.message || String(e)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -583,7 +541,113 @@ code {
   border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
-@media (max-width: 640px) {
+/* Light mode */
+.foundation-panel.light-theme {
+  background: #ffffff;
+  border-color: #bbf7d0;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
+  color: #052e16;
+}
+
+.foundation-panel.light-theme .foundation-title {
+  color: #052e16;
+}
+
+.foundation-panel.light-theme .foundation-desc,
+.foundation-panel.light-theme .foundation-format,
+.foundation-panel.light-theme .format-id-note,
+.foundation-panel.light-theme .foundation-file-hint {
+  color: #166534;
+}
+
+.foundation-panel.light-theme .foundation-desc strong,
+.foundation-panel.light-theme .foundation-format strong,
+.foundation-panel.light-theme .format-id-note strong,
+.foundation-panel.light-theme .foundation-file-hint strong,
+.foundation-panel.light-theme .foundation-status strong {
+  color: #15803d;
+}
+
+.foundation-panel.light-theme .foundation-format-block {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.foundation-panel.light-theme .foundation-format-toggle {
+  color: #166534;
+}
+
+.foundation-panel.light-theme .format-toggle-icon {
+  color: #15803d;
+}
+
+.foundation-panel.light-theme .foundation-format-body {
+  border-top-color: #e2e8f0;
+}
+
+.foundation-panel.light-theme code {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.foundation-panel.light-theme .format-sample {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.foundation-panel.light-theme .foundation-status-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.foundation-panel.light-theme .foundation-status-card.has-data {
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.foundation-panel.light-theme .status-card-icon {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.foundation-panel.light-theme .foundation-status-card.has-data .status-card-icon {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.foundation-panel.light-theme .foundation-status {
+  color: #052e16;
+}
+
+.foundation-panel.light-theme .foundation-status.muted {
+  color: #64748b;
+}
+
+.foundation-panel.light-theme .btn-foundation.secondary {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.foundation-panel.light-theme .btn-foundation.secondary:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.foundation-panel.light-theme .alert-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.foundation-panel.light-theme .alert-success {
+  background: #ecfdf5;
+  color: #166534;
+  border-color: #86efac;
+}
+
+@media (max-width: 768px) {
   .foundation-panel-head {
     flex-direction: column;
   }

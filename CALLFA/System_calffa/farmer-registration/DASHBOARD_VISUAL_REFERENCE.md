@@ -123,7 +123,6 @@ Login → Dashboard (unified)
       ├─ System Activity
       ├─ Financial Overview
       ├─ Notifications
-      └─ Audit Logs
 ```
 
 ---

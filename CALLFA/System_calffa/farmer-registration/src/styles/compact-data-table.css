@@ -7,21 +7,19 @@
   table-layout: fixed;
 }
 
-.financial-container .expenses-table,
-.financial-container .income-table,
-.financial-container .ar-table,
-.financial-container .collections-table,
-.financial-container .tab-content .data-table,
-.share-capital-page .tab-content .data-table {
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .expenses-table,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .income-table,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .ar-table,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .collections-table,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .tab-content .data-table {
   font-size: 0.625rem;
 }
 
-.financial-container .expenses-table th,
-.financial-container .income-table th,
-.financial-container .ar-table th,
-.financial-container .collections-table th,
-.financial-container .tab-content .data-table th,
-.share-capital-page .tab-content .data-table th {
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .expenses-table th,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .income-table th,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .ar-table th,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .collections-table th,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .tab-content .data-table th {
   padding: 0.28rem 0.32rem !important;
   font-size: 0.58rem !important;
   letter-spacing: 0.03em;
@@ -32,12 +30,11 @@
   font-weight: 700;
 }
 
-.financial-container .expenses-table td,
-.financial-container .income-table td,
-.financial-container .ar-table td,
-.financial-container .collections-table td,
-.financial-container .tab-content .data-table td,
-.share-capital-page .tab-content .data-table td {
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .expenses-table td,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .income-table td,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .ar-table td,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .collections-table td,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .tab-content .data-table td {
   padding: 0.26rem 0.3rem !important;
   font-size: 0.625rem !important;
   line-height: 1.15;
@@ -48,9 +45,8 @@
   font-weight: 500;
 }
 
-.financial-container .amount-cell,
-.financial-container .tab-content table.data-table tbody td.amount,
-.share-capital-page .tab-content table.data-table tbody td.amount {
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .amount-cell,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .tab-content table.data-table tbody td.amount {
   font-size: 0.625rem !important;
   font-weight: 600 !important;
 }
@@ -97,8 +93,7 @@
 }
 
 /* Table badges / status chips */
-.financial-container table :is(.badge, .status-badge),
-.share-capital-page table .badge,
+.financial-container:not(.share-capital-page) table :is(.badge, .status-badge),
 .admin-loans-page .loans-table :is(.status-badge, .payer-badge) {
   font-size: 0.55rem !important;
   font-weight: 600 !important;
@@ -107,38 +102,47 @@
 }
 
 /* Compact row action buttons (financial tables) */
-.financial-container .actions-cell,
-.financial-container .members-action-row {
+.financial-container td.actions-cell,
+.financial-container td.members-action-row {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.financial-container td.actions-cell .table-action-btn,
+.financial-container td.members-action-row .table-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  flex-wrap: nowrap;
+  vertical-align: middle;
 }
 
-.financial-container .actions-cell .table-action-btn {
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  min-height: 24px !important;
-  border-radius: 5px !important;
+.financial-container td.actions-cell .table-action-btn + .table-action-btn,
+.financial-container td.members-action-row .table-action-btn + .table-action-btn {
+  margin-left: 0.25rem;
 }
 
-.financial-container .actions-cell .table-action-btn svg {
-  width: 11px !important;
-  height: 11px !important;
+.financial-container td.actions-cell .table-action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 6px !important;
 }
 
-.financial-container .btn-sm,
-.financial-container .btn-small,
+.financial-container td.actions-cell .table-action-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .btn-sm,
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .btn-small,
 .share-capital-page .btn-sm {
   font-size: 0.55rem !important;
   padding: 0.16rem 0.3rem !important;
   line-height: 1.1;
 }
 
-.financial-container .badge,
-.share-capital-page .badge {
+.financial-container:not(.share-capital-page):not(.share-capital-withdrawal-page):not(.seed-fertilizer-plan):not(.machinery-financial-page) .badge {
   font-size: 0.55rem !important;
   padding: 0.08rem 0.28rem !important;
   line-height: 1.1;
@@ -263,16 +267,13 @@
 }
 
 /* Final override — beat light-mode-senior table font bumps (match dues tab) */
-body.glass-light .farmer-table-page.light-theme .members-table th,
-body.glass-light .financial-container.light-theme .tab-content .data-table th,
-body.glass-light .financial-container.light-theme :is(
+body.glass-light .financial-container.light-theme:not(.share-capital-page) .tab-content .data-table th,
+body.glass-light .financial-container.light-theme:not(.share-capital-page) :is(
   .expenses-table,
   .income-table,
   .ar-table,
   .collections-table
 ) th,
-body.glass-light .financial-container.share-capital-page.light-theme .tab-content .data-table th,
-body.glass-light .share-capital-page.light-theme .tab-content .data-table th,
 body.glass-light .page-container.admin-loans-page.light-theme .loans-table th,
 body.glass-light .page-container.admin-loans-page.light-theme .payment-history-table th {
   font-size: 0.58rem !important;
@@ -288,16 +289,13 @@ body.glass-light .page-container.admin-loans-page.light-theme .payment-history-t
   line-height: 1.08 !important;
 }
 
-body.glass-light .farmer-table-page.light-theme .members-table td,
-body.glass-light .financial-container.light-theme .tab-content .data-table td,
-body.glass-light .financial-container.light-theme :is(
+body.glass-light .financial-container.light-theme:not(.share-capital-page) .tab-content .data-table td,
+body.glass-light .financial-container.light-theme:not(.share-capital-page) :is(
   .expenses-table,
   .income-table,
   .ar-table,
   .collections-table
 ) td,
-body.glass-light .financial-container.share-capital-page.light-theme .tab-content .data-table td,
-body.glass-light .share-capital-page.light-theme .tab-content .data-table td,
 body.glass-light .page-container.admin-loans-page.light-theme .loans-table td,
 body.glass-light .page-container.admin-loans-page.light-theme .payment-history-table td {
   font-size: 0.625rem !important;
@@ -313,23 +311,19 @@ body.glass-light .page-container.admin-loans-page.light-theme .payment-history-t
   line-height: 1.12 !important;
 }
 
-body.glass-light .farmer-table-page.light-theme .members-table :is(.member-chip, .status-chip, .role-badge),
-body.glass-light .share-capital-page.light-theme .tab-content .data-table .badge,
 body.glass-light .page-container.admin-loans-page.light-theme .loans-table :is(.status-badge, .payer-badge) {
   font-size: 0.55rem !important;
   font-weight: 600 !important;
   padding: 0.08rem 0.28rem !important;
 }
 
-body.glass-light .share-capital-page.light-theme .tab-content .data-table .btn-link-inline,
-body.glass-light .financial-container.light-theme .tab-content .data-table .btn-link-inline,
+body.glass-light .financial-container.light-theme:not(.share-capital-page) .tab-content .data-table .btn-link-inline,
 body.glass-light .page-container.admin-loans-page.light-theme .btn-link-inline {
   font-size: inherit !important;
   font-weight: 500 !important;
 }
 
-body.glass-light .share-capital-page.light-theme .tab-content .data-table .btn-small,
-body.glass-light .financial-container.light-theme .tab-content .data-table .btn-small {
+body.glass-light .financial-container.light-theme:not(.share-capital-page) .tab-content .data-table .btn-small {
   font-size: 0.55rem !important;
   padding: 0.16rem 0.3rem !important;
 }

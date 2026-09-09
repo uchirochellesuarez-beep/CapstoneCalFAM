@@ -177,8 +177,75 @@ async function runExpenseTrainingSampleSeed(pool) {
   }
 }
 
+function loadSampleFingerprints() {
+  const fingerprints = [];
+  for (const fid of listSampleFarmerDirs()) {
+    const sampleDir = path.join(ROOT, fid);
+    const files = fs.readdirSync(sampleDir).filter((f) => f.endsWith('.json'));
+    for (const file of files) {
+      const payload = JSON.parse(fs.readFileSync(path.join(sampleDir, file), 'utf8'));
+      const farmerId = payload.farmer_id;
+      if (!farmerId) continue;
+      fingerprints.push({
+        farmer_id: farmerId,
+        area_hectares: payload.area_hectares,
+        planting_method: payload.planting_method,
+        irrigation_type: payload.irrigation_type,
+        total_expenses: payload.total_expenses,
+        net_income: payload.net_income
+      });
+    }
+  }
+  return fingerprints;
+}
+
+/**
+ * Removes rows previously inserted from bundled training JSON so they do not
+ * appear as the farmer's own Farm Income records. Forecast still reads JSON from disk.
+ */
+async function removeExpenseTrainingSampleRecords(pool) {
+  const fingerprints = loadSampleFingerprints();
+  if (fingerprints.length === 0) {
+    return { deleted: 0 };
+  }
+
+  const conn = await pool.getConnection();
+  let deleted = 0;
+  try {
+    await conn.beginTransaction();
+    for (const fp of fingerprints) {
+      const [result] = await conn.execute(
+        `DELETE FROM farmer_income_records
+         WHERE farmer_id = ?
+           AND area_hectares = ?
+           AND planting_method = ?
+           AND irrigation_type = ?
+           AND total_expenses = ?
+           AND net_income = ?`,
+        [
+          fp.farmer_id,
+          fp.area_hectares,
+          fp.planting_method,
+          fp.irrigation_type,
+          fp.total_expenses,
+          fp.net_income
+        ]
+      );
+      deleted += result.affectedRows || 0;
+    }
+    await conn.commit();
+    return { deleted };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 module.exports = {
   runExpenseTrainingSampleSeed,
+  removeExpenseTrainingSampleRecords,
   listSampleFarmerDirs,
   ROOT,
 };

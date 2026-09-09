@@ -25,6 +25,8 @@
 .machinery-action-btn svg {
   display: block;
   flex-shrink: 0;
+  margin: 0;
+  pointer-events: none;
 }
 
 .table-action-edit,
@@ -43,6 +45,10 @@
 
 .table-action-view {
   color: #38bdf8;
+}
+
+.table-action-print {
+  color: #cbd5e1;
 }
 
 .table-action-approve {
@@ -87,6 +93,12 @@
   color: #7dd3fc;
 }
 
+.table-action-print:hover {
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
 .table-action-approve:hover {
   color: #86efac;
   background: rgba(16, 36, 28, 1);
@@ -111,43 +123,64 @@
   transform: translateY(0);
 }
 
-/* Light theme pages */
+/* Light theme — dark chips + bright icon/label colors (readable on light pages) */
 body.glass-light :is(.light-theme) .table-action-btn,
 body.glass-light :is(.light-theme) .machinery-action-btn {
-  background: #374151 !important;
-  border-color: #4b5563 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  background: #1a2e24 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 2px 6px rgba(4, 18, 12, 0.22) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
 }
 
 body.glass-light :is(.light-theme) :is(.table-action-edit, .machinery-action-edit) {
-  color: #ea580c !important;
+  color: #fdba74 !important;
+  -webkit-text-fill-color: #fdba74 !important;
 }
 
 body.glass-light :is(.light-theme) :is(.table-action-delete, .machinery-action-delete) {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 body.glass-light :is(.light-theme) :is(.table-action-edit, .machinery-action-edit):hover {
-  color: #f97316 !important;
-  background: #4b5563 !important;
+  color: #fed7aa !important;
+  -webkit-text-fill-color: #fed7aa !important;
+  background: rgba(16, 36, 28, 1) !important;
 }
 
 body.glass-light :is(.light-theme) :is(.table-action-delete, .machinery-action-delete):hover {
   color: #ffffff !important;
-  background: #7f1d1d !important;
-  border-color: #b91c1c !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: rgba(40, 20, 20, 0.95) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
 }
 
 body.glass-light :is(.light-theme) .table-action-view {
-  color: #0284c7 !important;
+  color: #7dd3fc !important;
+  -webkit-text-fill-color: #7dd3fc !important;
+}
+
+body.glass-light :is(.light-theme) .table-action-print {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+body.glass-light :is(.light-theme) .table-action-print:hover {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
 }
 
 body.glass-light :is(.light-theme) .table-action-approve {
-  color: #16a34a !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
 }
 
 body.glass-light :is(.light-theme) .table-action-reject {
-  color: #dc2626 !important;
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
 }
 
 /* Dark mode — preserve icon colors vs global white text */
@@ -166,6 +199,10 @@ body.glass-dark :is(.table-action-btn, .machinery-action-btn) {
 
 body.glass-dark :is(.table-action-view) {
   color: #38bdf8 !important;
+}
+
+body.glass-dark :is(.table-action-print) {
+  color: #cbd5e1 !important;
 }
 
 body.glass-dark :is(.table-action-approve) {

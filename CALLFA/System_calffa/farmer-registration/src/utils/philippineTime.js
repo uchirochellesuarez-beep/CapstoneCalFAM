@@ -59,7 +59,7 @@ export const getMachineryDueDateString = (bookingDate) => addDays(bookingDate, 3
 
 export const isMachineryOverdue = (bookingDate) => {
   const dueDate = getMachineryDueDateString(bookingDate)
-  return due ? isPastDueDate(dueDate) : false
+  return dueDate ? isPastDueDate(dueDate) : false
 }
 
 export const formatManilaDateLabel = (value) => {

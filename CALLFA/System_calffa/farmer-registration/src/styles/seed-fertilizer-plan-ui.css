@@ -1,0 +1,389 @@
+/* Seed & Fertilizer Plan — stable global layout (loaded from main.js) */
+
+.financial-container.seed-fertilizer-plan {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.seed-fertilizer-plan .tab-content,
+.seed-fertilizer-plan .card,
+.seed-fertilizer-plan .table-container,
+.seed-fertilizer-plan .fin-desktop-table {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.seed-fertilizer-plan .stats-grid {
+  display: grid !important;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.seed-fertilizer-plan .stats-grid--seed-fert {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.seed-fertilizer-plan .stat-card {
+  min-width: 0;
+}
+
+.seed-fertilizer-plan .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.seed-fertilizer-plan .fin-desktop-table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(24rem, 56vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.seed-fertilizer-plan .table-container {
+  overflow: hidden;
+  padding: 5px 8px 6px;
+  box-sizing: border-box;
+}
+
+.seed-fertilizer-plan .ledger-table-seed-fert {
+  min-width: 36rem;
+  width: 100%;
+}
+
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-farmer { width: 22%; }
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-type { width: 12%; }
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-sacks { width: 8%; }
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-amount { width: 11%; }
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-status { width: 14%; }
+.seed-fertilizer-plan .ledger-table-seed-fert col.col-actions { width: 11%; }
+
+.seed-fertilizer-plan .tab-content .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.seed-fertilizer-plan .tab-content .card-header .btn-primary-action {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.seed-fertilizer-plan td.actions-cell {
+  text-align: right;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.seed-fertilizer-plan .tab-content .data-table .th-amount,
+.seed-fertilizer-plan .tab-content .data-table td.td-amount,
+.seed-fertilizer-plan .tab-content table.data-table tbody td.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.seed-fertilizer-plan .tab-content .data-table .th-sacks,
+.seed-fertilizer-plan .tab-content .data-table td.td-sacks {
+  text-align: center;
+}
+
+.seed-fertilizer-plan .tab-content .data-table .th-status,
+.seed-fertilizer-plan .tab-content .data-table td.td-status {
+  text-align: center;
+}
+
+.seed-fertilizer-plan .table-empty {
+  text-align: center;
+  color: var(--text-soft, rgba(220, 238, 211, 0.62));
+  padding: 10px 8px;
+}
+
+@media (max-width: 768px) {
+  .seed-fertilizer-plan .stats-grid--seed-fert {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .financial-container.seed-fertilizer-plan.glass-module-page {
+    padding: 8px 12px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    border-radius: 12px !important;
+    min-height: 0 !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-header,
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-header-text {
+    gap: 2px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page h1.page-title,
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-header::before {
+    top: -36px !important;
+    right: -44px !important;
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .page-header::after {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 0.35rem !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content--main {
+    padding-top: 8px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .ledger-note {
+    margin: 0 0 6px !important;
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .info-banner {
+    padding: 6px 10px !important;
+    margin-bottom: 6px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stats-group {
+    margin-bottom: 6px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stats-grid {
+    display: grid !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stats-grid--seed-fert {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stat-label {
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stat-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .card {
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .card-header {
+    gap: 6px !important;
+    padding: 5px 8px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .card-title {
+    font-size: 0.82rem !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .card-hint {
+    padding: 4px 8px 6px !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .card-header .btn-primary-action {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    min-height: 28px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .table-container {
+    padding: 5px 8px 6px !important;
+    overflow: hidden !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .fin-desktop-table {
+    max-height: min(22rem, 52vh) !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table,
+  html body .financial-container.seed-fertilizer-plan.glass-module-page table.data-table {
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    border-right: none !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    border-right: none !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table th:not(:last-child),
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table td:not(:last-child) {
+    border-right: none !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table tbody tr {
+    height: 1.9rem !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content table.data-table tbody td.amount,
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table td.td-amount {
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .tab-content .data-table .btn-small {
+    padding: 2px 7px !important;
+    font-size: 10px !important;
+    min-height: 24px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .sub {
+    font-size: 9px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .badge-dist {
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .pay-history {
+    font-size: 10px !important;
+    padding: 4px 0 4px 4px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .muted {
+    font-size: 10px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .table-empty {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger
+  ) {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    min-height: 28px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .empty-state {
+    padding: 14px 10px !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .empty-title {
+    font-size: 0.85rem !important;
+  }
+
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .empty-text {
+    font-size: 11px !important;
+  }
+
+  body.glass-dark .financial-container.seed-fertilizer-plan.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger,
+    .btn-small
+  ),
+  body.glass-light .financial-container.seed-fertilizer-plan.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger,
+    .btn-small
+  ) {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .fin-desktop-table {
+    max-height: min(20rem, 48vh) !important;
+  }
+}
+
+/* Layout lock — stable on refresh and client-side navigation */
+@media (min-width: 769px) {
+  html body .financial-container.seed-fertilizer-plan.glass-module-page .stats-grid.stats-grid--seed-fert {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+}

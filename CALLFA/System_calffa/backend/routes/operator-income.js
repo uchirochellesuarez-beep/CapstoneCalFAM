@@ -1,11 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const { verifyToken } = require('../middleware/auth');
 const {
   getOperatorIncomeSummary,
-  generateOperatorIncomeForBooking
+  generateOperatorIncomeForBooking,
+  ensureLaborReceiptForIncomeRow
 } = require('../services/operator-income-service');
+const { withDisplayStatus } = require('../services/machinery-status');
+
+const INCOME_RECEIPT_JOIN = `
+  LEFT JOIN payment_receipts pr
+    ON pr.module = 'operator_labor'
+   AND pr.reference_type = 'operator_income'
+   AND pr.reference_id = oi.id
+`;
+
+async function attachLaborReceipts(rows = []) {
+  const out = [];
+  for (const row of rows) {
+    const receiptNumber =
+      row.receipt_number ||
+      (await ensureLaborReceiptForIncomeRow(row));
+    out.push({ ...row, receipt_number: receiptNumber || null });
+  }
+  return out;
+}
 
 async function resolveUser(req) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -13,7 +34,7 @@ async function resolveUser(req) {
 
   const jwt = require('jsonwebtoken');
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     const [users] = await pool.execute(
       'SELECT id, role, barangay_id, full_name FROM farmers WHERE id = ?',
       [decoded.id]
@@ -50,7 +71,8 @@ router.get('/dashboard', verifyOperatorAccess, async (req, res) => {
       [operatorId]
     );
 
-    const machineryIds = assignedMachinery.map((m) => m.id);
+    const assignedWithStatus = await withDisplayStatus(pool, assignedMachinery);
+    const machineryIds = assignedWithStatus.map((m) => m.id);
     if (machineryIds.length === 0) {
       const emptySummary = await getOperatorIncomeSummary(operatorId);
       return res.json({
@@ -79,14 +101,14 @@ router.get('/dashboard', verifyOperatorAccess, async (req, res) => {
 
     const [upcoming] = await pool.execute(
       `${baseBookingSelect}
-       AND mb.status = 'Approved' AND mb.booking_date >= ?
+       AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed') AND mb.booking_date >= ?
        ORDER BY mb.booking_date ASC LIMIT 20`,
       [...machineryIds, operatorId, today]
     );
 
     const [active] = await pool.execute(
       `${baseBookingSelect}
-       AND mb.status IN ('Approved', 'In Use')
+       AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use')
        ORDER BY mb.booking_date ASC LIMIT 20`,
       [...machineryIds, operatorId]
     );
@@ -106,25 +128,32 @@ router.get('/dashboard', verifyOperatorAccess, async (req, res) => {
     );
 
     const [recentTransactions] = await pool.execute(
-      `SELECT oi.*, mi.machinery_name, mb.status AS booking_status
+      `SELECT oi.*, mi.machinery_name, mi.barangay_id, mb.status AS booking_status,
+              f.full_name AS farmer_name, pr.receipt_number
        FROM operator_income oi
        JOIN machinery_inventory mi ON oi.machinery_id = mi.id
        LEFT JOIN machinery_bookings mb ON oi.booking_id = mb.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
+       ${INCOME_RECEIPT_JOIN}
        WHERE oi.operator_id = ?
        ORDER BY oi.created_at DESC LIMIT 10`,
       [operatorId]
     );
 
     const incomeData = await getOperatorIncomeSummary(operatorId);
+    const recentWithReceipts = await attachLaborReceipts(recentTransactions);
 
     res.json({
       success: true,
-      assigned_machinery: assignedMachinery,
+      assigned_machinery: assignedWithStatus.map((row) => ({
+        ...row,
+        status: row.availability_status
+      })),
       upcoming_bookings: upcoming,
       active_bookings: active,
       completed_bookings: completed,
       incomplete_bookings: incomplete,
-      recent_transactions: recentTransactions,
+      recent_transactions: recentWithReceipts,
       income_summary: incomeData.summary,
       earnings_per_machinery: incomeData.earnings_per_machinery
     });
@@ -141,12 +170,13 @@ router.get('/', verifyOperatorAccess, async (req, res) => {
     const { start_date, end_date, machinery_id, booking_status, limit = 100 } = req.query;
 
     let query = `
-      SELECT oi.*, mi.machinery_name, mi.machinery_type, mb.status AS booking_status,
-             f.full_name AS farmer_name
+      SELECT oi.*, mi.machinery_name, mi.machinery_type, mi.barangay_id,
+             mb.status AS booking_status, f.full_name AS farmer_name, pr.receipt_number
       FROM operator_income oi
       JOIN machinery_inventory mi ON oi.machinery_id = mi.id
       LEFT JOIN machinery_bookings mb ON oi.booking_id = mb.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
+      ${INCOME_RECEIPT_JOIN}
       WHERE oi.operator_id = ?
     `;
     const params = [operatorId];
@@ -172,6 +202,7 @@ router.get('/', verifyOperatorAccess, async (req, res) => {
     params.push(parseInt(limit, 10));
 
     const [income] = await pool.execute(query, params);
+    const incomeWithReceipts = await attachLaborReceipts(income);
     const summary = await getOperatorIncomeSummary(operatorId, {
       start_date,
       end_date,
@@ -181,7 +212,7 @@ router.get('/', verifyOperatorAccess, async (req, res) => {
 
     res.json({
       success: true,
-      income,
+      income: incomeWithReceipts,
       summary: summary.summary,
       earnings_per_machinery: summary.earnings_per_machinery
     });

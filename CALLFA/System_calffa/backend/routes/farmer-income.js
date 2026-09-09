@@ -2,8 +2,13 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const pool = require('../db');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const {
-  createIncomeAssistanceNotification
+  createIncomeAssistanceNotification,
+  notifyPresidentsOfIncomeSubmission,
+  notifyAgriculturistsOfEligibleIncome,
+  createIncomeRejectedNotification,
+  deleteNotificationsForReference
 } = require('../services/notification-service');
 const {
   buildAssistanceSmsMessage,
@@ -29,7 +34,7 @@ function decodeIncomeJwt(req) {
   if (!token) return null;
   try {
     const jwt = require('jsonwebtoken');
-    return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    return jwt.verify(token, JWT_SECRET);
   } catch {
     return null;
   }
@@ -166,12 +171,72 @@ function parseLocaleNumberCell(s) {
   return parseFloat(t);
 }
 
+function detectCsvDelimiter(headerLine) {
+  const stripped = String(headerLine || '').replace(/^\uFEFF/, '');
+  const counts = {
+    ',': (stripped.match(/,/g) || []).length,
+    ';': (stripped.match(/;/g) || []).length,
+    '\t': (stripped.match(/\t/g) || []).length,
+  };
+  let best = ',';
+  let n = -1;
+  for (const [d, c] of Object.entries(counts)) {
+    if (c > n) {
+      n = c;
+      best = d;
+    }
+  }
+  return best;
+}
+
+function parseCsvLine(line, delimiter) {
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+  const s = String(line || '').replace(/^\uFEFF/, '');
+  for (let i = 0; i < s.length; i += 1) {
+    const ch = s[i];
+    if (ch === '"') {
+      if (inQuotes && s[i + 1] === '"') {
+        cur += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === delimiter && !inQuotes) {
+      out.push(cur.trim().replace(/^["']|["']$/g, ''));
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur.trim().replace(/^["']|["']$/g, ''));
+  return out;
+}
+
+/** Excel often writes 30,000 unquoted, which splits into extra columns. Glue those back into total_expenses. */
+function fitCsvRowToHeader(parts, headerLen, totalIdx) {
+  const row = parts.slice();
+  if (row.length < headerLen) {
+    while (row.length < headerLen) row.push('');
+    return row;
+  }
+  if (row.length === headerLen) return row;
+  if (totalIdx < 0 || totalIdx >= headerLen) return row.slice(0, headerLen);
+  const overflow = row.length - headerLen;
+  const take = overflow + 1;
+  const before = row.slice(0, totalIdx);
+  const joined = row.slice(totalIdx, totalIdx + take).join('');
+  const after = row.slice(totalIdx + take);
+  return [...before, joined, ...after].slice(0, headerLen);
+}
+
 function parseFoundationPointsFromText(text, expectedFarmerId) {
   const uid = Number(expectedFarmerId);
   if (!Number.isFinite(uid) || uid <= 0) {
     return { ok: false, error: 'Hindi wastong farmer ID sa upload.' };
   }
-  const t = String(text || '').trim();
+  const t = String(text || '').replace(/^\uFEFF/, '').trim();
   if (!t) return { ok: false, error: 'Walang nilalaman ang file.' };
   if (t.startsWith('[') || t.startsWith('{')) {
     try {
@@ -186,10 +251,12 @@ function parseFoundationPointsFromText(text, expectedFarmerId) {
     .map((l) => l.trim())
     .filter(Boolean);
   if (lines.length === 0) return { ok: false, error: 'Walang linyang CSV.' };
+  const delimiter = detectCsvDelimiter(lines[0]);
   let start = 0;
   let cPeriod = -1;
   let cTotal = 0;
-  const hdrCells = lines[0].split(',').map((h) => h.trim().toLowerCase());
+  const hdrCells = parseCsvLine(lines[0], delimiter).map((h) => h.trim().toLowerCase());
+  while (hdrCells.length && hdrCells[hdrCells.length - 1] === '') hdrCells.pop();
   const looksHeader =
     hdrCells.some((h) => h.includes('total')) ||
     hdrCells.some((h) => h.includes('gastos')) ||
@@ -231,31 +298,18 @@ function parseFoundationPointsFromText(text, expectedFarmerId) {
         'Ang CSV ay dapat may hindi bababa sa 2 column: farmer_id, total_expenses (o may header na may farmer_id).',
     };
   }
-  const headerColCount = looksHeader ? hdrCells.length : 0;
+  const headerColCount = looksHeader ? hdrCells.length : cPeriod >= 0 ? 3 : 2;
   const points = [];
   for (let li = start; li < lines.length; li += 1) {
-    let parts = lines[li]
-      .split(',')
-      .map((c) => c.trim().replace(/^["']|["']$/g, ''));
-    if (parts.length === 0) continue;
-    if (looksHeader && headerColCount >= 2 && parts.length > headerColCount) {
-      const merged = parts.slice(0, headerColCount - 1);
-      merged.push(parts.slice(headerColCount - 1).join(','));
-      parts = merged;
-    } else if (!looksHeader && parts.length >= 2) {
-      const expectCols = cPeriod >= 0 ? 3 : 2;
-      if (parts.length > expectCols) {
-        const merged = parts.slice(0, expectCols - 1);
-        merged.push(parts.slice(expectCols - 1).join(','));
-        parts = merged;
-      }
-    }
+    let parts = fitCsvRowToHeader(
+      parseCsvLine(lines[li], delimiter),
+      headerColCount,
+      cTotal
+    );
+    if (parts.every((c) => !String(c || '').trim())) continue;
     const rowFarmer = parseLocaleNumberCell(parts[cFarmer] != null ? parts[cFarmer] : '');
     if (!Number.isFinite(rowFarmer) || rowFarmer !== uid) {
-      return {
-        ok: false,
-        error: `Hindi tumugma ang farmer_id sa hilera ${li + 1} ng CSV (nakita: ${parts[cFarmer] || '—'}; dapat: ${uid}).`,
-      };
+      continue;
     }
     const total = parseLocaleNumberCell(parts[cTotal] != null ? parts[cTotal] : parts[0]);
     const periodRaw =
@@ -285,7 +339,7 @@ const getUserBarangayFromToken = (req) => {
   
   try {
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     return decoded.barangay_id || null;
   } catch (err) {
     return null;
@@ -495,6 +549,23 @@ router.post('/', async (req, res) => {
 
     await conn.commit();
 
+    try {
+      const [farmerRows] = await pool.execute(
+        'SELECT full_name, barangay_id FROM farmers WHERE id = ?',
+        [farmer_id]
+      );
+      const farmer = farmerRows[0];
+      if (farmer) {
+        await notifyPresidentsOfIncomeSubmission({
+          recordId,
+          barangayId: farmer.barangay_id,
+          farmerName: farmer.full_name
+        });
+      }
+    } catch (notifyError) {
+      console.error('Failed to notify president of income submission:', notifyError.message);
+    }
+
     res.status(201).json({
       message: 'Matagumpay na naitala ang kita!',
       id: recordId
@@ -588,7 +659,7 @@ router.get('/expense-forecast/:farmerId', async (req, res) => {
     }
 
     const [records] = await pool.execute(
-      `SELECT * FROM farmer_income_records WHERE farmer_id = ?`,
+      `SELECT * FROM farmer_income_records WHERE farmer_id = ? AND status = 'Eligible'`,
       [uid]
     );
 
@@ -866,7 +937,7 @@ router.put('/:id', async (req, res) => {
 
     // Verify existence and get barangay info
     const [existing] = await conn.execute(
-      `SELECT r.farmer_id, f.barangay_id FROM farmer_income_records r
+      `SELECT r.farmer_id, r.status, f.barangay_id, f.full_name as farmer_name FROM farmer_income_records r
        JOIN farmers f ON r.farmer_id = f.id
        WHERE r.id = ?`,
       [id]
@@ -889,6 +960,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Update main record
+    const resubmitRejected = String(existing[0].status || '') === 'Rejected';
     await conn.execute(
       `UPDATE farmer_income_records SET
         area_hectares = ?, planting_method = ?, irrigation_type = ?,
@@ -896,7 +968,7 @@ router.put('/:id', async (req, res) => {
         drying_cost = ?, hauling_cost = ?, tarasko_cost = ?, fuel_cost = ?, other_expenses = ?,
         sacks_harvested = ?, kg_per_sack = ?, price_per_kg = ?,
         total_fertilizer_cost = ?, total_pesticide_cost = ?, total_labor_cost = ?,
-        gross_income = ?, total_expenses = ?, net_income = ?
+        gross_income = ?, total_expenses = ?, net_income = ?${resubmitRejected ? ', status = ?' : ''}
       WHERE id = ?`,
       [
         area_hectares, planting_method, irrigation_type,
@@ -905,6 +977,7 @@ router.put('/:id', async (req, res) => {
         sacks_harvested || 0, kg_per_sack || 0, price_per_kg || 0,
         total_fertilizer_cost || 0, total_pesticide_cost || 0, total_labor_cost || 0,
         gross_income || 0, total_expenses || 0, net_income || 0,
+        ...(resubmitRejected ? ['Pending'] : []),
         id
       ]
     );
@@ -938,6 +1011,20 @@ router.put('/:id', async (req, res) => {
     }
 
     await conn.commit();
+
+    if (resubmitRejected) {
+      try {
+        await deleteNotificationsForReference('farmer_income_record', id, 'income_rejected');
+        await notifyPresidentsOfIncomeSubmission({
+          recordId: id,
+          barangayId: existing[0].barangay_id,
+          farmerName: existing[0].farmer_name
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify president of income resubmission:', notifyError.message);
+      }
+    }
+
     res.json({ message: 'Matagumpay na na-update ang talaan!' });
   } catch (err) {
     await conn.rollback();
@@ -958,7 +1045,7 @@ router.put('/:id/status', async (req, res) => {
     const userBarangayId = getUserBarangayFromToken(req);
 
     // Validate status
-    const VALID_STATUSES = ['Submitted', 'Under Review', 'Eligible', 'Upcoming Assistance', 'Received'];
+    const VALID_STATUSES = ['Pending', 'Eligible', 'Rejected'];
     if (!VALID_STATUSES.includes(status)) {
       await conn.rollback();
       return res.status(400).json({ 
@@ -968,7 +1055,7 @@ router.put('/:id/status', async (req, res) => {
 
     // Get current record and verify barangay access
     const [records] = await conn.execute(
-      `SELECT r.*, f.barangay_id FROM farmer_income_records r
+      `SELECT r.*, f.barangay_id, f.full_name as farmer_name FROM farmer_income_records r
        JOIN farmers f ON r.farmer_id = f.id
        WHERE r.id = ?`,
       [id]
@@ -1003,6 +1090,19 @@ router.put('/:id/status', async (req, res) => {
     );
 
     await conn.commit();
+
+    if (status === 'Eligible' && oldStatus !== 'Eligible') {
+      try {
+        await notifyAgriculturistsOfEligibleIncome({
+          recordId: id,
+          barangayId: record.barangay_id,
+          farmerName: record.farmer_name
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify agriculturist of eligible income:', notifyError.message);
+      }
+    }
+
     res.json({ 
       message: 'Matagumpay na na-update ang status!',
       old_status: oldStatus,
@@ -1028,7 +1128,7 @@ router.put('/:id/verify', async (req, res) => {
 
     // Get current record and verify barangay access
     const [records] = await conn.execute(
-      `SELECT r.*, f.barangay_id FROM farmer_income_records r
+      `SELECT r.*, f.barangay_id, f.full_name as farmer_name FROM farmer_income_records r
        JOIN farmers f ON r.farmer_id = f.id
        WHERE r.id = ?`,
       [id]
@@ -1048,7 +1148,12 @@ router.put('/:id/verify', async (req, res) => {
     }
 
     const oldStatus = record.status;
-    const newStatus = is_verified ? 'Eligible' : 'Pending';
+    const newStatus = is_verified ? 'Eligible' : 'Rejected';
+
+    if (!is_verified && !String(rejection_reason || '').trim()) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Kailangan ang dahilan ng pagtanggi.' });
+    }
 
     // Update the status
     await conn.execute(
@@ -1064,8 +1169,32 @@ router.put('/:id/verify', async (req, res) => {
     );
 
     await conn.commit();
+
+    if (is_verified) {
+      try {
+        await notifyAgriculturistsOfEligibleIncome({
+          recordId: id,
+          barangayId: record.barangay_id,
+          farmerName: record.farmer_name
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify agriculturist of eligible income:', notifyError.message);
+      }
+    } else {
+      try {
+        await deleteNotificationsForReference('farmer_income_record', id, 'president_income_submitted');
+        await createIncomeRejectedNotification({
+          farmerId: record.farmer_id,
+          recordId: id,
+          reason: rejection_reason
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify farmer of income rejection:', notifyError.message);
+      }
+    }
+
     res.json({ 
-      message: is_verified ? 'Ipinagkumpitansa ang talaan bilang Eligible!' : 'Ibinabalik ang talaan para sa karagdagang impormasyon!',
+      message: is_verified ? 'Ipinagkumpitansa ang talaan bilang Eligible!' : 'Tinanggihan ang talaan. Maaaring i-update at isumite muli ng magsasaka.',
       old_status: oldStatus,
       new_status: newStatus
     });
@@ -1213,16 +1342,9 @@ router.post('/distribution/create', async (req, res) => {
     );
 
     await conn.execute(
-      `UPDATE farmer_income_records
-       SET status = 'Upcoming Assistance'
-       WHERE id = ?`,
-      [income_record_id]
-    );
-
-    await conn.execute(
       `INSERT INTO income_status_audit_log (income_record_id, farmer_id, old_status, new_status, changed_by, reason_notes)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [income_record_id, record.farmer_id, record.status, 'Upcoming Assistance', userId, `Distribution allocated: ${assistance_type}${notes ? ` - ${notes}` : ''}`]
+      [income_record_id, record.farmer_id, record.status, record.status, userId, `Distribution allocated: ${assistance_type}${notes ? ` - ${notes}` : ''}`]
     );
 
     await conn.commit();
@@ -1504,25 +1626,6 @@ router.put('/distribution/:id/confirm', async (req, res) => {
     );
     const distAfter = distRowsAfter[0];
 
-    // Update the income record status to 'Received' if all distributions are confirmed
-    const recordId = dist.income_record_id;
-    const [allDistributions] = await conn.execute(
-      `SELECT COUNT(*) as total, 
-              SUM(CASE WHEN status = 'Confirmed Received' THEN 1 ELSE 0 END) as confirmed
-       FROM income_assistance_distributions
-       WHERE income_record_id = ?`,
-      [recordId]
-    );
-
-    if (allDistributions.length > 0 && 
-        allDistributions[0].total > 0 && 
-        allDistributions[0].total === allDistributions[0].confirmed) {
-      await conn.execute(
-        `UPDATE farmer_income_records SET status = 'Received' WHERE id = ?`,
-        [recordId]
-      );
-    }
-
     await conn.commit();
     res.json({
       message: 'Matagumpay na nakonpirma ang pagkuha ng assistance!',
@@ -1544,7 +1647,7 @@ const getUserIdFromToken = (req) => {
   
   try {
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     return decoded.id || null;
   } catch (err) {
     return null;

@@ -151,7 +151,6 @@ const handleMobileMenuToggle = (event) => {
 - System Activity (📋)
 - Financial Overview (💰)
 - Notifications (🔔)
-- Audit Logs (📜)
 
 ## Styling & Visual States
 

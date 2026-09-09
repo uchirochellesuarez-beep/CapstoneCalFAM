@@ -1,5 +1,5 @@
--- Migration: Add Farmer Profile Fields and Activity Logs
--- Description: Extends farmers table with profile information and creates activity logs
+-- Migration: Add Farmer Profile Fields
+-- Description: Extends farmers table with profile information
 
 -- Add profile fields to farmers table if they don't exist
 ALTER TABLE farmers
@@ -14,21 +14,6 @@ ADD COLUMN IF NOT EXISTS notes TEXT COMMENT 'Additional notes about the farmer',
 ADD INDEX idx_primary_crop (primary_crop),
 ADD INDEX idx_barangay_id (barangay_id),
 ADD INDEX idx_membership_type (membership_type);
-
--- Create activity_logs table for tracking user actions
-CREATE TABLE IF NOT EXISTS activity_logs (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  farmer_id INT NOT NULL COMMENT 'Reference to farmers table',
-  activity_type VARCHAR(50) NOT NULL COMMENT 'Type: login, profile_update, contribution, activity_participation, etc.',
-  activity_description TEXT COMMENT 'Detailed description of the activity',
-  ip_address VARCHAR(45) COMMENT 'IP address of user',
-  user_agent TEXT COMMENT 'Browser/device information',
-  metadata JSON COMMENT 'Additional data in JSON format',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_farmer_id (farmer_id),
-  INDEX idx_activity_type (activity_type),
-  INDEX idx_created_at (created_at)
-);
 
 -- Create membership_history table to track membership changes
 CREATE TABLE IF NOT EXISTS membership_history (
@@ -80,20 +65,3 @@ CREATE TABLE IF NOT EXISTS farmer_contacts (
   INDEX idx_farmer_id (farmer_id),
   INDEX idx_contact_type (contact_type)
 );
-
--- Insert some sample activity log entries for existing farmers
-INSERT INTO activity_logs (farmer_id, activity_type, activity_description)
-SELECT id, 'account_created', CONCAT('Account created for ', full_name)
-FROM farmers
-WHERE id NOT IN (SELECT DISTINCT farmer_id FROM activity_logs WHERE activity_type = 'account_created')
-LIMIT 100;
-
--- Update last_activity for all farmers
-UPDATE farmers f
-SET last_activity = (
-  SELECT MAX(created_at) 
-  FROM activity_logs al 
-  WHERE al.farmer_id = f.id
-)
-WHERE id IN (SELECT DISTINCT farmer_id FROM activity_logs);
-

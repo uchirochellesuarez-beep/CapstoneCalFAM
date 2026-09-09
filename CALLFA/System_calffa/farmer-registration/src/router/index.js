@@ -19,6 +19,11 @@ const routes = [
   },
   { path: '/signup', component: FarmerSignup },
   { path: '/login', component: Login, meta: { requiresGuest: true } },
+  {
+    path: '/forgot-password',
+    component: Login,
+    meta: { requiresGuest: true }
+  },
   { path: '/google-registration', component: GoogleRegistration, meta: { requiresGuest: true } },
   { path: '/barangay-notice', redirect: '/dashboard' },
 
@@ -52,6 +57,8 @@ const routes = [
       { path: 'machinery-approval', component: () => import('../views/MachineryApprovalPage.vue'), meta: { requiresOperator: true } },
       { path: 'operator-dashboard', component: () => import('../views/OperatorDashboardPage.vue'), meta: { requiresOperatorOnly: true } },
       { path: 'machinery-financial', component: () => import('../views/MachineryFinancialPage.vue'), meta: { requiresFinancial: true } },
+      // Association Dues tab of the machinery financial module (own URL for clarity)
+      { path: 'association-dues', component: () => import('../views/MachineryFinancialPage.vue'), meta: { requiresFinancial: true } },
       // Insights Routes
       { path: 'news', component: () => import('../views/NewsPage.vue') },
       { path: 'president-news-approvals', component: () => import('../views/PresidentNewsApprovalsPage.vue'), meta: { requiresPresident: true } },
@@ -67,9 +74,11 @@ const routes = [
       // Admin-Only Routes
       { path: 'financial-overview', component: () => import('../views/FinancialOverviewPage.vue'), meta: { requiresFinancial: true } },
       { path: 'share-capital', component: () => import('../views/ShareCapitalPage.vue') },
+      // Dues/Payments ledger view of the share capital module (own URL for clarity)
+      { path: 'dues-payments', component: () => import('../views/ShareCapitalPage.vue') },
+      { path: 'share-capital-withdrawals', component: () => import('../views/ShareCapitalWithdrawalPage.vue'), meta: { requiresShareCapitalWithdrawal: true } },
       { path: 'seed-fertilizer-plan', component: () => import('../views/SeedFertilizerPlanPage.vue'), meta: { requiresFinancial: true } },
       { path: 'notification-center', component: () => import('../views/NotificationCenterPage.vue'), meta: { requiresAdmin: true } },
-      { path: 'audit-logs', component: () => import('../views/AuditLogs.vue'), meta: { requiresAdmin: true } },
       { path: 'settings', component: () => import('../views/Settings.vue') }
     ]
   }
@@ -131,6 +140,15 @@ router.beforeEach((to, from, next) => {
   const requiresOperatorOnly = to.meta.requiresOperatorOnly || (to.matched.some(record => record.meta.requiresOperatorOnly))
   if (requiresOperatorOnly && userRole !== 'operator') {
     alert('Access denied. This page is for machinery operators only.')
+    next('/dashboard')
+    return
+  }
+
+  // Check if route requires share capital withdrawal access (admin, treasurer)
+  const requiresShareCapitalWithdrawal = to.meta.requiresShareCapitalWithdrawal
+    || to.matched.some((record) => record.meta.requiresShareCapitalWithdrawal)
+  if (requiresShareCapitalWithdrawal && !['admin', 'treasurer'].includes(userRole)) {
+    alert('Access denied. Only Admin and Treasurer can access withdrawals.')
     next('/dashboard')
     return
   }

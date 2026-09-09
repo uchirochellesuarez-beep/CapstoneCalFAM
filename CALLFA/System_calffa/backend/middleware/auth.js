@@ -2,11 +2,14 @@
 // Authentication and Authorization Middleware
 
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const pool = require('../db');
+const { validateUserSession } = require('../services/session-service');
 
 /**
  * Verify JWT token and extract user information
  * Stores user data in req.user for use in route handlers
+ * Enforces single active session per account (sid claim).
  */
 const verifyToken = async (req, res, next) => {
   try {
@@ -19,7 +22,16 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const sessionCheck = await validateUserSession(pool, decoded.id, decoded.sid);
+    if (!sessionCheck.ok) {
+      return res.status(401).json({
+        success: false,
+        code: sessionCheck.code,
+        message: sessionCheck.message
+      });
+    }
     
     // Fetch full user details from database
     const [users] = await pool.execute(
@@ -36,6 +48,7 @@ const verifyToken = async (req, res, next) => {
     }
 
     req.user = users[0];
+    req.sessionId = decoded.sid || null;
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {

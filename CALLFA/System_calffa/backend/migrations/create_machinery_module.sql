@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS machinery_inventory (
     unit_type VARCHAR(50) NOT NULL,
     max_capacity DECIMAL(10, 2),
     capacity_unit VARCHAR(50),
-    status ENUM('Available', 'In Use', 'Under Maintenance', 'Unavailable') DEFAULT 'Available',
+    status ENUM('Available', 'Unavailable') DEFAULT 'Available',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by INT,

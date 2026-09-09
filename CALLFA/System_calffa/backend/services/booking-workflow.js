@@ -1,8 +1,9 @@
 /**
- * Machinery booking workflow constants and helpers for down-payment flow.
+ * Machinery booking workflow constants and helpers.
+ * Farmer request → manager approval → (optional barangay down payment) → operator completes → treasurer collects remaining payment.
  */
 
-const DOWN_PAYMENT_RATE = 0.2;
+const { parseDownPaymentPercent } = require('./down-payment-settings-service');
 
 /** Statuses that reserve machinery capacity on the calendar */
 const CALENDAR_BLOCKING_STATUSES = [
@@ -11,17 +12,35 @@ const CALENDAR_BLOCKING_STATUSES = [
   'In Use',
   'Awaiting Final Payment',
   'Completed',
-  'Approved' // legacy — treated as reserved until migrated
+  'Approved'
 ];
 
 /** Pre-reservation statuses (do not block calendar) */
 const PRE_RESERVATION_STATUSES = [
   'Pending',
+  'Unapproved',
   'Awaiting Down Payment',
   'Awaiting Payment Verification',
   'Payment Rejected',
   'Down Payment Verified'
 ];
+
+/** Bookings the assigned operator can process */
+const OPERATOR_WORK_STATUSES = [
+  'Approved',
+  'Assigned to Operator',
+  'Booking Confirmed',
+  'In Use'
+];
+
+const DOWN_PAYMENT_WORKFLOW_STATUSES = [
+  'Awaiting Down Payment',
+  'Awaiting Payment Verification',
+  'Payment Rejected',
+  'Down Payment Verified'
+];
+
+const LEGACY_DOWN_PAYMENT_STATUSES = DOWN_PAYMENT_WORKFLOW_STATUSES;
 
 const BOOKING_STATUS_ENUM_VALUES = [
   'Pending',
@@ -49,11 +68,21 @@ const EXPIRABLE_DOWN_PAYMENT_STATUSES = [
   'Payment Rejected'
 ];
 
-function calculateDownPayment(totalPrice) {
+function formatDownPaymentPercentLabel(percent) {
+  const pct = parseDownPaymentPercent(percent);
+  if (pct == null) return null;
+  return Number.isInteger(pct) ? String(pct) : String(pct);
+}
+
+function calculateDownPayment(totalPrice, percent) {
   const total = parseFloat(totalPrice) || 0;
-  const down = Math.round(total * DOWN_PAYMENT_RATE * 100) / 100;
+  const pct = parseDownPaymentPercent(percent);
+  if (pct == null) {
+    return { downPayment: 0, remainingBalance: total, total, percent: null };
+  }
+  const down = Math.round(total * (pct / 100) * 100) / 100;
   const remaining = Math.round((total - down) * 100) / 100;
-  return { downPayment: down, remainingBalance: remaining, total };
+  return { downPayment: down, remainingBalance: remaining, total, percent: pct };
 }
 
 function calendarBlockingStatusesSql() {
@@ -73,6 +102,15 @@ const MACHINERY_BOOKING_ROLES = [
 function canUserBookMachinery(role) {
   const normalized = String(role || '').toLowerCase();
   return MACHINERY_BOOKING_ROLES.includes(normalized) && normalized !== 'agriculturist';
+}
+
+function canCreateBookingOnBehalf(role) {
+  const normalized = String(role || '').toLowerCase();
+  return ['operation_manager', 'business_manager', 'admin'].includes(normalized);
+}
+
+function operatorWorkStatusesSql() {
+  return OPERATOR_WORK_STATUSES.map((s) => `'${s}'`).join(', ');
 }
 
 function isCrossBarangayBooking(userBarangayId, machineryBarangayId) {
@@ -137,17 +175,6 @@ function paymentVerifierBookerFilter(role) {
 
 /** Upsert machinery_income from booking total_paid (down payment + final payment). */
 async function syncMachineryIncomeFromBooking(pool, bookingId, recordedBy, remarks = null) {
-  const [refunded] = await pool.execute(
-    `SELECT 1 FROM machinery_booking_refunds
-     WHERE booking_id = ? AND refund_status IN ('Refunded', 'Processed')
-     LIMIT 1`,
-    [bookingId]
-  );
-  if (refunded.length) {
-    await pool.execute('DELETE FROM machinery_income WHERE booking_id = ?', [bookingId]);
-    return;
-  }
-
   const [rows] = await pool.execute(
     `SELECT machinery_id, total_paid, last_payment_date, payment_date
      FROM machinery_bookings WHERE id = ?`,
@@ -176,16 +203,22 @@ async function syncMachineryIncomeFromBooking(pool, bookingId, recordedBy, remar
 }
 
 module.exports = {
-  DOWN_PAYMENT_RATE,
   CALENDAR_BLOCKING_STATUSES,
   PRE_RESERVATION_STATUSES,
+  OPERATOR_WORK_STATUSES,
+  DOWN_PAYMENT_WORKFLOW_STATUSES,
+  LEGACY_DOWN_PAYMENT_STATUSES,
   BOOKING_STATUS_ENUM_VALUES,
   EXPIRABLE_DOWN_PAYMENT_STATUSES,
+  parseDownPaymentPercent,
+  formatDownPaymentPercentLabel,
   MACHINERY_BOOKING_ROLES,
   calculateDownPayment,
   calendarBlockingStatusesSql,
+  operatorWorkStatusesSql,
   syncMachineryIncomeFromBooking,
   canUserBookMachinery,
+  canCreateBookingOnBehalf,
   isCrossBarangayBooking,
   shouldUseNonMemberRate,
   getPaymentVerifierRole,

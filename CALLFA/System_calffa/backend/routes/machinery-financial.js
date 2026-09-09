@@ -8,6 +8,10 @@ const { REFUNDED_BOOKING_NOT_EXISTS_SQL } = require('../services/refund-service'
 const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
 const { getRequestUser, isAdmin } = require('../utils/requestUser');
 const { buildExpenseReceiptLineItems } = require('../services/expense-receipt-lines');
+const {
+  calculatePartialPaymentInterest,
+  formatPartialInterestRuleLabel
+} = require('../services/machinery-interest-service');
 
 const EXPENSE_SELECT_BASE = `
   SELECT 
@@ -50,7 +54,7 @@ async function issueExpenseReceipt(pool, expenseRow, { paymentMethod = 'Cash', r
   const lineItems = buildExpenseReceiptLineItems(expenseRow);
 
   let treasurerName = 'Treasurer';
-  let treasurerAddress = expenseRow.barangay_name ? `${expenseRow.barangay_name} Chapter` : '';
+  let treasurerAddress = expenseRow.barangay_name ? `${expenseRow.barangay_name} Farmer Association` : '';
   let treasurerPhone = '';
 
   if (recordedBy) {
@@ -117,12 +121,13 @@ async function fetchExpenseRow(pool, expenseId) {
   return rows[0] || null;
 }
 
-async function finalizeExpenseAndIncome(expenseId, { laborCost, transactionDate, bookingId }) {
+async function finalizeExpenseAndIncome(expenseId, { laborCost, transactionDate, bookingId, recordedBy = null }) {
   if (!bookingId || !(parseFloat(laborCost) > 0)) return null;
   return generateOperatorIncomeForBooking(bookingId, {
     expenseId: parseInt(expenseId, 10),
     laborCost,
-    transactionDate
+    transactionDate,
+    recordedBy
   });
 }
 
@@ -424,7 +429,8 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       await finalizeExpenseAndIncome(result.insertId, {
         laborCost: labor_cost,
         transactionDate: date_of_expense,
-        bookingId: booking_id
+        bookingId: booking_id,
+        recordedBy: user_id
       });
     }
 
@@ -530,7 +536,8 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
       await finalizeExpenseAndIncome(id, {
         laborCost: labor_cost,
         transactionDate: date_of_expense,
-        bookingId: linkedBookingId
+        bookingId: linkedBookingId,
+        recordedBy: user_id
       });
     }
 
@@ -607,16 +614,25 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           mbp.amount as income_amount,
           mbp.payment_date as date_of_income,
           CASE
+            WHEN COALESCE(mbp.payment_type, '') = 'down_payment'
+              OR LOWER(COALESCE(mbp.remarks, '')) LIKE '%down payment%' THEN 'Verified'
             WHEN COALESCE(mb.total_paid, 0) >= COALESCE(mb.total_price, 0) AND COALESCE(mb.total_price, 0) > 0 THEN 'Full Payment'
             WHEN COALESCE(mb.total_paid, 0) > 0 THEN 'Partial Payment'
             ELSE 'Unpaid'
           END as payment_status,
           mb.status as booking_status,
-          'Machinery Collection' as income_type,
+          CASE
+            WHEN COALESCE(mbp.payment_type, '') = 'down_payment'
+              OR LOWER(COALESCE(mbp.remarks, '')) LIKE '%down payment%' THEN 'Down Payment'
+            WHEN COALESCE(mbp.payment_type, '') IN ('final_payment', 'full', 'partial') THEN 'Machinery Collection'
+            ELSE 'Machinery Collection'
+          END as income_type,
           COALESCE(mbp.remarks, '') as remarks,
           NULL as period_start,
           NULL as period_end,
-          mbp.payment_method
+          mbp.payment_method,
+          mbp.payment_type,
+          CONVERT(COALESCE(mbp.receipt_number, '') USING utf8mb4) as receipt_number
         FROM machinery_booking_payments mbp
         LEFT JOIN machinery_bookings mb ON mbp.booking_id = mb.id
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
@@ -651,7 +667,19 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           COALESCE(md.remarks, '') as remarks,
           md.period_start,
           md.period_end,
-          md.payment_method
+          md.payment_method,
+          NULL as payment_type,
+          CONVERT(COALESCE((
+            SELECT pr.receipt_number
+            FROM payment_receipts pr
+            WHERE pr.module = 'association_dues'
+              AND pr.reference_type = 'monthly_dues'
+              AND pr.reference_id = md.id
+              AND pr.receipt_number IS NOT NULL
+              AND TRIM(pr.receipt_number) != ''
+            ORDER BY pr.id DESC
+            LIMIT 1
+          ), '') USING utf8mb4) as receipt_number
         FROM monthly_dues md
         LEFT JOIN farmers f ON md.farmer_id = f.id
         LEFT JOIN barangays b ON md.barangay_id = b.id
@@ -685,7 +713,9 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           COALESCE(mb.notes, '') as remarks,
           NULL as period_start,
           NULL as period_end,
-          NULL as payment_method
+          NULL as payment_method,
+          NULL as payment_type,
+          CONVERT(COALESCE(mb.receipt_number, '') USING utf8mb4) as receipt_number
         FROM machinery_bookings mb
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
         LEFT JOIN farmers f ON mb.farmer_id = f.id
@@ -723,11 +753,16 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
             ELSE 'Paid'
           END as payment_status,
           COALESCE(mb.status, 'Completed') as booking_status,
-          'Machinery Booking' as income_type,
+          CASE
+            WHEN COALESCE(minc.remarks, '') LIKE '%down payment%' THEN 'Down Payment'
+            ELSE 'Machinery Booking'
+          END as income_type,
           COALESCE(minc.remarks, '') as remarks,
           NULL as period_start,
           NULL as period_end,
-          NULL as payment_method
+          NULL as payment_method,
+          NULL as payment_type,
+          CONVERT(COALESCE(mb.receipt_number, '') USING utf8mb4) as receipt_number
         FROM machinery_income minc
         LEFT JOIN machinery_inventory mi ON minc.machinery_id = mi.id
         LEFT JOIN machinery_bookings mb ON minc.booking_id = mb.id
@@ -739,6 +774,37 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
           WHERE mbp2.booking_id = minc.booking_id
         )
           AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+
+        UNION ALL
+
+        -- Treasurer-recorded income from non-machinery sources
+        SELECT
+          CONCAT('MAN-', mmi.id) as income_id,
+          NULL as booking_id,
+          NULL as dues_id,
+          NULL as machinery_id,
+          mmi.source_name as machinery_name,
+          'Other Source' as machinery_type,
+          mmi.barangay_id,
+          mmi.barangay_id as farmer_barangay_id,
+          mmi.barangay_id as machinery_barangay_id,
+          b.name as barangay_name,
+          NULL as farmer_name,
+          NULL as booking_date,
+          mmi.income_amount as original_amount,
+          mmi.income_amount,
+          mmi.date_of_income,
+          'Paid' as payment_status,
+          'Completed' as booking_status,
+          'Manual Income' as income_type,
+          COALESCE(mmi.remarks, '') as remarks,
+          NULL as period_start,
+          NULL as period_end,
+          NULL as payment_method,
+          NULL as payment_type,
+          CONVERT('' USING utf8mb4) as receipt_number
+        FROM machinery_manual_income mmi
+        LEFT JOIN barangays b ON mmi.barangay_id = b.id
       ) combined_income
       WHERE 1=1
     `;
@@ -767,9 +833,11 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
     }
 
     if (income_source === 'machinery') {
-      query += ' AND income_type <> \'Association Dues\'';
+      query += ' AND income_type NOT IN (\'Association Dues\', \'Manual Income\')';
     } else if (income_source === 'dues') {
       query += ' AND income_type = \'Association Dues\'';
+    } else if (income_source === 'manual') {
+      query += ' AND income_type = \'Manual Income\'';
     }
 
     if (start_date) {
@@ -793,40 +861,161 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
   }
 });
 
-// POST create income record (treasurer only)
+// POST create manual income from another source (barangay-scoped, treasurer only)
 router.post('/income', verifyTreasurerAccess, async (req, res) => {
   try {
     const {
-      machinery_id,
-      booking_id,
+      source_name,
       date_of_income,
       income_amount,
       remarks,
-      user_id
+      barangay_id
     } = req.body;
-    
-    if (!machinery_id || !booking_id || !date_of_income || !income_amount) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields' 
+
+    const sourceName = String(source_name || '').trim();
+    const amount = Number(income_amount);
+    const effectiveBarangayId = req.userRole === 'admin'
+      ? parseInt(barangay_id, 10)
+      : parseInt(req.userBarangayId, 10);
+
+    if (!sourceName || !date_of_income || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Source, date, and a valid amount are required.'
       });
     }
-    
+
+    if (!effectiveBarangayId) {
+      return res.status(400).json({
+        success: false,
+        message: 'A barangay is required for this income record.'
+      });
+    }
+
     const [result] = await pool.execute(
-      `INSERT INTO machinery_income 
-       (machinery_id, booking_id, date_of_income, income_amount, remarks, record_created_by)
+      `INSERT INTO machinery_manual_income
+       (barangay_id, source_name, date_of_income, income_amount, remarks, record_created_by)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [machinery_id, booking_id, date_of_income, income_amount, remarks, user_id]
+      [
+        effectiveBarangayId,
+        sourceName,
+        date_of_income,
+        amount,
+        String(remarks || '').trim() || null,
+        req.user.id
+      ]
     );
 
-    res.json({ 
-      success: true, 
-      message: 'Income recorded successfully',
-      income_id: result.insertId 
+    res.status(201).json({
+      success: true,
+      message: 'Manual income recorded successfully',
+      income_id: result.insertId
     });
   } catch (error) {
     console.error('Error creating income:', error);
     res.status(500).json({ success: false, message: 'Failed to record income' });
+  }
+});
+
+// GET manual income entries (barangay-scoped)
+router.get('/manual-income', verifyFinancialAccess, async (req, res) => {
+  try {
+    const { barangay_id } = req.query;
+    const effectiveBarangayId = req.userRole === 'admin'
+      ? parseInt(barangay_id, 10) || null
+      : parseInt(req.userBarangayId, 10);
+
+    let query = `
+      SELECT
+        mmi.id,
+        mmi.barangay_id,
+        b.name AS barangay_name,
+        mmi.source_name,
+        mmi.date_of_income,
+        mmi.income_amount,
+        mmi.remarks,
+        f.full_name AS recorded_by_name,
+        mmi.created_at
+      FROM machinery_manual_income mmi
+      LEFT JOIN barangays b ON mmi.barangay_id = b.id
+      LEFT JOIN farmers f ON mmi.record_created_by = f.id
+    `;
+    const params = [];
+    if (effectiveBarangayId) {
+      query += ' WHERE mmi.barangay_id = ?';
+      params.push(effectiveBarangayId);
+    }
+    query += ' ORDER BY mmi.date_of_income DESC, mmi.id DESC';
+
+    const [rows] = await pool.execute(query, params);
+    res.json({ success: true, manual_income: rows });
+  } catch (error) {
+    console.error('Error fetching manual income:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch manual income' });
+  }
+});
+
+async function findManualIncomeForUser(req, res, id) {
+  const [rows] = await pool.execute(
+    'SELECT * FROM machinery_manual_income WHERE id = ?',
+    [parseInt(id, 10)]
+  );
+  if (!rows.length) {
+    res.status(404).json({ success: false, message: 'Manual income record not found' });
+    return null;
+  }
+  if (req.userRole !== 'admin' && parseInt(rows[0].barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+    res.status(403).json({
+      success: false,
+      message: 'You can only manage manual income for your barangay.'
+    });
+    return null;
+  }
+  return rows[0];
+}
+
+// PUT update manual income entry (treasurer only, own barangay)
+router.put('/manual-income/:id', verifyTreasurerAccess, async (req, res) => {
+  try {
+    const existing = await findManualIncomeForUser(req, res, req.params.id);
+    if (!existing) return;
+
+    const { source_name, date_of_income, income_amount, remarks } = req.body;
+    const sourceName = String(source_name || '').trim();
+    const amount = Number(income_amount);
+
+    if (!sourceName || !date_of_income || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Source, date, and a valid amount are required.'
+      });
+    }
+
+    await pool.execute(
+      `UPDATE machinery_manual_income
+       SET source_name = ?, date_of_income = ?, income_amount = ?, remarks = ?
+       WHERE id = ?`,
+      [sourceName, date_of_income, amount, String(remarks || '').trim() || null, existing.id]
+    );
+
+    res.json({ success: true, message: 'Manual income updated successfully' });
+  } catch (error) {
+    console.error('Error updating manual income:', error);
+    res.status(500).json({ success: false, message: 'Failed to update manual income' });
+  }
+});
+
+// DELETE manual income entry (treasurer only, own barangay)
+router.delete('/manual-income/:id', verifyTreasurerAccess, async (req, res) => {
+  try {
+    const existing = await findManualIncomeForUser(req, res, req.params.id);
+    if (!existing) return;
+
+    await pool.execute('DELETE FROM machinery_manual_income WHERE id = ?', [existing.id]);
+    res.json({ success: true, message: 'Manual income deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting manual income:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete manual income' });
   }
 });
 
@@ -853,6 +1042,9 @@ router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
         UNION ALL
         SELECT md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id
         FROM monthly_dues md
+        UNION ALL
+        SELECT mmi.income_amount, mmi.date_of_income, mmi.barangay_id
+        FROM machinery_manual_income mmi
       ) combined_income
       WHERE 1=1
     `;
@@ -1070,11 +1262,20 @@ router.get('/ar', verifyFinancialAccess, async (req, res) => {
         b.name as barangay_name,
         mb.booking_date,
         mb.total_price,
-        COALESCE(mb.receivable_amount, mb.total_price - COALESCE(mb.total_paid, 0)) as accounts_receivable,
-        COALESCE(mb.receivable_amount, mb.total_price - COALESCE(mb.total_paid, 0)) - COALESCE(mb.remaining_balance, 0) as amount_collected,
+        /* Sisingilin (A/R) = amount still to collect (current balance) */
+        COALESCE(mb.remaining_balance, mb.total_price - COALESCE(mb.total_paid, 0)) as accounts_receivable,
+        /* Nakolektang = already paid = total − remaining balance */
+        GREATEST(
+          0,
+          COALESCE(mb.total_price, 0) - COALESCE(
+            mb.remaining_balance,
+            mb.total_price - COALESCE(mb.total_paid, 0)
+          )
+        ) as amount_collected,
         COALESCE(mb.remaining_balance, mb.total_price - COALESCE(mb.total_paid, 0)) as remaining_balance,
         COALESCE(mb.pending_interest, 0) as pending_interest,
         mb.interest_applied_date,
+        COALESCE(mi.interest_rate, 0) as machinery_interest_rate,
         mb.status as booking_status,
         mb.payment_status,
         mb.last_payment_date,
@@ -1145,6 +1346,7 @@ router.get('/collections', verifyFinancialAccess, async (req, res) => {
         mbp.receipt_number,
         mbp.remarks,
         f.full_name as farmer_name,
+        f.reference_number as farmer_reference,
         f.barangay_id as farmer_barangay_id,
         mi.machinery_name,
         mi.machinery_type,
@@ -1155,14 +1357,15 @@ router.get('/collections', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       LEFT JOIN barangays b ON mi.barangay_id = b.id
       LEFT JOIN farmers f ON mb.farmer_id = f.id
-      WHERE 1=1
+      WHERE COALESCE(mbp.payment_type, '') NOT IN ('down_payment', 'refund')
+        AND LOWER(COALESCE(mbp.remarks, '')) NOT LIKE '%down payment%'
     `;
     const params = [];
     
-    // Filter by farmer's barangay for non-admin users
+    // Filter by farmer or machinery barangay for non-admin users
     if (userRole !== 'admin' && userBarangayId) {
-      query += ' AND f.barangay_id = ?';
-      params.push(userBarangayId);
+      query += ' AND (f.barangay_id = ? OR mi.barangay_id = ?)';
+      params.push(userBarangayId, userBarangayId);
     }
     
     if (machinery_id && machinery_id !== '') {
@@ -1203,9 +1406,11 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
     // Get booking details
     const [booking] = await pool.execute(
       `SELECT mb.total_price, mb.total_paid, mb.booking_date, mb.pending_interest, mb.remaining_balance,
-              f.full_name AS farmer_name
+              f.full_name AS farmer_name,
+              COALESCE(mi.interest_rate, 0) AS machinery_interest_rate
        FROM machinery_bookings mb
        LEFT JOIN farmers f ON mb.farmer_id = f.id
+       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
        WHERE mb.id = ?`,
       [booking_id]
     );
@@ -1218,17 +1423,17 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
     let totalPrice = parseFloat(booking[0].total_price) || 0;
     const collectionAmt = parseFloat(collection_amount);
     const existingInterest = parseFloat(booking[0].pending_interest) || 0;
+    const machineryInterestRate = parseFloat(booking[0].machinery_interest_rate) || 0;
     
     // Determine payment type from amount vs remaining balance (server-authoritative).
     const initialRemainingBalance = totalPrice - currentTotalPaid;
     const isPartialPayment = collectionAmt < (initialRemainingBalance - 0.01);
     const finalPaymentType = isPartialPayment ? 'partial' : 'full';
 
-    // Automatically apply one-time 2% interest when payment is partial and
-    // no prior interest was added yet. Interest is based on full amount due.
+    // Apply one-time interest when payment is partial, no prior interest, and machinery rate > 0.
     let interestAmt = 0;
     if (isPartialPayment && existingInterest <= 0) {
-      interestAmt = parseFloat((totalPrice * 0.02).toFixed(2));
+      interestAmt = calculatePartialPaymentInterest(totalPrice, machineryInterestRate);
     }
     
     // If interest is applied, add it to total_price (one-time increase)
@@ -1335,7 +1540,8 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
       interest_applied: actualInterestApplied === 1,
       interest_amount: actualInterestAmount,
       total_collection: total_collection,
-      auto_interest_rule: '2% (Partial)'
+      auto_interest_rule: formatPartialInterestRuleLabel(machineryInterestRate),
+      machinery_interest_rate: machineryInterestRate
     });
   } catch (error) {
     console.error('Error recording collection:', error);
@@ -1364,6 +1570,9 @@ router.post('/profit-distribution/generate', verifyTreasurerAccess, async (req, 
         UNION ALL
         SELECT md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id
         FROM monthly_dues md
+        UNION ALL
+        SELECT mmi.income_amount, mmi.date_of_income, mmi.barangay_id
+        FROM machinery_manual_income mmi
       ) combined_income
       WHERE 1=1
     `;
@@ -1691,11 +1900,36 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         FROM monthly_dues md
         LEFT JOIN farmers f ON md.farmer_id = f.id
         WHERE md.collection_date BETWEEN ? AND ?
+
+        UNION ALL
+
+        SELECT
+          CONCAT('MAN-', mmi.id) as id,
+          mmi.date_of_income as date,
+          'Income' as transaction_type,
+          mmi.source_name as machinery_name,
+          'Other Source' as machinery_type,
+          CONCAT(mmi.source_name, ' - ', COALESCE(mmi.remarks, 'Manual income')) as description,
+          NULL as reference_number,
+          NULL as fuel_and_oil,
+          NULL as labor_cost,
+          NULL as per_diem,
+          NULL as repair_and_maintenance,
+          NULL as office_supply,
+          NULL as communication_expense,
+          NULL as utilities_expense,
+          NULL as sundries,
+          mmi.income_amount as amount,
+          NULL as farmer_name,
+          NULL as booking_id,
+          mmi.barangay_id
+        FROM machinery_manual_income mmi
+        WHERE mmi.date_of_income BETWEEN ? AND ?
       ) combined_income
       WHERE 1=1${effectiveBarangayId ? ' AND barangay_id = ?' : ''}
       ORDER BY date DESC
     `;
-      incomeParams.push(dateStart, dateEnd, dateStart, dateEnd);
+      incomeParams.push(dateStart, dateEnd, dateStart, dateEnd, dateStart, dateEnd);
       if (effectiveBarangayId) incomeParams.push(effectiveBarangayId);
     }
     
@@ -1802,12 +2036,10 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
           ELSE mb.total_price
         END as unit_service_fee,
         (
-          SELECT COALESCE(SUM(
-            mbp.amount + CASE WHEN mbp.interest_applied = 1 OR mbp.interest_applied = TRUE 
-              THEN COALESCE(mbp.interest_amount, 0) ELSE 0 END
-          ), 0)
+          SELECT COALESCE(SUM(mbp.amount), 0)
           FROM machinery_booking_payments mbp
           WHERE mbp.booking_id = mb.id
+            AND COALESCE(mbp.payment_type, '') <> 'refund'
         ) as cash_collection,
         (
           SELECT mbp.receipt_number
@@ -1891,7 +2123,10 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
     const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
     const totalIncome = income.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     const totalCollections = collections.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
-    const totalInterest = collections.reduce((sum, c) => sum + parseFloat(c.interest_amount || 0), 0);
+    // Interest on the payment row is "applied to amount due", not cash received.
+    // Only actual payment amounts count as collections/income.
+    const totalInterest = 0;
+    const totalInterestAssessed = collections.reduce((sum, c) => sum + parseFloat(c.interest_amount || 0), 0);
     const netProfit = totalIncome - totalExpenses;
     
     // Distribution calculations (30% org, 20% training, 50% members)
@@ -1935,6 +2170,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
           total_income: totalIncome,
           total_collections: totalCollections,
           total_interest_collected: totalInterest,
+          total_interest_assessed: totalInterestAssessed,
           net_profit: netProfit,
           distribution: {
             organization_share: organizationShare,
@@ -2073,7 +2309,7 @@ router.get('/monthly-dues/eligible-farmers', verifyDuesCollectorAccess, async (r
         f.full_name,
         f.role as member_role,
         f.phone_number,
-        f.membership_date,
+        f.registered_on,
         CASE WHEN md.id IS NOT NULL THEN 1 ELSE 0 END as dues_paid,
         md.collection_date,
         md.period_start,

@@ -1,104 +1,173 @@
 <template>
   <div class="registered-members-card section-card">
-    <h2 class="registered-members-title">Registered Members</h2>
+    <h2 class="registered-members-title">{{ $t('common.registeredMembers') }}</h2>
     
     <div v-if="displayLoading" class="registered-members-muted text-center py-8">
-      Loading members...
+      {{ $t('ui.loadingMembers') }}
     </div>
     <div v-else-if="displayError" class="registered-members-error text-center py-8">
       Error: {{ displayError }}
     </div>
     <div v-else-if="displayFarmers.length === 0" class="registered-members-muted text-center py-8">
-      No members registered yet.
+      {{ $t('ui.noMembersRegistered') }}
     </div>
     <div v-else>
       <!-- Role Tabs -->
-      <div class="role-tabs mb-6">
+      <div class="role-tabs stats-grid stats-grid--roles">
         <button
           type="button"
           @click="activeRole = 'operation_manager'"
-          :class="['role-tab', { 'active': activeRole === 'operation_manager' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'operation_manager' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M12 12v4M10 14h4"/></svg>
-          <span class="role-tab-label">Operation<br>Managers</span>
-          <span class="role-tab-count">({{ farmersByRole.operation_manager.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('ui.operation') }} Managers</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.operation_manager.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'business_manager'"
-          :class="['role-tab', { 'active': activeRole === 'business_manager' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'business_manager' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-6"/></svg>
-          <span class="role-tab-label">Business<br>Managers</span>
-          <span class="role-tab-count">({{ farmersByRole.business_manager.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('ui.business') }} Managers</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.business_manager.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'farmer'"
-          :class="['role-tab', { 'active': activeRole === 'farmer' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'farmer' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span class="role-tab-label">Farmers</span>
-          <span class="role-tab-count">({{ farmersByRole.farmer.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('ui.farmers') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.farmer.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'admin'"
-          :class="['role-tab', { 'active': activeRole === 'admin' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'admin' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span class="role-tab-label">Admins</span>
-          <span class="role-tab-count">({{ farmersByRole.admin.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('common.admins') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.admin.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'president'"
-          :class="['role-tab', { 'active': activeRole === 'president' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'president' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21.1 8 14 2 9.4h7.6L12 2z"/></svg>
-          <span class="role-tab-label">Presidents</span>
-          <span class="role-tab-count">({{ farmersByRole.president.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('common.presidents') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.president.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'treasurer'"
-          :class="['role-tab', { 'active': activeRole === 'treasurer' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'treasurer' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-          <span class="role-tab-label">Treasurers</span>
-          <span class="role-tab-count">({{ farmersByRole.treasurer.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('common.treasurers') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.treasurer.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'auditor'"
-          :class="['role-tab', { 'active': activeRole === 'auditor' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'auditor' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          <span class="role-tab-label">Auditors</span>
-          <span class="role-tab-count">({{ farmersByRole.auditor.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('common.auditors') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.auditor.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'operator'"
-          :class="['role-tab', { 'active': activeRole === 'operator' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'operator' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          <span class="role-tab-label">Operators</span>
-          <span class="role-tab-count">({{ farmersByRole.operator.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('ui.operators') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.operator.length }}</span>
+          </span>
         </button>
         <button
           type="button"
           @click="activeRole = 'agriculturist'"
-          :class="['role-tab', { 'active': activeRole === 'agriculturist' }]"
+          :class="['role-tab stat-card', { active: activeRole === 'agriculturist' }]"
         >
-          <svg class="role-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5-3 7-7 7-11a7 7 0 0 0-14 0c0 4 2 8 7 11z"/><path d="M12 11V7"/></svg>
-          <span class="role-tab-label">Agriculturists</span>
-          <span class="role-tab-count">({{ farmersByRole.agriculturist.length }})</span>
+          <span class="role-tab-content stat-content">
+            <span class="role-tab-label stat-label">{{ $t('common.agriculturists') }}</span>
+            <span class="role-tab-count stat-value">{{ farmersByRole.agriculturist.length }}</span>
+          </span>
         </button>
       </div>
 
+      <!-- Role members — mobile cards + desktop table -->
+      <div class="members-mobile-list">
+        <article v-for="farmer in currentRoleFarmers" :key="'m-' + farmer.id" class="members-mobile-card">
+          <div class="mmc-head">
+            <div class="member-avatar-wrap">
+              <img
+                v-if="farmer.profile_picture"
+                :src="getProfilePictureUrl(farmer.profile_picture)"
+                :alt="$t('ui.profile')"
+                class="member-avatar"
+              />
+              <div v-else class="member-avatar member-avatar-fallback">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-gray-400">
+                  <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div class="mmc-head-text">
+              <h3 class="mmc-name">{{ farmer.full_name }}</h3>
+              <p class="mmc-ref">{{ farmer.reference_number }}</p>
+            </div>
+            <span v-if="farmer.status === 'approved'" class="status-chip status-chip-approved">{{ $t('common.approved') }}</span>
+            <span v-else-if="farmer.status === 'rejected'" class="status-chip status-chip-rejected">{{ $t('common.rejected') }}</span>
+            <span v-else class="status-chip status-chip-pending">{{ $t('common.pending') }}</span>
+          </div>
+          <div class="mmc-rows">
+            <div class="mmc-row"><span>{{ $t('ui.phone') }}</span><strong>{{ farmer.phone_number || 'N/A' }}</strong></div>
+            <div class="mmc-row"><span>{{ $t('ui.address') }}</span><strong>{{ formatMemberAddress(farmer) }}</strong></div>
+            <div class="mmc-row"><span>{{ $t('ui.role') }}</span><strong><span class="role-badge" :class="farmer.role">{{ formatMemberRole(farmer.role) }}</span></strong></div>
+            <div class="mmc-row">
+              <span>{{ $t('ui.membership') }}</span>
+              <strong>
+                <span v-if="(farmer.membership_status || 'member') === 'member'" class="member-chip member-chip-member">{{ $t('ui.member') }}</span>
+                <span v-else class="member-chip member-chip-nonmember">{{ $t('ui.nonMember') }}</span>
+              </strong>
+            </div>
+            <div class="mmc-row"><span>{{ $t('ui.registered') }}</span><strong>{{ formatDate(farmer.registered_on) }}</strong></div>
+          </div>
+          <div class="members-action-row mmc-actions">
+            <button type="button" @click="viewDetails(farmer)" class="table-action-btn table-action-view mmc-action-text" :title="$t('common.view')" :aria-label="$t('common.view')">
+              {{ $t('common.view') }}
+            </button>
+            <button type="button" @click="startEdit(farmer)" class="table-action-btn table-action-edit mmc-action-text" :title="$t('common.edit')" :aria-label="$t('common.edit')">
+              {{ $t('common.edit') }}
+            </button>
+            <button
+              v-if="farmer.role !== 'admin'"
+              type="button"
+              @click="deleteFarmer(farmer)"
+              class="table-action-btn table-action-delete mmc-action-text"
+              :title="$t('common.delete')"
+              :aria-label="$t('common.delete')"
+            >
+              {{ $t('common.delete') }}
+            </button>
+          </div>
+        </article>
+        <p v-if="currentRoleFarmers.length === 0" class="mmc-empty">No {{ activeRole }}s registered yet.</p>
+      </div>
+
       <!-- Table for selected role (layout matches AdminLoansPage loans-table) -->
-      <div class="registered-table-scroll">
+      <div class="registered-table-scroll members-desktop-only">
         <div class="members-table-container">
           <table class="members-table w-full border-collapse">
           <colgroup>
@@ -117,18 +186,18 @@
           </colgroup>
           <thead>
             <tr>
-              <th>Photo</th>
-              <th>Ref #</th>
-              <th>Name</th>
-              <th>DOB</th>
-              <th>Address</th>
-              <th>Phone</th>
-              <th>Education</th>
-              <th class="members-th-role">Role</th>
-              <th>Membership</th>
-              <th>Registered</th>
-              <th>Status</th>
-              <th class="members-th-actions">Actions</th>
+              <th>{{ $t('ui.photo') }}</th>
+              <th>{{ $t('ui.refHash') }}</th>
+              <th>{{ $t('ui.name') }}</th>
+              <th>{{ $t('ui.dob') }}</th>
+              <th>{{ $t('ui.address') }}</th>
+              <th>{{ $t('ui.phone') }}</th>
+              <th>{{ $t('ui.education') }}</th>
+              <th class="members-th-role">{{ $t('ui.role') }}</th>
+              <th>{{ $t('ui.membership') }}</th>
+              <th>{{ $t('ui.registered') }}</th>
+              <th>{{ $t('ui.status') }}</th>
+              <th class="members-th-actions">{{ $t('ui.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -144,7 +213,7 @@
                     <img 
                       v-if="farmer.profile_picture" 
                       :src="getProfilePictureUrl(farmer.profile_picture)" 
-                      alt="Profile" 
+                      :alt="$t('ui.profile')" 
                       class="member-avatar"
                     />
                     <div v-else class="member-avatar member-avatar-fallback">
@@ -176,30 +245,30 @@
               </td>
               <td class="members-cell">
                 <span v-if="(farmer.membership_status || 'member') === 'member'" class="member-chip member-chip-member">
-                  Member
+                  {{ $t('ui.member') }}
                 </span>
                 <span v-else class="member-chip member-chip-nonmember">
-                  Non-Member
+                  {{ $t('ui.nonMember') }}
                 </span>
               </td>
               <td class="members-cell">{{ formatDate(farmer.registered_on) }}</td>
               <td class="members-cell">
                 <span v-if="farmer.status === 'approved'" class="status-chip status-chip-approved">
-                  Approved
+                  {{ $t('common.approved') }}
                 </span>
                 <span v-else-if="farmer.status === 'rejected'" class="status-chip status-chip-rejected">
-                  Rejected
+                  {{ $t('common.rejected') }}
                 </span>
               </td>
               <td class="members-cell members-actions-cell">
                 <div class="members-action-row">
-                  <button type="button" @click="viewDetails(farmer)" class="table-action-btn table-action-view" title="View" aria-label="View">
+                  <button type="button" @click="viewDetails(farmer)" class="table-action-btn table-action-view" :title="$t('common.view')" :aria-label="$t('common.view')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                       <circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
-                  <button type="button" @click="startEdit(farmer)" class="table-action-btn table-action-edit" title="Edit" aria-label="Edit">
+                  <button type="button" @click="startEdit(farmer)" class="table-action-btn table-action-edit" :title="$t('common.edit')" :aria-label="$t('common.edit')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -210,8 +279,8 @@
                     type="button"
                     @click="deleteFarmer(farmer)"
                     class="table-action-btn table-action-delete"
-                    title="Delete"
-                    aria-label="Delete"
+                    :title="$t('common.delete')"
+                    :aria-label="$t('common.delete')"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
@@ -240,335 +309,387 @@
       </div>
     </div>
 
-    <!-- View Details Modal -->
-    <div v-if="showDetailsModal" class="modal-overlay" @click="closeDetailsModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title">Member Details</h3>
-          <button @click="closeDetailsModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
-        </div>
-        <div class="modal-body" v-if="selectedFarmer">
-          <div class="flex flex-col items-center mb-6">
-            <img 
-              v-if="selectedFarmer.profile_picture" 
-              :src="getProfilePictureUrl(selectedFarmer.profile_picture)" 
-              alt="Profile Picture" 
-              class="rounded-full object-cover border-4 border-green-500 shadow-lg"
-              style="width: 100px; height: 100px; min-width: 100px; min-height: 100px;"
-            />
-            <div v-else class="rounded-full modal-avatar-fallback flex items-center justify-center border-4 border-gray-300" style="width: 100px; height: 100px; min-width: 100px; min-height: 100px;">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <h4 class="member-name">{{ selectedFarmer.full_name }}</h4>
-            <span class="role-badge mt-2" :class="selectedFarmer.role">{{ formatMemberRole(selectedFarmer.role) }}</span>
-          </div>
-          <div class="details-grid">
-            <div class="detail-item">
-              <span class="detail-label">Reference Number:</span>
-              <span class="detail-value">{{ selectedFarmer.reference_number }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Date of Birth:</span>
-              <span class="detail-value">{{ formatDate(selectedFarmer.date_of_birth) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Address:</span>
-              <span class="detail-value">{{ formatMemberAddress(selectedFarmer) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Phone Number:</span>
-              <span class="detail-value">{{ selectedFarmer.phone_number }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Educational Status:</span>
-              <span class="detail-value">{{ selectedFarmer.educational_status || 'Not specified' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Registered On:</span>
-              <span class="detail-value">{{ formatDate(selectedFarmer.registered_on) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Status:</span>
-              <span class="detail-value">
-                <span v-if="selectedFarmer.status === 'approved'" class="status-chip status-chip-approved">
-                  Approved
-                </span>
-                <span v-else-if="selectedFarmer.status === 'rejected'" class="status-chip status-chip-rejected">
-                  Rejected
-                </span>
-                <span v-else class="status-chip status-chip-pending">
-                  Pending
-                </span>
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="closeDetailsModal" class="btn-secondary">Close</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Member Modal -->
-    <div v-if="showEditMemberModal && editingFarmer" class="modal-overlay" @click="cancelEdit">
-      <div class="modal-content modal-edit-member" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title">Edit Member</h3>
-          <button @click="cancelEdit" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="edit-photo-row">
-            <div class="edit-photo-thumb">
-              <img
-                v-if="editingFarmer.profile_picture"
-                :src="getProfilePictureUrl(editingFarmer.profile_picture)"
-                alt="Member"
-              />
-              <div v-else class="edit-photo-fallback">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
-                  <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div class="edit-photo-meta">
-              <p class="edit-photo-name">{{ editingFarmer.full_name }}</p>
-              <p class="edit-photo-sub">{{ editingFarmer.reference_number || '—' }}</p>
-              <button type="button" class="edit-photo-btn" @click="openEditPictureModal(editingFarmer)">
-                Change Photo
+    <!-- View Member Information — teleported so it centers above header -->
+    <Teleport to="body">
+      <Transition name="member-info">
+        <div
+          v-if="showDetailsModal"
+          class="member-info-overlay"
+          :class="{ 'light-theme': isLight }"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="member-info-title"
+          @click.self="closeDetailsModal"
+        >
+          <div class="member-info-dialog" @click.stop>
+            <div class="member-info-header">
+              <h3 id="member-info-title" class="member-info-title">Member Information</h3>
+              <button
+                type="button"
+                class="member-info-close"
+                :aria-label="$t('common.close')"
+                @click="closeDetailsModal"
+              >
+                &times;
               </button>
             </div>
-          </div>
-
-          <div class="edit-grid">
-            <div class="edit-field edit-field-full">
-              <label class="edit-label">Reference Number *</label>
-              <input
-                v-model="editForm.reference_number"
-                @input="handleReferenceInput"
-                type="text"
-                class="edit-input edit-input-modal"
-                placeholder="00-00-00-000-000000"
-                maxlength="19"
-              />
-              <small class="edit-hint">Format: 00-00-00-000-000000 (digits only; auto-formatted)</small>
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Full Name *</label>
-              <input
-                v-model="editForm.full_name"
-                type="text"
-                class="edit-input edit-input-modal"
-                placeholder="Member full name"
-              />
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Date of Birth *</label>
-              <div class="edit-date-field">
-                <input
-                  v-model="editForm.date_of_birth"
-                  type="date"
-                  class="edit-input edit-input-modal edit-input-date"
+            <div class="member-info-body" v-if="selectedFarmer">
+              <div class="member-info-profile">
+                <img
+                  v-if="selectedFarmer.profile_picture"
+                  :src="getProfilePictureUrl(selectedFarmer.profile_picture)"
+                  :alt="$t('ui.profile')"
+                  class="member-info-avatar"
                 />
-                <svg
-                  class="edit-date-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#052e16"
-                  stroke-width="2.25"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+                <div v-else class="member-info-avatar member-info-avatar-fallback">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <h4 class="member-name">{{ selectedFarmer.full_name }}</h4>
+                <span class="role-badge mt-2" :class="selectedFarmer.role">{{ formatMemberRole(selectedFarmer.role) }}</span>
+              </div>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">{{ $t('ui.referenceNumberColon') }}</span>
+                  <span class="detail-value">{{ selectedFarmer.reference_number }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Date of Birth:</span>
+                  <span class="detail-value">{{ formatDate(selectedFarmer.date_of_birth) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">{{ $t('ui.barangayColonLabel') }}</span>
+                  <span class="detail-value">{{ selectedFarmer.barangay_name || 'Not assigned' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Address:</span>
+                  <span class="detail-value">{{ formatMemberAddress(selectedFarmer) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Phone Number:</span>
+                  <span class="detail-value">{{ selectedFarmer.phone_number }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Educational Status:</span>
+                  <span class="detail-value">{{ selectedFarmer.educational_status || 'Not specified' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Registered On:</span>
+                  <span class="detail-value">{{ formatDate(selectedFarmer.registered_on) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Status:</span>
+                  <span class="detail-value">
+                    <span v-if="selectedFarmer.status === 'approved'" class="status-chip status-chip-approved">
+                      {{ $t('common.approved') }}
+                    </span>
+                    <span v-else-if="selectedFarmer.status === 'rejected'" class="status-chip status-chip-rejected">
+                      {{ $t('common.rejected') }}
+                    </span>
+                    <span v-else class="status-chip status-chip-pending">
+                      {{ $t('common.pending') }}
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
-            <div class="edit-field">
-              <label class="edit-label">Phone Number *</label>
-              <input
-                v-model="editForm.phone_number"
-                type="text"
-                class="edit-input edit-input-modal"
-                placeholder="e.g., 09171234567"
-              />
+    <!-- Edit Member Modal -->
+    <Teleport to="body">
+      <Transition name="member-info">
+        <div
+          v-if="showEditMemberModal && editingFarmer"
+          class="modal-overlay edit-member-overlay"
+          :class="{ 'light-theme': isLight }"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-member-title"
+          @click.self="cancelEdit"
+        >
+          <div class="modal-content modal-edit-member" @click.stop>
+            <div class="modal-header">
+              <h3 id="edit-member-title" class="modal-title">Edit Member</h3>
+              <button type="button" @click="cancelEdit" class="text-gray-400 hover:text-gray-600 text-3xl" :aria-label="$t('common.close')">&times;</button>
             </div>
+            <div class="modal-body">
+              <div class="edit-photo-row">
+                <div class="edit-photo-thumb">
+                  <img
+                    v-if="editingFarmer.profile_picture"
+                    :src="getProfilePictureUrl(editingFarmer.profile_picture)"
+                    alt="Member"
+                  />
+                  <div v-else class="edit-photo-fallback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
+                      <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="edit-photo-meta">
+                  <p class="edit-photo-name">{{ editingFarmer.full_name }}</p>
+                  <p class="edit-photo-sub">{{ editingFarmer.reference_number || '—' }}</p>
+                  <button type="button" class="edit-photo-btn" @click="openEditPictureModal(editingFarmer)">
+                    {{ $t('common.changePhoto') }}
+                  </button>
+                </div>
+              </div>
 
-            <div class="edit-field">
-              <label class="edit-label">Barangay *</label>
-              <select
-                v-model.number="editForm.barangay_id"
-                class="edit-input edit-input-modal"
-                :disabled="!isAdmin && Boolean(userBarangayId)"
-                @change="onBarangayChange"
-              >
-                <option :value="null" disabled>Select Barangay</option>
-                <option v-for="barangay in editableBarangays" :key="barangay.id" :value="barangay.id">
-                  {{ barangay.name }}
-                </option>
-              </select>
+              <div class="edit-grid">
+                <div class="edit-field edit-field-full">
+                  <label class="edit-label">{{ $t('ui.referenceNumberReq') }}</label>
+                  <input
+                    v-model="editForm.reference_number"
+                    @input="handleReferenceInput"
+                    type="text"
+                    class="edit-input edit-input-modal"
+                    placeholder="00-00-00-000-000000"
+                    maxlength="19"
+                    inputmode="numeric"
+                    autocomplete="off"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Full Name *</label>
+                  <input
+                    v-model="editForm.full_name"
+                    type="text"
+                    class="edit-input edit-input-modal"
+                    :placeholder="$t('ui.memberFullName')"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Date of Birth *</label>
+                  <div class="edit-date-field">
+                    <input
+                      v-model="editForm.date_of_birth"
+                      type="date"
+                      class="edit-input edit-input-modal edit-input-date"
+                    />
+                    <span class="edit-date-icon-wrap" aria-hidden="true">
+                      <svg
+                        class="edit-date-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.25"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Phone Number *</label>
+                  <input
+                    v-model="editForm.phone_number"
+                    type="tel"
+                    class="edit-input edit-input-modal"
+                    placeholder="09XXXXXXXXX"
+                    maxlength="11"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    @input="handlePhoneInput"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Barangay *</label>
+                  <select
+                    v-model.number="editForm.barangay_id"
+                    class="edit-input edit-input-modal"
+                    :disabled="!isAdmin && Boolean(userBarangayId)"
+                    @change="onBarangayChange"
+                  >
+                    <option :value="null" disabled>{{ $t('ui.selectBarangayLabel') }}</option>
+                    <option v-for="barangay in editableBarangays" :key="barangay.id" :value="barangay.id">
+                      {{ barangay.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="edit-field edit-field-full">
+                  <label class="edit-label">Home Address</label>
+                  <input
+                    v-model="editForm.address"
+                    type="text"
+                    class="edit-input edit-input-modal"
+                    :placeholder="$t('ui.streetAddress')"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">{{ $t('ui.educationalStatus') }}</label>
+                  <select v-model="editForm.educational_status" class="edit-input edit-input-modal">
+                    <option value="">{{ $t('ui.select') }}</option>
+                    <option value="No Formal Education">{{ $t('ui.noFormalEducation') }}</option>
+                    <option value="Elementary Level">{{ $t('ui.elementaryLevel') }}</option>
+                    <option value="Elementary Graduate">{{ $t('ui.elementaryGraduate') }}</option>
+                    <option value="High School Level">{{ $t('ui.highSchoolLevel') }}</option>
+                    <option value="High School Graduate">{{ $t('ui.highSchoolGraduate') }}</option>
+                    <option value="Vocational">{{ $t('ui.vocational') }}</option>
+                    <option value="College Level">{{ $t('ui.collegeLevel') }}</option>
+                    <option value="College Graduate">{{ $t('ui.collegeGraduate') }}</option>
+                    <option value="Post Graduate">{{ $t('ui.postGraduate') }}</option>
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Hectares Farmed</label>
+                  <input
+                    v-model="editForm.land_area"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="edit-input edit-input-modal"
+                    :placeholder="$t('incomeForm.example15')"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">{{ $t('ui.farmLocation') }}</label>
+                  <select
+                    v-model="editForm.farm_location"
+                    class="edit-input edit-input-modal"
+                    :disabled="loadingFarmLocations || !editForm.barangay_id"
+                  >
+                    <option value="">{{ editForm.barangay_id ? 'Select Farm Location' : 'Select barangay first' }}</option>
+                    <option v-for="loc in farmLocationOptions" :key="loc.id" :value="loc.name">
+                      {{ loc.name }}
+                    </option>
+                  </select>
+                  <small v-if="loadingFarmLocations" class="edit-hint">{{ $t('ui.loadingPlaces') }}</small>
+                </div>
+
+                <div
+                  v-if="editingFarmer.role !== 'admin' && (editingFarmer.membership_status || 'member') !== 'non-member'"
+                  class="edit-field"
+                >
+                  <label class="edit-label">Role *</label>
+                  <select v-model="editForm.role" class="edit-input edit-input-modal">
+                    <option value="farmer">{{ $t('ui.farmer') }}</option>
+                    <option value="admin">{{ $t('ui.admin') }}</option>
+                    <option value="president">{{ $t('ui.president') }}</option>
+                    <option value="treasurer">{{ $t('ui.treasurer') }}</option>
+                    <option value="auditor">{{ $t('ui.auditor') }}</option>
+                    <option value="operator">{{ $t('ui.operator') }}</option>
+                    <option value="operation_manager">{{ $t('ui.operationManager') }}</option>
+                    <option value="business_manager">{{ $t('ui.businessManager') }}</option>
+                    <option value="agriculturist">{{ $t('ui.agriculturist') }}</option>
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Membership Status *</label>
+                  <select v-model="editForm.membership_status" class="edit-input edit-input-modal">
+                    <option value="member">{{ $t('ui.member') }}</option>
+                    <option value="non-member">{{ $t('ui.nonMember') }}</option>
+                  </select>
+                </div>
+              </div>
             </div>
-
-            <div class="edit-field edit-field-full">
-              <label class="edit-label">Home Address</label>
-              <input
-                v-model="editForm.address"
-                type="text"
-                class="edit-input edit-input-modal"
-                placeholder="Street, purok, sitio, or full address"
-              />
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Educational Status</label>
-              <select v-model="editForm.educational_status" class="edit-input edit-input-modal">
-                <option value="">Select</option>
-                <option value="No Formal Education">No Formal Education</option>
-                <option value="Elementary Level">Elementary Level</option>
-                <option value="Elementary Graduate">Elementary Graduate</option>
-                <option value="High School Level">High School Level</option>
-                <option value="High School Graduate">High School Graduate</option>
-                <option value="Vocational">Vocational</option>
-                <option value="College Level">College Level</option>
-                <option value="College Graduate">College Graduate</option>
-                <option value="Post Graduate">Post Graduate</option>
-              </select>
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Hectares Farmed</label>
-              <input
-                v-model="editForm.land_area"
-                type="number"
-                step="0.01"
-                min="0"
-                class="edit-input edit-input-modal"
-                placeholder="e.g., 1.5"
-              />
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Farm Location</label>
-              <select
-                v-model="editForm.farm_location"
-                class="edit-input edit-input-modal"
-                :disabled="loadingFarmLocations || !editForm.barangay_id"
-              >
-                <option value="">{{ editForm.barangay_id ? 'Select Farm Location' : 'Select barangay first' }}</option>
-                <option v-for="loc in farmLocationOptions" :key="loc.id" :value="loc.name">
-                  {{ loc.name }}
-                </option>
-              </select>
-              <small v-if="loadingFarmLocations" class="edit-hint">Loading places...</small>
-            </div>
-
-            <div
-              v-if="editingFarmer.role !== 'admin' && (editingFarmer.membership_status || 'member') !== 'non-member'"
-              class="edit-field"
-            >
-              <label class="edit-label">Role *</label>
-              <select v-model="editForm.role" class="edit-input edit-input-modal">
-                <option value="farmer">Farmer</option>
-                <option value="admin">Admin</option>
-                <option value="president">President</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="auditor">Auditor</option>
-                <option value="operator">Operator</option>
-                <option value="operation_manager">Operation Manager</option>
-                <option value="business_manager">Business Manager</option>
-                <option value="agriculturist">Agriculturist</option>
-              </select>
-            </div>
-
-            <div class="edit-field">
-              <label class="edit-label">Membership Status *</label>
-              <select v-model="editForm.membership_status" class="edit-input edit-input-modal">
-                <option value="member">Member</option>
-                <option value="non-member">Non-Member</option>
-              </select>
+            <div class="modal-footer">
+              <button type="button" @click="cancelEdit" class="btn-secondary">{{ $t('common.cancel') }}</button>
+              <button type="button" @click="saveEdit(editingFarmer)" class="btn-primary">{{ $t('common.save') }}</button>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button @click="cancelEdit" class="btn-secondary">Cancel</button>
-          <button @click="saveEdit(editingFarmer)" class="btn-primary">Save Changes</button>
-        </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
 
     <!-- Edit Profile Picture Modal -->
-    <div v-if="showEditPictureModal" class="modal-overlay" @click="closeEditPictureModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3 class="modal-title text-2xl">Update Profile Picture</h3>
-          <button @click="closeEditPictureModal" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
-        </div>
-        <div class="modal-body" v-if="selectedFarmer">
-          <div class="flex flex-col items-center">
-            <div class="relative mb-4">
-              <img 
-                v-if="profilePicturePreview" 
-                :src="profilePicturePreview" 
-                alt="Preview" 
-                class="w-40 h-40 rounded-full object-cover border-4 border-green-500"
+    <Teleport to="body">
+      <div
+        v-if="showEditPictureModal"
+        class="modal-overlay edit-picture-overlay"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeEditPictureModal"
+      >
+        <div class="modal-content edit-picture-dialog" @click.stop>
+          <div class="modal-header edit-picture-header">
+            <h3 class="modal-title">Update Profile Picture</h3>
+            <button type="button" @click="closeEditPictureModal" class="edit-picture-close" :aria-label="$t('common.close')">&times;</button>
+          </div>
+          <div class="modal-body edit-picture-body" v-if="selectedFarmer">
+            <div class="edit-picture-preview-wrap">
+              <img
+                v-if="profilePicturePreview"
+                :src="profilePicturePreview"
+                alt="Preview"
+                class="edit-picture-avatar"
               />
-              <img 
-                v-else-if="selectedFarmer.profile_picture" 
-                :src="getProfilePictureUrl(selectedFarmer.profile_picture)" 
-                alt="Current" 
-                class="w-40 h-40 rounded-full object-cover border-4 border-gray-300"
+              <img
+                v-else-if="selectedFarmer.profile_picture"
+                :src="getProfilePictureUrl(selectedFarmer.profile_picture)"
+                alt="Current"
+                class="edit-picture-avatar"
               />
-              <div v-else class="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-4 border-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" viewBox="0 0 24 24" fill="currentColor">
+              <div v-else class="edit-picture-avatar edit-picture-avatar-fallback">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
                 </svg>
               </div>
             </div>
-            <label class="btn-primary cursor-pointer">
-              Choose Photo
-              <input 
-                type="file" 
+
+            <p class="edit-picture-name">{{ selectedFarmer.full_name }}</p>
+            <p class="edit-picture-hint">{{ $t('ui.jpegPngGif') }}</p>
+
+            <label class="edit-picture-choose">
+              {{ selectedProfilePicture ? 'Change Photo' : 'Choose Photo' }}
+              <input
+                type="file"
                 ref="profilePictureInput"
-                @change="handleProfilePictureSelect" 
+                @change="handleProfilePictureSelect"
                 accept="image/jpeg,image/png,image/gif"
                 class="hidden"
               />
             </label>
-            <p class="text-xs text-gray-500 mt-2">Max 5MB - JPEG, PNG, GIF only</p>
-            <p v-if="uploadError" class="text-sm text-red-600 mt-2">{{ uploadError }}</p>
+
+            <p v-if="selectedProfilePicture" class="edit-picture-filename">
+              {{ selectedProfilePicture.name }}
+            </p>
+            <p v-if="uploadError" class="edit-picture-error">{{ uploadError }}</p>
+          </div>
+          <div class="modal-footer edit-picture-footer">
+            <button type="button" @click="closeEditPictureModal" class="btn-secondary" :disabled="uploading">{{ $t('common.cancel') }}</button>
+            <button
+              type="button"
+              @click="uploadProfilePicture"
+              class="btn-primary"
+              :disabled="!selectedProfilePicture || uploading"
+            >
+              {{ uploading ? 'Uploading…' : 'Save Photo' }}
+            </button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button @click="closeEditPictureModal" class="btn-secondary">Cancel</button>
-          <button 
-            @click="uploadProfilePicture" 
-            class="btn-primary"
-            :disabled="!selectedProfilePicture || uploading"
-          >
-            <span v-if="uploading">Uploading...</span>
-            <span v-else>💾 Save Photo</span>
-          </button>
-        </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, defineProps, defineEmits } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineProps, defineEmits } from 'vue'
 import { formatMemberRole } from '../utils/roleLabels.js'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 // Emits
 const emit = defineEmits(['member-updated', 'member-deleted'])
@@ -726,7 +847,7 @@ const startEdit = (farmer) => {
     date_of_birth: farmer.date_of_birth?.split('T')[0] || '',
     address: homeAddress,
     barangay_name: barangayLabel,
-    phone_number: farmer.phone_number,
+    phone_number: String(farmer.phone_number || '').replace(/\D/g, '').slice(0, 11),
     educational_status: farmer.educational_status || '',
     land_area: farmer.land_area || '',
     farm_location: farmer.farm_location || '',
@@ -753,6 +874,12 @@ const formatReferenceNumberInput = (value = '') => {
 
 const handleReferenceInput = () => {
   editForm.value.reference_number = formatReferenceNumberInput(editForm.value.reference_number)
+}
+
+const handlePhoneInput = () => {
+  editForm.value.phone_number = String(editForm.value.phone_number || '')
+    .replace(/\D/g, '')
+    .slice(0, 11)
 }
 
 const onBarangayChange = () => {
@@ -818,6 +945,17 @@ const saveEdit = async (farmer) => {
     alert('Reference number must follow 00-00-00-000-000000 format.')
     return
   }
+
+  const phoneNumber = String(editForm.value.phone_number || '').replace(/\D/g, '')
+  if (phoneNumber.length !== 11) {
+    alert(`Phone number must be exactly 11 digits. You entered ${phoneNumber.length} digits.`)
+    return
+  }
+  if (!/^09\d{9}$/.test(phoneNumber)) {
+    alert('Phone number must be a valid Philippine mobile number (09XXXXXXXXX).')
+    return
+  }
+  editForm.value.phone_number = phoneNumber
 
   if (!confirm(`Are you sure you want to update ${farmer.full_name}'s information?`)) {
     return
@@ -930,6 +1068,40 @@ const deleteFarmer = async (farmer) => {
   }
 }
 
+let mainScrollOverflow = ''
+
+const lockPageScroll = (locked) => {
+  const main = document.querySelector('.main-content')
+  if (locked) {
+    document.body.style.overflow = 'hidden'
+    if (main) {
+      mainScrollOverflow = main.style.overflowY || ''
+      main.style.overflowY = 'hidden'
+    }
+  } else {
+    document.body.style.overflow = ''
+    if (main) {
+      main.style.overflowY = mainScrollOverflow
+      mainScrollOverflow = ''
+    }
+  }
+}
+
+const onDetailsEscape = (event) => {
+  if (event.key !== 'Escape') return
+  if (showEditPictureModal.value) {
+    closeEditPictureModal()
+    return
+  }
+  if (showEditMemberModal.value) {
+    cancelEdit()
+    return
+  }
+  if (showDetailsModal.value) {
+    closeDetailsModal()
+  }
+}
+
 const viewDetails = (farmer) => {
   selectedFarmer.value = farmer
   showDetailsModal.value = true
@@ -939,6 +1111,24 @@ const closeDetailsModal = () => {
   showDetailsModal.value = false
   selectedFarmer.value = null
 }
+
+const anyMemberModalOpen = computed(
+  () => showDetailsModal.value || showEditMemberModal.value || showEditPictureModal.value
+)
+
+watch(anyMemberModalOpen, (open) => {
+  lockPageScroll(open)
+  if (open) {
+    document.addEventListener('keydown', onDetailsEscape)
+  } else {
+    document.removeEventListener('keydown', onDetailsEscape)
+  }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onDetailsEscape)
+  lockPageScroll(false)
+})
 
 const openEditPictureModal = (farmer) => {
   selectedFarmer.value = farmer
@@ -960,9 +1150,9 @@ const handleProfilePictureSelect = (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // Validate file size (5MB max)
-  if (file.size > 5 * 1024 * 1024) {
-    uploadError.value = 'File size must be less than 5MB'
+  // Validate file size (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    uploadError.value = 'File size must be less than 10MB'
     selectedProfilePicture.value = null
     profilePicturePreview.value = null
     return
@@ -992,7 +1182,7 @@ const uploadProfilePicture = async () => {
     const formData = new FormData()
     formData.append('profile_picture', selectedProfilePicture.value)
 
-    const response = await fetch(`http://localhost:3000/api/farmers/${selectedFarmer.value.id}/profile-picture`, {
+    const response = await fetch(`/api/farmers/${selectedFarmer.value.id}/profile-picture`, {
       method: 'POST',
       body: formData
     })
@@ -1102,68 +1292,70 @@ onMounted(async () => {
 }
 
 .role-tabs {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
   background: linear-gradient(145deg, rgba(14,25,19,0.97), rgba(10,19,15,0.96));
-  padding: 8px;
-  border-radius: 12px;
+  padding: 4px;
+  border-radius: 8px;
   border: 1px solid rgba(122,171,140,0.20);
-  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
 
 .role-tab {
-  flex: 1;
-  min-width: 84px;
-  padding: 10px 8px 8px;
+  min-width: 0;
+  padding: 4px 6px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(122,171,140,0.15);
-  border-radius: 12px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.22s ease;
-  color: rgba(220,252,231,0.70);
-  font-size: var(--members-font-tab, 1rem);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  color: rgba(220,252,231,0.78);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  line-height: 1.3;
-  text-align: center;
+  align-items: stretch;
+  line-height: 1.2;
+  text-align: left;
 }
 
 .role-tab-icon {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  color: rgba(220, 252, 231, 0.88);
-  transition: transform 0.22s ease, color 0.22s ease;
+  display: none !important;
+}
+
+.role-tab-content,
+.role-tab .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
 }
 
 .role-tab-label {
-  font-size: 0.9375rem;
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  color: rgba(220,252,231,0.80);
-  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(220,252,231,0.72);
+  line-height: 1.15;
+  word-break: break-word;
 }
 
 .role-tab-count {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: rgba(134,239,172,0.65);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: rgba(134,239,172,0.88);
+  line-height: 1.05;
+  margin-top: 1px;
 }
 
 .role-tab:hover {
   background: rgba(74,222,128,0.10);
   border-color: rgba(134,239,172,0.35);
   color: #ecfdf5;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-}
-
-.role-tab:hover .role-tab-icon {
-  transform: scale(1.12);
-  color: #ecfdf5;
+  transform: none;
+  box-shadow: none;
 }
 
 .role-tab:hover .role-tab-label {
@@ -1174,13 +1366,8 @@ onMounted(async () => {
   background: linear-gradient(135deg, rgba(22,163,74,0.55) 0%, rgba(16,120,54,0.65) 100%);
   border-color: rgba(74,222,128,0.45);
   color: white;
-  box-shadow: 0 4px 16px rgba(16,185,129,0.30), inset 0 1px 0 rgba(255,255,255,0.08);
-  transform: translateY(-1px);
-}
-
-.role-tab.active .role-tab-icon {
-  color: #ffffff;
-  transform: scale(1.08);
+  box-shadow: none;
+  transform: none;
 }
 
 .role-tab.active .role-tab-label {
@@ -1188,7 +1375,7 @@ onMounted(async () => {
 }
 
 .role-tab.active .role-tab-count {
-  color: rgba(134,239,172,0.90);
+  color: #ffffff;
 }
 
 .edit-input {
@@ -1214,17 +1401,330 @@ onMounted(async () => {
   box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  /* Compact 3×3 — small row gap matching column gap; count on right */
   .role-tabs {
-    flex-direction: column;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    column-gap: 3px !important;
+    row-gap: 3px !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    margin-bottom: 0.35rem !important;
+    overflow: visible !important;
   }
 
   .role-tab {
-    width: 100%;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    flex: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 2px !important;
+    row-gap: 0 !important;
+    padding: 3px 4px !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    line-height: 1 !important;
+    align-items: center !important;
+    justify-items: center !important;
+  }
+
+  .role-tab:hover,
+  .role-tab.active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .role-tab-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 10px !important;
+    height: 10px !important;
+    margin: 0 !important;
+  }
+
+  .role-tab-label {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100%;
+    white-space: normal !important;
+    overflow: visible;
+    word-break: break-word;
+    text-align: center !important;
+  }
+
+  .role-tab-count {
+    grid-column: 2 !important;
+    grid-row: 1 / -1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .registered-members-card {
+    padding: 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .registered-members-title {
+    font-size: 1rem;
+    margin-bottom: 0.45rem;
   }
 }
 
-/* Modal Styles */
+/* ============================================
+   Member Information modal (teleported to body)
+   ============================================ */
+.member-info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(6, 12, 9, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-sizing: border-box;
+}
+
+.member-info-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(145deg, rgba(5, 46, 22, 0.96), rgba(20, 83, 45, 0.94));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.member-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 1.15rem 1.35rem;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.member-info-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.member-info-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.member-info-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.member-info-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.35rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.member-info-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.35rem;
+}
+
+.member-info-avatar {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  min-height: 100px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 4px solid #22c55e;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+.member-info-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(156, 163, 175, 0.65);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(187, 247, 208, 0.75);
+}
+
+.member-info-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 1rem 1.35rem 1.25rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.member-info-enter-active,
+.member-info-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.member-info-enter-active .member-info-dialog,
+.member-info-leave-active .member-info-dialog {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+
+.member-info-enter-from,
+.member-info-leave-to {
+  opacity: 0;
+}
+
+.member-info-enter-from .member-info-dialog,
+.member-info-leave-to .member-info-dialog {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+.member-info-overlay.light-theme {
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.member-info-overlay.light-theme .member-info-dialog {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%);
+  border-color: #166534;
+  color: #000000;
+  box-shadow: 0 24px 56px rgba(22, 101, 52, 0.22);
+}
+
+.member-info-overlay.light-theme .member-info-header {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%);
+  border-bottom-color: #166534;
+}
+
+.member-info-overlay.light-theme .member-info-title,
+.member-info-overlay.light-theme .member-name,
+.member-info-overlay.light-theme .detail-label,
+.member-info-overlay.light-theme .detail-value {
+  color: #000000;
+  -webkit-text-fill-color: #000000;
+}
+
+.member-info-overlay.light-theme .member-info-close {
+  background: #ffffff;
+  border-color: #166534;
+  color: #166534;
+}
+
+.member-info-overlay.light-theme .member-info-close:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.member-info-overlay.light-theme .member-info-footer {
+  border-top-color: rgba(22, 101, 52, 0.28);
+}
+
+.member-info-overlay.light-theme .detail-item {
+  background: #ffffff;
+  border-color: rgba(22, 101, 52, 0.35);
+}
+
+.member-info-overlay.light-theme .member-info-avatar-fallback {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #d1d5db;
+}
+
+.member-info-overlay.light-theme .btn-secondary {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  border-color: #15803d;
+}
+
+@media (max-width: 768px) {
+  .member-info-overlay {
+    padding: 0.65rem;
+  }
+
+  .member-info-dialog {
+    width: 94%;
+    max-width: none;
+    max-height: min(92vh, 920px);
+    border-radius: 14px;
+  }
+
+  .member-info-header {
+    padding: 0.95rem 1rem;
+  }
+
+  .member-info-title {
+    font-size: 1.05rem;
+  }
+
+  .member-info-body {
+    padding: 1rem;
+  }
+
+  .member-info-footer {
+    padding: 0.85rem 1rem 1rem;
+  }
+
+  .member-info-avatar {
+    width: 84px;
+    height: 84px;
+    min-width: 84px;
+    min-height: 84px;
+  }
+
+  .member-info-overlay .details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Modal Styles (edit / profile picture) */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1312,6 +1812,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(74, 222, 128, 0.18);
 }
 
 .detail-label {
@@ -1367,27 +1871,49 @@ onMounted(async () => {
 }
 
 /* ============================================
-   Edit Member Modal — bigger, two-column grid
+   Edit Member Modal — compact teleported dialog
    ============================================ */
 .modal-content.modal-edit-member {
-  max-width: 760px;
+  max-width: 680px;
+  max-height: min(90vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--glass-font, 'Plus Jakarta Sans', 'Segoe UI', sans-serif);
+}
+
+.modal-content.modal-edit-member :is(.modal-title, .edit-label, .edit-input, .edit-hint, .btn-primary, .btn-secondary, button, input, select, label, p, span) {
+  font-family: inherit;
+}
+
+.modal-content.modal-edit-member .modal-header,
+.modal-content.modal-edit-member .modal-footer {
+  flex-shrink: 0;
+  padding: 0.85rem 1rem;
+}
+
+.modal-content.modal-edit-member .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem 1rem 0.5rem;
 }
 
 .edit-photo-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  margin-bottom: 18px;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(190, 235, 203, 0.18);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .edit-photo-thumb img,
 .edit-photo-thumb .edit-photo-fallback {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(74, 222, 128, 0.55);
@@ -1406,19 +1932,19 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .edit-photo-name {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .edit-photo-sub {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(187, 247, 208, 0.7);
   font-variant-numeric: tabular-nums;
@@ -1426,10 +1952,10 @@ onMounted(async () => {
 
 .edit-photo-btn {
   align-self: flex-start;
-  margin-top: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 12px;
+  margin-top: 4px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2px;
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.55) 0%, rgba(22, 163, 74, 0.55) 100%);
@@ -1447,13 +1973,14 @@ onMounted(async () => {
 .edit-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 22px;
+  gap: 12px 14px;
 }
 
 .edit-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
+  margin: 0;
 }
 
 .edit-field-full {
@@ -1461,22 +1988,32 @@ onMounted(async () => {
 }
 
 .edit-label {
-  font-size: 11px;
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
   font-weight: 700;
   color: rgba(187, 247, 208, 0.92);
   text-transform: uppercase;
-  letter-spacing: 0.7px;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
 }
 
 .edit-input-modal {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 13.5px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  margin: 0;
+  padding: 0 10px;
+  font-size: 13px;
+  line-height: 40px;
   border-radius: 8px;
   border: 1px solid rgba(190, 235, 203, 0.32);
   background: rgba(0, 0, 0, 0.32);
   color: #f8fafc;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-sizing: border-box;
 }
 
 .edit-input-modal::placeholder {
@@ -1503,32 +2040,56 @@ onMounted(async () => {
 .edit-date-field {
   position: relative;
   width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 40px;
+  align-items: stretch;
+  margin: 0;
 }
 
 .edit-input-date {
-  padding-right: 3.25rem !important;
+  grid-area: 1 / 1;
+  position: relative;
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  margin: 0 !important;
+  padding: 0 44px 0 10px !important;
   color-scheme: light;
+  line-height: 40px;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
 }
 
 .edit-input-date::-webkit-calendar-picker-indicator {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 3.25rem;
+  inset: 0 0 0 auto;
+  width: 44px;
   height: 100%;
   margin: 0;
   padding: 0;
   opacity: 0;
   cursor: pointer;
+  z-index: 3;
+}
+
+.edit-date-icon-wrap {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  pointer-events: none;
+  box-sizing: border-box;
 }
 
 .edit-date-icon {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   padding: 4px;
   box-sizing: content-box;
   color: #052e16;
@@ -1536,13 +2097,67 @@ onMounted(async () => {
   border: 1px solid #16a34a;
   border-radius: 6px;
   pointer-events: none;
-  z-index: 2;
+  display: block;
+  flex-shrink: 0;
 }
 
 .edit-hint {
   font-size: 11px;
   color: rgba(220, 252, 231, 0.62);
   letter-spacing: 0.2px;
+}
+
+@media (max-width: 768px) {
+  .modal-content.modal-edit-member {
+    width: 94%;
+    max-width: none;
+    max-height: min(92vh, 900px);
+  }
+
+  .modal-content.modal-edit-member .modal-header,
+  .modal-content.modal-edit-member .modal-footer {
+    padding: 0.65rem 0.8rem;
+  }
+
+  .modal-content.modal-edit-member .modal-body {
+    padding: 0.55rem 0.8rem 0.35rem;
+  }
+
+  .edit-photo-row {
+    gap: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .edit-field {
+    gap: 3px;
+  }
+
+  .edit-input-modal {
+    padding: 0 10px;
+    font-size: 13px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    margin: 0 !important;
+  }
+
+  .edit-date-field {
+    grid-template-rows: 40px;
+  }
+
+  .edit-input-date {
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    line-height: 40px;
+    padding: 0 44px 0 10px !important;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1554,7 +2169,7 @@ onMounted(async () => {
 /* Light mode — parent page sets .light-theme on .farmer-table-page */
 :global(.farmer-table-page.light-theme) .registered-members-card {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
@@ -1570,12 +2185,12 @@ onMounted(async () => {
 
 :global(.farmer-table-page.light-theme) .role-tabs {
   background: #f4faf6 !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
 }
 
 :global(.farmer-table-page.light-theme) .role-tab {
   background: #ffffff !important;
-  border: 1.5px solid #bbf7d0 !important;
+  border-color: #bbf7d0 !important;
   color: #000000 !important;
 }
 
@@ -1603,8 +2218,7 @@ onMounted(async () => {
 :global(.farmer-table-page.light-theme) .edit-input {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 1.5px solid #cbd5e1 !important;
-  font-size: 0.875rem !important;
+  border-color: #cbd5e1 !important;
 }
 
 :global(.farmer-table-page.light-theme) .edit-input-modal[type="date"],
@@ -1618,26 +2232,20 @@ onMounted(async () => {
   border-color: #86efac !important;
 }
 
-/* Member Details modal — lively light mode */
+/* Member Details modal — colors only; layout matches dark */
 :global(.farmer-table-page.light-theme) .modal-overlay {
   background: rgba(236, 253, 245, 0.55) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 :global(.farmer-table-page.light-theme) .modal-content {
   background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%) !important;
-  border: 2px solid #166534 !important;
-  border-radius: 20px !important;
+  border-color: #166534 !important;
   color: #000000 !important;
-  box-shadow:
-    0 24px 48px rgba(22, 101, 52, 0.16),
-    0 8px 20px rgba(22, 101, 52, 0.08) !important;
 }
 
 :global(.farmer-table-page.light-theme) .modal-header {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 48%, #bbf7d0 100%) !important;
-  border-bottom: 2px solid #166534 !important;
+  border-bottom-color: #166534 !important;
 }
 
 :global(.farmer-table-page.light-theme) .modal-title,
@@ -1650,17 +2258,478 @@ onMounted(async () => {
 
 :global(.farmer-table-page.light-theme) .detail-item {
   background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.35) !important;
-  border-radius: 12px !important;
-  padding: 0.75rem 0.9rem !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
 }
 
 :global(.farmer-table-page.light-theme) .btn-secondary {
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 55%, #16a34a 100%) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  border: 2px solid #15803d !important;
-  font-weight: 800 !important;
-  box-shadow: 0 6px 16px rgba(22, 101, 52, 0.22) !important;
+  border-color: #15803d !important;
+}
+</style>
+
+<!-- Unscoped: teleported Member Information modal (must sit above fixed header) -->
+<style>
+.member-info-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(6, 12, 9, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-sizing: border-box;
+}
+
+.member-info-overlay .member-info-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: min(90vh, 860px);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(145deg, rgba(5, 46, 22, 0.96), rgba(20, 83, 45, 0.94));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.member-info-enter-active,
+.member-info-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.member-info-enter-active .member-info-dialog,
+.member-info-leave-active .member-info-dialog {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+
+.member-info-enter-from,
+.member-info-leave-to {
+  opacity: 0;
+}
+
+.member-info-enter-from .member-info-dialog,
+.member-info-leave-to .member-info-dialog {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+@media (max-width: 768px) {
+  .member-info-overlay {
+    padding: 0.65rem !important;
+  }
+
+  .member-info-overlay .member-info-dialog {
+    width: 94%;
+    max-width: none;
+    max-height: min(92vh, 920px);
+  }
+}
+
+/* Teleported Edit Member modal — above header */
+.edit-member-overlay.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  background: rgba(6, 12, 9, 0.62) !important;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-sizing: border-box;
+}
+
+.edit-member-overlay .modal-content.modal-edit-member {
+  width: 100%;
+  max-width: 680px;
+  max-height: min(90vh, 820px);
+}
+
+.edit-member-overlay.light-theme {
+  background: rgba(15, 23, 42, 0.48) !important;
+}
+
+/*
+ * Beat global style.css mobile rules that add:
+ *   label { margin-bottom: clamp(0.75rem…) }
+ *   input[type=text|date], select { margin-bottom: clamp(1rem…) }
+ * (tel is excluded there → inconsistent gaps)
+ */
+.edit-member-overlay label,
+.edit-member-overlay .edit-label {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.6px !important;
+  align-items: unset !important;
+  cursor: default !important;
+}
+
+.edit-member-overlay input,
+.edit-member-overlay select,
+.edit-member-overlay textarea,
+.edit-member-overlay .edit-input-modal,
+.edit-member-overlay .edit-input-modal.edit-input {
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 8px !important;
+  padding: 0 10px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  font-size: 13px !important;
+  line-height: 40px !important;
+  box-sizing: border-box !important;
+}
+
+.edit-member-overlay .edit-date-field {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 40px !important;
+  align-items: stretch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 40px !important;
+  height: 40px !important;
+}
+
+.edit-member-overlay .edit-input-date,
+.edit-member-overlay .edit-input-modal.edit-input-date {
+  grid-area: 1 / 1 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 44px 0 10px !important;
+  line-height: 40px !important;
+  margin: 0 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.edit-member-overlay .edit-input-date::-webkit-calendar-picker-indicator {
+  position: absolute !important;
+  inset: 0 0 0 auto !important;
+  width: 44px !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+  z-index: 3 !important;
+}
+
+.edit-member-overlay .edit-date-icon-wrap {
+  grid-area: 1 / 1 !important;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding: 0 8px 0 0 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  box-sizing: border-box !important;
+}
+
+.edit-member-overlay .edit-date-icon {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  padding: 4px !important;
+  box-sizing: content-box !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+.edit-member-overlay .edit-grid {
+  gap: 12px 14px !important;
+  row-gap: 12px !important;
+  column-gap: 14px !important;
+}
+
+.edit-member-overlay .edit-field {
+  gap: 3px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.edit-member-overlay .modal-body {
+  padding: 0.75rem 1rem 0.5rem !important;
+}
+
+@media (max-width: 768px) {
+  .edit-member-overlay.modal-overlay {
+    padding: 0.55rem !important;
+  }
+
+  .edit-member-overlay .modal-content.modal-edit-member {
+    width: 94%;
+    max-width: none;
+  }
+
+  .edit-member-overlay .modal-header,
+  .edit-member-overlay .modal-footer {
+    padding: 0.65rem 0.8rem !important;
+  }
+
+  .edit-member-overlay .modal-body {
+    padding: 0.5rem 0.8rem 0.3rem !important;
+  }
+
+  .edit-member-overlay .edit-photo-row {
+    gap: 10px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .edit-member-overlay .edit-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    row-gap: 12px !important;
+  }
+
+  .edit-member-overlay .edit-field {
+    gap: 3px !important;
+  }
+
+  .edit-member-overlay label,
+  .edit-member-overlay .edit-label {
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+
+  .edit-member-overlay input,
+  .edit-member-overlay select,
+  .edit-member-overlay textarea,
+  .edit-member-overlay .edit-input-modal,
+  .edit-member-overlay .edit-input-modal.edit-input,
+  .edit-member-overlay input[type='text'],
+  .edit-member-overlay input[type='tel'],
+  .edit-member-overlay input[type='date'],
+  .edit-member-overlay input[type='number'] {
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .edit-member-overlay .edit-input-date,
+  .edit-member-overlay .edit-input-modal.edit-input-date,
+  .edit-member-overlay input[type='date'] {
+    padding: 0 44px 0 10px !important;
+  }
+
+  .edit-member-overlay .edit-date-field {
+    grid-template-rows: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+  }
+}
+
+.edit-picture-overlay.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10060 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.75rem !important;
+  background: rgba(6, 12, 9, 0.7) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.edit-picture-dialog {
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  font-family: var(--glass-font, 'Plus Jakarta Sans', 'Segoe UI', sans-serif);
+}
+
+.edit-picture-header {
+  padding: 0.9rem 1rem !important;
+}
+
+.edit-picture-header .modal-title {
+  font-size: 1.1rem !important;
+}
+
+.edit-picture-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-picture-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.15rem 1.25rem 0.85rem !important;
+  gap: 0.45rem;
+}
+
+.edit-picture-preview-wrap {
+  margin-bottom: 0.35rem;
+}
+
+.edit-picture-avatar {
+  width: 128px;
+  height: 128px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 3px solid #22c55e;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  display: block;
+}
+
+.edit-picture-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(156, 163, 175, 0.55);
+  color: rgba(187, 247, 208, 0.75);
+}
+
+.edit-picture-avatar-fallback svg {
+  width: 52px;
+  height: 52px;
+}
+
+.edit-picture-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f0fdf4;
+}
+
+.edit-picture-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(187, 247, 208, 0.72);
+}
+
+.edit-picture-choose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9.5rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-picture-choose:hover {
+  filter: brightness(1.05);
+}
+
+.edit-picture-filename {
+  margin: 0.15rem 0 0;
+  max-width: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(220, 252, 231, 0.8);
+  word-break: break-all;
+}
+
+.edit-picture-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fca5a5;
+}
+
+.edit-picture-footer {
+  padding: 0.85rem 1rem !important;
+  gap: 0.55rem;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-dialog {
+  background: linear-gradient(165deg, #ffffff 0%, #f7fdf9 42%, #ecfdf5 100%);
+  border-color: #166534;
+  color: #052e16;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-header {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-bottom-color: #86efac;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-header .modal-title,
+.edit-picture-overlay.light-theme .edit-picture-name {
+  color: #052e16 !important;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-hint,
+.edit-picture-overlay.light-theme .edit-picture-filename {
+  color: #166534;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-close {
+  background: #ffffff;
+  border-color: #166534;
+  color: #166534;
+}
+
+.edit-picture-overlay.light-theme .edit-picture-avatar-fallback {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #d1d5db;
+}
+
+@media (max-width: 768px) {
+  .edit-picture-dialog {
+    width: 94%;
+    max-width: none;
+  }
+
+  .edit-picture-avatar {
+    width: 112px;
+    height: 112px;
+  }
 }
 </style>

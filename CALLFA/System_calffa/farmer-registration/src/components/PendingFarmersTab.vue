@@ -1,14 +1,14 @@
 <template>
   <div class="registered-members-card pending-members-card">
     <div class="section-header-with-actions">
-      <h2 class="registered-members-title">Pending Member Approvals</h2>
+      <h2 class="registered-members-title">{{ $t('ui.pendingMemberApprovals') }}</h2>
       <div v-if="farmers.length > 0" class="bulk-actions">
         <button @click="approveAllPending" class="bulk-approve-btn" :disabled="processingBulk">
-          <span v-if="!processingBulk">Approve All ({{ farmers.length }})</span>
-          <span v-else>Processing...</span>
+          <span v-if="!processingBulk">{{ $t('common.approveAll', { count: farmers.length }) }}</span>
+          <span v-else>{{ $t('common.processing') }}</span>
         </button>
         <button @click="$emit('refresh')" class="refresh-btn" :disabled="loading">
-          Refresh
+          {{ $t('common.refresh') }}
         </button>
       </div>
     </div>
@@ -16,22 +16,120 @@
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading pending members...</p>
+      <p>{{ $t('ui.loadingPendingMembers') }}</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="error-state">
       <p>{{ error }}</p>
-      <button @click="$emit('refresh')" class="retry-btn">Retry</button>
+      <button @click="$emit('refresh')" class="retry-btn">{{ $t('common.retry') }}</button>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="farmers.length === 0" class="empty-state">
-      <p>No pending members found.</p>
+      <p>{{ $t('ui.noPendingMembers') }}</p>
     </div>
 
-    <!-- Pending Members Table -->
-    <div v-else class="registered-table-scroll">
+    <!-- Pending Members — mobile cards + desktop table -->
+    <template v-else>
+    <div class="members-mobile-list">
+      <article v-for="member in farmers" :key="'m-' + member.id" class="members-mobile-card">
+        <div class="mmc-head">
+          <div class="member-avatar-wrap">
+            <img
+              v-if="member.profile_picture"
+              :src="getProfilePictureUrl(member.profile_picture)"
+              :alt="$t('ui.profile')"
+              class="member-avatar"
+            />
+            <div v-else class="member-avatar member-avatar-fallback">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div class="mmc-head-text">
+            <h3 class="mmc-name">{{ member.full_name }}</h3>
+            <p class="mmc-ref">{{ member.reference_number }}</p>
+          </div>
+          <span class="status-chip status-chip-pending">{{ $t('common.pending') }}</span>
+        </div>
+        <div class="mmc-rows">
+          <div class="mmc-row"><span>{{ $t('ui.phone') }}</span><strong>{{ member.phone_number || 'N/A' }}</strong></div>
+          <div class="mmc-row"><span>{{ $t('ui.barangay') }}</span><strong>{{ member.barangay_name || 'Not assigned' }}</strong></div>
+          <div class="mmc-row"><span>{{ $t('ui.education') }}</span><strong>{{ member.educational_status || 'N/A' }}</strong></div>
+          <div class="mmc-row"><span>{{ $t('ui.registered') }}</span><strong>{{ formatDate(member.registered_on) }}</strong></div>
+        </div>
+        <div class="mmc-controls">
+          <label class="mmc-field">
+            <span>{{ $t('ui.role') }}</span>
+            <select
+              :value="member.role"
+              class="table-select"
+              :disabled="processingId === member.id"
+              @change="updateRole(member.id, $event.target.value)"
+            >
+              <option value="farmer">{{ $t('ui.farmer') }}</option>
+              <option value="president">{{ $t('ui.president') }}</option>
+              <option value="treasurer">{{ $t('ui.treasurer') }}</option>
+              <option value="auditor">{{ $t('ui.auditor') }}</option>
+              <option value="operator">{{ $t('ui.operator') }}</option>
+              <option value="operation_manager">{{ $t('ui.operationManager') }}</option>
+              <option value="business_manager">{{ $t('ui.businessManager') }}</option>
+              <option value="agriculturist">{{ $t('ui.agriculturist') }}</option>
+              <option value="admin">{{ $t('ui.admin') }}</option>
+            </select>
+          </label>
+          <label class="mmc-field">
+            <span>{{ $t('ui.membership') }}</span>
+            <select
+              :value="member.membership_status || 'member'"
+              class="table-select"
+              :disabled="processingId === member.id"
+              @change="updateMembershipStatus(member.id, $event.target.value)"
+            >
+              <option value="member">{{ $t('ui.member') }}</option>
+              <option value="non-member">{{ $t('ui.nonMember') }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="members-action-row mmc-actions">
+          <button
+            type="button"
+            class="table-action-btn table-action-approve mmc-action-text"
+            :disabled="processingId === member.id || member.role === 'admin'"
+            :title="$t('common.approve')"
+            :aria-label="$t('common.approve')"
+            @click="approveMember(member.id)"
+          >
+            {{ $t('common.approve') }}
+          </button>
+          <button
+            type="button"
+            class="table-action-btn table-action-reject mmc-action-text"
+            :disabled="processingId === member.id || member.role === 'admin'"
+            :title="$t('common.reject')"
+            :aria-label="$t('common.reject')"
+            @click="rejectMember(member.id)"
+          >
+            {{ $t('common.reject') }}
+          </button>
+          <button
+            type="button"
+            class="table-action-btn table-action-delete mmc-action-text"
+            :disabled="processingId === member.id || member.role === 'admin'"
+            :title="$t('common.delete')"
+            :aria-label="$t('common.delete')"
+            @click="deleteMember(member.id)"
+          >
+            {{ $t('common.delete') }}
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Pending Members Table (desktop/tablet) -->
+    <div class="registered-table-scroll members-desktop-only">
       <div class="members-table-container">
         <table class="members-table">
           <colgroup>
@@ -50,18 +148,18 @@
           </colgroup>
           <thead>
             <tr>
-              <th>Photo</th>
-              <th>Ref #</th>
-              <th>Name</th>
-              <th>DOB</th>
-              <th>Phone</th>
-              <th>Education</th>
-              <th>Role</th>
-              <th>Membership</th>
-              <th>Barangay</th>
-              <th>Registered</th>
-              <th>Status</th>
-              <th class="members-th-actions">Actions</th>
+              <th>{{ $t('ui.photo') }}</th>
+              <th>{{ $t('ui.refHash') }}</th>
+              <th>{{ $t('ui.name') }}</th>
+              <th>{{ $t('ui.dob') }}</th>
+              <th>{{ $t('ui.phone') }}</th>
+              <th>{{ $t('ui.education') }}</th>
+              <th>{{ $t('ui.role') }}</th>
+              <th>{{ $t('ui.membership') }}</th>
+              <th>{{ $t('ui.barangay') }}</th>
+              <th>{{ $t('ui.registered') }}</th>
+              <th>{{ $t('ui.status') }}</th>
+              <th class="members-th-actions">{{ $t('ui.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -71,7 +169,7 @@
                   <img
                     v-if="member.profile_picture"
                     :src="getProfilePictureUrl(member.profile_picture)"
-                    alt="Profile"
+                    :alt="$t('ui.profile')"
                     class="member-avatar"
                   />
                   <div v-else class="member-avatar member-avatar-fallback">
@@ -93,15 +191,15 @@
                   :disabled="processingId === member.id"
                   @change="updateRole(member.id, $event.target.value)"
                 >
-                  <option value="farmer">Farmer</option>
-                  <option value="president">President</option>
-                  <option value="treasurer">Treasurer</option>
-                  <option value="auditor">Auditor</option>
-                  <option value="operator">Operator</option>
-                  <option value="operation_manager">Operation Manager</option>
-                  <option value="business_manager">Business Manager</option>
-                  <option value="agriculturist">Agriculturist</option>
-                  <option value="admin">Admin</option>
+                  <option value="farmer">{{ $t('ui.farmer') }}</option>
+                  <option value="president">{{ $t('ui.president') }}</option>
+                  <option value="treasurer">{{ $t('ui.treasurer') }}</option>
+                  <option value="auditor">{{ $t('ui.auditor') }}</option>
+                  <option value="operator">{{ $t('ui.operator') }}</option>
+                  <option value="operation_manager">{{ $t('ui.operationManager') }}</option>
+                  <option value="business_manager">{{ $t('ui.businessManager') }}</option>
+                  <option value="agriculturist">{{ $t('ui.agriculturist') }}</option>
+                  <option value="admin">{{ $t('ui.admin') }}</option>
                 </select>
               </td>
               <td class="members-cell">
@@ -111,14 +209,14 @@
                   :disabled="processingId === member.id"
                   @change="updateMembershipStatus(member.id, $event.target.value)"
                 >
-                  <option value="member">Member</option>
-                  <option value="non-member">Non-Member</option>
+                  <option value="member">{{ $t('ui.member') }}</option>
+                  <option value="non-member">{{ $t('ui.nonMember') }}</option>
                 </select>
               </td>
               <td class="members-cell">{{ member.barangay_name || 'Not assigned' }}</td>
               <td class="members-cell">{{ formatDate(member.registered_on) }}</td>
               <td class="members-cell">
-                <span class="status-chip status-chip-pending">Pending</span>
+                <span class="status-chip status-chip-pending">{{ $t('common.pending') }}</span>
               </td>
               <td class="members-cell members-actions-cell">
                 <div class="members-action-row">
@@ -126,8 +224,8 @@
                     type="button"
                     class="table-action-btn table-action-approve"
                     :disabled="processingId === member.id || member.role === 'admin'"
-                    title="Approve"
-                    aria-label="Approve"
+                    :title="$t('common.approve')"
+                    :aria-label="$t('common.approve')"
                     @click="approveMember(member.id)"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -138,8 +236,8 @@
                     type="button"
                     class="table-action-btn table-action-reject"
                     :disabled="processingId === member.id || member.role === 'admin'"
-                    title="Reject"
-                    aria-label="Reject"
+                    :title="$t('common.reject')"
+                    :aria-label="$t('common.reject')"
                     @click="rejectMember(member.id)"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -151,8 +249,8 @@
                     type="button"
                     class="table-action-btn table-action-delete"
                     :disabled="processingId === member.id || member.role === 'admin'"
-                    title="Delete"
-                    aria-label="Delete"
+                    :title="$t('common.delete')"
+                    :aria-label="$t('common.delete')"
                     @click="deleteMember(member.id)"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -169,6 +267,7 @@
         </table>
       </div>
     </div>
+    </template>
 
     <!-- Success Message -->
     <div v-if="successMessage" class="success-message-banner">
@@ -552,19 +651,35 @@ const approveAllPending = async () => {
 }
 
 @media (max-width: 768px) {
+  .registered-members-card {
+    padding: 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+
   .section-header-with-actions {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    margin-bottom: 0.55rem;
+    gap: 0.45rem;
+  }
+
+  .registered-members-title {
+    font-size: 1rem;
   }
 
   .bulk-actions {
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .bulk-approve-btn,
   .refresh-btn {
-    width: 100%;
+    width: auto;
+    flex: 1 1 auto;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
   }
 
   .members-table {
@@ -597,7 +712,7 @@ const approveAllPending = async () => {
 
 :global(.farmer-table-page.light-theme) .registered-members-card {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
@@ -609,19 +724,17 @@ const approveAllPending = async () => {
 
 :global(.farmer-table-page.light-theme) :is(.loading-state, .error-state, .empty-state) {
   color: #14532d !important;
-  background: #f8fdf9 !important;
-  border: 1.5px solid #bbf7d0 !important;
+  background: #ffffff !important;
+  border-color: #94a3b8 !important;
 }
 
 :global(.farmer-table-page.light-theme) .empty-state > p:first-child {
   color: #052e16 !important;
-  font-size: 1rem !important;
 }
 
 :global(.farmer-table-page.light-theme) .refresh-btn {
   background: #ffffff !important;
   color: #15803d !important;
-  border: 1.5px solid #86efac !important;
-  font-size: 0.9375rem !important;
+  border-color: #86efac !important;
 }
 </style>

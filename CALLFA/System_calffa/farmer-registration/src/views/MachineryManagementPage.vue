@@ -1,504 +1,217 @@
 <template>
-  <div class="machinery-management-page" :class="{ 'light-theme': isLight }">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1 class="page-title">Machinery Management System</h1>
-        <p class="page-subtitle" v-if="isPresidentRole">Manage machinery inventory and monitor bookings for your barangay</p>
-        <p class="page-subtitle" v-else-if="!isAdminOnly">Monitor machinery bookings</p>
+  <div class="page-container machinery-management-page machinery-ui" :class="{ 'light-theme': isLight }">
+    <!-- Page Header (Barangays-style split) -->
+    <div class="page-header page-header-split">
+      <div class="page-header-text">
+        <h1 class="page-title">{{ $t('ui.machineryManagement') }}</h1>
+        <p class="page-subtitle" v-if="isAdminOnly">{{ $t('ui.machineryManagementAdminSub') }}</p>
+        <p class="page-subtitle" v-else-if="isPresidentRole">{{ $t('ui.machineryManagementPresidentSub') }}</p>
+        <p class="page-subtitle" v-else>{{ $t('ui.machineryManagementSub') }}</p>
       </div>
-      <button v-if="isAdminRole" @click="showInventoryModal = true" class="btn-primary machinery-inventory-btn">
-        Machinery Inventory
+      <button
+        v-if="isAdminOnly || isPresidentRole"
+        type="button"
+        class="btn-header-add"
+        @click="showAddMachineryModal = true"
+      >
+        <svg class="btn-header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+        </svg>
+        {{ $t('common.addMachinery') }}
       </button>
     </div>
 
+    <div
+      v-if="isPresidentRole"
+      class="dp-module-panel"
+      :class="{ 'dp-module-panel--off': !dpEnabled }"
+    >
+      <div class="dp-module-panel__text">
+        <h2 class="dp-module-panel__title">{{ $t('ui.machineryDownPaymentModule') }}</h2>
+        <p class="dp-module-panel__desc">
+          {{ dpEnabled ? $t('ui.machineryDownPaymentOnDesc') : $t('ui.machineryDownPaymentOffDesc') }}
+        </p>
+        <label class="dp-percent-label" for="dp-percent-input">{{ $t('ui.machineryDownPaymentPercent') }}</label>
+        <div class="dp-percent-row">
+          <input
+            id="dp-percent-input"
+            v-model="dpPercentInput"
+            type="text"
+            class="dp-percent-input"
+            inputmode="decimal"
+            placeholder="10, 15, 20, 30"
+            :disabled="dpSaving"
+            @blur="normalizeDownPaymentPercentField"
+          />
+          <span class="dp-percent-suffix">%</span>
+          <button
+            type="button"
+            class="btn-secondary dp-percent-save"
+            :disabled="dpSaving || !dpPercentDirty"
+            @click="saveDownPaymentPercent"
+          >
+            {{ $t('common.save') }}
+          </button>
+        </div>
+        <p class="dp-percent-hint">{{ $t('ui.machineryDownPaymentPercentHint') }}</p>
+      </div>
+      <button
+        type="button"
+        class="dp-module-toggle"
+        :class="{ 'dp-module-toggle--on': dpEnabled, 'dp-module-toggle--off': !dpEnabled }"
+        :disabled="dpSaving"
+        @click="toggleDownPayment"
+        :aria-pressed="dpEnabled"
+      >
+        <span class="dp-module-toggle__track">
+          <span class="dp-module-toggle__thumb"></span>
+        </span>
+        <span class="dp-module-toggle__label">{{ dpEnabled ? $t('ui.machineryDownPaymentOnLabel') : $t('ui.machineryDownPaymentOffLabel') }}</span>
+      </button>
+      <p v-if="dpMessage" class="dp-module-panel__msg" :class="dpMessageType">{{ dpMessage }}</p>
+    </div>
+
     <!-- Stats Overview (Hidden for Admin-Only) -->
-    <div v-if="!isAdminOnly" class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-content">
-          <div class="stat-label">Total Machinery</div>
-          <div class="stat-value">{{ totalMachinery }}</div>
+    <div v-if="!isAdminOnly" class="stats-group stats-group--machinery">
+      <div class="stats-grid stats-grid--machinery">
+        <div class="stat-card stat-card-total">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.totalMachinery') }}</div>
+            <div class="stat-value">{{ totalMachinery }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-success">
-        <div class="stat-content">
-          <div class="stat-label">Available</div>
-          <div class="stat-value">{{ availableMachinery }}</div>
+        <div class="stat-card stat-success">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('common.available') }}</div>
+            <div class="stat-value">{{ availableMachinery }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-pending">
-        <div class="stat-content">
-          <div class="stat-label">Pending Bookings</div>
-          <div class="stat-value">{{ pendingBookingsCount }}</div>
+        <div class="stat-card stat-pending">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.pendingBookings') }}</div>
+            <div class="stat-value">{{ pendingBookingsCount }}</div>
+          </div>
         </div>
-      </div>
-      <div class="stat-card stat-info">
-        <div class="stat-content">
-          <div class="stat-label">Total Revenue</div>
-          <div class="stat-value">₱{{ formatNumber(totalRevenue) }}</div>
+        <div class="stat-card stat-info">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.totalRevenue') }}</div>
+            <div class="stat-value">₱{{ formatNumber(totalRevenue) }}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Admin Inventory View -->
-    <div v-if="isAdminOnly" class="section">
-      <h2 class="section-title">Machinery Inventory by Barangay</h2>
-      
-      <!-- Admin Inventory Filters -->
-      <div class="filters-section">
-        <div class="filter-group">
-          <label class="filter-label">Status</label>
-          <select v-model="adminFilters.status" @change="applyAdminFilters" class="filter-select">
-            <option value="">All Status</option>
-            <option value="Available">Available</option>
-            <option value="In Use">In Use</option>
-            <option value="Under Maintenance">Under Maintenance</option>
-            <option value="Unavailable">Unavailable</option>
-          </select>
+    <template v-if="isAdminOnly">
+      <div class="tools-card">
+        <div class="tools-card-top">
+          <div class="search-bar">
+            <span class="search-icon-wrap" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input v-model="invQ" type="text" class="toolbar-input search-input-main" :placeholder="$t('ui.searchNameType')" />
+          </div>
+          <div class="inv2-view-toggle" title="View format">
+            <button type="button" class="inv2-view-btn" :class="{ active: invView === 'table' }" @click="invView = 'table'" :title="$t('ui.tableView')" :aria-label="$t('ui.tableView')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3h18M3 9h18M3 15h18M3 21h18"/></svg>
+            </button>
+            <button type="button" class="inv2-view-btn" :class="{ active: invView === 'card' }" @click="invView = 'card'" :title="$t('ui.cardView')" :aria-label="$t('ui.cardView')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+          </div>
         </div>
         <div class="filter-group">
-          <label class="filter-label">Machinery Type</label>
-          <select v-model="adminFilters.machinery_type" @change="applyAdminFilters" class="filter-select">
-            <option value="">All Types</option>
-            <option v-for="type in distinctMachineryTypes" :key="type" :value="type">
-              {{ type }}
-            </option>
+          <select v-model="invTypeF" class="toolbar-select">
+            <option value="">{{ $t('ui.allTypes') }}</option>
+            <option v-for="t in invUniqueTypes" :key="t" :value="t">{{ t }}</option>
           </select>
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Barangay</label>
-          <select v-model="adminFilters.barangay_id" @change="applyAdminFilters" class="filter-select">
-            <option value="">All Barangays</option>
-            <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
+          <select v-model="invStatusF" class="toolbar-select">
+            <option value="">{{ $t('ui.allStatus') }}</option>
+            <option value="Available">{{ $t('common.available') }}</option>
+            <option value="Unavailable">{{ $t('common.unavailable') }}</option>
+          </select>
+          <select v-model="invBarangayF" class="toolbar-select">
+            <option value="">{{ $t('ui.allBarangays') }}</option>
+            <option v-for="barangay in barangays" :key="barangay.id" :value="String(barangay.id)">
               {{ barangay.name }}
             </option>
           </select>
         </div>
-      </div>
-
-      <!-- Admin Inventory Table -->
-      <div class="inventory-table-container">
-        <div class="inventory-actions">
-          <button @click="showAddMachineryModal = true" class="btn-success btn-inventory-add">
-            <svg class="btn-add-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add New Machinery
-          </button>
-        </div>
-        <table class="inventory-table inventory-table-admin">
-          <colgroup>
-            <col class="col-name" />
-            <col class="col-type" />
-            <col class="col-barangay" />
-            <col class="col-pricing" />
-            <col class="col-capacity" />
-            <col class="col-status" />
-            <col class="col-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Barangay</th>
-              <th>Pricing</th>
-              <th>Max Cap.</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading">
-              <td colspan="7" class="loading-cell">
-                <div class="loading-spinner"></div>
-                <span>Loading machinery...</span>
-              </td>
-            </tr>
-            <tr v-else-if="filteredInventory.length === 0">
-              <td colspan="7" class="empty-cell">No machinery found matching the filters</td>
-            </tr>
-            <tr v-else v-for="machine in filteredInventory" :key="machine.id">
-              <td>{{ machine.machinery_name }}</td>
-              <td>
-                <span class="badge" :class="'badge-' + getMachineryTypeClass(machine.machinery_type)">
-                  {{ machine.machinery_type }}
-                </span>
-              </td>
-              <td>
-                <span class="barangay-badge">{{ getBarangayName(machine.barangay_id) }}</span>
-              </td>
-              <td class="pricing-cell">
-                <div class="price-stack">
-                  <div class="price-block price-block-member">
-                    <span class="price-block-label">Member</span>
-                    <span class="price-block-value">
-                      ₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}
-                      <small>{{ formatUnitLabel(machine.unit_type) }}</small>
-                    </span>
-                  </div>
-                  <div class="price-block price-block-nonmember">
-                    <span class="price-block-label">Non-Member</span>
-                    <span class="price-block-value">
-                      ₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}
-                      <small>{{ formatUnitLabel(machine.unit_type) }}</small>
-                    </span>
-                  </div>
-                </div>
-              </td>
-              <td class="capacity-cell">
-                <span v-if="machine.max_capacity">{{ formatCapacity(machine) }}</span>
-                <span v-else>-</span>
-              </td>
-              <td>
-                <span class="status-badge" :class="'status-' + getStatusClass(machine.status)">
-                  {{ machine.status }}
-                </span>
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                  <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- President's Machinery Inventory Section -->
-    <div v-if="isPresidentRole" class="section">
-      <h2 class="section-title">Machinery Inventory ({{ barangays.find(b => b.id === userBarangayId)?.name || 'Your Barangay' }})</h2>
-      
-      <div class="inventory-actions standalone-actions">
-        <button @click="showAddMachineryModal = true" class="btn-success btn-inventory-add">
-          <svg class="btn-add-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Add Machinery
-        </button>
-      </div>
-
-      <div v-if="inventory.length === 0" class="empty-state">
-        <p>No machinery in your barangay yet</p>
-      </div>
-
-      <div v-else class="inventory-table-container">
-        <table class="inventory-table inventory-table-president">
-          <colgroup>
-            <col class="col-name" />
-            <col class="col-type" />
-            <col class="col-operator" />
-            <col class="col-pricing" />
-            <col class="col-status" />
-            <col class="col-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Assigned Operator</th>
-              <th>Pricing</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="machine in inventory" :key="machine.id">
-              <td><strong>{{ machine.machinery_name }}</strong></td>
-              <td>
-                <span :class="['badge', `badge-${getMachineryTypeClass(machine.machinery_type)}`]">
-                  {{ machine.machinery_type }}
-                </span>
-              </td>
-              <td class="operator-cell">
-                <div v-if="machine.assigned_operator_name" class="operator-assigned">
-                  <strong>{{ machine.assigned_operator_name }}</strong>
-                  <small v-if="machine.assignment_date">Since {{ formatDate(machine.assignment_date) }}</small>
-                  <small v-if="machine.assigned_by_name">by {{ machine.assigned_by_name }}</small>
-                </div>
-                <span v-else class="operator-missing">Not assigned</span>
-              </td>
-              <td class="pricing-cell">
-                <div class="price-stack">
-                  <div class="price-block price-block-member">
-                    <span class="price-block-label">Member</span>
-                    <span class="price-block-value">
-                      ₱{{ formatNumber(machine.member_price || machine.price_per_unit) }}
-                      <small v-if="machine.unit_type">{{ formatUnitLabel(machine.unit_type) }}</small>
-                    </span>
-                  </div>
-                  <div class="price-block price-block-nonmember">
-                    <span class="price-block-label">Non-Member</span>
-                    <span class="price-block-value">
-                      ₱{{ formatNumber(machine.non_member_price || (machine.price_per_unit * 1.25)) }}
-                      <small v-if="machine.unit_type">{{ formatUnitLabel(machine.unit_type) }}</small>
-                    </span>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span :class="['status-badge', `status-${getStatusClass(machine.status)}`]">
-                  {{ machine.status }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <div class="action-buttons">
-                  <button type="button" @click="openAssignOperatorModal(machine)" class="machinery-action-btn machinery-action-assign" title="Assign Operator" aria-label="Assign Operator">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-                    </svg>
-                  </button>
-                  <button type="button" @click="editMachinery(machine)" class="machinery-action-btn machinery-action-edit" title="Edit" aria-label="Edit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                  <button type="button" @click="deleteMachineryConfirm(machine)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- All Bookings Table -->
-    <div v-if="!isAdminOnly" class="section">
-      <h2 class="section-title">Machinery Bookings</h2>
-      
-      <!-- Filters -->
-      <div class="filters-section">
-        <div class="filter-group">
-          <label class="filter-label">Status</label>
-          <select v-model="filters.status" @change="applyFilters" class="filter-select">
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Machinery Type</label>
-          <select v-model="filters.machinery_type" @change="applyFilters" class="filter-select">
-            <option value="">All Types</option>
-            <option v-for="type in distinctMachineryTypes" :key="type" :value="type">
-              {{ type }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Bookings Table -->
-      <div class="table-container">
-        <table class="bookings-table">
-          <colgroup>
-            <col class="col-farmer" />
-            <col class="col-machinery" />
-            <col class="col-date" />
-            <col class="col-location" />
-            <col class="col-area" />
-            <col class="col-total" />
-            <col class="col-status" />
-            <col class="col-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Farmer</th>
-              <th>Machinery</th>
-              <th>Date</th>
-              <th>Location</th>
-              <th>Area/Qty</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading">
-              <td colspan="8" class="loading-cell">
-                <div class="loading-spinner"></div>
-                <span>Loading bookings...</span>
-              </td>
-            </tr>
-            <tr v-else-if="bookings.length === 0">
-              <td colspan="8" class="empty-cell">
-                No bookings found.
-              </td>
-            </tr>
-            <tr v-else v-for="booking in bookings" :key="booking.id">
-              <td>
-                <div class="farmer-info">
-                  <strong>{{ booking.farmer_name }}</strong>
-                  <small>{{ booking.reference_number }}</small>
-                </div>
-              </td>
-              <td>
-                <div class="machinery-info">
-                  <strong>{{ booking.machinery_name }}</strong>
-                  <span class="badge" :class="'badge-' + getMachineryTypeClass(booking.machinery_type)">
-                    {{ booking.machinery_type }}
-                  </span>
-                </div>
-              </td>
-              <td>{{ formatDate(booking.booking_date) }}</td>
-              <td>{{ booking.service_location }}</td>
-              <td>{{ booking.area_size }} {{ booking.area_unit }}</td>
-              <td class="price-cell">₱{{ formatNumber(booking.total_price) }}</td>
-              <td>
-                <span class="status-badge" :class="'status-' + getBookingStatusClass(booking.status)">
-                  {{ booking.status }}
-                </span>
-              </td>
-              <td>
-                <button @click="viewBooking(booking)" class="btn-icon-small booking-view-btn" title="View Details" aria-label="View booking details">
-                  <svg class="booking-view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path>
-                    <circle cx="12" cy="12" r="2.7"></circle>
-                  </svg>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Inventory Modal (Hidden for Admin) -->
-    <div v-if="showInventoryModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content modal-xlarge inv2-modal">
-
-        <!-- ── Header ── -->
-        <div class="inv2-header">
-          <div class="inv2-header-left">
-            <div class="inv2-header-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            </div>
-            <div>
-              <h2 class="inv2-title">Machinery Inventory</h2>
-              <p class="inv2-subtitle">{{ invFiltered.length }} record{{ invFiltered.length !== 1 ? 's' : '' }} found</p>
-            </div>
-          </div>
-          <div class="inv2-header-right">
-            <!-- View toggle -->
-            <div class="inv2-view-toggle">
-              <button type="button" class="inv2-view-btn" :class="{ active: invView === 'table' }" @click="invView = 'table'" title="Table view">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3h18M3 9h18M3 15h18M3 21h18"/></svg>
+        <div v-if="invQ || invTypeF || invStatusF || invBarangayF" class="tools-chips">
+          <div class="tools-chips-list">
+            <span v-if="invQ" class="inv2-chip">
+              Search: "{{ invQ }}"
+              <button type="button" @click="invQ = ''" class="inv2-chip-x" aria-label="Clear search chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
-              <button type="button" class="inv2-view-btn" :class="{ active: invView === 'card' }" @click="invView = 'card'" title="Card view">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </span>
+            <span v-if="invTypeF" class="inv2-chip">
+              Type: {{ invTypeF }}
+              <button type="button" @click="invTypeF = ''" class="inv2-chip-x" aria-label="Clear type chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
-            </div>
-            <button type="button" @click="closeModals" class="inv2-close" title="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
+            </span>
+            <span v-if="invStatusF" class="inv2-chip">
+              Status: {{ invStatusF }}
+              <button type="button" @click="invStatusF = ''" class="inv2-chip-x" aria-label="Clear status chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </span>
+            <span v-if="invBarangayF" class="inv2-chip">
+              Barangay: {{ getBarangayName(invBarangayF) }}
+              <button type="button" @click="invBarangayF = ''" class="inv2-chip-x" aria-label="Clear barangay chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </span>
           </div>
+          <button type="button" @click="clearInvFilters" class="inv2-clear-all">{{ $t('common.clearAll') }}</button>
         </div>
+      </div>
 
-        <!-- ── Toolbar ── -->
-        <div class="inv2-toolbar">
-          <div class="inv2-search">
-            <svg class="inv2-search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input v-model="invQ" type="text" class="inv2-search-input" placeholder="Search name or type…" />
-            <button v-if="invQ" type="button" @click="invQ = ''" class="inv2-clear-btn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-
-          <select v-model="invTypeF" class="inv2-select">
-            <option value="">All Types</option>
-            <option v-for="t in invUniqueTypes" :key="t" :value="t">{{ t }}</option>
-          </select>
-
-          <select v-model="invStatusF" class="inv2-select">
-            <option value="">All Status</option>
-            <option value="Available">Available</option>
-            <option value="In Use">In Use</option>
-            <option value="Under Maintenance">Under Maintenance</option>
-            <option value="Unavailable">Unavailable</option>
-          </select>
-
-          <button type="button" @click="showAddMachineryModal = true; showInventoryModal = false" class="inv2-add-btn">
-            ➕ Add New Machinery
-          </button>
+      <div class="card inv2-data-card">
+        <div class="inv2-card-meta-bar">
+          <span class="inv2-record-count">{{ invFiltered.length }} record{{ invFiltered.length !== 1 ? 's' : '' }} found</span>
         </div>
-
-        <!-- Active filter chips -->
-        <div v-if="invQ || invTypeF || invStatusF" class="inv2-chips">
-          <span v-if="invQ" class="inv2-chip">
-            Search: "{{ invQ }}"
-            <button type="button" @click="invQ = ''" class="inv2-chip-x">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </span>
-          <span v-if="invTypeF" class="inv2-chip">
-            Type: {{ invTypeF }}
-            <button type="button" @click="invTypeF = ''" class="inv2-chip-x">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </span>
-          <span v-if="invStatusF" class="inv2-chip">
-            Status: {{ invStatusF }}
-            <button type="button" @click="invStatusF = ''" class="inv2-chip-x">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </span>
-          <button type="button" @click="invQ = ''; invTypeF = ''; invStatusF = ''" class="inv2-clear-all">Clear all</button>
-        </div>
-
-        <!-- ── Body ── -->
         <div class="inv2-body">
+          <div v-if="loading" class="inv2-empty">
+            <div class="loading-spinner"></div>
+            <div>{{ $t('ui.loadingMachinery') }}</div>
+          </div>
 
-          <!-- TABLE VIEW -->
-          <div v-if="invView === 'table'" class="inv2-table-wrap">
+          <template v-if="!loading && invView === 'table'">
+          <div class="inv2-table-wrap inv2-desktop-table">
             <table class="inv2-table">
               <colgroup>
                 <col class="inv2-col-name" />
                 <col class="inv2-col-type" />
+                <col class="inv2-col-barangay" />
                 <col class="inv2-col-member" />
                 <col class="inv2-col-nonmember" />
+                <col class="inv2-col-interest" />
                 <col class="inv2-col-capacity" />
                 <col class="inv2-col-status" />
                 <col class="inv2-col-actions" />
               </colgroup>
               <thead>
                 <tr>
-                  <th class="inv2-th-name">Name</th>
-                  <th>Type</th>
-                  <th class="inv2-th-rate">Member Rate</th>
-                  <th class="inv2-th-rate">Non-Member Rate</th>
-                  <th>Capacity</th>
-                  <th>Status</th>
-                  <th class="inv2-th-actions">Actions</th>
+                  <th class="inv2-th-name">{{ $t('ui.name') }}</th>
+                  <th>{{ $t('ui.type') }}</th>
+                  <th>{{ $t('ui.barangay') }}</th>
+                  <th class="inv2-th-rate">{{ $t('ui.memberRate') }}</th>
+                  <th class="inv2-th-rate">{{ $t('ui.nonMemberRate') }}</th>
+                  <th class="inv2-th-rate">{{ $t('ui.interestRate') }}</th>
+                  <th>{{ $t('ui.capacity') }}</th>
+                  <th>{{ $t('ui.status') }}</th>
+                  <th class="inv2-th-actions">{{ $t('ui.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="invFiltered.length === 0">
-                  <td colspan="7" class="inv2-empty">
+                  <td colspan="9" class="inv2-empty">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    <div>No machinery found</div>
+                    <div>{{ $t('ui.noMachinery') }}</div>
                   </td>
                 </tr>
                 <tr v-else v-for="(m, i) in invPaged" :key="m.id" class="inv2-row" :class="i % 2 === 0 ? 'inv2-row-a' : 'inv2-row-b'">
@@ -508,30 +221,36 @@
                   <td>
                     <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
                   </td>
-                  <td style="text-align:right">
+                  <td>
+                    <span class="barangay-badge">{{ getBarangayName(m.barangay_id) }}</span>
+                  </td>
+                  <td class="inv2-td-rate">
                     <span v-if="m.member_price" class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
                     <span v-else class="inv2-price inv2-price-main">₱{{ formatNumber(m.price_per_unit) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
                   </td>
-                  <td style="text-align:right">
+                  <td class="inv2-td-rate">
                     <span v-if="m.non_member_price" class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
                     <span v-else class="inv2-na">—</span>
                   </td>
-                  <td style="text-align:center">
+                  <td class="inv2-td-center inv2-td-interest">
+                    <span class="inv2-interest">{{ formatInterestRateDisplay(m.interest_rate) }}</span>
+                  </td>
+                  <td class="inv2-td-center">
                     <span v-if="m.max_capacity" class="inv2-cap">{{ m.max_capacity }} {{ m.capacity_unit }}</span>
                     <span v-else class="inv2-na">—</span>
                   </td>
-                  <td style="text-align:center">
-                    <span class="status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
+                  <td class="inv2-td-center">
+                    <span class="status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
                   </td>
                   <td class="inv2-td-actions">
                     <div class="inv2-actions action-buttons">
-                      <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
+                      <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit machinery-action-icon" :title="$t('ui.editMachinery')" :aria-label="$t('ui.editMachinery')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                      <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete machinery-action-icon" :title="$t('common.delete')" :aria-label="$t('common.delete')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -546,36 +265,81 @@
             </table>
           </div>
 
-          <!-- CARD VIEW -->
-          <div v-else class="inv2-cards-grid">
+          <div class="inv2-mobile-list">
+            <div v-if="invFiltered.length === 0" class="inv2-empty">
+              <div>{{ $t('ui.noMachinery') }}</div>
+            </div>
+            <article v-else v-for="m in invPaged" :key="'ml-' + m.id" class="inv2-mobile-card">
+              <div class="inv2-mobile-card-top">
+                <h4 class="inv2-mobile-card-name">{{ m.machinery_name }}</h4>
+                <span class="status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
+              </div>
+              <div class="inv2-mobile-card-meta">
+                <div class="inv2-mobile-meta-row">
+                  <span class="inv2-mobile-label">{{ $t('ui.type') }}</span>
+                  <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                </div>
+                <div class="inv2-mobile-meta-row">
+                  <span class="inv2-mobile-label">{{ $t('ui.barangay') }}</span>
+                  <span>{{ getBarangayName(m.barangay_id) || '—' }}</span>
+                </div>
+                <div class="inv2-mobile-meta-row">
+                  <span class="inv2-mobile-label">{{ $t('ui.member') }}</span>
+                  <span>₱{{ formatNumber(m.member_price || m.price_per_unit) }}/{{ m.unit_type }}</span>
+                </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.nonMember') }}</span>
+                    <span v-if="m.non_member_price">₱{{ formatNumber(m.non_member_price) }}/{{ m.unit_type }}</span>
+                    <span v-else>—</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.interestRate') }}</span>
+                    <span>{{ formatInterestRateDisplay(m.interest_rate) }}</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row" v-if="m.max_capacity">
+                  <span class="inv2-mobile-label">{{ $t('ui.capacity') }}</span>
+                  <span>{{ m.max_capacity }} {{ m.capacity_unit }}</span>
+                </div>
+              </div>
+              <div class="inv2-mobile-card-actions action-buttons">
+                <button type="button" class="machinery-action-text machinery-action-edit-text" @click="editMachinery(m)">{{ $t('common.edit') }}</button>
+                <button type="button" class="machinery-action-text machinery-action-delete-text" @click="deleteMachineryConfirm(m)">{{ $t('common.delete') }}</button>
+              </div>
+            </article>
+          </div>
+          </template>
+
+          <div v-if="!loading && invView === 'card'" class="inv2-cards-grid">
             <div v-if="invFiltered.length === 0" class="inv2-empty">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <div>No machinery found</div>
+              <div>{{ $t('ui.noMachinery') }}</div>
             </div>
             <div v-else v-for="m in invPaged" :key="'c' + m.id" class="inv2-card">
-              <!-- Card image / icon -->
               <div class="inv2-card-img">
                 <img v-if="getImageUrl(m.machinery_picture)" :src="getImageUrl(m.machinery_picture)" :alt="m.machinery_name" @error="handleImageError" />
                 <div v-else class="inv2-card-img-fallback">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                 </div>
-                <span class="inv2-card-status-badge status-badge" :class="'status-' + getStatusClass(m.status)">{{ m.status }}</span>
+                <span class="inv2-card-status-badge status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
               </div>
-              <!-- Card body -->
               <div class="inv2-card-body">
                 <div class="inv2-card-top">
                   <span class="inv2-card-name">{{ m.machinery_name }}</span>
                   <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
                 </div>
-                <!-- Pricing rows -->
+                <div class="inv2-card-barangay">{{ getBarangayName(m.barangay_id) }}</div>
                 <div class="inv2-card-pricing">
                   <div class="inv2-card-price-row">
-                    <span class="inv2-card-price-label">Member</span>
+                    <span class="inv2-card-price-label">{{ $t('ui.member') }}</span>
                     <span class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price || m.price_per_unit) }}/{{ m.unit_type }}</span>
                   </div>
                   <div v-if="m.non_member_price" class="inv2-card-price-row">
-                    <span class="inv2-card-price-label">Non-Member</span>
+                    <span class="inv2-card-price-label">{{ $t('ui.nonMember') }}</span>
                     <span class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}/{{ m.unit_type }}</span>
+                  </div>
+                  <div class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">{{ $t('ui.interestRate') }}</span>
+                    <span class="inv2-interest">{{ formatInterestRateDisplay(m.interest_rate) }}</span>
                   </div>
                 </div>
                 <div v-if="m.max_capacity" class="inv2-card-cap">
@@ -583,13 +347,13 @@
                   {{ m.max_capacity }} {{ m.capacity_unit }}
                 </div>
                 <div class="inv2-card-actions action-buttons">
-                  <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit" title="Edit Machinery" aria-label="Edit Machinery">
+                  <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit machinery-action-icon" :title="$t('ui.editMachinery')" :aria-label="$t('ui.editMachinery')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                   </button>
-                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete" title="Delete" aria-label="Delete">
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete machinery-action-icon" :title="$t('common.delete')" :aria-label="$t('common.delete')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -597,13 +361,14 @@
                       <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                     </svg>
                   </button>
+                  <button type="button" @click="editMachinery(m)" class="machinery-action-text machinery-action-edit-text">{{ $t('common.edit') }}</button>
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-text machinery-action-delete-text">{{ $t('common.delete') }}</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Pagination -->
-          <div v-if="invTotalPg > 1" class="inv2-pagination">
+          <div v-if="!loading && invTotalPg > 1" class="inv2-pagination">
             <button type="button" class="inv2-pg-btn" :disabled="invPg === 1" @click="invPg--">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
@@ -613,238 +378,686 @@
             </button>
           </div>
         </div>
+      </div>
+    </template>
 
-        <!-- Mobile FAB -->
-        <button type="button" @click="showAddMachineryModal = true; showInventoryModal = false" class="inv2-fab" title="Add New Machinery">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
+    <!-- President's Machinery Inventory Section (Admin-aligned layout) -->
+    <template v-if="isPresidentRole">
+      <div class="tools-card">
+        <div class="tools-card-top">
+          <div class="search-bar">
+            <span class="search-icon-wrap" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input v-model="invQ" type="text" class="toolbar-input search-input-main" :placeholder="$t('ui.searchNameType')" />
+          </div>
+          <div class="inv2-view-toggle" title="View format">
+            <button type="button" class="inv2-view-btn" :class="{ active: invView === 'table' }" @click="invView = 'table'" :title="$t('ui.tableView')" :aria-label="$t('ui.tableView')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3h18M3 9h18M3 15h18M3 21h18"/></svg>
+            </button>
+            <button type="button" class="inv2-view-btn" :class="{ active: invView === 'card' }" @click="invView = 'card'" :title="$t('ui.cardView')" :aria-label="$t('ui.cardView')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="filter-group filter-group-2">
+          <select v-model="invTypeF" class="toolbar-select">
+            <option value="">{{ $t('ui.allTypes') }}</option>
+            <option v-for="t in invUniqueTypes" :key="t" :value="t">{{ t }}</option>
+          </select>
+          <select v-model="invStatusF" class="toolbar-select">
+            <option value="">{{ $t('ui.allStatus') }}</option>
+            <option value="Available">{{ $t('common.available') }}</option>
+            <option value="Unavailable">{{ $t('common.unavailable') }}</option>
+          </select>
+        </div>
+        <div v-if="invQ || invTypeF || invStatusF" class="tools-chips">
+          <div class="tools-chips-list">
+            <span v-if="invQ" class="inv2-chip">
+              Search: "{{ invQ }}"
+              <button type="button" @click="invQ = ''" class="inv2-chip-x" aria-label="Clear search chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </span>
+            <span v-if="invTypeF" class="inv2-chip">
+              Type: {{ invTypeF }}
+              <button type="button" @click="invTypeF = ''" class="inv2-chip-x" aria-label="Clear type chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </span>
+            <span v-if="invStatusF" class="inv2-chip">
+              Status: {{ invStatusF }}
+              <button type="button" @click="invStatusF = ''" class="inv2-chip-x" aria-label="Clear status chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </span>
+          </div>
+          <button type="button" @click="clearInvFilters" class="inv2-clear-all">{{ $t('common.clearAll') }}</button>
+        </div>
+      </div>
+
+      <div class="card inv2-data-card">
+        <div class="inv2-card-meta-bar">
+          <span class="inv2-record-count">
+            {{ invFiltered.length }} record{{ invFiltered.length !== 1 ? 's' : '' }} found
+            <span class="inv2-barangay-hint">· {{ barangays.find(b => b.id === userBarangayId)?.name || 'Your Barangay' }}</span>
+          </span>
+        </div>
+        <div class="inv2-body">
+          <div v-if="loading" class="inv2-empty">
+            <div class="loading-spinner"></div>
+            <div>{{ $t('ui.loadingMachinery') }}</div>
+          </div>
+
+          <template v-if="!loading && invView === 'table'">
+            <div class="inv2-table-wrap inv2-desktop-table">
+              <table class="inv2-table inv2-table-president">
+                <colgroup>
+                  <col class="inv2-col-name" />
+                  <col class="inv2-col-type" />
+                  <col class="inv2-col-operator" />
+                  <col class="inv2-col-member" />
+                  <col class="inv2-col-nonmember" />
+                  <col class="inv2-col-interest" />
+                  <col class="inv2-col-status" />
+                  <col class="inv2-col-actions" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="inv2-th-name">{{ $t('ui.name') }}</th>
+                    <th>{{ $t('ui.type') }}</th>
+                    <th class="inv2-th-operator">{{ $t('ui.operator') }}</th>
+                    <th class="inv2-th-rate">{{ $t('ui.memberRate') }}</th>
+                    <th class="inv2-th-rate">{{ $t('ui.nonMemberRate') }}</th>
+                    <th class="inv2-th-rate">{{ $t('ui.interestRate') }}</th>
+                    <th>{{ $t('ui.status') }}</th>
+                    <th class="inv2-th-actions">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="invFiltered.length === 0">
+                    <td colspan="8" class="inv2-empty">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <div>{{ $t('ui.noMachinery') }}</div>
+                    </td>
+                  </tr>
+                  <tr v-else v-for="(m, i) in invPaged" :key="m.id" class="inv2-row" :class="i % 2 === 0 ? 'inv2-row-a' : 'inv2-row-b'">
+                    <td class="inv2-td-name">
+                      <span class="inv2-name">{{ m.machinery_name }}</span>
+                    </td>
+                    <td>
+                      <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                    </td>
+                    <td class="inv2-td-operator">
+                      <div v-if="m.assigned_operator_name" class="operator-assigned">
+                        <span class="operator-assigned__name">{{ m.assigned_operator_name }}</span>
+                        <span v-if="m.assignment_date" class="operator-assigned__date">Since {{ formatDate(m.assignment_date) }}</span>
+                      </div>
+                      <span v-else class="operator-missing">{{ $t('ui.notAssigned') }}</span>
+                    </td>
+                    <td class="inv2-td-rate">
+                      <span v-if="m.member_price" class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                      <span v-else class="inv2-price inv2-price-main">₱{{ formatNumber(m.price_per_unit) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                    </td>
+                    <td class="inv2-td-rate">
+                      <span v-if="m.non_member_price" class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}<span class="inv2-unit">/{{ m.unit_type }}</span></span>
+                      <span v-else class="inv2-na">—</span>
+                    </td>
+                    <td class="inv2-td-center inv2-td-interest">
+                      <span class="inv2-interest">{{ formatInterestRateDisplay(m.interest_rate) }}</span>
+                    </td>
+                    <td class="inv2-td-center">
+                      <span class="status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
+                    </td>
+                    <td class="inv2-td-actions">
+                      <div class="inv2-actions action-buttons">
+                        <button type="button" @click="openAssignOperatorModal(m)" class="machinery-action-btn machinery-action-assign machinery-action-icon" title="Assign Operator" aria-label="Assign Operator">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                          </svg>
+                        </button>
+                        <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit machinery-action-icon" :title="$t('common.edit')" :aria-label="$t('common.edit')">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete machinery-action-icon" :title="$t('common.delete')" :aria-label="$t('common.delete')">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="inv2-mobile-list">
+              <div v-if="invFiltered.length === 0" class="inv2-empty">
+                <div>{{ $t('ui.noMachinery') }}</div>
+              </div>
+              <article v-else v-for="m in invPaged" :key="'pml-' + m.id" class="inv2-mobile-card">
+                <div class="inv2-mobile-card-top">
+                  <h4 class="inv2-mobile-card-name">{{ m.machinery_name }}</h4>
+                  <span class="status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
+                </div>
+                <div class="inv2-mobile-card-meta">
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.type') }}</span>
+                    <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.operator') }}</span>
+                    <span>{{ m.assigned_operator_name || 'Not assigned' }}</span>
+                  </div>
+                  <div v-if="m.requires_machinery_name" class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.requires') }}</span>
+                    <span>{{ m.requires_machinery_name }}</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.member') }}</span>
+                    <span>₱{{ formatNumber(m.member_price || m.price_per_unit) }}/{{ m.unit_type }}</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.nonMember') }}</span>
+                    <span v-if="m.non_member_price">₱{{ formatNumber(m.non_member_price) }}/{{ m.unit_type }}</span>
+                    <span v-else>—</span>
+                  </div>
+                  <div class="inv2-mobile-meta-row">
+                    <span class="inv2-mobile-label">{{ $t('ui.interestRate') }}</span>
+                    <span>{{ formatInterestRateDisplay(m.interest_rate) }}</span>
+                  </div>
+                </div>
+                <div class="inv2-mobile-card-actions action-buttons">
+                  <button type="button" class="machinery-action-text machinery-action-assign-text" @click="openAssignOperatorModal(m)">{{ $t('common.assign') }}</button>
+                  <button type="button" class="machinery-action-text machinery-action-edit-text" @click="editMachinery(m)">{{ $t('common.edit') }}</button>
+                  <button type="button" class="machinery-action-text machinery-action-delete-text" @click="deleteMachineryConfirm(m)">{{ $t('common.delete') }}</button>
+                </div>
+              </article>
+            </div>
+          </template>
+
+          <div v-if="!loading && invView === 'card'" class="inv2-cards-grid">
+            <div v-if="invFiltered.length === 0" class="inv2-empty">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <div>{{ $t('ui.noMachinery') }}</div>
+            </div>
+            <div v-else v-for="m in invPaged" :key="'pc' + m.id" class="inv2-card">
+              <div class="inv2-card-img">
+                <img v-if="getImageUrl(m.machinery_picture)" :src="getImageUrl(m.machinery_picture)" :alt="m.machinery_name" @error="handleImageError" />
+                <div v-else class="inv2-card-img-fallback">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </div>
+                <span class="inv2-card-status-badge status-badge" :class="'status-' + getStatusClass(machineryStatusLabel(m))">{{ machineryStatusLabel(m) }}</span>
+              </div>
+              <div class="inv2-card-body">
+                <div class="inv2-card-top">
+                  <span class="inv2-card-name">{{ m.machinery_name }}</span>
+                  <span class="badge" :class="'badge-' + getMachineryTypeClass(m.machinery_type)">{{ m.machinery_type }}</span>
+                </div>
+                <div class="inv2-card-barangay">{{ m.assigned_operator_name || 'No operator assigned' }}</div>
+                <div v-if="m.requires_machinery_name" class="inv2-card-barangay inv2-card-requires">
+                  {{ $t('ui.requires') }}: {{ m.requires_machinery_name }}
+                </div>
+                <div class="inv2-card-pricing">
+                  <div class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">{{ $t('ui.member') }}</span>
+                    <span class="inv2-price inv2-price-member">₱{{ formatNumber(m.member_price || m.price_per_unit) }}/{{ m.unit_type }}</span>
+                  </div>
+                  <div v-if="m.non_member_price" class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">{{ $t('ui.nonMember') }}</span>
+                    <span class="inv2-price inv2-price-nonmember">₱{{ formatNumber(m.non_member_price) }}/{{ m.unit_type }}</span>
+                  </div>
+                  <div class="inv2-card-price-row">
+                    <span class="inv2-card-price-label">{{ $t('ui.interestRate') }}</span>
+                    <span class="inv2-interest">{{ formatInterestRateDisplay(m.interest_rate) }}</span>
+                  </div>
+                </div>
+                <div class="inv2-card-actions action-buttons">
+                  <button type="button" @click="openAssignOperatorModal(m)" class="machinery-action-btn machinery-action-assign machinery-action-icon" title="Assign Operator" aria-label="Assign Operator">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                    </svg>
+                  </button>
+                  <button type="button" @click="editMachinery(m)" class="machinery-action-btn machinery-action-edit machinery-action-icon" :title="$t('common.edit')" :aria-label="$t('common.edit')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-btn machinery-action-delete machinery-action-icon" :title="$t('common.delete')" :aria-label="$t('common.delete')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                  <button type="button" @click="openAssignOperatorModal(m)" class="machinery-action-text machinery-action-assign-text">{{ $t('common.assign') }}</button>
+                  <button type="button" @click="editMachinery(m)" class="machinery-action-text machinery-action-edit-text">{{ $t('common.edit') }}</button>
+                  <button type="button" @click="deleteMachineryConfirm(m)" class="machinery-action-text machinery-action-delete-text">{{ $t('common.delete') }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!loading && invTotalPg > 1" class="inv2-pagination">
+            <button type="button" class="inv2-pg-btn" :disabled="invPg === 1" @click="invPg--">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="inv2-pg-info">{{ invPg }} / {{ invTotalPg }}</span>
+            <button type="button" class="inv2-pg-btn" :disabled="invPg === invTotalPg" @click="invPg++">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- All Bookings Table -->
+    <div v-if="!isAdminOnly" class="section bookings-section">
+      <h2 class="section-title">{{ $t('ui.machineryBookings') }}</h2>
+
+      <div class="tools-card bookings-tools-card">
+        <div class="filter-group filter-group-2">
+          <select v-model="filters.status" @change="applyFilters" class="toolbar-select">
+            <option value="">{{ $t('ui.allStatus') }}</option>
+            <option value="Pending">{{ $t('common.pending') }}</option>
+            <option value="Approved">{{ $t('common.approved') }}</option>
+            <option value="Rejected">{{ $t('common.rejected') }}</option>
+            <option value="Completed">{{ $t('common.completed') }}</option>
+            <option value="Cancelled">{{ $t('common.cancelled') }}</option>
+          </select>
+          <select v-model="filters.machinery_type" @change="applyFilters" class="toolbar-select">
+            <option value="">{{ $t('ui.allTypes') }}</option>
+            <option v-for="type in distinctMachineryTypes" :key="type" :value="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-container bookings-table-wrap">
+        <table class="bookings-table bookings-desktop-table">
+          <colgroup>
+            <col class="col-farmer" />
+            <col class="col-machinery" />
+            <col class="col-date" />
+            <col class="col-location" />
+            <col class="col-area" />
+            <col class="col-total" />
+            <col class="col-status" />
+            <col class="col-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>{{ $t('ui.farmer') }}</th>
+              <th>{{ $t('ui.machinery') }}</th>
+              <th>{{ $t('ui.date') }}</th>
+              <th>{{ $t('ui.location') }}</th>
+              <th>Area/Qty</th>
+              <th>{{ $t('ui.total') }}</th>
+              <th>{{ $t('ui.status') }}</th>
+              <th>{{ $t('ui.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading">
+              <td colspan="8" class="loading-cell">
+                <div class="loading-spinner"></div>
+                <span>{{ $t('ui.loadingBookings') }}</span>
+              </td>
+            </tr>
+            <tr v-else-if="bookings.length === 0">
+              <td colspan="8" class="empty-cell">
+                {{ $t('ui.noBookings') }}
+              </td>
+            </tr>
+            <tr v-else v-for="booking in bookings" :key="booking.id">
+              <td data-label="Farmer">
+                <div class="farmer-info">
+                  <strong>{{ booking.farmer_name }}</strong>
+                  <small>{{ booking.reference_number }}</small>
+                </div>
+              </td>
+              <td data-label="Machinery">
+                <div class="machinery-info">
+                  <strong>{{ booking.machinery_name }}</strong>
+                  <span class="badge" :class="'badge-' + getMachineryTypeClass(booking.machinery_type)">
+                    {{ booking.machinery_type }}
+                  </span>
+                </div>
+              </td>
+              <td data-label="Date">{{ formatDate(booking.booking_date) }}</td>
+              <td data-label="Location">{{ booking.service_location }}</td>
+              <td data-label="Area/Qty">{{ booking.area_size }} {{ booking.area_unit }}</td>
+              <td class="price-cell" data-label="Total">₱{{ formatNumber(booking.total_price) }}</td>
+              <td data-label="Status">
+                <span class="status-badge" :class="'status-' + getBookingStatusClass(booking.status)">
+                  {{ booking.status }}
+                </span>
+              </td>
+              <td class="actions-cell booking-actions-cell">
+                <button type="button" @click="viewBooking(booking)" class="btn-icon-small booking-view-btn machinery-action-icon" :title="$t('common.viewDetails')" aria-label="View booking details">
+                  <svg class="booking-view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path>
+                    <circle cx="12" cy="12" r="2.7"></circle>
+                  </svg>
+                </button>
+                <button type="button" @click="viewBooking(booking)" class="machinery-action-text machinery-action-view-text">{{ $t('common.view') }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="inv2-mobile-list bookings-mobile-list">
+          <div v-if="loading" class="inv2-empty">
+            <div class="loading-spinner"></div>
+            <div>{{ $t('ui.loadingBookings') }}</div>
+          </div>
+          <div v-else-if="bookings.length === 0" class="inv2-empty">
+            <div>{{ $t('ui.noBookings') }}</div>
+          </div>
+          <article v-else v-for="booking in bookings" :key="'bml-' + booking.id" class="inv2-mobile-card">
+            <div class="inv2-mobile-card-top">
+              <h4 class="inv2-mobile-card-name">{{ booking.farmer_name }}</h4>
+              <span class="status-badge" :class="'status-' + getBookingStatusClass(booking.status)">{{ booking.status }}</span>
+            </div>
+            <div class="inv2-mobile-card-meta">
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.ref') }}</span>
+                <span>{{ booking.reference_number || '—' }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.machinery') }}</span>
+                <span>{{ booking.machinery_name }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.type') }}</span>
+                <span class="badge" :class="'badge-' + getMachineryTypeClass(booking.machinery_type)">{{ booking.machinery_type }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.date') }}</span>
+                <span>{{ formatDate(booking.booking_date) }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.location') }}</span>
+                <span>{{ booking.service_location }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">Area/Qty</span>
+                <span>{{ booking.area_size }} {{ booking.area_unit }}</span>
+              </div>
+              <div class="inv2-mobile-meta-row">
+                <span class="inv2-mobile-label">{{ $t('ui.total') }}</span>
+                <span>₱{{ formatNumber(booking.total_price) }}</span>
+              </div>
+            </div>
+            <div class="inv2-mobile-card-actions action-buttons">
+              <button type="button" class="machinery-action-text machinery-action-view-text" @click="viewBooking(booking)">{{ $t('common.view') }}</button>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
 
     <!-- Add/Edit Machinery Modal -->
-    <div v-if="showAddMachineryModal || showEditMachineryModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content modal-form-content">
-        <div class="modal-header">
-          <h2>{{ showEditMachineryModal ? 'Edit Machinery' : 'Add New Machinery' }}</h2>
-          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="showEditMachineryModal ? updateMachinery() : addMachinery()">
-            <section class="machinery-form-section barangay-assignment-group">
-              <h3 class="machinery-form-section-title">Barangay Assignment</h3>
-              <p class="machinery-form-section-desc" v-if="isPresidentRole">
-                Machinery will be assigned to your barangay only.
-              </p>
-              <p class="machinery-form-section-desc" v-else>
-                Select which barangay will own and manage this machinery.
-              </p>
-
-              <!-- For Admin: Show dropdown for selection -->
-              <template v-if="!isPresidentRole">
-                <div class="form-group">
-                  <label class="form-label">Assign to Barangay *</label>
-
-                  <div v-if="barangays.length === 0" class="barangay-loading">
-                    <div class="spinner-small"></div>
-                    Loading barangays...
+    <Teleport to="body">
+      <div
+        v-if="showAddMachineryModal || showEditMachineryModal"
+        class="modal-overlay machinery-modal-overlay machinery-ui"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeModals"
+      >
+        <div class="modal-content machinery-edit-modal" role="dialog" aria-modal="true" @click.stop>
+          <div class="modal-header">
+            <div class="modal-title-text">
+              <h2>{{ showEditMachineryModal ? $t('ui.editMachinery') : $t('common.addNewMachinery') }}</h2>
+            </div>
+            <button type="button" class="close-btn" :aria-label="$t('common.close')" @click="closeModals">×</button>
+          </div>
+          <div class="modal-body">
+            <form id="machinery-form" @submit.prevent="showEditMachineryModal ? updateMachinery() : addMachinery()">
+              <section class="machinery-form-section">
+                <h3 class="machinery-form-section-title">{{ $t('ui.barangayAssignment') }}</h3>
+                <template v-if="!isPresidentRole">
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.assignToBarangayReq') }}</label>
+                    <div v-if="barangays.length === 0" class="barangay-loading">
+                      <div class="spinner-small"></div>
+                      {{ $t('ui.loadingBarangays') }}
+                    </div>
+                    <select
+                      v-else
+                      v-model="machineryForm.barangay_id"
+                      class="form-input"
+                      required
+                      @change="handleBarangayChange"
+                    >
+                      <option value="">{{ $t('ui.selectABarangay') }}</option>
+                      <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
+                        {{ barangay.name }}
+                      </option>
+                    </select>
                   </div>
+                </template>
+                <template v-else>
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.yourBarangay') }}</label>
+                    <div class="barangay-read-only">
+                      <div class="barangay-info">{{ getBarangayName(userBarangayId) }}</div>
+                    </div>
+                  </div>
+                </template>
+              </section>
 
-                  <select
-                    v-else
-                    v-model="machineryForm.barangay_id"
-                    class="form-input barangay-select-emphasized"
-                    required
-                    @change="handleBarangayChange"
-                  >
-                    <option value="">Select a barangay</option>
-                    <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
-                      {{ barangay.name }}
+              <section class="machinery-form-section">
+                <h3 class="machinery-form-section-title">{{ $t('ui.machineryDetails') }}</h3>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.machineryNameReq') }}</label>
+                  <input v-model="machineryForm.machinery_name" type="text" class="form-input" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.machineryTypeReq') }}</label>
+                  <input v-model="machineryForm.machinery_type" type="text" class="form-input" required :placeholder="$t('ui.egMachineryTypes')" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.description') }}</label>
+                  <textarea v-model="machineryForm.description" class="form-input" rows="2" :placeholder="$t('ui.optionalNotes')"></textarea>
+                </div>
+              </section>
+
+              <section class="machinery-form-section">
+                <h3 class="machinery-form-section-title">{{ $t('ui.pricing') }}</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.memberPriceReq') }}</label>
+                    <div class="price-input-wrap">
+                      <span class="price-input-prefix" aria-hidden="true">₱</span>
+                      <input
+                        v-model="machineryForm.member_price"
+                        type="text"
+                        inputmode="decimal"
+                        class="form-input price-input"
+                        required
+                        placeholder="0.00"
+                        @blur="normalizePriceField('member_price')"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.nonMemberPriceReq') }}</label>
+                    <div class="price-input-wrap">
+                      <span class="price-input-prefix" aria-hidden="true">₱</span>
+                      <input
+                        v-model="machineryForm.non_member_price"
+                        type="text"
+                        inputmode="decimal"
+                        class="form-input price-input"
+                        required
+                        placeholder="0.00"
+                        @blur="normalizePriceField('non_member_price')"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.unitTypeReq') }}</label>
+                  <input v-model="machineryForm.unit_type" type="text" class="form-input" required :placeholder="$t('ui.egPerHectareLoad')" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.interestRate') }}</label>
+                  <input
+                    v-model="machineryForm.interest_rate"
+                    type="text"
+                    inputmode="decimal"
+                    class="form-input"
+                    :placeholder="$t('ui.interestRatePlaceholder')"
+                    @blur="normalizeInterestRateField"
+                  />
+                  <p class="form-hint">{{ $t('ui.interestRateHint') }}</p>
+                </div>
+              </section>
+
+              <section class="machinery-form-section">
+                <h3 class="machinery-form-section-title">{{ $t('ui.capacityAndStatus') }}</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.maxCapacity') }}</label>
+                    <input v-model="machineryForm.max_capacity" type="text" inputmode="decimal" class="form-input" :placeholder="$t('ui.optional')" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">{{ $t('ui.capacityUnit') }}</label>
+                    <input v-model="machineryForm.capacity_unit" type="text" class="form-input" :placeholder="$t('ui.egHectaresLoads')" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.statusReq') }}</label>
+                  <select v-model="machineryForm.status" class="form-input" required>
+                    <option value="Available">{{ $t('common.available') }}</option>
+                    <option value="Unavailable">{{ $t('common.unavailable') }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">{{ $t('ui.prerequisiteMachine') }}</label>
+                  <select v-model="machineryForm.requires_machinery_id" class="form-input">
+                    <option value="">{{ $t('ui.prerequisiteNone') }}</option>
+                    <option
+                      v-for="opt in prerequisiteMachineOptions"
+                      :key="'req-' + opt.id"
+                      :value="String(opt.id)"
+                    >
+                      {{ opt.machinery_name }} ({{ opt.machinery_type }})
                     </option>
                   </select>
-
-                  <p v-if="machineryForm.barangay_id" class="barangay-selected">
-                    Selected: {{ getBarangayName(machineryForm.barangay_id) }}
-                  </p>
-
-                  <small class="form-hint barangay-hint">This machinery will belong to and be managed by the selected barangay only.</small>
+                  <p class="form-hint">{{ $t('ui.prerequisiteMachineHint') }}</p>
                 </div>
-              </template>
+              </section>
 
-              <!-- For President: Show read-only barangay info -->
-              <template v-else>
+              <section class="machinery-form-section">
+                <h3 class="machinery-form-section-title">{{ $t('ui.machineryPicture') }}</h3>
                 <div class="form-group">
-                  <label class="form-label">Your Barangay</label>
-                  <div class="barangay-read-only">
-                    <div class="barangay-info">{{ getBarangayName(userBarangayId) }}</div>
-                    <small class="form-hint">All machinery will be assigned to your barangay only.</small>
+                  <div class="picture-upload-section">
+                    <div v-if="machineryForm.machinery_picture && machineryForm.machinery_picture.trim() !== ''" class="picture-preview">
+                      <img
+                        :src="getImageUrl(machineryForm.machinery_picture)"
+                        :alt="$t('ui.machineryPreview')"
+                        class="preview-image"
+                        @error="handleImageError"
+                        @load="handleImageLoad"
+                      />
+                      <button type="button" @click.prevent="removeMachineryPicture()" class="btn-remove-picture">
+                        {{ $t('ui.removePicture') }}
+                      </button>
+                    </div>
+                    <div v-else class="picture-placeholder">
+                      <p>{{ $t('ui.noImageUploaded') }}</p>
+                    </div>
+                    <input
+                      type="file"
+                      ref="machineryPictureInput"
+                      @change="handleMachineryPictureChange"
+                      accept="image/*"
+                      class="file-input-hidden"
+                    />
+                    <button type="button" @click.prevent="$refs.machineryPictureInput.click()" class="btn-upload-picture">
+                      {{ $t('ui.uploadPicture') }}
+                    </button>
                   </div>
                 </div>
-              </template>
-            </section>
-
-            <section class="machinery-form-section">
-              <h3 class="machinery-form-section-title">Machinery Details</h3>
-
-            <div class="form-group">
-              <label class="form-label">Machinery Name *</label>
-              <input v-model="machineryForm.machinery_name" type="text" class="form-input" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Machinery Type *</label>
-              <input v-model="machineryForm.machinery_type" type="text" class="form-input" required placeholder="e.g., Harvester, Dryer, Tractor" />
-              <small class="form-hint">Enter any machinery type — not limited to predefined options.</small>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Description</label>
-              <textarea v-model="machineryForm.description" class="form-input" rows="3" placeholder="Optional notes about this machinery"></textarea>
-            </div>
-            </section>
-
-            <section class="machinery-form-section">
-              <h3 class="machinery-form-section-title">Pricing</h3>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Member Price (₱) *</label>
-                <input v-model.number="machineryForm.member_price" type="number" step="0.01" min="0.01" class="form-input" required placeholder="e.g., 5000" />
-                <small class="form-hint">Price for barangay/association members.</small>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Non-Member Price (₱) *</label>
-                <input v-model.number="machineryForm.non_member_price" type="number" step="0.01" min="0.01" class="form-input" required placeholder="e.g., 6250" />
-                <small class="form-hint">Price for non-members (typically 20–30% higher).</small>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Unit Type *</label>
-              <input v-model="machineryForm.unit_type" type="text" class="form-input" required placeholder="e.g., per hectare, per load" />
-            </div>
-            </section>
-
-            <section class="machinery-form-section">
-              <h3 class="machinery-form-section-title">Capacity &amp; Status</h3>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Max Capacity</label>
-                <input v-model.number="machineryForm.max_capacity" type="number" step="0.01" min="0" class="form-input" placeholder="Optional" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Capacity Unit</label>
-                <input v-model="machineryForm.capacity_unit" type="text" class="form-input" placeholder="e.g., hectares, loads" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Status *</label>
-              <select v-model="machineryForm.status" class="form-input" required>
-                <option value="Available">Available</option>
-                <option value="In Use">In Use</option>
-                <option value="Under Maintenance">Under Maintenance</option>
-                <option value="Unavailable">Unavailable</option>
-              </select>
-            </div>
-            </section>
-
-            <!-- Machinery Picture Upload -->
-            <section class="machinery-form-section">
-              <h3 class="machinery-form-section-title">Machinery Picture</h3>
-            <div class="form-group">
-              <div class="picture-upload-section">
-                <div v-if="machineryForm.machinery_picture && machineryForm.machinery_picture.trim() !== ''" class="picture-preview">
-                  <img 
-                    :src="getImageUrl(machineryForm.machinery_picture)" 
-                    alt="Machinery preview" 
-                    class="preview-image"
-                    @error="handleImageError"
-                    @load="handleImageLoad"
-                  />
-                  <button type="button" @click.prevent="removeMachineryPicture()" class="btn-remove-picture">
-                    Remove Picture
-                  </button>
-                </div>
-                <div v-else class="picture-placeholder">
-                  <p>No image uploaded</p>
-                </div>
-                <input 
-                  type="file" 
-                  ref="machineryPictureInput" 
-                  @change="handleMachineryPictureChange" 
-                  accept="image/*" 
-                  class="file-input-hidden"
-                />
-                <button type="button" @click.prevent="$refs.machineryPictureInput.click()" class="btn-upload-picture">
-                  Upload Picture
-                </button>
-              </div>
-              <small class="form-hint">JPG, PNG, GIF or WebP (max 10MB).</small>
-            </div>
-            </section>
-
-            <div class="modal-actions">
-              <button type="button" @click="closeModals" class="btn-secondary">Cancel</button>
-              <button type="submit" class="btn-primary" :disabled="loading">
-                {{ loading ? 'Saving...' : (showEditMachineryModal ? 'Update' : 'Add') }}
-              </button>
-            </div>
-          </form>
+              </section>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" @click="closeModals">{{ $t('common.cancel') }}</button>
+            <button type="submit" form="machinery-form" class="btn-submit" :disabled="loading">
+              {{ loading ? $t('common.saving') : (showEditMachineryModal ? $t('ui.update') : $t('common.add')) }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- View Booking Modal -->
-    <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay" @click.self="closeModals">
-      <div class="modal-content modal-large">
+    <Teleport to="body">
+    <div v-if="showViewBookingModal && selectedBooking" class="modal-overlay machinery-ui" :class="{ 'light-theme': isLight }" @click.self="closeModals">
+      <div class="modal-content modal-large tx-detail-modal">
         <div class="modal-header">
           <h2>Booking Details #{{ selectedBooking.id }}</h2>
-          <button type="button" @click="closeModals" class="modal-close" aria-label="Close">×</button>
+          <button type="button" @click="closeModals" class="modal-close" :aria-label="$t('common.close')">×</button>
         </div>
         <div class="modal-body">
-          <div class="booking-details">
-            <div class="detail-section">
-              <h3>Farmer Information</h3>
-              <div class="details-grid">
-                <div class="detail-item"><label>Name:</label><span>{{ selectedBooking.farmer_name }}</span></div>
-                <div class="detail-item"><label>Reference:</label><span>{{ selectedBooking.reference_number }}</span></div>
-                <div class="detail-item" v-if="selectedBooking.farmer_phone"><label>Phone:</label><span>{{ selectedBooking.farmer_phone }}</span></div>
+          <div class="booking-details tx-detail-sections">
+            <div class="detail-section tx-detail-section">
+              <h3 class="tx-detail-section-title">Farmer Information</h3>
+              <div class="details-grid tx-details-grid">
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.name') }}</label><span>{{ selectedBooking.farmer_name }}</span></div>
+                <div class="detail-item tx-detail-item"><label>Reference</label><span>{{ selectedBooking.reference_number }}</span></div>
+                <div class="detail-item tx-detail-item" v-if="selectedBooking.farmer_phone"><label>{{ $t('ui.phone') }}</label><span>{{ selectedBooking.farmer_phone }}</span></div>
               </div>
             </div>
 
-            <div class="detail-section">
-              <h3>Booking Information</h3>
-              <div class="details-grid">
-                <div class="detail-item"><label>Machinery:</label><span>{{ selectedBooking.machinery_name }}</span></div>
-                <div class="detail-item"><label>Type:</label><span class="badge" :class="'badge-' + getMachineryTypeClass(selectedBooking.machinery_type)">{{ selectedBooking.machinery_type }}</span></div>
-                <div class="detail-item"><label>Date:</label><span>{{ formatDate(selectedBooking.booking_date) }}</span></div>
-                <div class="detail-item"><label>Location:</label><span>{{ selectedBooking.service_location }}</span></div>
-                <div class="detail-item"><label>Area/Quantity:</label><span>{{ selectedBooking.area_size }} {{ selectedBooking.area_unit }}</span></div>
-                <div class="detail-item"><label>Total Price:</label><strong class="price-highlight">₱{{ formatNumber(selectedBooking.total_price) }}</strong></div>
-                <div class="detail-item"><label>Status:</label><span class="status-badge" :class="'status-' + getBookingStatusClass(selectedBooking.status)">{{ selectedBooking.status }}</span></div>
+            <div class="detail-section tx-detail-section">
+              <h3 class="tx-detail-section-title">{{ $t('ui.machineryServiceDetails') }}</h3>
+              <div class="details-grid tx-details-grid">
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.machinery') }}</label><span>{{ selectedBooking.machinery_name }}</span></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.type') }}</label><span class="badge" :class="'badge-' + getMachineryTypeClass(selectedBooking.machinery_type)">{{ selectedBooking.machinery_type }}</span></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.date') }}</label><span>{{ formatDate(selectedBooking.booking_date) }}</span></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.location') }}</label><span>{{ selectedBooking.service_location }}</span></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.areaQuantity') }}</label><span>{{ selectedBooking.area_size }} {{ selectedBooking.area_unit }}</span></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.totalPrice') }}</label><strong class="price-highlight">₱{{ formatNumber(selectedBooking.total_price) }}</strong></div>
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.status') }}</label><span class="status-badge" :class="'status-' + getBookingStatusClass(selectedBooking.status)">{{ selectedBooking.status }}</span></div>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedBooking.approved_by_name">
-              <h3>Approval Information</h3>
-              <div class="details-grid">
-                <div class="detail-item"><label>Approved By:</label><span>{{ selectedBooking.approved_by_name }}</span></div>
-                <div class="detail-item" v-if="selectedBooking.approved_date"><label>Date:</label><span>{{ formatDateTime(selectedBooking.approved_date) }}</span></div>
+            <div class="detail-section tx-detail-section" v-if="selectedBooking.approved_by_name">
+              <h3 class="tx-detail-section-title">Approval Information</h3>
+              <div class="details-grid tx-details-grid">
+                <div class="detail-item tx-detail-item"><label>{{ $t('ui.approvedBy') }}</label><span>{{ selectedBooking.approved_by_name }}</span></div>
+                <div class="detail-item tx-detail-item" v-if="selectedBooking.approved_date"><label>{{ $t('ui.date') }}</label><span>{{ formatDateTime(selectedBooking.approved_date) }}</span></div>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedBooking.notes">
-              <h3>Notes</h3>
+            <div class="detail-section tx-detail-section" v-if="selectedBooking.notes">
+              <h3 class="tx-detail-section-title">{{ $t('ui.notes') }}</h3>
               <p class="notes-text">{{ selectedBooking.notes }}</p>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- Assign Operator Modal -->
-    <div v-if="showAssignOperatorModal" class="modal-overlay" @click.self="closeAssignOperatorModal">
+    <Teleport to="body">
+    <div v-if="showAssignOperatorModal" class="modal-overlay machinery-ui" :class="{ 'light-theme': isLight }" @click.self="closeAssignOperatorModal">
       <div class="modal-content modal-medium" @click.stop>
         <div class="modal-header">
           <h2>Assign Operator</h2>
@@ -852,7 +1065,7 @@
         </div>
         <div class="modal-body">
           <p class="modal-subtitle">
-            Machinery: <strong>{{ machineryToAssign?.machinery_name }}</strong>
+            {{ $t('ui.machineryColon') }} <strong>{{ machineryToAssign?.machinery_name }}</strong>
           </p>
           <div class="form-group">
             <label>Operator *</label>
@@ -870,18 +1083,21 @@
           <p v-if="assignOperatorError" class="validation-error">{{ assignOperatorError }}</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="closeAssignOperatorModal">Cancel</button>
+          <button type="button" class="btn-secondary" @click="closeAssignOperatorModal">{{ $t('common.cancel') }}</button>
           <button type="button" class="btn-primary" @click="saveOperatorAssignment" :disabled="assigningOperator">
             {{ assigningOperator ? 'Saving...' : 'Assign Operator' }}
           </button>
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- Delete Confirmation Modal -->
+    <Teleport to="body">
     <div
       v-if="showDeleteModal"
-      class="modal-overlay modal-delete-overlay"
+      class="modal-overlay modal-delete-overlay machinery-ui"
+      :class="{ 'light-theme': isLight }"
       @click="closeDeleteModal"
     >
       <div
@@ -903,55 +1119,63 @@
               </svg>
             </span>
             <div class="modal-title-text">
-              <h2 id="machinery-delete-title">Delete Machinery</h2>
+              <h2 id="machinery-delete-title">{{ $t('ui.deleteMachinery') }}</h2>
               <p id="machinery-delete-desc" class="modal-subtitle delete-confirm-message">
-                Remove <strong>{{ machineryToDelete?.machinery_name }}</strong> from the inventory?
+                {{ $t('ui.remove') }} <strong>{{ machineryToDelete?.machinery_name }}</strong> from the inventory?
               </p>
             </div>
           </div>
-          <button type="button" @click="closeDeleteModal" class="close-btn" aria-label="Close" :disabled="deleteInProgress">×</button>
+          <button type="button" @click="closeDeleteModal" class="close-btn" :aria-label="$t('common.close')" :disabled="deleteInProgress">×</button>
         </div>
         <div class="modal-body delete-modal-body">
           <p class="delete-warning-text">This action cannot be undone. All booking records linked to this machinery may be affected.</p>
         </div>
         <div class="modal-footer delete-modal-footer">
-          <button type="button" class="btn-secondary" @click="closeDeleteModal" :disabled="deleteInProgress">Cancel</button>
+          <button type="button" class="btn-secondary" @click="closeDeleteModal" :disabled="deleteInProgress">{{ $t('common.cancel') }}</button>
           <button type="button" class="btn-delete-confirm" @click="deleteMachinery" :disabled="deleteInProgress || loading">
             {{ deleteInProgress || loading ? 'Deleting...' : 'Delete' }}
           </button>
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- Alerts (teleported so they appear above fixed header) -->
     <Teleport to="body">
-      <div v-if="validationError" class="alert alert-warning">
-        {{ validationError }}
-        <button @click="validationError = ''" class="alert-close">✕</button>
-      </div>
-      <div v-if="error" class="alert alert-error">
-        {{ error }}
-        <button @click="clearError" class="alert-close">✕</button>
-      </div>
-      <div v-if="successMessage" class="alert alert-success">
-        {{ successMessage }}
-        <button @click="successMessage = ''" class="alert-close">✕</button>
+      <div v-if="validationError || error || successMessage" class="alert-center-stack" :class="{ 'light-theme': isLight }">
+        <div v-if="validationError" class="alert alert-warning">
+          {{ validationError }}
+          <button @click="validationError = ''" class="alert-close">✕</button>
+        </div>
+        <div v-if="error" class="alert alert-error">
+          {{ error }}
+          <button @click="clearError" class="alert-close">✕</button>
+        </div>
+        <div v-if="successMessage" class="alert alert-success">
+          {{ successMessage }}
+          <button @click="successMessage = ''" class="alert-close">✕</button>
+        </div>
       </div>
     </Teleport>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useMachineryStore } from '../stores/machineryStore'
 import { useAuthStore } from '../stores/authStore'
+import { useDownPaymentStore } from '../stores/downPaymentStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { machineryStatusLabel } from '../utils/machineryStatus'
 
 export default {
   name: 'MachineryManagementPage',
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
+    const downPaymentStore = useDownPaymentStore()
+    const { t } = useI18n()
     const { isDark } = useBackdropTheme()
     const isLight = computed(() => !isDark.value)
 
@@ -986,8 +1210,21 @@ export default {
 
     const machineryForm = ref({
       machinery_name: '', machinery_type: '', description: '',
-      member_price: '', non_member_price: '', price_per_unit: '', unit_type: '', max_capacity: '',
-      capacity_unit: '', status: 'Available', created_by: null, barangay_id: '', machinery_picture: ''
+      member_price: '', non_member_price: '', interest_rate: '', price_per_unit: '', unit_type: '', max_capacity: '',
+      capacity_unit: '', status: 'Available', created_by: null, barangay_id: '', machinery_picture: '',
+      requires_machinery_id: ''
+    })
+
+    const prerequisiteMachineOptions = computed(() => {
+      const barangayId = machineryForm.value.barangay_id
+        ? parseInt(machineryForm.value.barangay_id, 10)
+        : null
+      const selfId = machineryForm.value.id != null ? Number(machineryForm.value.id) : null
+      return (inventory.value || []).filter((m) => {
+        if (selfId != null && Number(m.id) === selfId) return false
+        if (barangayId && Number(m.barangay_id) !== barangayId) return false
+        return true
+      })
     })
     
     const currentPictureFile = ref(null)
@@ -1005,7 +1242,7 @@ export default {
       // If it's a server path, construct full backend URL
       if (imagePath.startsWith('/uploads/')) {
         // In development, construct the backend URL
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+        const apiBaseUrl = import.meta.env.VITE_API_URL || ''
         return `${apiBaseUrl}${imagePath}`
       }
       
@@ -1016,17 +1253,11 @@ export default {
     const invQ = ref('')
     const invTypeF = ref('')
     const invStatusF = ref('')
+    const invBarangayF = ref('')
     const invView = ref('table')
     const invPg = ref(1)
     const invPerPg = 10
 
-    const inventory = computed(() => machineryStore.inventory)
-    const bookings = computed(() => machineryStore.bookings)
-    const loading = computed(() => machineryStore.loading)
-    const error = computed(() => machineryStore.error)
-    const selectedBooking = computed(() => machineryStore.selectedBooking)
-    const distinctMachineryTypes = computed(() => machineryStore.distinctMachineryTypes)
-    const barangays = computed(() => machineryStore.barangays)
     const isAdminRole = computed(() => {
       const role = authStore.currentUser?.role
       return role === 'admin' || role === 'president'
@@ -1034,13 +1265,108 @@ export default {
     const isAdminOnly = computed(() => authStore.currentUser?.role === 'admin')
     const isPresidentRole = computed(() => authStore.currentUser?.role === 'president')
     const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
+    const dpEnabled = computed(() => downPaymentStore.enabled)
+    const dpPercentInput = ref('')
+    const dpSaving = ref(false)
+    const dpMessage = ref('')
+    const dpMessageType = ref('success')
+    const dpPercentDirty = computed(() => {
+      const typed = parseFloat(String(dpPercentInput.value).trim())
+      const stored = Number(downPaymentStore.percent)
+      if (!Number.isFinite(typed)) return String(dpPercentInput.value).trim() !== ''
+      return typed !== stored
+    })
+
+    const parsePercentInput = () => {
+      const cleaned = String(dpPercentInput.value).replace(/,/g, '').replace(/[^\d.-]/g, '').trim()
+      if (!cleaned || cleaned === '-' || cleaned === '.') return null
+      const n = Number(cleaned)
+      if (!Number.isFinite(n) || n <= 0 || n > 100) return null
+      return Math.round(n * 100) / 100
+    }
+
+    const normalizeDownPaymentPercentField = () => {
+      const parsed = parsePercentInput()
+      if (parsed == null) return
+      dpPercentInput.value = Number.isInteger(parsed) ? String(parsed) : String(parsed)
+    }
+
+    const syncPercentInput = () => {
+      dpPercentInput.value = downPaymentStore.percent != null ? String(downPaymentStore.percent) : ''
+    }
+
+    const toggleDownPayment = async () => {
+      const next = !dpEnabled.value
+      const percent = parsePercentInput()
+      if (next && percent == null) {
+        dpMessage.value = t('ui.machineryDownPaymentPercentRequired')
+        dpMessageType.value = 'error'
+        return
+      }
+      const confirmMsg = next ? t('ui.machineryDownPaymentConfirmOn') : t('ui.machineryDownPaymentConfirmOff')
+      if (!window.confirm(confirmMsg)) return
+
+      dpSaving.value = true
+      dpMessage.value = ''
+      try {
+        await downPaymentStore.saveSettings(next ? { enabled: next, percent } : { enabled: next })
+        syncPercentInput()
+        dpMessage.value = next ? t('ui.machineryDownPaymentActivated') : t('ui.machineryDownPaymentOnHold')
+        dpMessageType.value = 'success'
+      } catch (err) {
+        dpMessage.value = err.message || t('ui.machineryDownPaymentUpdateFailed')
+        dpMessageType.value = 'error'
+      } finally {
+        dpSaving.value = false
+      }
+    }
+
+    const saveDownPaymentPercent = async () => {
+      const percent = parsePercentInput()
+      if (percent == null) {
+        dpMessage.value = t('ui.machineryDownPaymentPercentRequired')
+        dpMessageType.value = 'error'
+        return
+      }
+      dpSaving.value = true
+      dpMessage.value = ''
+      try {
+        await downPaymentStore.saveSettings({
+          enabled: dpEnabled.value,
+          percent
+        })
+        syncPercentInput()
+        dpMessage.value = t('ui.machineryDownPaymentPercentSaved')
+        dpMessageType.value = 'success'
+      } catch (err) {
+        dpMessage.value = err.message || t('ui.machineryDownPaymentUpdateFailed')
+        dpMessageType.value = 'error'
+      } finally {
+        dpSaving.value = false
+      }
+    }
+
+    const inventory = computed(() => {
+      const list = machineryStore.inventory || []
+      // President management: only machinery assigned to their barangay
+      if (isPresidentRole.value && userBarangayId.value != null && userBarangayId.value !== '') {
+        return list.filter((m) => String(m.barangay_id) === String(userBarangayId.value))
+      }
+      return list
+    })
+    const bookings = computed(() => machineryStore.bookings)
+    const loading = computed(() => machineryStore.loading)
+    const error = computed(() => machineryStore.error)
+    const selectedBooking = computed(() => machineryStore.selectedBooking)
+    const distinctMachineryTypes = computed(() => machineryStore.distinctMachineryTypes)
+    const barangays = computed(() => machineryStore.barangays)
 
     const adminFilters = ref({ status: '', machinery_type: '', barangay_id: '' })
 
     const filteredInventory = computed(() => {
       if (!inventory.value) return []
       return inventory.value.filter(machine => {
-        const statusMatch = !adminFilters.value.status || machine.status === adminFilters.value.status
+        const statusMatch = !adminFilters.value.status || machineryStatusLabel(machine) === adminFilters.value.status
         const typeMatch = !adminFilters.value.machinery_type || machine.machinery_type === adminFilters.value.machinery_type
         const barangayMatch = !adminFilters.value.barangay_id || machine.barangay_id === parseInt(adminFilters.value.barangay_id)
         return statusMatch && typeMatch && barangayMatch
@@ -1059,14 +1385,29 @@ export default {
           (m.machinery_name || '').toLowerCase().includes(q) ||
           (m.machinery_type || '').toLowerCase().includes(q)
         const tMatch = !invTypeF.value || m.machinery_type === invTypeF.value
-        const sMatch = !invStatusF.value || m.status === invStatusF.value
-        return qMatch && tMatch && sMatch
+        const sMatch = !invStatusF.value || machineryStatusLabel(m) === invStatusF.value
+        const bMatch =
+          !invBarangayF.value ||
+          String(m.barangay_id) === String(invBarangayF.value)
+        return qMatch && tMatch && sMatch && bMatch
       })
     })
     const invTotalPg = computed(() => Math.max(1, Math.ceil(invFiltered.value.length / invPerPg)))
     const invPaged = computed(() => {
       const s = (invPg.value - 1) * invPerPg
       return invFiltered.value.slice(s, s + invPerPg)
+    })
+
+    const clearInvFilters = () => {
+      invQ.value = ''
+      invTypeF.value = ''
+      invStatusF.value = ''
+      invBarangayF.value = ''
+      invPg.value = 1
+    }
+
+    watch([invQ, invTypeF, invStatusF, invBarangayF], () => {
+      invPg.value = 1
     })
 
     const applyAdminFilters = () => {
@@ -1087,7 +1428,7 @@ export default {
 
     const availableMachinery = computed(() => {
       if (!inventory.value) return 0
-      return inventory.value.filter(m => m.status === 'Available').length
+      return inventory.value.filter(m => machineryStatusLabel(m) === 'Available').length
     })
 
     const pendingBookingsCount = computed(() => {
@@ -1104,8 +1445,12 @@ export default {
 
     const loadData = async () => {
       try {
+        const inventoryFilters =
+          isPresidentRole.value && userBarangayId.value != null && userBarangayId.value !== ''
+            ? { barangay_id: String(userBarangayId.value) }
+            : {}
         await Promise.all([
-          machineryStore.fetchInventory(),
+          machineryStore.fetchInventory(inventoryFilters),
           machineryStore.fetchBookings(filters.value),
           machineryStore.fetchBarangays()
         ])
@@ -1136,8 +1481,13 @@ export default {
             : machineryForm.value.barangay_id
         }
         
-        const memberPrice = parseFloat(machineryForm.value.member_price) || 0
-        const nonMemberPrice = parseFloat(machineryForm.value.non_member_price) || 0
+        const memberPrice = parsePriceValue(machineryForm.value.member_price)
+        const nonMemberPrice = parsePriceValue(machineryForm.value.non_member_price)
+        if (memberPrice === null || memberPrice <= 0 || nonMemberPrice === null || nonMemberPrice <= 0) {
+          validationError.value = 'Enter valid member and non-member prices (numbers greater than 0).'
+          setTimeout(() => { validationError.value = '' }, 5000)
+          return
+        }
         
         const data = {
           machinery_name: machineryForm.value.machinery_name.trim(),
@@ -1155,7 +1505,11 @@ export default {
             : null,
           status: machineryForm.value.status,
           created_by: authStore.currentUser?.id || null,
-          barangay_id: barangayId  // Auto-set for president, admin-selected for admin
+          barangay_id: barangayId,  // Auto-set for president, admin-selected for admin
+          requires_machinery_id: machineryForm.value.requires_machinery_id
+            ? parseInt(machineryForm.value.requires_machinery_id, 10)
+            : null,
+          interest_rate: parseInterestRateValue(machineryForm.value.interest_rate)
         }
         
         console.log('Submitting machinery data:', data)
@@ -1180,12 +1534,62 @@ export default {
 
     const editMachinery = (machine) => {
       machineryForm.value = { ...machine }
+      machineryForm.value.status = machine.stored_status === 'Available' || machine.status === 'Available'
+        ? 'Available'
+        : 'Unavailable'
       // Ensure barangay_id is properly initialized for the form
       if (!machineryForm.value.barangay_id) {
         machineryForm.value.barangay_id = ''
       }
+      machineryForm.value.requires_machinery_id = machine.requires_machinery_id
+        ? String(machine.requires_machinery_id)
+        : ''
+      // Keep prices as plain numeric strings for the text inputs
+      if (machineryForm.value.member_price != null && machineryForm.value.member_price !== '') {
+        machineryForm.value.member_price = String(machineryForm.value.member_price)
+      }
+      if (machineryForm.value.non_member_price != null && machineryForm.value.non_member_price !== '') {
+        machineryForm.value.non_member_price = String(machineryForm.value.non_member_price)
+      }
+      const rate = parseFloat(machine.interest_rate)
+      machineryForm.value.interest_rate = Number.isFinite(rate) && rate > 0 ? String(rate) : ''
       showEditMachineryModal.value = true
       showInventoryModal.value = false
+    }
+
+    const parsePriceValue = (raw) => {
+      if (raw === null || raw === undefined || raw === '') return null
+      const cleaned = String(raw).replace(/,/g, '').replace(/[^\d.-]/g, '').trim()
+      if (!cleaned || cleaned === '-' || cleaned === '.') return null
+      const n = Number(cleaned)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const normalizePriceField = (field) => {
+      const parsed = parsePriceValue(machineryForm.value[field])
+      if (parsed === null) {
+        machineryForm.value[field] = ''
+        return
+      }
+      machineryForm.value[field] = Number.isInteger(parsed)
+        ? String(parsed)
+        : parsed.toFixed(2)
+    }
+
+    const parseInterestRateValue = (raw) => {
+      if (raw === null || raw === undefined || String(raw).trim() === '') return 0
+      const cleaned = String(raw).replace(/,/g, '').replace(/[^\d.-]/g, '').trim()
+      if (!cleaned || cleaned === '-' || cleaned === '.') return 0
+      const n = Number(cleaned)
+      if (!Number.isFinite(n) || n < 0) return 0
+      return Math.min(n, 100)
+    }
+
+    const normalizeInterestRateField = () => {
+      const parsed = parseInterestRateValue(machineryForm.value.interest_rate)
+      machineryForm.value.interest_rate = parsed > 0
+        ? (Number.isInteger(parsed) ? String(parsed) : String(parsed))
+        : ''
     }
 
     const updateMachinery = async () => {
@@ -1208,8 +1612,13 @@ export default {
 
         validationError.value = ''
         
-        const memberPrice = parseFloat(machineryForm.value.member_price) || 0
-        const nonMemberPrice = parseFloat(machineryForm.value.non_member_price) || 0
+        const memberPrice = parsePriceValue(machineryForm.value.member_price)
+        const nonMemberPrice = parsePriceValue(machineryForm.value.non_member_price)
+        if (memberPrice === null || memberPrice <= 0 || nonMemberPrice === null || nonMemberPrice <= 0) {
+          validationError.value = 'Enter valid member and non-member prices (numbers greater than 0).'
+          setTimeout(() => { validationError.value = '' }, 5000)
+          return
+        }
         
         const data = {
           machinery_name: machineryForm.value.machinery_name.trim(),
@@ -1226,7 +1635,11 @@ export default {
             ? machineryForm.value.capacity_unit.trim() 
             : null,
           status: machineryForm.value.status,
-          barangay_id: barangayId  // Auto-set for president, admin-selected for admin
+          barangay_id: barangayId,  // Auto-set for president, admin-selected for admin
+          requires_machinery_id: machineryForm.value.requires_machinery_id
+            ? parseInt(machineryForm.value.requires_machinery_id, 10)
+            : null,
+          interest_rate: parseInterestRateValue(machineryForm.value.interest_rate)
         }
         
         console.log('Updating machinery data:', data)
@@ -1262,11 +1675,19 @@ export default {
         assignment_date: machine.assignment_date || new Date().toISOString().split('T')[0]
       }
       try {
-        const barangayId = machine.barangay_id || userBarangayId.value
+        // President always loads operators from their own barangay
+        const barangayId = isPresidentRole.value
+          ? (userBarangayId.value || machine.barangay_id)
+          : (machine.barangay_id || userBarangayId.value)
         eligibleOperators.value = await machineryStore.fetchEligibleOperators(barangayId)
+        if (!eligibleOperators.value.length) {
+          assignOperatorError.value = 'No approved operators found in this barangay.'
+        }
         showAssignOperatorModal.value = true
       } catch (err) {
+        eligibleOperators.value = []
         assignOperatorError.value = err.message || 'Failed to load operators'
+        showAssignOperatorModal.value = true
       }
     }
 
@@ -1344,8 +1765,9 @@ export default {
     const resetForm = () => {
       machineryForm.value = {
         machinery_name: '', machinery_type: '', description: '',
-        member_price: '', non_member_price: '', price_per_unit: '', unit_type: '', max_capacity: '',
-        capacity_unit: '', status: 'Available', created_by: null, barangay_id: '', machinery_picture: ''
+        member_price: '', non_member_price: '', interest_rate: '', price_per_unit: '', unit_type: '', max_capacity: '',
+        capacity_unit: '', status: 'Available', created_by: null, barangay_id: '', machinery_picture: '',
+        requires_machinery_id: ''
       }
       currentPictureFile.value = null
       if (machineryPictureInput.value) {
@@ -1435,7 +1857,7 @@ export default {
           throw new Error('No authentication token found');
         }
         
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const apiBaseUrl = import.meta.env.VITE_API_URL || '';
         const uploadUrl = `${apiBaseUrl}/api/machinery/inventory/${machineryId}/picture`;
         console.log('📤 Uploading to:', uploadUrl);
         const response = await fetch(uploadUrl, {
@@ -1475,16 +1897,24 @@ export default {
     }[type] || 'default')
 
     const getStatusClass = (status) => ({
-      'Available': 'success', 'In Use': 'info',
-      'Under Maintenance': 'warning', 'Unavailable': 'danger'
+      'Available': 'success',
+      'Unavailable': 'danger',
+      'In Use': 'danger',
+      'Under Maintenance': 'danger'
     }[status] || 'default')
 
     const getBookingStatusClass = (status) => ({
       'Pending': 'warning', 'Approved': 'success',
-      'Completed': 'info', 'Rejected': 'danger', 'Cancelled': 'default'
+      'Completed': 'success', 'Rejected': 'danger', 'Cancelled': 'default'
     }[status] || 'default')
 
     const formatNumber = (num) => new Intl.NumberFormat('en-PH').format(num)
+
+    const formatInterestRateDisplay = (rate) => {
+      const n = parseFloat(rate)
+      if (!Number.isFinite(n) || n <= 0) return '0%'
+      return Number.isInteger(n) ? `${n}%` : `${n}%`
+    }
     const formatUnitLabel = (unit) => {
       if (!unit) return ''
       const trimmed = String(unit).trim()
@@ -1506,9 +1936,34 @@ export default {
       return barangay ? barangay.name : ''
     }
 
-    onMounted(() => {
+    onMounted(async () => {
       machineryStore.clearError()
       loadData()
+      if (isPresidentRole.value) {
+        await downPaymentStore.fetchStatus()
+        syncPercentInput()
+      }
+    })
+
+    const isAnyModalOpen = computed(
+      () =>
+        showAddMachineryModal.value ||
+        showEditMachineryModal.value ||
+        showViewBookingModal.value ||
+        showAssignOperatorModal.value ||
+        showDeleteModal.value
+    )
+
+    watch(
+      isAnyModalOpen,
+      (open) => {
+        document.body.style.overflow = open ? 'hidden' : ''
+      },
+      { immediate: true }
+    )
+
+    onUnmounted(() => {
+      document.body.style.overflow = ''
     })
 
     // Auto-set barangay for president when opening add modal
@@ -1525,63 +1980,214 @@ export default {
       eligibleOperators, assignOperatorForm, assignOperatorError, assigningOperator,
       openAssignOperatorModal, closeAssignOperatorModal, saveOperatorAssignment,
       successMessage, validationError, filters, adminFilters, machineryForm, inventory, bookings,
+      prerequisiteMachineOptions,
       loading, error, selectedBooking, distinctMachineryTypes,
       totalMachinery, availableMachinery, barangays, isAdminRole, isAdminOnly,
       pendingBookingsCount, totalRevenue, applyFilters, applyAdminFilters,
       filteredInventory, handleBarangayChange, isPresidentRole, userBarangayId,
+      dpEnabled, dpPercentInput, dpSaving, dpMessage, dpMessageType, dpPercentDirty,
+      toggleDownPayment, saveDownPaymentPercent, normalizeDownPaymentPercentField,
       addMachinery, editMachinery, updateMachinery, deleteMachineryConfirm,
       deleteMachinery, viewBooking, closeModals, closeDeleteModal, deleteInProgress, clearError, loadData,
-      getMachineryTypeClass, getStatusClass, getBookingStatusClass,
-      getBarangayName, formatNumber, formatUnitLabel, formatCapacity, formatDate, formatDateTime,
+      getMachineryTypeClass, getStatusClass, getBookingStatusClass, machineryStatusLabel,
+      getBarangayName, formatNumber, formatInterestRateDisplay, formatUnitLabel, formatCapacity, formatDate, formatDateTime,
       handleMachineryPictureChange, removeMachineryPicture, uploadMachineryPicture,
       handleImageError, handleImageLoad, machineryPictureInput, currentPictureFile, resetForm,
       getImageUrl,
       invQ,
       invTypeF,
       invStatusF,
+      invBarangayF,
       invView,
       invPg,
       invTotalPg,
       invPaged,
       invUniqueTypes,
-      invFiltered
+      invFiltered,
+      clearInvFilters,
+      normalizePriceField,
+      normalizeInterestRateField
     }
   }
 }
 </script>
 
 <style scoped>
-.machinery-management-page {
-  --surface-1: #1e4234;
-  --surface-2: #255241;
+.page-container.machinery-management-page {
+  --surface-1: rgba(28, 42, 33, 0.92);
+  --surface-2: rgba(24, 39, 30, 0.92);
   --surface-3: #2d5c4a;
-  --line-soft: rgba(167, 211, 178, 0.22);
+  --line-soft: rgba(190, 235, 203, 0.14);
   --line-strong: rgba(187, 227, 196, 0.35);
-  --text-main: #ecfdf5;
-  --text-muted: #b8dcc6;
-  --text-soft: #8fb89e;
+  --text-main: #eefde6;
+  --text-muted: rgba(229, 235, 231, 0.82);
+  --text-soft: rgba(229, 235, 231, 0.65);
   --success: #6ee7a8;
   --warning: #e8c468;
   --danger: #f87171;
   --info: #7dd3fc;
-  --panel-shadow: 0 10px 28px rgba(4, 18, 12, 0.32);
-  min-height: 100vh;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 28px;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  background: linear-gradient(160deg, #0c2418 0%, #123222 42%, #1a3d2e 100%);
+  --panel-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  max-width: none;
+  margin: 0 -1.5rem;
+  width: calc(100% + 3rem);
+  min-height: calc(100vh - 70px - 3rem);
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #0f1712 0%, #132119 22%, #1a2b20 45%, #243b2c 72%, #2f4a38 100%);
+  color: #eefde6;
+  border-radius: 18px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
 }
 
+.dp-module-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid rgba(190, 235, 203, 0.18);
+  background: rgba(28, 42, 33, 0.92);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+}
+.dp-module-panel--off {
+  border-color: rgba(252, 211, 77, 0.45);
+}
+.dp-module-panel__text {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.dp-module-panel__title {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #eefde6;
+}
+.dp-module-panel--off .dp-module-panel__title {
+  color: #fde68a;
+}
+.dp-module-panel__desc {
+  margin: 0 0 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: rgba(229, 235, 231, 0.82);
+}
+.dp-percent-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-bottom: 0.28rem;
+}
+.dp-percent-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.dp-percent-input {
+  width: 5.5rem;
+  padding: 0.38rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 235, 203, 0.28);
+  background: rgba(0, 0, 0, 0.22);
+  color: #eefde6;
+  font-size: 0.9rem;
+}
+.dp-percent-suffix {
+  font-weight: 700;
+}
+.dp-percent-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: rgba(229, 235, 231, 0.65);
+}
+.dp-module-panel__msg {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.72rem;
+}
+.dp-module-panel__msg.success { color: #86efac; }
+.dp-module-panel__msg.error { color: #fca5a5; }
+.dp-module-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  background: rgba(0, 0, 0, 0.18);
+  color: #bbf7d0;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+  cursor: pointer;
+}
+.dp-module-toggle--off {
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+.dp-module-toggle__track {
+  width: 2.1rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.35);
+  position: relative;
+  display: inline-block;
+}
+.dp-module-toggle--off .dp-module-toggle__track {
+  background: rgba(245, 158, 11, 0.35);
+}
+.dp-module-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 18px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: #fff;
+}
+.dp-module-toggle--off .dp-module-toggle__thumb {
+  left: 3px;
+}
+.dp-module-toggle__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.page-container.machinery-management-page.light-theme .dp-module-panel {
+  background: linear-gradient(135deg, rgba(220, 252, 231, 0.95) 0%, rgba(187, 247, 208, 0.75) 100%);
+  border-color: #86efac;
+}
+.page-container.machinery-management-page.light-theme .dp-module-panel--off {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(253, 230, 138, 0.65) 100%);
+  border-color: #fcd34d;
+}
+.page-container.machinery-management-page.light-theme .dp-module-panel__title,
+.page-container.machinery-management-page.light-theme .dp-module-panel__desc,
+.page-container.machinery-management-page.light-theme .dp-percent-label,
+.page-container.machinery-management-page.light-theme .dp-percent-hint,
+.page-container.machinery-management-page.light-theme .dp-percent-suffix {
+  color: #14532d;
+}
+.page-container.machinery-management-page.light-theme .dp-module-panel--off .dp-module-panel__title,
+.page-container.machinery-management-page.light-theme .dp-module-panel--off .dp-module-panel__desc {
+  color: #92400e;
+}
+.page-container.machinery-management-page.light-theme .dp-percent-input {
+  background: #fff;
+  color: #14532d;
+  border-color: #86efac;
+}
+.page-container.machinery-management-page.light-theme .dp-module-panel__msg.success { color: #15803d; }
+.page-container.machinery-management-page.light-theme .dp-module-panel__msg.error { color: #b91c1c; }
+
 .machinery-management-page::before,
 .machinery-management-page::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
 }
 
 .machinery-management-page::before {
@@ -1601,18 +2207,457 @@ export default {
   z-index: 1;
 }
 
+.page-header-split {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.page-header-split::before {
+  content: '';
+  position: absolute;
+  top: -62px;
+  right: -72px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.page-header-split::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
+  pointer-events: none;
+}
+
+.page-header-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 220px;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  color: #eefde6;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(229, 235, 231, 0.82);
+}
+
+.btn-header-add {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 40px !important;
+  padding: 0.45rem 0.95rem !important;
+  border: 1.5px solid #15803d !important;
+  border-radius: 10px !important;
+  font-weight: 700;
+  font-size: 0.9rem !important;
+  line-height: 1.2;
+  cursor: pointer;
+  color: #000000;
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-header-add:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.btn-header-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+}
+
+.tools-card {
+  --tools-h: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(28, 42, 33, 0.85);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), inset 1px 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.tools-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.search-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--tools-h);
+}
+
+.search-icon-wrap {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(186, 240, 200, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.toolbar-input,
+.toolbar-select {
+  width: 100%;
+  height: var(--tools-h);
+  min-height: var(--tools-h);
+  max-height: var(--tools-h);
+  padding: 0 0.85rem;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.2;
+  background-color: rgba(0, 0, 0, 0.24);
+  color: #eefde6;
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.toolbar-input::placeholder {
+  color: rgba(229, 235, 231, 0.5);
+  font-weight: 400;
+  opacity: 1;
+}
+
+.toolbar-select {
+  cursor: pointer;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a7f3c8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 1.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.search-input-main {
+  padding-left: 2.25rem;
+  padding-right: 0.85rem;
+}
+
+.toolbar-input:focus,
+.toolbar-select:focus {
+  outline: none;
+  border-color: rgba(74, 222, 128, 0.55);
+}
+
+.toolbar-select option {
+  background: #132119;
+  color: #eefde6;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.filter-group-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bookings-tools-card {
+  margin-bottom: 0.85rem;
+}
+
+.bookings-mobile-list {
+  display: none;
+}
+
+.inv2-barangay-hint {
+  font-weight: 500;
+  opacity: 0.72;
+}
+
+.inv2-col-operator {
+  width: 11%;
+}
+
+.inv2-th-operator {
+  font-size: 0.68rem !important;
+  letter-spacing: 0.02em;
+}
+
+.inv2-td-operator {
+  max-width: 0;
+  overflow: hidden;
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 4px !important;
+}
+
+.inv2-td-operator .operator-assigned {
+  display: block;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.inv2-td-operator .operator-assigned__name {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ecfdf5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv2-td-operator .operator-assigned__date {
+  display: block;
+  margin-top: 1px;
+  font-size: 9px;
+  color: rgba(200, 235, 210, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv2-td-operator .operator-missing {
+  font-size: 10px;
+  font-style: italic;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.tools-chips {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.35rem 0 0;
+  border-radius: 0;
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid rgba(190, 235, 203, 0.14) !important;
+  box-shadow: none !important;
+}
+
+.tools-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.tools-chips .inv2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  max-width: 100%;
+  min-height: 0;
+  height: 1.55rem;
+  padding: 0 0.18rem 0 0.42rem;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(167, 211, 178, 0.25);
+  color: rgba(220, 252, 231, 0.9);
+}
+
+.tools-chips .inv2-chip-x {
+  width: 1rem;
+  height: 1rem;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  opacity: 0.75;
+  color: rgba(220, 252, 231, 0.9);
+  flex-shrink: 0;
+}
+
+.tools-chips .inv2-chip-x:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tools-chips .inv2-chip-x svg {
+  width: 8px;
+  height: 8px;
+  display: block;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.tools-chips .inv2-clear-all {
+  margin-left: 0;
+  flex-shrink: 0;
+  align-self: center;
+  margin-top: 0;
+  padding: 0;
+  height: 1.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.55rem;
+  text-decoration: none;
+  color: #86efac;
+}
+
+.tools-chips .inv2-clear-all:hover {
+  text-decoration: underline;
+  color: #bbf7d0;
+}
+
+.inv2-view-toggle {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  height: var(--tools-h);
+  width: calc(var(--tools-h) * 2 + 6px);
+  padding: 3px;
+  gap: 2px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.inv2-view-btn {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.inv2-view-btn svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.inv2-view-btn.active {
+  background: rgba(45, 92, 74, 0.85);
+  color: #ffffff;
+}
+
+.inv2-view-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.card,
+.inv2-data-card {
+  background: rgba(28, 42, 33, 0.92);
+  border-radius: 12px;
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  min-height: 160px;
+  margin-bottom: 1.5rem;
+}
+
+.inv2-card-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.65rem 0.15rem;
+}
+
+.inv2-record-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(229, 235, 231, 0.7);
+}
+
 .page-header,
 .section {
   background: var(--surface-1);
   border: 1px solid var(--line-soft);
-  border-radius: 24px;
+  border-radius: 12px;
   box-shadow: var(--panel-shadow);
 }
 
-.page-header {
+.page-header:not(.page-header-split) {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   gap: 20px;
   margin-bottom: 26px;
   padding: 28px 32px;
@@ -1621,23 +2666,11 @@ export default {
 .header-content {
   flex: 1;
   min-width: 0;
-}
-
-.page-title {
-  margin: 0 0 8px;
-  font-size: 34px;
-  line-height: 1.05;
-  font-weight: 900;
-  letter-spacing: -0.8px;
-  color: var(--text-main);
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
-}
-
-.page-subtitle {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .stats-grid {
@@ -1821,6 +2854,51 @@ export default {
   flex-shrink: 0;
 }
 
+.inv2-section {
+  margin-top: 0.25rem;
+}
+
+.inv2-panel {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  border-radius: 16px;
+  background: linear-gradient(165deg, #1e4234 0%, #255241 100%);
+  border: 1px solid rgba(167, 211, 178, 0.24);
+  box-shadow: 0 12px 32px rgba(4, 18, 12, 0.28);
+}
+
+.inv2-panel .inv2-body {
+  max-height: none;
+  overflow: visible;
+}
+
+.inv2-panel .inv2-table-wrap {
+  max-height: none;
+  overflow-x: auto;
+}
+
+.inv2-col-barangay { width: auto; }
+.inv2-td-rate { text-align: right; }
+.inv2-td-center { text-align: center; }
+
+.inv2-card-barangay {
+  margin: 0.15rem 0 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-soft, #8fb89e);
+}
+
+.inv2-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
 .inv2-modal {
   padding: 0 !important;
   overflow: hidden;
@@ -1879,39 +2957,6 @@ export default {
   align-items: center;
   gap: 10px;
 }
-.inv2-view-toggle {
-  display: flex;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 3px;
-  gap: 2px;
-}
-.inv2-view-btn {
-  width: 32px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 7px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.88);
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-.inv2-view-btn svg {
-  color: currentColor;
-  stroke: currentColor;
-}
-.inv2-view-btn.active {
-  background: rgba(45, 92, 74, 0.75);
-  color: #ffffff;
-}
-.inv2-view-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
 .inv2-close {
   width: 36px;
   height: 36px;
@@ -1937,7 +2982,7 @@ export default {
 
 .inv2-toolbar {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 170px 170px auto;
+  grid-template-columns: minmax(200px, 1.4fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) minmax(130px, 0.9fr) auto;
   align-items: center;
   gap: 10px;
   padding: 13px 24px;
@@ -2042,39 +3087,55 @@ export default {
 .inv2-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 0.3rem;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 0.2rem 0.35rem 0.2rem 0.55rem;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 600;
-  background: rgba(45, 92, 74, 0.4);
-  border: 1px solid rgba(167, 211, 178, 0.28);
-  color: #b8dcc6;
+  line-height: 1.2;
+  background: rgba(45, 92, 74, 0.45);
+  border: 1px solid rgba(167, 211, 178, 0.3);
+  color: #d1fae5;
 }
 .inv2-chip-x {
-  background: none;
+  background: rgba(255, 255, 255, 0.08);
   border: none;
-  color: #b8dcc6;
+  color: #d1fae5;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
   padding: 0;
-  opacity: 0.7;
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 .inv2-chip-x:hover {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.16);
 }
 .inv2-clear-all {
-  background: none;
+  margin-left: auto;
+  background: transparent;
   border: none;
-  color: rgba(200, 235, 210, 0.45);
-  font-size: 11px;
-  font-weight: 600;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 0.2rem 0.15rem;
+  border-radius: 0;
   text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  min-height: auto;
 }
 .inv2-clear-all:hover {
-  color: rgba(200, 235, 210, 0.8);
+  background: transparent;
+  color: #bbf7d0;
 }
 
 .inv2-body {
@@ -2082,10 +3143,10 @@ export default {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 18px 24px 24px;
+  padding: 0.35rem 0.65rem 0.65rem;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0.45rem;
 }
 
 .inv2-table-wrap {
@@ -2116,13 +3177,14 @@ export default {
 .inv2-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 .inv2-col-name { width: auto; }
 .inv2-col-type { width: auto; }
 .inv2-col-member { width: auto; }
 .inv2-col-nonmember { width: auto; }
+.inv2-col-interest { width: auto; }
 .inv2-col-capacity { width: auto; }
 .inv2-col-status { width: auto; }
 .inv2-col-actions { width: 1%; white-space: nowrap; }
@@ -2130,7 +3192,7 @@ export default {
 .inv2-th-name,
 .inv2-td-name {
   text-align: left !important;
-  min-width: 6.5rem;
+  min-width: 4.5rem;
   white-space: normal;
   word-break: break-word;
 }
@@ -2145,34 +3207,36 @@ export default {
 .inv2-td-actions {
   text-align: center !important;
   white-space: nowrap;
-  min-width: 5.75rem;
+  min-width: 4.5rem;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
 }
 .inv2-table thead {
   background: rgba(255, 255, 255, 0.04);
 }
 .inv2-table th {
-  padding: 11px 10px;
-  font-size: 0.8125rem;
+  padding: 5px 6px;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: rgba(200, 235, 210, 0.5);
   white-space: nowrap;
   text-align: center;
-  border-bottom: 1.5px solid #94a3b8;
+  border-bottom: 1px solid #94a3b8;
 }
 
 .inv2-table th:not(:last-child),
 .inv2-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8;
+  border-right: 1px solid #94a3b8;
 }
 
 .inv2-table td {
-  padding: 11px 10px;
-  font-size: 0.9375rem;
+  padding: 5px 6px;
+  font-size: 11px;
   color: #e8f5ee;
   vertical-align: middle;
-  border-bottom: 1.5px solid #94a3b8;
+  border-bottom: 1px solid #94a3b8;
 }
 .inv2-row {
   transition: background 0.15s ease;
@@ -2206,10 +3270,13 @@ export default {
 }
 .inv2-name {
   font-weight: 600;
+  font-size: 11px;
+  line-height: 1.2;
   color: #ecfdf5;
 }
 .inv2-price {
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 11px;
   white-space: nowrap;
 }
 .inv2-price-main {
@@ -2222,26 +3289,32 @@ export default {
   color: #fb923c;
 }
 .inv2-unit {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 500;
   color: rgba(200, 235, 210, 0.5);
   margin-left: 1px;
 }
 .inv2-cap {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(200, 235, 210, 0.7);
 }
 .inv2-na {
   color: rgba(200, 235, 210, 0.3);
-  font-size: 13px;
+  font-size: 10px;
+}
+.inv2-interest {
+  font-weight: 600;
+  font-size: 10px;
+  color: #eefde6;
+  white-space: nowrap;
 }
 
 .inv2-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 88px;
+  gap: 4px;
+  min-width: 0;
   flex-wrap: nowrap;
 }
 .inv2-action-btn {
@@ -2282,6 +3355,12 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 14px;
+  width: 100%;
+}
+
+/* Hidden on desktop; shown in the mobile media query below */
+.inv2-mobile-list {
+  display: none;
 }
 .inv2-card {
   background: rgba(255, 255, 255, 0.04);
@@ -2376,12 +3455,16 @@ export default {
 
 .inv2-empty {
   text-align: center;
-  padding: 52px 20px;
-  color: rgba(200, 235, 210, 0.4);
-  font-size: 14px;
+  padding: 1.75rem 1rem;
+  color: rgba(200, 235, 210, 0.55);
+  font-size: 0.88rem;
+  font-weight: 600;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 120px;
 }
 
 .inv2-pagination {
@@ -2455,10 +3538,12 @@ export default {
 
 @media (max-width: 640px) {
   .inv2-fab {
-    display: flex;
-  }
-  .inv2-add-btn {
     display: none;
+  }
+  .inv2-panel .inv2-add-btn {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
   }
   .inv2-modal {
     max-height: 95vh !important;
@@ -2470,18 +3555,555 @@ export default {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
-  .inv2-table-wrap {
-    overflow-x: auto;
-  }
-  .inv2-table th,
-  .inv2-table td {
-    white-space: nowrap;
-  }
   .inv2-cards-grid {
     grid-template-columns: 1fr;
   }
   .modal-form-content {
     margin-top: 8px;
+  }
+}
+
+/* ===== Mobile page layout (desktop unchanged) ===== */
+@media (max-width: 768px) {
+  .page-container.machinery-management-page {
+    margin: 0 -0.75rem;
+    width: calc(100% + 1.5rem);
+    padding: 0.75rem;
+    border-radius: 0;
+  }
+
+  .page-header-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title action"
+      "subtitle action";
+    align-items: center;
+    column-gap: 0.65rem;
+    row-gap: 0.15rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .page-header-split::after {
+    display: none;
+  }
+
+  .page-header-text {
+    display: contents;
+    min-width: 0;
+  }
+
+  .page-title {
+    grid-area: title;
+    font-size: 1.2rem !important;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .page-subtitle {
+    grid-area: subtitle;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .btn-header-add {
+    grid-area: action;
+    align-self: center;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.78rem;
+    border-radius: 9px;
+  }
+
+  .tools-card {
+    --tools-h: 36px;
+    gap: 0.5rem;
+    padding: 0.65rem 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tools-card-top {
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .search-bar {
+    height: var(--tools-h);
+  }
+
+  .search-icon-wrap {
+    width: 2.1rem;
+  }
+
+  .search-svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .tools-card .toolbar-input,
+  .tools-card .toolbar-select {
+    height: var(--tools-h);
+    min-height: var(--tools-h);
+    max-height: var(--tools-h);
+    font-size: 0.82rem;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .tools-card .search-input-main {
+    padding-left: 2.1rem;
+  }
+
+  .tools-card .toolbar-select {
+    padding-left: 0.55rem;
+    padding-right: 1.55rem;
+    background-position: right 0.45rem center;
+  }
+
+  .inv2-view-toggle {
+    height: var(--tools-h);
+    width: calc(var(--tools-h) * 2 + 4px);
+    padding: 2px;
+    border-radius: 8px;
+  }
+
+  .inv2-view-btn {
+    border-radius: 6px;
+  }
+
+  .inv2-view-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .filter-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .filter-group-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-group .toolbar-select:last-child {
+    grid-column: auto;
+  }
+
+  .bookings-section {
+    padding: 0.75rem 0.7rem 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .bookings-section .section-title {
+    font-size: 1rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .bookings-tools-card {
+    margin-bottom: 0.65rem;
+  }
+
+  .bookings-desktop-table {
+    display: none !important;
+  }
+
+  .bookings-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .bookings-table-wrap {
+    overflow: visible;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 0.7rem 0.75rem 0.65rem;
+    gap: 0.35rem;
+    border-radius: 12px;
+  }
+
+  .stat-label {
+    font-size: 0.62rem;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-value {
+    font-size: 1.15rem;
+  }
+
+  .tools-chips {
+    margin: 0;
+    padding: 0.3rem 0 0;
+    gap: 0.3rem;
+  }
+
+  .tools-chips-list {
+    gap: 0.22rem;
+  }
+
+  .tools-chips .inv2-chip {
+    height: 1.45rem;
+    font-size: 0.65rem;
+    padding: 0 0.15rem 0 0.38rem;
+    border-radius: 5px;
+  }
+
+  .tools-chips .inv2-chip-x {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .tools-chips .inv2-clear-all {
+    height: 1.45rem;
+    font-size: 0.65rem;
+    line-height: 1.45rem;
+  }
+
+  .btn-header-add {
+    min-height: 34px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 9px;
+  }
+
+  .page-header:not(.page-header-split) {
+    margin-bottom: 14px;
+    padding: 14px 14px 12px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+
+  .section {
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .filters-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .inv2-header {
+    padding: 12px 12px 10px;
+    gap: 8px;
+  }
+
+  .inv2-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .inv2-title {
+    font-size: 1.05rem;
+  }
+
+  .inv2-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .inv2-toolbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .inv2-chips {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .inv2-panel .inv2-body {
+    padding: 8px 10px 12px;
+  }
+
+  .inv2-desktop-table {
+    display: none !important;
+  }
+
+  .inv2-mobile-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .inv2-mobile-card {
+    padding: 0.7rem 0.75rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid rgba(167, 211, 178, 0.22);
+    background: rgba(0, 0, 0, 0.16);
+  }
+
+  .inv2-mobile-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .inv2-mobile-card-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--text-main, #ecfdf5);
+    word-break: break-word;
+  }
+
+  .inv2-mobile-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .inv2-mobile-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+
+  .inv2-mobile-label {
+    flex-shrink: 0;
+    min-width: 4.8rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(229, 235, 231, 0.55);
+  }
+
+  .inv2-mobile-card-actions.action-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(190, 235, 203, 0.12);
+  }
+
+  .inv2-mobile-card-actions .machinery-action-text {
+    display: inline-flex !important;
+  }
+
+  .machinery-action-icon {
+    display: none !important;
+  }
+
+  .machinery-action-text {
+    display: inline-flex !important;
+  }
+
+  .inv2-card-actions.action-buttons {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .inv2-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0;
+  }
+
+  .inv2-card {
+    border-radius: 12px;
+  }
+
+  .inv2-card-img {
+    height: 120px;
+  }
+
+  .inv2-card-body {
+    padding: 0.7rem 0.75rem 0.75rem;
+  }
+
+  .inventory-table-container,
+  .table-container {
+    overflow-x: visible;
+  }
+
+  .inventory-table thead,
+  .bookings-table thead {
+    display: none;
+  }
+
+  .inventory-table,
+  .inventory-table tbody,
+  .inventory-table tr,
+  .inventory-table td,
+  .bookings-table,
+  .bookings-table tbody,
+  .bookings-table tr,
+  .bookings-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .inventory-table tr,
+  .bookings-table tr {
+    border: 1px solid rgba(167, 211, 178, 0.22);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    padding: 0.65rem 0.75rem;
+    background: rgba(0, 0, 0, 0.14);
+  }
+
+  .inventory-table td,
+  .bookings-table td {
+    padding: 0.28rem 0;
+    border: none !important;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .inventory-table td::before,
+  .bookings-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(229, 235, 231, 0.55);
+    margin-bottom: 0.15rem;
+  }
+
+  .inventory-table .actions-cell::before,
+  .bookings-table .booking-actions-cell::before,
+  .bookings-table td.actions-cell::before {
+    content: none;
+  }
+
+  .inventory-table .actions-cell,
+  .bookings-table .booking-actions-cell {
+    padding-top: 0.55rem;
+    margin-top: 0.35rem;
+    border-top: 1px solid rgba(190, 235, 203, 0.12);
+  }
+
+  .inventory-table .action-buttons,
+  .booking-actions-cell {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .standalone-actions {
+    padding: 0 0 10px;
+  }
+
+  .btn-inventory-add {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
+    font-size: 0.9rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.machinery-management-page.light-theme .machinery-action-edit-text {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.machinery-management-page.light-theme .machinery-action-delete-text {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.machinery-management-page.light-theme .machinery-action-assign-text {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.machinery-management-page.light-theme .machinery-action-view-text {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.machinery-management-page.light-theme .inv2-mobile-label {
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .machinery-management-page.light-theme .inv2-mobile-card {
+    background: #ffffff;
+    border-color: #bbf7d0;
+  }
+
+  .machinery-management-page.light-theme .inv2-mobile-card-name {
+    color: #052e16;
+  }
+
+  .machinery-management-page.light-theme .inv2-mobile-label {
+    color: #64748b;
+  }
+
+  .machinery-management-page.light-theme .inv2-mobile-card-actions {
+    border-top-color: #bbf7d0;
+  }
+
+  .machinery-management-page.light-theme .bookings-table-wrap {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .machinery-management-page.light-theme .inv2-table tr.inv2-row,
+  .machinery-management-page.light-theme .inventory-table tr,
+  .machinery-management-page.light-theme .bookings-table tr {
+    background: #ffffff;
+    border-color: #bbf7d0;
+  }
+
+  .machinery-management-page.light-theme .inv2-table .inv2-td-actions,
+  .machinery-management-page.light-theme .inventory-table .actions-cell,
+  .machinery-management-page.light-theme .bookings-table .booking-actions-cell {
+    border-top-color: #bbf7d0;
+  }
+
+  .machinery-management-page.light-theme .inventory-table td::before,
+  .machinery-management-page.light-theme .bookings-table td::before {
+    color: #64748b;
   }
 }
 
@@ -2520,11 +4142,11 @@ export default {
 .inventory-table-admin col.col-status { width: auto; }
 .inventory-table-admin col.col-actions { width: auto; }
 
-.inventory-table-president col.col-operator { width: auto; }
-.operator-cell { min-width: 9rem; }
-.operator-assigned { display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.85rem; }
-.operator-assigned small { color: var(--text-soft, #8fb89e); font-size: 0.75rem; }
-.operator-missing { color: #e65100; font-size: 0.85rem; font-weight: 600; }
+.inventory-table-president col.col-operator { width: 11%; }
+.operator-cell { min-width: 0; max-width: 9rem; }
+.operator-assigned { display: block; line-height: 1.15; font-size: 10px; }
+.operator-assigned small { color: var(--text-soft, #8fb89e); font-size: 9px; }
+.operator-missing { color: #e65100; font-size: 10px; font-weight: 600; }
 .machinery-action-assign { color: #1565c0; }
 
 .inventory-table-president col.col-name { width: auto; }
@@ -2816,23 +4438,70 @@ export default {
 .machinery-management-page .inventory-table .machinery-action-btn,
 .machinery-management-page .inv2-table .machinery-action-btn,
 .machinery-management-page .inv2-card .machinery-action-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
 }
 
 .machinery-management-page .inventory-table .machinery-action-btn svg,
 .machinery-management-page .inv2-table .machinery-action-btn svg,
 .machinery-management-page .inv2-card .machinery-action-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
 }
 
 .inv2-card-actions.action-buttons {
   justify-content: flex-start;
   margin-top: 10px;
+}
+
+.inv2-mobile-meta {
+  display: none;
+}
+
+.machinery-action-text {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0.42rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  margin: 0 !important;
+  text-align: center;
+  border: 1.5px solid transparent;
+}
+
+.machinery-action-edit-text {
+  color: #ffedd5;
+  background: rgba(10, 24, 18, 0.95);
+  border-color: rgba(251, 146, 60, 0.45);
+}
+
+.machinery-action-delete-text {
+  color: #fecaca;
+  background: rgba(10, 24, 18, 0.95);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.machinery-action-assign-text {
+  color: #dbeafe;
+  background: rgba(10, 24, 18, 0.95);
+  border-color: rgba(96, 165, 250, 0.45);
+}
+
+.machinery-action-view-text {
+  color: #d1fae5;
+  background: rgba(10, 24, 18, 0.95);
+  border-color: rgba(52, 211, 153, 0.45);
 }
 
 .btn-icon-small,
@@ -2971,31 +4640,68 @@ export default {
 }
 
 .modal-overlay {
+  /* Theme vars duplicated from the page container so teleported modals resolve them */
+  --surface-1: rgba(28, 42, 33, 0.92);
+  --surface-2: rgba(24, 39, 30, 0.92);
+  --surface-3: #2d5c4a;
+  --line-soft: rgba(190, 235, 203, 0.14);
+  --line-strong: rgba(187, 227, 196, 0.35);
+  --text-main: #eefde6;
+  --text-muted: rgba(229, 235, 231, 0.82);
+  --text-soft: rgba(229, 235, 231, 0.65);
+  --success: #6ee7a8;
+  --warning: #e8c468;
+  --danger: #f87171;
+  --info: #7dd3fc;
+  --panel-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
   position: fixed !important;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  padding-left: calc(var(--app-sidebar-width, 260px) + 20px);
-  background: rgba(12, 36, 24, 0.72);
-  backdrop-filter: blur(4px);
-  z-index: 1200;
+  inset: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  background: rgba(6, 12, 9, 0.62) !important;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  z-index: 10050 !important;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-content {
-  width: min(90%, 640px);
-  max-height: 90vh;
+  width: 100%;
+  max-width: 520px;
+  max-height: min(92dvh, calc(100dvh - 1.5rem));
+  margin: auto;
+  background: rgba(28, 42, 33, 0.96);
+  color: #eefde6;
+  border-radius: 14px;
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.machinery-edit-modal {
+  max-width: 560px;
+}
+
+.machinery-edit-modal .modal-body {
   overflow-y: auto;
-  background: var(--surface-1);
-  color: var(--text-main);
-  border-radius: 22px;
-  border: 1px solid var(--line-soft);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-form-content {
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .modal-large {
@@ -3011,59 +4717,169 @@ export default {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 24px 26px;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(28, 42, 33, 0.98);
 }
 
+.modal-title-text h2,
 .modal-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: #eefde6;
 }
 
-.modal-close {
+.modal-close,
+.close-btn,
+.modal-content .close-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  font-size: 20px;
+  flex-shrink: 0;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid rgba(190, 235, 203, 0.15);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(229, 235, 231, 0.65);
+  font-size: 1.5rem;
+  line-height: 1;
   cursor: pointer;
 }
 
 .modal-body {
-  padding: 24px 26px 28px;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding: 0.85rem 1.25rem 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  background: rgba(28, 42, 33, 0.98);
+}
+
+.modal-footer .btn-secondary {
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(190, 235, 203, 0.2);
+  color: #eefde6;
+  cursor: pointer;
+}
+
+.modal-footer .btn-submit {
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #14532d;
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  cursor: pointer;
+}
+
+.modal-footer .btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 0.65rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label,
+.form-label {
+  display: block;
+  margin: 0 0 0.25rem !important;
+  padding: 0 !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(229, 235, 231, 0.88);
+}
+
+.form-group .form-input,
+.form-group input,
+.form-group select,
+.form-group textarea {
+  margin: 0 !important;
+}
+
+.modal-content .form-input,
+.modal-content input.form-input,
+.modal-content select.form-input,
+.modal-content textarea.form-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(190, 235, 203, 0.24);
+  color: #eefde6;
+  box-sizing: border-box;
+}
+
+.price-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.price-input-prefix {
+  position: absolute;
+  left: 0.75rem;
+  z-index: 1;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgba(229, 235, 231, 0.55);
+  pointer-events: none;
+}
+
+.price-input-wrap .price-input {
+  padding-left: 1.65rem !important;
+}
+
+.modal-content textarea.form-input {
+  min-height: 72px;
 }
 
 .form-hint {
   display: block;
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 0.28rem;
+  font-size: 0.72rem;
   color: var(--text-soft);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 0.7rem;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding-top: 0.15rem;
 }
 
 .modal-delete-overlay {
@@ -3300,21 +5116,44 @@ export default {
   }
 }
 
-.alert {
+.alert-center-stack {
   position: fixed;
-  top: 5.25rem;
-  right: 20px;
-  z-index: 10050;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10060;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(420px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.alert {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-width: 320px;
-  max-width: 420px;
+  width: 100%;
   padding: 16px 18px;
   border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  text-align: left;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
   backdrop-filter: blur(12px);
+  pointer-events: auto;
+  animation: alert-pop-in 0.18s ease-out;
+}
+
+@keyframes alert-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .alert-error {
@@ -3357,27 +5196,28 @@ export default {
 }
 
 .machinery-form-section {
-  margin-bottom: 1.35rem;
-  padding: 1.15rem 1.2rem 0.25rem;
-  border-radius: 14px;
+  margin-bottom: 0.65rem;
+  padding: 0.65rem 0.75rem 0.25rem;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(190, 235, 203, 0.18);
 }
 
+.machinery-form-section:last-of-type {
+  margin-bottom: 0;
+}
+
 .machinery-form-section-title {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  color: var(--text-main);
-  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(229, 235, 231, 0.78);
 }
 
 .machinery-form-section-desc {
-  margin: 0 0 1rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--text-soft);
+  display: none;
 }
 
 .barangay-loading {
@@ -3502,38 +5342,23 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .machinery-management-page {
-    padding: 18px;
-  }
-
-  .page-header,
-  .section {
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  .page-title {
-    font-size: 28px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
   .form-row,
   .details-grid {
     grid-template-columns: 1fr;
   }
 
   .modal-overlay {
-    padding: 14px;
-    padding-left: 14px;
+    padding:
+      max(0.65rem, env(safe-area-inset-top, 0px))
+      0.75rem
+      0.75rem !important;
+    padding-left: 0.75rem !important;
   }
 
   .modal-header,
   .modal-body {
-    padding-left: 18px;
-    padding-right: 18px;
+    padding-left: 0.95rem;
+    padding-right: 0.95rem;
   }
 
   .modal-actions {
@@ -3544,27 +5369,41 @@ export default {
     width: 100%;
   }
 
+  .alert-center-stack {
+    width: calc(100vw - 1.75rem);
+    gap: 0.5rem;
+  }
+
   .alert {
-    top: 5rem;
-    left: 14px;
-    right: 14px;
-    min-width: auto;
-    max-width: none;
+    padding: 0.85rem 0.95rem;
+    font-size: 0.85rem;
+    border-radius: 12px;
   }
 }
 
 @media (max-width: 480px) {
-  .machinery-management-page {
-    padding: 14px;
+  .page-container.machinery-management-page {
+    padding: 0.65rem;
   }
 
-  .page-header,
-  .section {
-    padding: 18px;
+  .btn-header-add {
+    min-height: 32px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  .tools-card {
+    --tools-h: 34px;
+    padding: 0.55rem 0.6rem;
+    gap: 0.45rem;
+  }
+
+  .filter-group {
+    gap: 0.35rem;
   }
 
   .page-title {
-    font-size: 24px;
+    font-size: 1.1rem !important;
   }
 
   .bookings-table th,
@@ -3589,8 +5428,9 @@ export default {
 
 .machinery-management-page:not(.light-theme) :is(
   .page-header, .section, .stat-card, .filters-section, .table-container,
-  .inventory-table-container, .modal-content, .detail-section, .empty-state,
-  .picture-upload-section, .picture-preview, .notes-text, .inv2-card, .inv2-table-wrap
+  .inventory-table-container, .detail-section, .empty-state,
+  .picture-upload-section, .picture-preview, .notes-text, .inv2-card, .inv2-table-wrap,
+  .tools-card, .card, .inv2-data-card
 ) {
   background: var(--surface-1) !important;
   border-color: var(--line-soft) !important;
@@ -3625,9 +5465,16 @@ export default {
   border: 2px solid #94a3b8 !important;
 }
 
-.machinery-management-page:not(.light-theme) :is(.inv2-toolbar, .inv2-chips) {
+.machinery-management-page:not(.light-theme) :is(.inv2-toolbar) {
   background: rgba(30, 66, 52, 0.65) !important;
   border-color: var(--line-soft) !important;
+}
+
+.machinery-management-page:not(.light-theme) .tools-chips {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid rgba(190, 235, 203, 0.14) !important;
+  box-shadow: none !important;
 }
 
 .machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) {
@@ -3935,6 +5782,16 @@ export default {
   color: #052e16 !important;
 }
 
+.machinery-management-page.light-theme .inv2-panel {
+  background: #ffffff;
+  border-color: #86efac;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.machinery-management-page.light-theme .inv2-card-barangay {
+  color: #166534;
+}
+
 .machinery-management-page.light-theme .inv2-subtitle {
   color: #166534 !important;
 }
@@ -3945,7 +5802,7 @@ export default {
   color: #166534 !important;
 }
 
-.machinery-management-page.light-theme :is(.inv2-toolbar, .inv2-chips) {
+.machinery-management-page.light-theme :is(.inv2-toolbar) {
   background: #f0fdf4 !important;
   border-color: #bbf7d0 !important;
 }
@@ -3973,6 +5830,18 @@ export default {
 }
 
 .machinery-management-page.light-theme .inv2-na {
+  color: #64748b !important;
+}
+
+.machinery-management-page.light-theme .inv2-interest {
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .operator-assigned__name {
+  color: #052e16 !important;
+}
+
+.machinery-management-page.light-theme .operator-assigned__date {
   color: #64748b !important;
 }
 
@@ -4069,17 +5938,32 @@ export default {
   color: #991b1b !important;
 }
 
-.machinery-management-page.light-theme .inv2-chip {
+.machinery-management-page.light-theme .tools-chips {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid #bbf7d0 !important;
+}
+
+.machinery-management-page.light-theme .tools-chips .inv2-chip {
   background: #f0fdf4 !important;
-  border-color: #86efac !important;
+  border-color: #bbf7d0 !important;
   color: #166534 !important;
 }
 
-.machinery-management-page.light-theme .inv2-clear-all {
+.machinery-management-page.light-theme .tools-chips .inv2-chip-x {
+  background: transparent !important;
+  color: #166534 !important;
+}
+
+.machinery-management-page.light-theme .tools-chips .inv2-clear-all {
+  background: transparent !important;
+  border: none !important;
   color: #15803d !important;
+  box-shadow: none !important;
 }
 
 .machinery-management-page.light-theme .inv2-clear-all:hover {
+  background: transparent !important;
   color: #052e16 !important;
 }
 
@@ -4333,8 +6217,305 @@ export default {
   box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
 }
 
+.alert-center-stack.light-theme .alert-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-left: 4px solid #ca8a04 !important;
+  box-shadow: 0 8px 24px rgba(146, 64, 14, 0.15) !important;
+}
+
+.alert-center-stack.light-theme .alert-error {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-left: 4px solid #dc2626 !important;
+  box-shadow: 0 8px 24px rgba(153, 27, 27, 0.15) !important;
+}
+
+.alert-center-stack.light-theme .alert-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-left: 4px solid #16a34a !important;
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.12) !important;
+}
+
 .inv2-modal {
   position: relative;
 }
 
+/* ===== Teleported modals (view booking / assign operator / delete) — light theme ===== */
+.modal-overlay.machinery-ui.light-theme {
+  --surface-1: #ffffff;
+  --surface-2: #f8fdf9;
+  --surface-3: #ffffff;
+  --line-soft: #bbf7d0;
+  --line-strong: #86efac;
+  --text-main: #052e16;
+  --text-muted: #166534;
+  --text-soft: #15803d;
+  background: rgba(15, 23, 42, 0.48) !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .modal-content {
+  background: #ffffff !important;
+  border: 2px solid #86efac !important;
+  color: #052e16 !important;
+  box-shadow: 0 16px 40px rgba(22, 101, 52, 0.15) !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .modal-header h2 {
+  color: #052e16 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme :is(.modal-close, .close-btn) {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme :is(.modal-footer, .delete-modal-footer) {
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .btn-secondary {
+  background: #ffffff !important;
+  color: #166534 !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .modal-subtitle {
+  color: #166534 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .form-group label {
+  color: #052e16 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .modal-content .form-input {
+  background: #ffffff !important;
+  border: 1.5px solid #94a3b8 !important;
+  color: #052e16 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .form-input option {
+  background: #ffffff;
+  color: #052e16;
+}
+
+.modal-overlay.machinery-ui.light-theme :is(.detail-section, .empty-state) {
+  background: #f8fdf9 !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .detail-section h3 {
+  color: #052e16 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .detail-item label {
+  color: #166534 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .price-highlight {
+  color: #15803d !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .notes-text {
+  color: #14532d !important;
+  background: #f8fdf9 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .delete-confirm-message {
+  color: #166534 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .delete-warning-text {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .badge-primary {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .badge-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-color: #ca8a04 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .badge-info {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  border-color: #a5b4fc !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .badge-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .badge-default {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .status-success {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .status-info {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .status-warning {
+  background: #fef9c3 !important;
+  color: #92400e !important;
+  border-color: #ca8a04 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .status-danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #dc2626 !important;
+}
+
+.modal-overlay.machinery-ui.light-theme .status-default {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+</style>
+
+<style>
+/* Teleported Add/Edit modal — Barangays-parity chrome */
+.machinery-modal-overlay.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+  background: rgba(6, 12, 9, 0.62) !important;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+.machinery-ui.light-theme.machinery-modal-overlay.modal-overlay {
+  background: rgba(15, 23, 42, 0.48) !important;
+}
+
+.machinery-edit-modal.modal-content {
+  background: rgba(28, 42, 33, 0.96) !important;
+  border: 1px solid rgba(190, 235, 203, 0.14) !important;
+  color: #eefde6 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal.modal-content {
+  background: #fffef9 !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .modal-header,
+.machinery-ui.light-theme .machinery-edit-modal .modal-footer {
+  background: #fffef9 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .modal-header h2,
+.machinery-ui.light-theme .machinery-edit-modal .form-label {
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .close-btn {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .form-input {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .machinery-form-section {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .machinery-form-section-title {
+  color: #166534 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .btn-submit {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border-color: #14532d !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .btn-secondary {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+.machinery-ui.light-theme .machinery-edit-modal .price-input-prefix {
+  color: #64748b !important;
+}
+
+.page-container.machinery-management-page.machinery-ui.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .page-header-split {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+}
+
+.machinery-ui.light-theme .page-title {
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .page-subtitle {
+  color: #166534 !important;
+}
+
+.machinery-ui.light-theme .btn-header-add {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  border-color: #14532d !important;
+}
+
+.machinery-ui.light-theme .tools-card,
+.machinery-ui.light-theme .card,
+.machinery-ui.light-theme .inv2-data-card {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+}
+
+.machinery-ui.light-theme .toolbar-input,
+.machinery-ui.light-theme .toolbar-select {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+}
+
+.machinery-ui.light-theme .inv2-record-count {
+  color: #166534 !important;
+}
 </style>

@@ -1,41 +1,32 @@
 <template>
-  <div class="page-container barangays-page" :class="{ 'light-theme': isLight }">
+  <div class="page-container barangays-page barangays-ui" :class="{ 'light-theme': isLight }">
     <div class="page-header page-header-split">
       <div class="page-header-text">
-        <h1 class="page-title">Barangay Management</h1>
-        <p class="page-subtitle">Manage barangays and land areas</p>
+        <h1 class="page-title">{{ $t('ui.barangayManagement') }}</h1>
+        <p class="page-subtitle">{{ $t('ui.manageBarangaysSub') }}</p>
       </div>
       <button type="button" @click="openAddModal" class="btn-header-add">
         <svg class="btn-header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M12 5v14M5 12h14" stroke-linecap="round" />
         </svg>
-        Add Barangay
+        {{ $t('common.addBarangay') }}
       </button>
     </div>
 
     <!-- Statistics -->
-    <div class="stats-grid">
-      <div class="stat-card stat-total">
-        <div class="stat-icon-wrap" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="stat-svg">
-            <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M9 9v0M9 12v0M9 15v0" stroke-linecap="round" />
-          </svg>
+    <div class="stats-group stats-group--barangays">
+      <div class="stats-grid stats-grid--barangays">
+        <div class="stat-card stat-total">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.totalBarangays') }}</div>
+            <div class="stat-value">{{ totalBarangays }}</div>
+          </div>
         </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ totalBarangays }}</div>
-          <div class="stat-label">Total Barangays</div>
-        </div>
-      </div>
-      <div class="stat-card stat-active">
-        <div class="stat-icon-wrap stat-icon-accent" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="stat-svg">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ activeBarangays }}</div>
-          <div class="stat-label">Active Barangays</div>
+        <div class="stat-card stat-active">
+          <div class="stat-content">
+            <div class="stat-label">{{ $t('ui.activeBarangays') }}</div>
+            <div class="stat-value">{{ activeBarangays }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -51,26 +42,26 @@
         <input 
           v-model="searchQuery" 
           type="text" 
-          placeholder="Search barangays..."
+          :placeholder="$t('ui.searchBarangays')"
           class="toolbar-input search-input-main"
         />
       </div>
       <div class="filter-group">
         <select v-model="statusFilter" class="toolbar-select">
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="">{{ $t('ui.allStatus') }}</option>
+          <option value="active">{{ $t('common.active') }}</option>
+          <option value="inactive">{{ $t('common.inactive') }}</option>
         </select>
         <select v-model="sortBy" class="toolbar-select">
-          <option value="name">Sort by Name</option>
-          <option value="area">Sort by Member Land (Ha)</option>
+          <option value="name">{{ $t('ui.sortByName') }}</option>
+          <option value="area">{{ $t('ui.sortByLand') }}</option>
         </select>
       </div>
     </div>
 
-    <!-- Barangays Table -->
+    <!-- Barangays Table (desktop) + Mobile cards -->
     <div class="card">
-      <div class="table-container">
+      <div class="table-container barangays-desktop-wrap">
       <table class="barangays-table">
         <colgroup>
           <col class="col-name" />
@@ -82,23 +73,23 @@
         </colgroup>
         <thead>
           <tr>
-            <th>Barangay Name</th>
-            <th>Land Area (Ha)</th>
-            <th>Farmers</th>
-            <th>Officers</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{{ $t('ui.barangayName') }}</th>
+            <th>{{ $t('ui.landAreaHa') }}</th>
+            <th>{{ $t('ui.farmers') }}</th>
+            <th>{{ $t('ui.officers') }}</th>
+            <th>{{ $t('ui.status') }}</th>
+            <th>{{ $t('ui.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="6" class="loading-cell">Loading barangays...</td>
+            <td colspan="6" class="loading-cell">{{ $t('ui.loadingBarangays') }}</td>
           </tr>
           <tr v-else-if="filteredBarangays.length === 0">
-            <td colspan="6" class="empty-cell">No barangays found</td>
+            <td colspan="6" class="empty-cell">{{ $t('ui.noBarangaysFound') }}</td>
           </tr>
           <template v-else>
-          <tr v-for="barangay in filteredBarangays" :key="barangay.id">
+          <tr v-for="barangay in filteredBarangays" :key="'d-' + barangay.id">
             <td class="td-name-link barangay-name-link" @click="viewBarangayDetails(barangay)">
               {{ barangay.name }}
             </td>
@@ -114,22 +105,25 @@
             </td>
             <td class="td-actions">
               <div class="barangays-action-row">
-              <button type="button" class="btn-view-area" @click="viewBarangayDetails(barangay)">
-                View
+              <button type="button" @click="viewBarangayDetails(barangay)" class="barangays-icon-btn barangays-icon-view" :title="$t('common.view')" :aria-label="$t('common.view')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
               </button>
-              <button type="button" @click="openPlacesModal(barangay)" class="barangays-icon-btn barangays-icon-places" title="Manage Places" aria-label="Manage Places">
+              <button type="button" @click="openPlacesModal(barangay)" class="barangays-icon-btn barangays-icon-places" :title="$t('ui.managePlaces')" :aria-label="$t('ui.managePlaces')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 21s-8-5.5-8-11.8A8 8 0 0 1 12 3a8 8 0 0 1 8 6.2c0 6.3-8 11.8-8 11.8z"/>
                   <circle cx="12" cy="10.5" r="2.75"/>
                 </svg>
               </button>
-              <button type="button" @click="openEditModal(barangay)" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit">
+              <button type="button" @click="openEditModal(barangay)" class="barangays-icon-btn barangays-icon-edit" :title="$t('common.edit')" :aria-label="$t('common.edit')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-              <button type="button" @click="openDeleteBarangayConfirm(barangay)" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete">
+              <button type="button" @click="openDeleteBarangayConfirm(barangay)" class="barangays-icon-btn barangays-icon-delete" :title="$t('common.delete')" :aria-label="$t('common.delete')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M3 6h18" />
                   <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -145,364 +139,530 @@
         </tbody>
       </table>
       </div>
+
+      <div class="barangays-mobile-list" aria-label="Barangay list">
+        <div v-if="loading" class="barangay-mobile-empty">{{ $t('ui.loadingBarangays') }}</div>
+        <div v-else-if="filteredBarangays.length === 0" class="barangay-mobile-empty">{{ $t('ui.noBarangaysFound') }}</div>
+        <article
+          v-for="barangay in filteredBarangays"
+          :key="'m-' + barangay.id"
+          class="barangay-mobile-card"
+        >
+          <button
+            type="button"
+            class="barangay-mobile-main"
+            @click="viewBarangayDetails(barangay)"
+          >
+            <span class="barangay-name-text">{{ barangay.name }}</span>
+            <span class="barangay-mobile-meta">
+              <span class="barangay-mobile-chip">{{ formatHectares(barangay.total_area) }} ha</span>
+              <span class="barangay-mobile-chip">{{ barangay.total_farmers || 0 }} farmers</span>
+              <span class="barangay-mobile-chip">{{ barangay.total_officers || 0 }} officers</span>
+              <span :class="['status-pill', 'status-pill-sm', barangay.status]">{{ barangay.status }}</span>
+            </span>
+          </button>
+          <div class="barangays-action-row barangay-mobile-actions">
+            <button type="button" class="btn-action-text btn-view-area" @click="viewBarangayDetails(barangay)">
+              {{ $t('common.view') }}
+            </button>
+            <button type="button" class="btn-action-text btn-places-text" @click="openPlacesModal(barangay)">
+              Places
+            </button>
+            <button type="button" class="btn-action-text btn-edit-text" @click="openEditModal(barangay)">
+              {{ $t('common.edit') }}
+            </button>
+            <button type="button" class="btn-action-text btn-delete-text" @click="openDeleteBarangayConfirm(barangay)">
+              {{ $t('common.delete') }}
+            </button>
+          </div>
+        </article>
+      </div>
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ editingBarangay ? 'Edit Barangay' : 'Add New Barangay' }}</h2>
-          <button type="button" @click="closeModal" class="close-btn" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <p class="form-hint-area">
-            Land area is computed automatically from the farm hectares registered by approved farmers and officers.
-          </p>
-          <div class="compact-form-grid">
-            <div class="form-group">
-              <label>Barangay Name *</label>
-              <input 
-                v-model="formData.name" 
-                type="text" 
-                class="form-input"
-                placeholder="Enter barangay name"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select v-model="formData.status" class="form-input">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" @click="closeModal" class="btn-secondary">Cancel</button>
-          <button type="button" @click="saveBarangay" class="btn-submit">
-            {{ editingBarangay ? 'Update' : 'Add Barangay' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Barangay Details Modal -->
-    <div v-if="showDetailsModal" class="modal-overlay modal-overlay-spaced" @click="closeDetailsModal">
-      <div class="modal-content modal-large barangay-details-modal" @click.stop>
-        <div class="modal-header">
-          <div class="modal-title-row">
-            <span class="barangay-details-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 21h18" />
-                <path d="M5 21V7l7-4 7 4v14" />
-                <path d="M9 21v-6h6v6" />
-                <path d="M9 9h.01" />
-                <path d="M15 9h.01" />
-                <path d="M9 13h.01" />
-                <path d="M15 13h.01" />
-              </svg>
-            </span>
+    <Teleport to="body">
+      <div
+        v-if="showModal"
+        class="modal-overlay barangays-modal-overlay barangays-ui"
+        :class="{ 'light-theme': isLight }"
+        @click="closeModal"
+      >
+        <div class="modal-content barangay-edit-modal" role="dialog" aria-modal="true" @click.stop>
+          <div class="modal-header">
             <div class="modal-title-text">
-              <h2>{{ selectedBarangay?.name }}</h2>
-              <p class="modal-subtitle">
-                {{ officers.length }} officers · {{ farmers.length }} farmers · {{ places.length }} places
+              <h2>{{ editingBarangay ? 'Edit Barangay' : 'Add New Barangay' }}</h2>
+              <p class="modal-subtitle">{{ editingBarangay ? 'Update barangay details' : 'Create a new barangay record' }}</p>
+            </div>
+            <button type="button" @click="closeModal" class="close-btn" :aria-label="$t('common.close')">×</button>
+          </div>
+          <div class="modal-body">
+            <section class="modal-section">
+              <h3 class="modal-section-heading">General Information</h3>
+              <p class="form-hint-area">
+                Land area is computed automatically from the farm hectares registered by approved farmers and officers.
               </p>
-            </div>
-          </div>
-          <button type="button" @click="closeDetailsModal" class="close-btn" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="area-summary-card" v-if="selectedBarangay">
-            <div class="area-summary-title">Total land area (approved members)</div>
-            <div class="area-summary-value">{{ formatHectares(detailsTotalLandArea) }} ha</div>
-            <p class="area-summary-note">Sum of hectares reported by each registered farmer and officer below.</p>
-          </div>
-
-          <div class="details-tabs filter-tabs">
-            <button 
-              type="button"
-              @click="activeTab = 'officers'" 
-              :class="['tab', { active: activeTab === 'officers' }]"
-            >
-              Officers ({{ filteredOfficers.length }})
-            </button>
-            <button 
-              type="button"
-              @click="activeTab = 'farmers'" 
-              :class="['tab', { active: activeTab === 'farmers' }]"
-            >
-              Farmers ({{ filteredFarmers.length }})
-            </button>
-            <button 
-              type="button"
-              @click="activeTab = 'places'" 
-              :class="['tab', { active: activeTab === 'places' }]"
-            >
-              Places ({{ places.length }})
-            </button>
-          </div>
-
-          <div
-            class="places-card"
-            :class="{ 'places-card--busy': placesLoading || placeSaving }"
-            v-if="selectedBarangay && activeTab === 'places'"
-          >
-            <div v-if="placesLoading || placeSaving" class="places-loading-overlay" role="status" aria-live="polite">
-              <span class="places-loading-spinner" aria-hidden="true"></span>
-              <span class="places-loading-text">
-                {{ placeSaving ? (editingPlaceId ? 'Updating place...' : 'Adding place...') : 'Loading places...' }}
-              </span>
-            </div>
-
-            <div class="places-header">
-              <div class="places-section-title">
-                <span class="places-section-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z" />
-                    <circle cx="12" cy="10" r="2.5" />
-                  </svg>
-                </span>
-                <div>
-                  <h3>Service Places</h3>
-                  <p>Used in machinery booking location choices.</p>
-                </div>
-              </div>
-              <span class="places-count">{{ places.length }} total</span>
-            </div>
-
-            <div class="place-form-card">
-              <div class="place-form-title">{{ editingPlaceId ? 'Edit place' : 'Add new place' }}</div>
-              <div class="place-form-row">
-                <div class="place-form-field">
-                  <label class="place-form-label">Place name</label>
+              <div class="compact-form-grid">
+                <div class="form-group">
+                  <label for="barangay-name-input">Barangay Name *</label>
                   <input
-                    v-model="placeForm.name"
+                    id="barangay-name-input"
+                    v-model="formData.name"
                     type="text"
                     class="form-input"
-                    placeholder="e.g. Sitio Proper"
-                    :disabled="placeSaving || placesLoading"
+                    placeholder="Enter barangay name"
+                    required
+                    autocomplete="off"
                   />
                 </div>
-                <div class="place-form-field">
-                  <label class="place-form-label">Description</label>
-                  <input
-                    v-model="placeForm.description"
-                    type="text"
-                    class="form-input"
-                    placeholder="Optional"
-                    :disabled="placeSaving || placesLoading"
-                  />
-                </div>
-                <div class="place-form-field place-form-field-status">
-                  <label class="place-form-label">Status</label>
-                  <select v-model="placeForm.is_active" class="form-input place-status" :disabled="placeSaving || placesLoading">
-                    <option :value="true">Active</option>
-                    <option :value="false">Inactive</option>
+                <div class="form-group">
+                  <label for="barangay-status-input">{{ $t('ui.status') }}</label>
+                  <select id="barangay-status-input" v-model="formData.status" class="form-input">
+                    <option value="active">{{ $t('common.active') }}</option>
+                    <option value="inactive">{{ $t('common.inactive') }}</option>
                   </select>
                 </div>
-                <div class="place-form-actions">
-                  <button
-                    type="button"
-                    class="btn-submit btn-place-save"
-                    @click="savePlace"
-                    :disabled="placeSaving || placesLoading"
-                  >
-                    {{
-                      placeSaving
-                        ? (editingPlaceId ? 'Updating...' : 'Adding...')
-                        : (editingPlaceId ? 'Update' : 'Add Place')
-                    }}
-                  </button>
-                  <button
-                    v-if="editingPlaceId"
-                    type="button"
-                    class="btn-secondary btn-place-cancel"
-                    @click="resetPlaceForm"
-                    :disabled="placeSaving || placesLoading"
-                  >
-                    Cancel
-                  </button>
-                </div>
+              </div>
+            </section>
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="closeModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="button" @click="saveBarangay" class="btn-submit">
+              {{ editingBarangay ? 'Update' : 'Add Barangay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Barangay Details Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDetailsModal"
+        class="modal-overlay barangays-modal-overlay barangays-ui"
+        :class="{ 'light-theme': isLight }"
+        @click="closeDetailsModal"
+      >
+        <div
+          class="modal-content modal-large barangay-details-modal"
+          role="dialog"
+          aria-modal="true"
+          @click.stop
+        >
+          <div class="modal-header">
+            <div class="modal-title-row">
+              <span class="barangay-details-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18" />
+                  <path d="M5 21V7l7-4 7 4v14" />
+                  <path d="M9 21v-6h6v6" />
+                  <path d="M9 9h.01" />
+                  <path d="M15 9h.01" />
+                  <path d="M9 13h.01" />
+                  <path d="M15 13h.01" />
+                </svg>
+              </span>
+              <div class="modal-title-text">
+                <h2>{{ selectedBarangay?.name }}</h2>
+                <p class="modal-subtitle">Barangay details and membership overview</p>
               </div>
             </div>
+            <button type="button" @click="closeDetailsModal" class="close-btn" :aria-label="$t('common.close')">×</button>
+          </div>
+          <div class="modal-body">
+            <section class="modal-section" v-if="selectedBarangay">
+              <h3 class="modal-section-heading">General Information</h3>
+              <div class="modal-info-grid">
+                <div class="modal-info-item">
+                  <span class="modal-info-label">{{ $t('ui.barangayName') }}</span>
+                  <span class="modal-info-value">{{ selectedBarangay.name }}</span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">{{ $t('ui.status') }}</span>
+                  <span class="modal-info-value">
+                    <span :class="['status-pill', 'status-pill-sm', selectedBarangay.status]">
+                      {{ selectedBarangay.status }}
+                    </span>
+                  </span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">Total Land Area</span>
+                  <span class="modal-info-value">{{ formatHectares(detailsTotalLandArea) }} ha</span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">Land Area Note</span>
+                  <span class="modal-info-value modal-info-value--muted">Sum of hectares from approved officers and farmers</span>
+                </div>
+              </div>
+            </section>
 
-            <div class="places-table-wrap" v-if="places.length">
-              <table class="places-table">
-                <colgroup>
-                  <col class="places-col-name" />
-                  <col class="places-col-desc" />
-                  <col class="places-col-status" />
-                  <col class="places-col-actions" />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>Place</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th class="th-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="place in places" :key="place.id">
-                    <td class="td-place-name font-semibold">{{ place.name }}</td>
-                    <td class="td-place-desc">{{ place.description || '—' }}</td>
-                    <td class="td-place-status">
+            <section class="modal-section" v-if="selectedBarangay">
+              <h3 class="modal-section-heading">Statistics</h3>
+              <div class="modal-info-grid modal-info-grid--stats">
+                <div class="modal-info-item">
+                  <span class="modal-info-label">{{ $t('ui.officers') }}</span>
+                  <span class="modal-info-value">{{ officers.length }}</span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">{{ $t('ui.farmers') }}</span>
+                  <span class="modal-info-value">{{ farmers.length }}</span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">Service Places</span>
+                  <span class="modal-info-value">{{ places.length }}</span>
+                </div>
+                <div class="modal-info-item">
+                  <span class="modal-info-label">{{ $t('ui.totalMembers') }}</span>
+                  <span class="modal-info-value">{{ officers.length + farmers.length }}</span>
+                </div>
+              </div>
+            </section>
+
+            <div class="details-tabs filter-tabs">
+              <button
+                type="button"
+                @click="activeTab = 'officers'"
+                :class="['tab', { active: activeTab === 'officers' }]"
+              >
+                Officers ({{ filteredOfficers.length }})
+              </button>
+              <button
+                type="button"
+                @click="activeTab = 'farmers'"
+                :class="['tab', { active: activeTab === 'farmers' }]"
+              >
+                {{ $t('common.farmers') }} ({{ filteredFarmers.length }})
+              </button>
+              <button
+                type="button"
+                @click="activeTab = 'places'"
+                :class="['tab', { active: activeTab === 'places' }]"
+              >
+                Places ({{ places.length }})
+              </button>
+            </div>
+
+            <div
+              class="places-card"
+              :class="{ 'places-card--busy': placesLoading || placeSaving }"
+              v-if="selectedBarangay && activeTab === 'places'"
+            >
+              <div v-if="placesLoading || placeSaving" class="places-loading-overlay" role="status" aria-live="polite">
+                <span class="places-loading-spinner" aria-hidden="true"></span>
+                <span class="places-loading-text">
+                  {{ placeSaving ? (editingPlaceId ? 'Updating place...' : 'Adding place...') : 'Loading places...' }}
+                </span>
+              </div>
+
+              <div class="places-header">
+                <div class="places-section-title">
+                  <span class="places-section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z" />
+                      <circle cx="12" cy="10" r="2.5" />
+                    </svg>
+                  </span>
+                  <div>
+                    <h3>Service Places</h3>
+                    <p>Used in machinery booking location choices.</p>
+                  </div>
+                </div>
+                <span class="places-count">{{ places.length }} total</span>
+              </div>
+
+              <div class="place-form-card">
+                <div class="place-form-title">{{ editingPlaceId ? 'Edit place' : 'Add new place' }}</div>
+                <div class="place-form-row">
+                  <div class="place-form-field">
+                    <label class="place-form-label" for="place-name-input">Place name</label>
+                    <input
+                      id="place-name-input"
+                      v-model="placeForm.name"
+                      type="text"
+                      class="form-input"
+                      placeholder="e.g. Sitio Proper"
+                      :disabled="placeSaving || placesLoading"
+                    />
+                  </div>
+                  <div class="place-form-field">
+                    <label class="place-form-label" for="place-desc-input">Description</label>
+                    <input
+                      id="place-desc-input"
+                      v-model="placeForm.description"
+                      type="text"
+                      class="form-input"
+                      :placeholder="$t('ui.optional')"
+                      :disabled="placeSaving || placesLoading"
+                    />
+                  </div>
+                  <div class="place-form-field place-form-field-status">
+                    <label class="place-form-label" for="place-status-input">{{ $t('ui.status') }}</label>
+                    <select id="place-status-input" v-model="placeForm.is_active" class="form-input place-status" :disabled="placeSaving || placesLoading">
+                      <option :value="true">{{ $t('common.active') }}</option>
+                      <option :value="false">{{ $t('common.inactive') }}</option>
+                    </select>
+                  </div>
+                  <div class="place-form-actions">
+                    <button
+                      type="button"
+                      class="btn-submit btn-place-save"
+                      @click="savePlace"
+                      :disabled="placeSaving || placesLoading"
+                    >
+                      {{
+                        placeSaving
+                          ? (editingPlaceId ? 'Updating...' : 'Adding...')
+                          : (editingPlaceId ? 'Update' : 'Add Place')
+                      }}
+                    </button>
+                    <button
+                      v-if="editingPlaceId"
+                      type="button"
+                      class="btn-secondary btn-place-cancel"
+                      @click="resetPlaceForm"
+                      :disabled="placeSaving || placesLoading"
+                    >
+                      {{ $t('common.cancel') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="places-list" v-if="places.length">
+                <article v-for="place in places" :key="place.id" class="place-item">
+                  <div class="place-item-main">
+                    <div class="place-item-top">
+                      <h4 class="place-item-name">{{ place.name }}</h4>
                       <span :class="['status-badge', 'place-status-badge', place.is_active ? 'active' : 'inactive']">
                         {{ place.is_active ? 'Active' : 'Inactive' }}
                       </span>
-                    </td>
-                    <td class="td-actions">
-                      <div class="barangays-action-row">
-                      <button type="button" class="barangays-icon-btn barangays-icon-edit" title="Edit" aria-label="Edit" :disabled="placesLoading || placeSaving" @click="startEditPlace(place)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button type="button" class="barangays-icon-btn barangays-icon-delete" title="Delete" aria-label="Delete" :disabled="placesLoading || placeSaving" @click="openDeletePlaceConfirm(place)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M3 6h18" />
-                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                        </svg>
-                      </button>
+                    </div>
+                    <div class="place-item-meta">
+                      <span class="place-item-label">Description</span>
+                      <span class="place-item-desc">{{ place.description || '—' }}</span>
+                    </div>
+                  </div>
+                  <div class="place-item-actions">
+                    <button
+                      type="button"
+                      class="barangays-icon-btn barangays-icon-edit place-action-icon"
+                      :title="$t('common.edit')"
+                      aria-label="Edit place"
+                      :disabled="placesLoading || placeSaving"
+                      @click="startEditPlace(place)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="barangays-icon-btn barangays-icon-delete place-action-icon"
+                      :title="$t('common.delete')"
+                      aria-label="Delete place"
+                      :disabled="placesLoading || placeSaving"
+                      @click="openDeletePlaceConfirm(place)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action-text btn-edit-text place-action-text"
+                      :disabled="placesLoading || placeSaving"
+                      @click="startEditPlace(place)"
+                    >
+                      {{ $t('common.edit') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action-text btn-delete-text place-action-text"
+                      :disabled="placesLoading || placeSaving"
+                      @click="openDeletePlaceConfirm(place)"
+                    >
+                      {{ $t('common.delete') }}
+                    </button>
+                  </div>
+                </article>
+              </div>
+              <div class="empty-state compact" v-else>
+                No service places yet.
+              </div>
+            </div>
+
+            <div class="modal-search-bar" v-if="activeTab !== 'places'">
+              <span class="search-icon-wrap" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+                </svg>
+              </span>
+              <input
+                v-model="memberSearchQuery"
+                type="text"
+                placeholder="Search by name or reference number..."
+                class="toolbar-input modal-search-input"
+              />
+            </div>
+
+            <div class="tab-content">
+              <div v-if="activeTab === 'officers'">
+                <div v-if="officers.length === 0" class="empty-state">
+                  No officers assigned to this barangay yet.
+                </div>
+                <div v-else-if="filteredOfficers.length === 0" class="empty-state">
+                  No officers found matching "{{ memberSearchQuery }}".
+                </div>
+                <div v-else>
+                  <div class="members-table-wrap members-table-desktop">
+                    <table class="members-table">
+                      <thead>
+                        <tr>
+                          <th>Reference #</th>
+                          <th>Full Name</th>
+                          <th>{{ $t('ui.role') }}</th>
+                          <th>Land (Ha)</th>
+                          <th>{{ $t('ui.phone') }}</th>
+                          <th>{{ $t('ui.registered') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="officer in filteredOfficers" :key="officer.id">
+                          <td class="td-ref">{{ officer.reference_number }}</td>
+                          <td class="td-name font-semibold">{{ officer.full_name }}</td>
+                          <td class="td-role">
+                            <span class="role-badge" :class="officer.role">
+                              {{ formatMemberRole(officer.role) }}
+                            </span>
+                          </td>
+                          <td class="td-land">{{ formatHectares(officer.land_area) }}</td>
+                          <td class="td-phone">{{ officer.phone_number }}</td>
+                          <td class="td-date">{{ formatDate(officer.registered_on) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="members-card-list members-cards-mobile">
+                    <article v-for="officer in filteredOfficers" :key="'m-' + officer.id" class="member-card">
+                      <div class="member-card-title">{{ officer.full_name }}</div>
+                      <div class="member-card-grid">
+                        <div class="member-card-field">
+                          <span class="member-card-label">Reference #</span>
+                          <span class="member-card-value">{{ officer.reference_number }}</span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">{{ $t('ui.role') }}</span>
+                          <span class="member-card-value">
+                            <span class="role-badge" :class="officer.role">{{ formatMemberRole(officer.role) }}</span>
+                          </span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">Land (Ha)</span>
+                          <span class="member-card-value">{{ formatHectares(officer.land_area) }}</span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">{{ $t('ui.phone') }}</span>
+                          <span class="member-card-value">{{ officer.phone_number || '—' }}</span>
+                        </div>
+                        <div class="member-card-field member-card-field--full">
+                          <span class="member-card-label">{{ $t('ui.registeredOn') }}</span>
+                          <span class="member-card-value">{{ formatDate(officer.registered_on) }}</span>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="empty-state compact" v-else>
-              No service places yet.
-            </div>
-          </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
 
-          <!-- Search Bar -->
-          <div class="modal-search-bar" v-if="activeTab !== 'places'">
-            <span class="search-icon-wrap" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
-              </svg>
-            </span>
-            <input 
-              v-model="memberSearchQuery" 
-              type="text" 
-              placeholder="Search by name or reference number..."
-              class="toolbar-input modal-search-input"
-            />
-          </div>
-
-          <div class="tab-content">
-            <!-- Officers Tab -->
-            <div v-if="activeTab === 'officers'">
-              <div v-if="officers.length === 0" class="empty-state">
-                No officers assigned to this barangay yet.
-              </div>
-              <div v-else-if="filteredOfficers.length === 0" class="empty-state">
-                No officers found matching "{{ memberSearchQuery }}".
-              </div>
-              <div v-else class="members-table-wrap">
-                <table class="members-table">
-                  <colgroup>
-                    <col class="members-col-ref" />
-                    <col class="members-col-name" />
-                    <col class="members-col-role" />
-                    <col class="members-col-land" />
-                    <col class="members-col-phone" />
-                    <col class="members-col-date" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>Reference #</th>
-                      <th>Full Name</th>
-                      <th>Role</th>
-                      <th>Land (Ha)</th>
-                      <th>Phone Number</th>
-                      <th>Registered On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="officer in filteredOfficers" :key="officer.id">
-                      <td class="td-ref">{{ officer.reference_number }}</td>
-                      <td class="td-name font-semibold">{{ officer.full_name }}</td>
-                      <td class="td-role">
-                        <span class="role-badge" :class="officer.role">
-                          {{ formatMemberRole(officer.role) }}
-                        </span>
-                      </td>
-                      <td class="td-land">{{ formatHectares(officer.land_area) }}</td>
-                      <td class="td-phone">{{ officer.phone_number }}</td>
-                      <td class="td-date">{{ formatDate(officer.registered_on) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Farmers Tab -->
-            <div v-if="activeTab === 'farmers'">
-              <div v-if="farmers.length === 0" class="empty-state">
-                No farmers registered from this barangay yet.
-              </div>
-              <div v-else-if="filteredFarmers.length === 0" class="empty-state">
-                No farmers found matching "{{ memberSearchQuery }}".
-              </div>
-              <div v-else class="members-table-wrap">
-                <table class="members-table">
-                  <colgroup>
-                    <col class="members-col-ref" />
-                    <col class="members-col-name" />
-                    <col class="members-col-land" />
-                    <col class="members-col-phone" />
-                    <col class="members-col-date" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>Reference #</th>
-                      <th>Full Name</th>
-                      <th>Land (Ha)</th>
-                      <th>Phone Number</th>
-                      <th>Registered On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="farmer in filteredFarmers" :key="farmer.id">
-                      <td class="td-ref">{{ farmer.reference_number }}</td>
-                      <td class="td-name font-semibold">{{ farmer.full_name }}</td>
-                      <td class="td-land">{{ formatHectares(farmer.land_area) }}</td>
-                      <td class="td-phone">{{ farmer.phone_number }}</td>
-                      <td class="td-date">{{ formatDate(farmer.registered_on) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div v-if="activeTab === 'farmers'">
+                <div v-if="farmers.length === 0" class="empty-state">
+                  No farmers registered from this barangay yet.
+                </div>
+                <div v-else-if="filteredFarmers.length === 0" class="empty-state">
+                  No farmers found matching "{{ memberSearchQuery }}".
+                </div>
+                <div v-else>
+                  <div class="members-table-wrap members-table-desktop">
+                    <table class="members-table">
+                      <thead>
+                        <tr>
+                          <th>Reference #</th>
+                          <th>Full Name</th>
+                          <th>Land (Ha)</th>
+                          <th>{{ $t('ui.phone') }}</th>
+                          <th>{{ $t('ui.registered') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="farmer in filteredFarmers" :key="farmer.id">
+                          <td class="td-ref">{{ farmer.reference_number }}</td>
+                          <td class="td-name font-semibold">{{ farmer.full_name }}</td>
+                          <td class="td-land">{{ formatHectares(farmer.land_area) }}</td>
+                          <td class="td-phone">{{ farmer.phone_number }}</td>
+                          <td class="td-date">{{ formatDate(farmer.registered_on) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="members-card-list members-cards-mobile">
+                    <article v-for="farmer in filteredFarmers" :key="'m-' + farmer.id" class="member-card">
+                      <div class="member-card-title">{{ farmer.full_name }}</div>
+                      <div class="member-card-grid">
+                        <div class="member-card-field">
+                          <span class="member-card-label">Reference #</span>
+                          <span class="member-card-value">{{ farmer.reference_number }}</span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">Land (Ha)</span>
+                          <span class="member-card-value">{{ formatHectares(farmer.land_area) }}</span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">{{ $t('ui.phone') }}</span>
+                          <span class="member-card-value">{{ farmer.phone_number || '—' }}</span>
+                        </div>
+                        <div class="member-card-field">
+                          <span class="member-card-label">{{ $t('ui.registeredOn') }}</span>
+                          <span class="member-card-value">{{ formatDate(farmer.registered_on) }}</span>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" @click="closeDetailsModal" class="btn-secondary">Close</button>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showDeleteConfirm"
-      class="modal-overlay modal-delete-overlay"
-      @click="closeDeleteConfirm"
-    >
+    <Teleport to="body">
       <div
-        class="modal-content modal-delete"
-        role="alertdialog"
-        aria-labelledby="delete-confirm-title"
-        aria-describedby="delete-confirm-desc"
-        @click.stop
+        v-if="showDeleteConfirm"
+        class="modal-overlay barangays-modal-overlay barangays-ui modal-delete-overlay"
+        :class="{ 'light-theme': isLight }"
+        @click="closeDeleteConfirm"
       >
-        <div class="modal-header delete-modal-header">
-          <div class="modal-title-row">
+        <div
+          class="modal-content modal-delete"
+          role="alertdialog"
+          aria-labelledby="delete-confirm-title"
+          aria-describedby="delete-confirm-desc"
+          @click.stop
+        >
+          <button
+            type="button"
+            class="close-btn delete-modal-close"
+            @click="closeDeleteConfirm"
+            :aria-label="$t('common.close')"
+            :disabled="deleteInProgress"
+          >×</button>
+
+          <div class="delete-modal-inner">
             <span class="delete-warning-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18" />
@@ -512,24 +672,40 @@
                 <path d="M14 11v6" />
               </svg>
             </span>
-            <div class="modal-title-text">
-              <h2 id="delete-confirm-title">{{ deleteConfirmTitle }}</h2>
-              <p id="delete-confirm-desc" class="modal-subtitle delete-confirm-message">{{ deleteConfirmMessage }}</p>
+
+            <h2 id="delete-confirm-title" class="delete-modal-title">{{ deleteConfirmTitle }}</h2>
+            <p id="delete-confirm-desc" class="delete-confirm-message">{{ deleteConfirmMessage }}</p>
+
+            <div class="delete-warning-banner" role="note">
+              <svg class="delete-warning-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4m0 4h.01" stroke-linecap="round" />
+              </svg>
+              <p class="delete-warning-text">{{ $t('ui.thisActionUndone') }}</p>
+            </div>
+
+            <div class="delete-modal-footer">
+              <button
+                type="button"
+                class="btn-secondary btn-delete-cancel"
+                @click="closeDeleteConfirm"
+                :disabled="deleteInProgress"
+              >
+                {{ $t('common.cancel') }}
+              </button>
+              <button
+                type="button"
+                class="btn-delete-confirm"
+                @click="confirmDelete"
+                :disabled="deleteInProgress"
+              >
+                {{ deleteInProgress ? 'Deleting...' : 'Delete' }}
+              </button>
             </div>
           </div>
-          <button type="button" @click="closeDeleteConfirm" class="close-btn" aria-label="Close" :disabled="deleteInProgress">×</button>
-        </div>
-        <div class="modal-body delete-modal-body">
-          <p class="delete-warning-text">This action cannot be undone.</p>
-        </div>
-        <div class="modal-footer delete-modal-footer">
-          <button type="button" class="btn-secondary" @click="closeDeleteConfirm" :disabled="deleteInProgress">Cancel</button>
-          <button type="button" class="btn-delete-confirm" @click="confirmDelete" :disabled="deleteInProgress">
-            {{ deleteInProgress ? 'Deleting...' : 'Delete' }}
-          </button>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Toast notification (replaces browser alert) -->
     <Teleport to="body">
@@ -550,7 +726,7 @@
             </svg>
           </span>
           <span class="barangays-toast-text">{{ toastMessage }}</span>
-          <button type="button" class="barangays-toast-close" @click="clearToast" aria-label="Dismiss">×</button>
+          <button type="button" class="barangays-toast-close" @click="clearToast" :aria-label="$t('common.close')">×</button>
         </div>
       </Transition>
     </Teleport>
@@ -558,7 +734,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
@@ -643,7 +819,6 @@ const showToast = (message, type = 'success') => {
   toastTimer = setTimeout(clearToast, type === 'error' ? 4000 : 2800)
 }
 
-onUnmounted(clearToast)
 
 const totalBarangays = computed(() => barangays.value.length)
 const activeBarangays = computed(() => barangays.value.filter(b => b.status === 'active').length)
@@ -705,7 +880,7 @@ const filteredBarangays = computed(() => {
 const fetchBarangays = async () => {
   loading.value = true
   try {
-    const response = await fetch('http://localhost:3000/api/barangays')
+    const response = await fetch('/api/barangays')
     const data = await response.json()
     if (data.success) {
       barangays.value = data.barangays
@@ -753,8 +928,8 @@ const saveBarangay = async () => {
 
   try {
     const url = editingBarangay.value 
-      ? `http://localhost:3000/api/barangays/${editingBarangay.value.id}`
-      : 'http://localhost:3000/api/barangays'
+      ? `/api/barangays/${editingBarangay.value.id}`
+      : '/api/barangays'
     
     const method = editingBarangay.value ? 'PUT' : 'POST'
 
@@ -784,7 +959,7 @@ const saveBarangay = async () => {
 
 const deleteBarangay = async (barangay) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/barangays/${barangay.id}`, {
+    const response = await fetch(`/api/barangays/${barangay.id}`, {
       method: 'DELETE',
       headers: authHeaders(false)
     })
@@ -845,8 +1020,8 @@ const viewBarangayDetails = async (barangay, { tab = 'officers' } = {}) => {
 
   try {
     const [detailsRes, placesRes] = await Promise.all([
-      fetch(`http://localhost:3000/api/barangays/${barangay.id}`),
-      fetch(`http://localhost:3000/api/barangays/${barangay.id}/places?active_only=0`)
+      fetch(`/api/barangays/${barangay.id}`),
+      fetch(`/api/barangays/${barangay.id}/places?active_only=0`)
     ])
     const detailsData = await detailsRes.json()
     const placesData = await placesRes.json()
@@ -869,7 +1044,7 @@ const fetchPlacesForBarangay = async (barangayId) => {
 
   placesLoading.value = true
   try {
-    const res = await fetch(`http://localhost:3000/api/barangays/${barangayId}/places?active_only=0`)
+    const res = await fetch(`/api/barangays/${barangayId}/places?active_only=0`)
     const data = await res.json()
     if (!data.success) {
       showToast(data.message || 'Failed to refresh places', 'error')
@@ -933,8 +1108,8 @@ const savePlace = async () => {
 
   try {
     const endpoint = isEdit
-      ? `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places/${editingPlaceId.value}`
-      : `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places`
+      ? `/api/barangays/${selectedBarangay.value.id}/places/${editingPlaceId.value}`
+      : `/api/barangays/${selectedBarangay.value.id}/places`
 
     const res = await fetch(endpoint, {
       method: isEdit ? 'PUT' : 'POST',
@@ -969,7 +1144,7 @@ const deletePlace = async (place) => {
 
   try {
     const res = await fetch(
-      `http://localhost:3000/api/barangays/${selectedBarangay.value.id}/places/${place.id}`,
+      `/api/barangays/${selectedBarangay.value.id}/places/${place.id}`,
       { method: 'DELETE', headers: authHeaders(false) }
     )
     const data = await res.json()
@@ -1002,8 +1177,42 @@ const formatHectares = (value) => {
   return n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
+const isAnyModalOpen = computed(
+  () => showModal.value || showDetailsModal.value || showDeleteConfirm.value
+)
+
+const lockPageScroll = (locked) => {
+  document.body.style.overflow = locked ? 'hidden' : ''
+}
+
+watch(isAnyModalOpen, (open) => {
+  lockPageScroll(open)
+}, { immediate: true })
+
+const onModalKeydown = (event) => {
+  if (event.key !== 'Escape') return
+  if (showDeleteConfirm.value) {
+    closeDeleteConfirm()
+    return
+  }
+  if (showModal.value) {
+    closeModal()
+    return
+  }
+  if (showDetailsModal.value) {
+    closeDetailsModal()
+  }
+}
+
 onMounted(() => {
   fetchBarangays()
+  window.addEventListener('keydown', onModalKeydown)
+})
+
+onUnmounted(() => {
+  clearToast()
+  lockPageScroll(false)
+  window.removeEventListener('keydown', onModalKeydown)
 })
 </script>
 
@@ -1432,6 +1641,48 @@ onMounted(() => {
   isolation: isolate;
 }
 
+.btn-action-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.7rem;
+  min-height: 34px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0 !important;
+  text-align: center;
+  transition: filter 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.btn-places-text {
+  color: #ecfdf5;
+  background: rgba(10, 24, 18, 0.95);
+  border: 1px solid rgba(134, 239, 172, 0.35);
+}
+
+.btn-edit-text {
+  color: #ffedd5;
+  background: rgba(10, 24, 18, 0.95);
+  border: 1px solid rgba(251, 146, 60, 0.45);
+}
+
+.btn-delete-text {
+  color: #fecaca;
+  background: rgba(10, 24, 18, 0.95);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.btn-places-text:hover,
+.btn-edit-text:hover,
+.btn-delete-text:hover {
+  filter: brightness(1.1);
+}
+
 .barangays-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1461,6 +1712,7 @@ onMounted(() => {
   -webkit-text-fill-color: currentColor;
 }
 
+.barangays-icon-view { color: #86efac; }
 .barangays-icon-places { color: #ffffff; }
 .barangays-icon-edit { color: #fb923c; }
 .barangays-icon-delete { color: #ffffff; }
@@ -1470,6 +1722,7 @@ onMounted(() => {
   box-shadow: none;
 }
 
+.barangays-icon-view:hover { color: #bbf7d0; }
 .barangays-icon-places:hover { color: #5eead4; }
 .barangays-icon-edit:hover { color: #fdba74; background: rgba(16, 36, 28, 1); }
 .barangays-icon-delete:hover {
@@ -1488,23 +1741,35 @@ onMounted(() => {
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: var(--app-sidebar-width, 260px);
-  background: rgba(6, 12, 9, 0.72);
-  backdrop-filter: blur(8px);
+  inset: 0;
+  left: 0;
+  background: rgba(6, 12, 9, 0.62);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1200;
-  padding: 1.25rem;
+  z-index: 10050;
+  padding:
+    max(calc(var(--app-header-height, 70px) + 0.75rem), env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.barangays-modal-overlay.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
 }
 
 .modal-overlay-spaced {
-  align-items: flex-start;
-  padding-top: calc(var(--app-header-height, 70px) + 1.25rem);
-  padding-bottom: 1.5rem;
+  align-items: center;
+  padding-top: max(calc(var(--app-header-height, 70px) + 0.75rem), env(safe-area-inset-top, 0px));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
 }
 
@@ -1513,10 +1778,29 @@ onMounted(() => {
   border: 1px solid rgba(190, 235, 203, 0.14);
   border-radius: 14px;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
+  max-height: min(90dvh, calc(100dvh - var(--app-header-height, 70px) - 1.5rem));
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
-  margin: 0 auto;
+  margin: auto;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.barangay-edit-modal {
+  max-width: 520px;
+}
+
+.barangay-edit-modal .modal-body {
+  overflow-y: auto;
+}
+
+.barangay-edit-modal .modal-footer {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: rgba(28, 42, 33, 0.98);
 }
 
 .modal-header {
@@ -1524,7 +1808,17 @@ onMounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(28, 42, 33, 0.98);
+}
+
+.modal-header .close-btn {
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -1654,12 +1948,78 @@ onMounted(() => {
 }
 
 .modal-large {
-  width: min(1120px, calc(100vw - var(--app-sidebar-width, 260px) - 2.5rem));
-  max-width: min(1120px, calc(100vw - var(--app-sidebar-width, 260px) - 2.5rem));
-  max-height: calc(100dvh - var(--app-header-height, 70px) - 2.5rem);
-  overflow-y: auto;
+  width: min(960px, calc(100vw - 1.5rem));
+  max-width: min(960px, calc(100vw - 1.5rem));
+  max-height: min(90dvh, calc(100dvh - var(--app-header-height, 70px) - 1.5rem));
+  overflow: hidden;
   border-radius: 16px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.barangay-details-modal .modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.modal-section {
+  margin-bottom: 1.15rem;
+}
+
+.modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.modal-section-heading {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(190, 235, 203, 0.78);
+}
+
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.modal-info-grid--stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.modal-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  min-width: 0;
+}
+
+.modal-info-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(229, 235, 231, 0.62);
+}
+
+.modal-info-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #eefde6;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.modal-info-value--muted {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(229, 235, 231, 0.78);
 }
 
 .barangay-details-modal .modal-header {
@@ -1739,85 +2099,149 @@ onMounted(() => {
 
 .modal-delete-overlay {
   left: 0;
-  z-index: 1300;
+  z-index: 10120 !important;
   align-items: center;
+  justify-content: center;
   padding: 1.25rem;
 }
 
 .modal-content.modal-delete {
-  max-width: 480px;
+  position: relative;
+  max-width: 420px;
   width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 18px;
+  overflow: visible;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
 }
 
-.delete-modal-header {
-  padding: 1.25rem 1.35rem;
-  gap: 0.75rem;
+.delete-modal-close {
+  position: absolute !important;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 2;
 }
 
-.delete-warning-icon {
+.delete-modal-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.75rem 1.5rem 1.35rem;
+  gap: 0;
+}
+
+.delete-modal-inner .delete-warning-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 14px;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  border-radius: 16px;
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border: 2px solid #fca5a5;
+  border: 2px solid #f87171;
   color: #b91c1c;
+  box-shadow: 0 8px 20px rgba(185, 28, 28, 0.18);
 }
 
-.delete-warning-icon svg {
-  width: 1.45rem;
-  height: 1.45rem;
+.delete-modal-inner .delete-warning-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
-.delete-modal-body {
-  padding: 0 1.35rem 1.1rem;
+.delete-modal-title {
+  margin: 0 0 0.45rem;
+  padding: 0 1.5rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #eefde6;
 }
 
 .delete-confirm-message {
+  margin: 0 0 1.1rem;
+  padding: 0 0.25rem;
+  max-width: 22rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
   color: rgba(229, 235, 231, 0.82) !important;
+}
+
+.delete-warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0 0 1.25rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(254, 226, 226, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  box-sizing: border-box;
+}
+
+.delete-warning-banner-icon {
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #fca5a5;
 }
 
 .delete-warning-text {
   margin: 0;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  background: rgba(254, 226, 226, 0.12);
-  border: 1px solid rgba(248, 113, 113, 0.28);
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #fecaca;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
 }
 
 .delete-modal-footer {
-  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.delete-modal-footer .btn-delete-cancel,
+.delete-modal-footer .btn-delete-confirm {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease, background 0.15s ease;
 }
 
 .btn-delete-confirm {
-  padding: 0.55rem 1.15rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  border: 2px solid #b91c1c;
+  border: 2px solid #991b1b;
   color: #ffffff;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transition: filter 0.15s ease, transform 0.15s ease;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
 }
 
 .btn-delete-confirm:hover:not(:disabled) {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
   transform: translateY(-1px);
 }
 
 .btn-delete-confirm:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
 }
 
 .compact-form-grid {
@@ -1879,8 +2303,7 @@ onMounted(() => {
 }
 
 .members-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
   border: 1px solid rgba(190, 235, 203, 0.14);
   border-radius: 12px;
 }
@@ -1889,36 +2312,88 @@ onMounted(() => {
 .places-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .members-table {
-  min-width: 980px;
+  min-width: 0;
 }
-
-.members-table col.members-col-ref { width: 180px; }
-.members-table col.members-col-name { width: 190px; }
-.members-table col.members-col-role { width: 140px; }
-.members-table col.members-col-land { width: 96px; }
-.members-table col.members-col-phone { width: 140px; }
-.members-table col.members-col-date { width: 128px; }
 
 .members-table .td-ref {
   font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
-  font-size: 0.9375rem;
-  white-space: nowrap;
-  min-width: 180px;
+  font-size: 0.875rem;
+  word-break: break-word;
 }
 
 .members-table .td-name {
-  white-space: nowrap;
-  min-width: 190px;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .members-table .td-role,
 .members-table .td-land,
 .members-table .td-phone,
 .members-table .td-date {
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.members-cards-mobile {
+  display: none;
+}
+
+.members-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.member-card {
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+}
+
+.member-card-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #eefde6;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.member-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.75rem;
+}
+
+.member-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.member-card-field--full {
+  grid-column: 1 / -1;
+}
+
+.member-card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(229, 235, 231, 0.58);
+}
+
+.member-card-value {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: rgba(238, 253, 230, 0.95);
+  word-break: break-word;
 }
 
 .members-table th,
@@ -1945,10 +2420,10 @@ onMounted(() => {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(45, 212, 191, 0.1) 100%);
   font-weight: 700;
   color: rgba(234, 241, 236, 0.94);
-  font-size: 1rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .members-table tbody tr:hover,
@@ -2069,7 +2544,7 @@ onMounted(() => {
 }
 
 .places-card--busy .place-form-card,
-.places-card--busy .places-table-wrap,
+.places-card--busy .places-list,
 .places-card--busy .empty-state.compact {
   pointer-events: none;
   opacity: 0.55;
@@ -2178,10 +2653,19 @@ onMounted(() => {
 .place-form-title {
   margin-bottom: 0.85rem;
   font-size: 0.9375rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.01em;
   color: rgba(187, 247, 208, 0.92);
+}
+
+.place-form-card .form-input {
+  font-weight: 500;
+}
+
+.place-form-card .form-input::placeholder {
+  font-weight: 400 !important;
+  opacity: 0.75;
 }
 
 .place-form-row {
@@ -2224,38 +2708,86 @@ onMounted(() => {
 }
 
 .places-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
   border: 1px solid rgba(190, 235, 203, 0.14);
   border-radius: 12px;
 }
 
 .places-table {
-  min-width: 720px;
+  min-width: 0;
 }
 
-.places-table col.places-col-name { width: 180px; }
-.places-table col.places-col-desc { width: auto; }
-.places-table col.places-col-status { width: 120px; }
-.places-table col.places-col-actions { width: 130px; }
-
-.places-table .td-place-name {
-  white-space: nowrap;
-  min-width: 160px;
+.places-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
-.places-table .td-place-desc {
-  min-width: 180px;
+.place-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(190, 235, 203, 0.14);
 }
 
-.places-table .td-place-status {
-  white-space: nowrap;
+.place-item-main {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-.places-table .th-actions,
-.places-table .td-actions {
-  text-align: center !important;
-  min-width: 130px;
+.place-item-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin-bottom: 0.45rem;
+}
+
+.place-item-name {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #eefde6;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.place-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.place-item-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(229, 235, 231, 0.58);
+}
+
+.place-item-desc {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(229, 235, 231, 0.88);
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.place-item-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.place-action-text {
+  display: none;
 }
 
 .places-card .barangays-icon-btn {
@@ -2277,6 +2809,30 @@ onMounted(() => {
   font-size: 0.875rem;
   font-weight: 700;
   text-transform: capitalize;
+}
+
+.barangay-name-text {
+  display: block;
+  font-weight: inherit;
+}
+
+.barangay-mobile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.status-pill-sm {
+  min-width: 0;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.7rem;
+  border-radius: 6px;
+}
+
+/* Mobile list — hidden on desktop */
+.barangays-mobile-list {
+  display: none;
 }
 
 @media (max-width: 1024px) {
@@ -2321,18 +2877,419 @@ onMounted(() => {
   .page-container.barangays-page {
     margin: 0 -0.75rem;
     width: calc(100% + 1.5rem);
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: 0;
   }
 
-  .barangays-table th,
-  .barangays-table td {
-    padding: 0.75rem 0.55rem;
-    font-size: 0.9375rem;
+  .page-header-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title action"
+      "subtitle action";
+    align-items: center;
+    column-gap: 0.65rem;
+    row-gap: 0.15rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.85rem;
   }
 
-  .table-container {
-    max-height: none;
+  .page-header-split::after {
+    display: none;
+  }
+
+  .page-header-text {
+    display: contents;
+    min-width: 0;
+  }
+
+  .page-title {
+    grid-area: title;
+    font-size: 1.2rem !important;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .page-subtitle {
+    grid-area: subtitle;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .btn-header-add {
+    grid-area: action;
+    align-self: center;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.78rem;
+    border-radius: 9px;
+    border-width: 1.5px;
+    gap: 0.28rem;
+    flex-shrink: 0;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+
+  .btn-header-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 0.65rem 0.7rem;
+    gap: 0.55rem;
+    border-radius: 10px;
+    border-left-width: 3px;
+  }
+
+  .stat-icon-wrap {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 8px;
+  }
+
+  .stat-svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .tools-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    margin-bottom: 0.75rem;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .search-bar {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .toolbar-input,
+  .toolbar-select {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem !important;
+    min-height: 40px;
+    border-radius: 8px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  .search-input-main {
+    padding-left: 2.35rem !important;
+  }
+
+  .search-icon-wrap {
+    left: 0.65rem;
+  }
+
+  .search-svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .card {
+    border-radius: 10px;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* Hide desktop table — use mobile cards instead */
+  .barangays-desktop-wrap {
+    display: none !important;
+  }
+
+  .barangays-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.55rem;
+  }
+
+  .barangay-mobile-empty {
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(229, 235, 231, 0.72);
+  }
+
+  .barangay-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(190, 235, 203, 0.2);
+    background: rgba(10, 22, 16, 0.55);
+  }
+
+  .barangay-mobile-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+  }
+
+  .barangay-name-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #86efac;
+    word-break: break-word;
+  }
+
+  .barangay-mobile-meta {
+    width: 100%;
+  }
+
+  .barangay-mobile-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.14rem 0.42rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: rgba(220, 252, 231, 0.9);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(190, 235, 203, 0.22);
+  }
+
+  .barangay-mobile-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(190, 235, 203, 0.12);
+  }
+
+  .barangay-mobile-actions .btn-action-text {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    padding: 0.38rem 0.35rem;
+    font-size: 0.72rem;
+    min-height: 34px;
+  }
+
+  .btn-view-area {
+    padding: 0.38rem 0.35rem;
+    font-size: 0.72rem;
+    border-radius: 8px;
+    border-width: 1.5px;
+    margin: 0 !important;
+  }
+
+  .status-pill {
+    min-width: 0;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.7rem;
+  }
+
+  .btn-header-add {
+    margin: 0 !important;
+  }
+
+  .modal-content:not(.modal-large) {
+    width: min(94%, 520px);
+    max-width: none;
+  }
+
+  .modal-info-grid,
+  .modal-info-grid--stats,
+  .compact-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .members-table-desktop {
+    display: none !important;
+  }
+
+  .members-cards-mobile {
+    display: flex;
+  }
+
+  .place-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .place-item-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(190, 235, 203, 0.12);
+  }
+
+  .place-item-actions .place-action-icon {
+    display: none !important;
+  }
+
+  .place-item-actions .place-action-text {
+    display: inline-flex;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    justify-content: center;
+    align-items: center;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+    min-height: 36px;
+  }
+
+  .details-tabs.filter-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .details-tabs .tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.48rem 0.35rem;
+    font-size: 0.72rem;
+    border-radius: 10px !important;
+    border-width: 1.5px !important;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .places-header {
+    margin-bottom: 0.55rem;
+    gap: 0.55rem;
+  }
+
+  .places-section-title {
+    gap: 0.5rem;
+  }
+
+  .places-section-icon {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 10px;
+  }
+
+  .places-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .places-header p {
+    margin-top: 0.1rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+
+  .places-count {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .place-form-card {
+    padding: 0.7rem 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .place-form-title {
+    margin-bottom: 0.45rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+  }
+
+  .place-form-row {
+    gap: 0.5rem;
+  }
+
+  .place-form-field {
+    gap: 0.2rem;
+  }
+
+  .place-form-label {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .place-form-card .form-input,
+  .place-form-card .place-status {
+    margin: 0 !important;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+    min-height: 38px;
+  }
+
+  .place-form-actions {
+    gap: 0.4rem;
+    margin-top: 0.1rem;
+  }
+
+  .btn-place-save,
+  .btn-place-cancel {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    min-height: 38px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .form-hint-area {
+    font-size: 0.78rem;
+    padding: 0.55rem 0.65rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .details-tabs.filter-tabs {
+    flex-wrap: wrap;
+  }
+
+  .details-tabs .tab {
+    flex: 1 1 calc(50% - 0.2rem);
   }
 }
 
@@ -2343,8 +3300,8 @@ onMounted(() => {
   }
 
   .modal-large {
-    width: min(1120px, calc(100vw - 1.5rem));
-    max-width: calc(100vw - 1.5rem);
+    width: min(960px, calc(100vw - 1.25rem));
+    max-width: calc(100vw - 1.25rem);
   }
 }
 
@@ -2352,265 +3309,380 @@ onMounted(() => {
   .page-container.barangays-page {
     margin: 0 -0.5rem;
     width: calc(100% + 1rem);
+    padding: 0.6rem;
   }
 
+  .page-title {
+    font-size: 1.1rem !important;
+  }
+
+  .btn-header-add {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  .stats-grid {
+    gap: 0.45rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .modal-overlay,
   .modal-overlay-spaced {
-    padding-top: calc(var(--app-header-height, 70px) + 0.85rem);
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    padding-top: max(calc(var(--app-header-height, 70px) + 0.65rem), env(safe-area-inset-top, 0px));
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
   }
 
   .modal-large {
-    max-height: calc(100dvh - var(--app-header-height, 70px) - 1.75rem);
+    max-height: min(92dvh, calc(100dvh - var(--app-header-height, 70px) - 1.25rem));
   }
 
   .modal-large .modal-header {
-    padding: 1.15rem 1.1rem;
+    padding: 1rem 0.9rem;
   }
 
   .modal-large .modal-body {
-    padding: 1rem 1.1rem 1.15rem;
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  .places-table {
+    min-width: 0 !important;
   }
 }
 
 /* ===== LIGHT MODE — Senior-friendly bright theme ===== */
-.page-container.barangays-page.light-theme {
+.page-container.barangays-page.barangays-ui.light-theme {
+  font-size: 16px;
+  line-height: 1.5;
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%);
   color: #052e16;
 }
 
-.page-container.barangays-page.light-theme .page-header-split {
+.barangays-ui.light-theme {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #052e16;
+}
+
+.barangays-modal-overlay.barangays-ui.light-theme {
+  background: rgba(15, 23, 42, 0.48) !important;
+}
+
+.barangays-ui.light-theme .modal-header {
+  background: #fffef9;
+}
+
+.barangays-ui.light-theme .barangay-edit-modal .modal-footer,
+.barangays-ui.light-theme .modal-footer {
+  background: #fffef9;
+  border-top-color: #bbf7d0;
+}
+
+.barangays-ui.light-theme .barangay-edit-modal .modal-subtitle,
+.barangays-ui.light-theme .modal-subtitle {
+  color: #166534;
+}
+
+.barangays-ui.light-theme .modal-section-heading {
+  color: #166534;
+}
+
+.barangays-ui.light-theme .modal-info-item,
+.barangays-ui.light-theme .place-item,
+.barangays-ui.light-theme .member-card {
   background: #ffffff;
-  border: 2px solid #86efac;
+  border-color: #bbf7d0;
+}
+
+.barangays-ui.light-theme .modal-info-label,
+.barangays-ui.light-theme .place-item-label,
+.barangays-ui.light-theme .member-card-label {
+  color: #64748b;
+}
+
+.barangays-ui.light-theme .modal-info-value,
+.barangays-ui.light-theme .place-item-name,
+.barangays-ui.light-theme .place-item-desc,
+.barangays-ui.light-theme .member-card-title,
+.barangays-ui.light-theme .member-card-value {
+  color: #052e16;
+}
+
+.barangays-ui.light-theme .modal-info-value--muted {
+  color: #166534;
+}
+
+.barangays-ui.light-theme .place-item-actions {
+  border-top-color: #bbf7d0;
+}
+
+.barangays-ui.light-theme .page-header-split {
+  background: #ffffff;
+  border-color: #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
 }
 
-.page-container.barangays-page.light-theme .page-title {
+.barangays-ui.light-theme .page-title {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .page-subtitle {
+.barangays-ui.light-theme .page-subtitle {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .stat-label {
+.barangays-ui.light-theme .stat-label {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .stat-card {
+.barangays-ui.light-theme .stat-card {
   background: #ffffff;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
 }
 
-.page-container.barangays-page.light-theme .stat-icon-wrap {
+.barangays-ui.light-theme .stat-icon-wrap {
   background: #f0fdf4;
   border-color: #bbf7d0;
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .stat-value {
+.barangays-ui.light-theme .stat-value {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .tools-card {
+.barangays-ui.light-theme .tools-card {
   background: #ffffff;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   box-shadow: 0 6px 18px rgba(22, 101, 52, 0.08);
 }
 
-.page-container.barangays-page.light-theme .search-icon-wrap {
+.barangays-ui.light-theme .search-icon-wrap {
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .toolbar-input,
-.page-container.barangays-page.light-theme .toolbar-select {
+.barangays-ui.light-theme .toolbar-input,
+.barangays-ui.light-theme .toolbar-select {
   background: #ffffff;
-  border: 2px solid #94a3b8;
+  border-color: #94a3b8;
   color: #000000;
-  font-size: 1rem;
 }
 
-.page-container.barangays-page.light-theme .toolbar-input::placeholder {
+.barangays-ui.light-theme .toolbar-input::placeholder {
   color: #475569;
   opacity: 1;
 }
 
-.page-container.barangays-page.light-theme .toolbar-select option {
+.barangays-ui.light-theme .toolbar-select option {
   background: #ffffff;
   color: #052e16;
 }
 
-.page-container.barangays-page.light-theme .card {
+.barangays-ui.light-theme .card {
   background: #ffffff;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
 }
 
-.page-container.barangays-page.light-theme .barangays-table th {
+.barangays-ui.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #000000;
-  border-bottom: 2px solid #16a34a;
+  border-bottom-color: #16a34a;
 }
 
-.page-container.barangays-page.light-theme .barangays-table td {
+.barangays-ui.light-theme .barangays-table td {
   color: #000000;
-  border-bottom: 1.5px solid #94a3b8;
+  border-bottom-color: #94a3b8;
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
-.page-container.barangays-page.light-theme .barangays-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8;
+.barangays-ui.light-theme .barangays-table th:not(:last-child),
+.barangays-ui.light-theme .barangays-table td:not(:last-child) {
+  border-right-color: #94a3b8;
 }
 
-.page-container.barangays-page.light-theme .barangays-table tbody tr:hover {
+.barangays-ui.light-theme .barangays-table tbody tr:hover {
   background: #ecfdf5 !important;
 }
 
-.page-container.barangays-page.light-theme .loading-cell,
-.page-container.barangays-page.light-theme .empty-cell {
+.barangays-ui.light-theme .loading-cell,
+.barangays-ui.light-theme .empty-cell {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .area-value {
+.barangays-ui.light-theme .area-value {
   color: #000000;
-  font-weight: 700;
 }
 
-.page-container.barangays-page.light-theme .barangay-name-link {
+.barangays-ui.light-theme .barangay-name-link {
   color: #000000;
-  text-decoration: underline;
 }
 
-.page-container.barangays-page.light-theme .barangay-name-link:hover {
+.barangays-ui.light-theme .barangay-name-link:hover {
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .status-pill.active {
-  color: #000000;
-  border: 2px solid #16a34a;
-  background: #ffffff;
+.barangays-ui.light-theme .barangay-mobile-chip {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #86efac;
 }
 
-.page-container.barangays-page.light-theme .status-pill.inactive {
+.barangays-ui.light-theme .barangay-mobile-card {
+  background: #ffffff;
+  border-color: #86efac;
+}
+
+.barangays-ui.light-theme .barangay-mobile-main .barangay-name-text {
+  color: #166534;
+}
+
+.barangays-ui.light-theme .barangay-mobile-actions {
+  border-top-color: #d1fae5;
+}
+
+.barangays-ui.light-theme .barangay-mobile-empty {
+  color: #166534;
+}
+
+.barangays-ui.light-theme .status-pill.active {
+  color: #166534;
+  border-color: rgba(16, 185, 129, 0.55);
+  background: transparent;
+}
+
+.barangays-ui.light-theme .status-pill.inactive {
   color: #991b1b;
-  border: 2px solid #ef4444;
-  background: #ffffff;
+  border-color: rgba(248, 113, 113, 0.5);
+  background: transparent;
 }
 
-.page-container.barangays-page.light-theme .btn-view-area {
+.barangays-ui.light-theme .btn-view-area {
   color: #000000;
   background: #ffffff;
-  border: 2px solid #16a34a;
+  border-color: #16a34a;
 }
 
-.page-container.barangays-page.light-theme .btn-header-add {
+.barangays-ui.light-theme .btn-places-text {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.barangays-ui.light-theme .btn-edit-text {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.barangays-ui.light-theme .btn-delete-text {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.barangays-ui.light-theme .btn-header-add {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  border: 2px solid #14532d;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28);
+  border-color: #14532d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
-.page-container.barangays-page.light-theme .btn-header-add:hover {
+.barangays-ui.light-theme .btn-header-add:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   filter: none;
 }
 
-.page-container.barangays-page.light-theme .modal-content {
+.barangays-ui.light-theme .modal-content {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   color: #052e16;
 }
 
-.page-container.barangays-page.light-theme .modal-header {
-  border-bottom: 1px solid #bbf7d0;
+.barangays-ui.light-theme .modal-header {
+  border-bottom-color: #bbf7d0;
 }
 
-.page-container.barangays-page.light-theme .modal-header h2 {
+.barangays-ui.light-theme .modal-header h2 {
   color: #052e16;
 }
 
-.page-container.barangays-page.light-theme .barangay-details-modal .modal-title-text h2 {
+.barangays-ui.light-theme .barangay-details-modal .modal-title-text h2 {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .barangay-details-modal .modal-subtitle {
+.barangays-ui.light-theme .barangay-details-modal .modal-subtitle {
   color: #166534;
 }
 
-.page-container.barangays-page.light-theme .barangay-details-icon {
+.barangays-ui.light-theme .barangay-details-icon {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border-color: #86efac;
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .barangay-details-modal .modal-footer {
+.barangays-ui.light-theme .barangay-details-modal .modal-footer {
   background: #f0fdf4;
-  border-top: 2px solid #86efac;
+  border-top-color: #86efac;
 }
 
-.page-container.barangays-page.light-theme .barangay-details-modal .close-btn {
+.barangays-ui.light-theme .barangay-details-modal .close-btn {
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border-color: #cbd5e1;
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .members-table-wrap {
-  border: 2px solid #94a3b8;
+.barangays-ui.light-theme .members-table-wrap {
+  border-color: #94a3b8;
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .places-table-wrap {
-  border: 2px solid #94a3b8;
+.barangays-ui.light-theme .places-table-wrap {
+  border-color: #94a3b8;
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .close-btn {
+.barangays-ui.light-theme .close-btn {
   background: #f0fdf4;
   border-color: #bbf7d0;
   color: #64748b;
 }
 
-.page-container.barangays-page.light-theme .modal-footer {
-  border-top: 1px solid #bbf7d0;
+.barangays-ui.light-theme .modal-footer {
+  background: #fffef9;
+  border-top-color: #bbf7d0;
 }
 
-.page-container.barangays-page.light-theme .form-group label {
+.barangays-ui.light-theme .form-group label {
   color: #000000;
-  font-size: 1rem;
 }
 
-.page-container.barangays-page.light-theme .form-input {
+.barangays-ui.light-theme .form-input {
   background: #ffffff;
-  border: 2px solid #94a3b8;
+  border-color: #94a3b8;
   color: #000000;
-  font-size: 1rem;
 }
 
-.page-container.barangays-page.light-theme .form-hint-area {
+.barangays-ui.light-theme .form-hint-area {
   background: #f0fdf4;
-  border: 2px solid #86efac;
+  border-color: #86efac;
   color: #000000;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.55;
 }
 
-.page-container.barangays-page.light-theme .btn-secondary {
+.barangays-ui.light-theme .btn-secondary {
   color: #000000;
   -webkit-text-fill-color: #000000;
   background: #ffffff;
-  border: 2px solid #64748b;
-  font-size: 1rem;
-  font-weight: 700;
+  border-color: #64748b;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   filter: none;
   transform: none;
 }
 
-.page-container.barangays-page.light-theme .btn-secondary:hover {
+.barangays-ui.light-theme .btn-secondary:hover {
   background: #f1f5f9;
   border-color: #475569;
   color: #000000;
@@ -2618,281 +3690,300 @@ onMounted(() => {
   filter: none;
 }
 
-.page-container.barangays-page.light-theme .members-table th,
-.page-container.barangays-page.light-theme .places-table th {
+.barangays-ui.light-theme .members-table th,
+.barangays-ui.light-theme .places-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #000000;
-  border-bottom: 2px solid #16a34a;
+  border-bottom-color: #16a34a;
 }
 
-.page-container.barangays-page.light-theme .members-table th:not(:last-child),
-.page-container.barangays-page.light-theme .members-table td:not(:last-child),
-.page-container.barangays-page.light-theme .places-table th:not(:last-child),
-.page-container.barangays-page.light-theme .places-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8;
+.barangays-ui.light-theme .members-table th:not(:last-child),
+.barangays-ui.light-theme .members-table td:not(:last-child),
+.barangays-ui.light-theme .places-table th:not(:last-child),
+.barangays-ui.light-theme .places-table td:not(:last-child) {
+  border-right-color: #94a3b8;
 }
 
-.page-container.barangays-page.light-theme .members-table td,
-.page-container.barangays-page.light-theme .places-table td {
+.barangays-ui.light-theme .members-table td,
+.barangays-ui.light-theme .places-table td {
   color: #000000;
-  border-bottom: 1.5px solid #94a3b8;
+  border-bottom-color: #94a3b8;
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .members-table tbody tr:hover,
-.page-container.barangays-page.light-theme .places-table tbody tr:hover {
+.barangays-ui.light-theme .members-table tbody tr:hover,
+.barangays-ui.light-theme .places-table tbody tr:hover {
   background: #ecfdf5;
 }
 
-.page-container.barangays-page.light-theme .empty-state {
+.barangays-ui.light-theme .empty-state {
   color: #000000;
-  font-size: 1rem;
 }
 
-.page-container.barangays-page.light-theme .area-summary-card {
+.barangays-ui.light-theme .area-summary-card {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border-color: #86efac;
 }
 
-.page-container.barangays-page.light-theme .area-summary-title {
+.barangays-ui.light-theme .area-summary-title {
   color: #166534;
 }
 
-.page-container.barangays-page.light-theme .area-summary-value {
+.barangays-ui.light-theme .area-summary-value {
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .area-summary-note {
+.barangays-ui.light-theme .area-summary-note {
   color: #000000;
-  font-size: 1rem;
 }
 
-.page-container.barangays-page.light-theme .places-card {
+.barangays-ui.light-theme .places-card {
   background: #f8fdf9;
-  border: 2px solid #bbf7d0;
+  border-color: #bbf7d0;
 }
 
-.page-container.barangays-page.light-theme .places-loading-overlay {
+.barangays-ui.light-theme .places-loading-overlay {
   background: rgba(255, 255, 255, 0.9);
 }
 
-.page-container.barangays-page.light-theme .places-loading-text {
+.barangays-ui.light-theme .places-loading-text {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .places-section-icon {
+.barangays-ui.light-theme .places-section-icon {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   border-color: #86efac;
   color: #15803d;
 }
 
-.page-container.barangays-page.light-theme .places-header h3 {
+.barangays-ui.light-theme .places-header h3 {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .places-header p {
+.barangays-ui.light-theme .places-header p {
   color: #166534;
 }
 
-.page-container.barangays-page.light-theme .place-form-card {
+.barangays-ui.light-theme .place-form-card {
   background: #ffffff;
-  border: 2px solid #e2e8f0;
+  border-color: #e2e8f0;
 }
 
-.page-container.barangays-page.light-theme .place-form-title {
+.barangays-ui.light-theme .place-form-title {
   color: #166534;
+  font-weight: 500;
 }
 
-.page-container.barangays-page.light-theme .place-form-label {
+.barangays-ui.light-theme .place-form-card .form-input::placeholder {
+  font-weight: 400 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.barangays-ui.light-theme .place-form-label {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .places-table-wrap {
-  border: 2px solid #94a3b8;
+.barangays-ui.light-theme .places-table-wrap {
+  border-color: #94a3b8;
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .places-card .place-status-badge.active {
+.barangays-ui.light-theme .places-card .place-status-badge.active {
   color: #15803d;
   background: #f0fdf4;
   border-color: #86efac;
-  font-size: 0.875rem;
 }
 
-.page-container.barangays-page.light-theme .places-card .place-status-badge.inactive {
+.barangays-ui.light-theme .places-card .place-status-badge.inactive {
   color: #b91c1c;
   background: #fef2f2;
   border-color: #fca5a5;
-  font-size: 0.875rem;
 }
 
-.page-container.barangays-page.light-theme .modal-delete .modal-title-text h2 {
-  color: #000000;
+.barangays-ui.light-theme .modal-delete {
+  border-color: #fca5a5;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
 }
 
-.page-container.barangays-page.light-theme .modal-delete .delete-confirm-message {
-  color: #166534 !important;
+.barangays-ui.light-theme .modal-delete .delete-modal-title {
+  color: #0f172a;
 }
 
-.page-container.barangays-page.light-theme .modal-delete .delete-warning-text {
+.barangays-ui.light-theme .modal-delete .delete-confirm-message {
+  color: #475569 !important;
+}
+
+.barangays-ui.light-theme .modal-delete .delete-warning-banner {
   background: #fef2f2;
-  border: 2px solid #fca5a5;
+  border-color: #fecaca;
+}
+
+.barangays-ui.light-theme .modal-delete .delete-warning-banner-icon {
+  color: #dc2626;
+}
+
+.barangays-ui.light-theme .modal-delete .delete-warning-text {
+  background: transparent;
+  border: none;
   color: #991b1b;
 }
 
-.page-container.barangays-page.light-theme .modal-delete .delete-warning-icon {
+.barangays-ui.light-theme .modal-delete .delete-warning-icon {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border-color: #fca5a5;
+  border-color: #f87171;
   color: #b91c1c;
 }
 
-.page-container.barangays-page.light-theme .modal-delete .delete-modal-footer {
-  background: #f8fafc;
-  border-top: 2px solid #e2e8f0;
+.barangays-ui.light-theme .modal-delete .delete-modal-footer {
+  background: transparent;
+  border: none;
 }
 
-.page-container.barangays-page.light-theme .modal-delete .btn-delete-confirm {
+.barangays-ui.light-theme .modal-delete .btn-delete-confirm {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-  border: 2px solid #991b1b !important;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  border-color: #991b1b !important;
 }
 
-.page-container.barangays-page.light-theme .status-badge.active {
+.barangays-ui.light-theme .status-badge.active {
   color: #15803d;
   background: #f0fdf4;
   border-color: #86efac;
 }
 
-.page-container.barangays-page.light-theme .status-badge.inactive {
+.barangays-ui.light-theme .status-badge.inactive {
   color: #b91c1c;
   background: #fef2f2;
   border-color: #fca5a5;
 }
 
-.page-container.barangays-page.light-theme .role-badge {
+.barangays-ui.light-theme .role-badge {
   background: #f0fdf4 !important;
-  border: 1px solid #86efac !important;
+  border-color: #86efac !important;
   color: #14532d !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.president {
+.barangays-ui.light-theme .role-badge.president {
   background: #e0e7ff !important;
   color: #4338ca !important;
   border-color: #a5b4fc !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.treasurer {
+.barangays-ui.light-theme .role-badge.treasurer {
   background: #fce7f3 !important;
   color: #be185d !important;
   border-color: #f9a8d4 !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.auditor {
+.barangays-ui.light-theme .role-badge.auditor {
   background: #fef9c3 !important;
   color: #a16207 !important;
   border-color: #fcd34d !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.operator {
+.barangays-ui.light-theme .role-badge.operator {
   background: #e0f2fe !important;
   color: #0369a1 !important;
   border-color: #7dd3fc !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.farmer {
+.barangays-ui.light-theme .role-badge.farmer {
   background: #dbeafe !important;
   color: #1d4ed8 !important;
   border-color: #93c5fd !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.admin {
+.barangays-ui.light-theme .role-badge.admin {
   background: #fef9c3 !important;
   color: #a16207 !important;
   border-color: #fcd34d !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.agriculturist {
+.barangays-ui.light-theme .role-badge.agriculturist {
   background: #f0fdf4 !important;
   color: #15803d !important;
   border-color: #86efac !important;
 }
 
-.page-container.barangays-page.light-theme .role-badge.operation_manager,
-.page-container.barangays-page.light-theme .role-badge.business_manager {
+.barangays-ui.light-theme .role-badge.operation_manager,
+.barangays-ui.light-theme .role-badge.business_manager {
   background: #dcfce7 !important;
   color: #15803d !important;
   border-color: #bbf7d0 !important;
 }
 
-.page-container.barangays-page.light-theme .modal-search-input {
+.barangays-ui.light-theme .modal-search-input {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
   color: #052e16 !important;
 }
 
-.page-container.barangays-page.light-theme .tab.active {
+.barangays-ui.light-theme .tab.active {
   color: #052e16 !important;
   background: #dcfce7 !important;
   border-color: #16a34a !important;
 }
 
-.page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td:not(.td-actions) {
+.barangays-ui.light-theme .barangays-table tbody tr:nth-child(even) td:not(.td-actions) {
   background: #f8fdf9;
 }
 
-.page-container.barangays-page.light-theme .barangays-table tbody tr:nth-child(even) td.td-actions {
+.barangays-ui.light-theme .barangays-table tbody tr:nth-child(even) td.td-actions {
   background: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-btn {
+.barangays-ui.light-theme .barangays-icon-btn {
   background: #374151;
   border-color: #4b5563;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-places {
+.barangays-ui.light-theme .barangays-icon-places {
   color: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-edit {
+.barangays-ui.light-theme .barangays-icon-view {
+  color: #86efac;
+}
+
+.barangays-ui.light-theme .barangays-icon-edit {
   color: #ea580c;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-delete {
+.barangays-ui.light-theme .barangays-icon-delete {
   color: #ffffff;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-edit:hover {
+.barangays-ui.light-theme .barangays-icon-edit:hover {
   color: #f97316;
   background: #4b5563;
 }
 
-.page-container.barangays-page.light-theme .barangays-icon-delete:hover {
+.barangays-ui.light-theme .barangays-icon-delete:hover {
   color: #ffffff;
   background: #7f1d1d;
   border-color: #b91c1c;
 }
 
-.page-container.barangays-page.light-theme .members-table tbody tr:nth-child(even) td,
-.page-container.barangays-page.light-theme .places-table tbody tr:nth-child(even) td {
+.barangays-ui.light-theme .members-table tbody tr:nth-child(even) td,
+.barangays-ui.light-theme .places-table tbody tr:nth-child(even) td {
   background: #f8fdf9;
 }
 
-.page-container.barangays-page.light-theme .font-semibold {
+.barangays-ui.light-theme .font-semibold {
   color: #000000;
 }
 
-.page-container.barangays-page.light-theme .btn-submit {
+.barangays-ui.light-theme .btn-submit {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  border: 2px solid #14532d;
-  font-size: 1rem;
-  font-weight: 700;
+  border-color: #14532d;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28);
 }
 
-.page-container.barangays-page.light-theme .btn-submit:hover {
+.barangays-ui.light-theme .btn-submit:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   filter: none;
 }
@@ -2902,22 +3993,19 @@ onMounted(() => {
 <style>
 .barangays-toast {
   position: fixed;
-  top: 5.25rem;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  z-index: 10050;
+  transform: translate(-50%, -50%);
+  z-index: 10100;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-width: min(420px, calc(100vw - 2rem));
-  max-width: min(520px, calc(100vw - 2rem));
+  max-width: min(560px, calc(100vw - 2rem));
   padding: 1rem 1.15rem;
   border-radius: 14px;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  line-height: 1.45;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
-  border: 3px solid #16a34a;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.35);
+  border: 1px solid #16a34a;
   border-left-width: 6px;
   background: #ffffff !important;
   color: #000000 !important;
@@ -2962,8 +4050,9 @@ onMounted(() => {
   flex: 1;
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .barangays-toast-close {
@@ -2971,14 +4060,11 @@ onMounted(() => {
   width: 2rem;
   height: 2rem;
   padding: 0;
-  border: 2px solid #64748b !important;
+  border: 1px solid #64748b !important;
   border-radius: 8px;
   background: #f1f5f9 !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1;
   cursor: pointer;
   box-shadow: none !important;
   filter: none !important;
@@ -2990,6 +4076,70 @@ onMounted(() => {
   transform: none !important;
 }
 
+/* Beat global dark-mode mint button overrides on delete confirm */
+body.glass-dark .barangays-modal-overlay .modal-delete .btn-delete-confirm,
+.barangays-modal-overlay .modal-delete .btn-delete-confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #991b1b !important;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.28) !important;
+  filter: none !important;
+}
+
+body.glass-dark .barangays-modal-overlay .modal-delete .btn-delete-confirm:hover:not(:disabled),
+.barangays-modal-overlay .modal-delete .btn-delete-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: none !important;
+}
+
+body.glass-dark .barangays-modal-overlay .modal-delete .btn-delete-cancel,
+.barangays-modal-overlay .modal-delete .btn-delete-cancel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #eefde6 !important;
+  -webkit-text-fill-color: #eefde6 !important;
+  border: 2px solid rgba(190, 235, 203, 0.35) !important;
+  box-shadow: none !important;
+}
+
+body.glass-dark .barangays-modal-overlay.light-theme .modal-delete .btn-delete-cancel,
+.barangays-modal-overlay.light-theme .modal-delete .btn-delete-cancel {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+body.glass-dark .barangays-modal-overlay .modal-delete .delete-modal-close,
+.barangays-modal-overlay .modal-delete .delete-modal-close {
+  background: rgba(0, 0, 0, 0.22) !important;
+  color: rgba(238, 253, 230, 0.85) !important;
+  -webkit-text-fill-color: rgba(238, 253, 230, 0.85) !important;
+  border: 1px solid rgba(190, 235, 203, 0.2) !important;
+}
+
+body.glass-dark .barangays-modal-overlay.light-theme .modal-delete .delete-modal-close,
+.barangays-modal-overlay.light-theme .modal-delete .delete-modal-close {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Service Places form — keep title + placeholders normal weight */
+.barangays-modal-overlay .place-form-title {
+  font-weight: 500 !important;
+  text-transform: none !important;
+}
+
+.barangays-modal-overlay .place-form-card .form-input::placeholder,
+.barangays-modal-overlay .place-form-card input::placeholder {
+  font-weight: 400 !important;
+  opacity: 0.8;
+}
+
 .toast-fade-enter-active,
 .toast-fade-leave-active {
   transition: opacity 0.28s ease, transform 0.28s ease;
@@ -2998,6 +4148,6 @@ onMounted(() => {
 .toast-fade-enter-from,
 .toast-fade-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(-16px);
+  transform: translate(-50%, -50%) scale(0.96);
 }
 </style>

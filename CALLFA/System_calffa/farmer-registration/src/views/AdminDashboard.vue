@@ -9,14 +9,14 @@
       <!-- Glass header top bar -->
       <div class="header-top">
         <div class="header-left">
-          <div class="header-eyebrow">{{ dashboardEyebrow }}</div>
-          <h1 class="dashboard-title">Dashboard</h1>
-          <p class="dashboard-subtitle">{{ dashboardSubtitle }}</p>
+          <div class="header-eyebrow">{{ isAdmin ? $t('ui.calffaAdmin') : isFarmer ? $t('ui.calffaFarmer') : $t('ui.calffaOperations') }}</div>
+          <h1 class="dashboard-title">{{ $t('ui.dashboard') }}</h1>
+          <p class="dashboard-subtitle">{{ isFarmer ? $t('ui.dashboardFarmerSub') : $t('ui.dashboardOpsSub') }}</p>
         </div>
-        <div class="header-time-card" :aria-label="`Current time and date, ${displayUserRole}`">
-          <div class="header-time-label">Live Time</div>
+        <div class="header-time-card" :aria-label="`${$t('ui.liveTime')}, ${displayUserRole}`">
+          <div class="header-time-label">{{ $t('ui.liveTime') }}</div>
           <div class="header-time-value">{{ currentTime }}</div>
-          <div class="header-time-day">Day: {{ currentDay }}</div>
+          <div class="header-time-day">{{ $t('ui.dayColon') }} {{ currentDay }}</div>
           <div class="header-time-date">{{ currentDate }}</div>
           <div v-if="displayUserRole" class="header-time-role" :class="userRole">{{ displayUserRole }}</div>
         </div>
@@ -27,12 +27,12 @@
         <!-- Total Farmers - Green -->
         <div class="stat-card stat-green">
           <div class="stat-icon-wrap stat-icon-green">
-            <img src="https://cdn-icons-png.flaticon.com/512/7417/7417717.png" alt="Farmer" class="stat-icon-img" />
+            <img src="https://cdn-icons-png.flaticon.com/512/7417/7417717.png" :alt="$t('ui.farmer')" class="stat-icon-img" />
           </div>
           <div class="stat-body">
-            <div class="stat-label">{{ farmersStatLabel }}</div>
+            <div class="stat-label">{{ isFarmer ? $t('ui.membersInBarangay') : $t('ui.totalFarmers') }}</div>
             <div class="stat-value">{{ animatedFarmers }}</div>
-            <div class="stat-pill stat-pill-green">Active members</div>
+            <div class="stat-pill stat-pill-green">{{ $t('ui.activeMembers') }}</div>
           </div>
         </div>
 
@@ -44,7 +44,7 @@
           <div class="stat-body">
             <div class="stat-label">{{ barangaysLabel }}</div>
             <div class="stat-value">{{ animatedBarangays }}</div>
-            <div class="stat-pill stat-pill-teal">Covered areas</div>
+            <div class="stat-pill stat-pill-teal">{{ $t('ui.coveredAreas') }}</div>
           </div>
         </div>
 
@@ -52,12 +52,12 @@
           <!-- Pending Approvals - Yellow -->
           <div class="stat-card stat-yellow">
             <div class="stat-icon-wrap stat-icon-yellow">
-              <img src="https://cdn-icons-png.freepik.com/512/13366/13366070.png" alt="Pending" class="stat-icon-img" />
+            <span class="stat-emoji">⏳</span>
             </div>
             <div class="stat-body">
-              <div class="stat-label">Pending Approvals</div>
+              <div class="stat-label">{{ $t('common.pendingApprovals') }}</div>
               <div class="stat-value">{{ animatedPending }}</div>
-              <div class="stat-pill stat-pill-yellow">Needs review</div>
+              <div class="stat-pill stat-pill-yellow">{{ $t('ui.needsReview') }}</div>
             </div>
           </div>
         </template>
@@ -71,14 +71,14 @@
       <!-- Section Header -->
       <div class="analytics-header">
         <div class="analytics-title-block">
-          <h2 class="analytics-section-title">Analytics &amp; Insights</h2>
-          <p class="analytics-section-sub">Real-time cooperative data at a glance</p>
+          <h2 class="analytics-section-title">{{ $t('dashboard.analyticsTitle') }}</h2>
+          <p class="analytics-section-sub">{{ $t('dashboard.analyticsSub') }}</p>
         </div>
-        <button v-if="isAdmin" class="filter-toggle-btn" @click="filterPanelOpen = !filterPanelOpen" :class="{ active: filterPanelOpen }" aria-label="Toggle filters">
+        <button v-if="isAdmin" class="filter-toggle-btn" @click="filterPanelOpen = !filterPanelOpen" :class="{ active: filterPanelOpen }" :aria-label="$t('dashboard.toggleFilters')">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
-          <span>Filter</span>
+          <span>{{ $t('common.filter') }}</span>
           <span v-if="activeFiltersCount > 0" class="filter-badge">{{ activeFiltersCount }}</span>
         </button>
       </div>
@@ -88,33 +88,33 @@
         <div v-if="filterPanelOpen && isAdmin" class="filter-panel">
           <div class="filter-panel-grid">
             <div class="filter-group">
-              <label class="filter-label">Barangay</label>
+              <label class="filter-label">{{ $t('ui.barangay') }}</label>
               <select v-model="filterBarangay" class="filter-select">
-                <option value="">All Barangays</option>
+                <option value="">{{ $t('ui.allBarangays') }}</option>
                 <option v-for="b in barangayFilterOptions" :key="b.id" :value="b.id">{{ b.name }}</option>
               </select>
             </div>
             <div class="filter-group">
-              <label class="filter-label">Status</label>
+              <label class="filter-label">{{ $t('ui.status') }}</label>
               <select v-model="filterStatus" class="filter-select">
-                <option value="">All Status</option>
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
+                <option value="">{{ $t('ui.allStatus') }}</option>
+                <option value="approved">{{ $t('common.approved') }}</option>
+                <option value="pending">{{ $t('common.pending') }}</option>
+                <option value="rejected">{{ $t('common.rejected') }}</option>
               </select>
             </div>
             <div class="filter-group">
-              <label class="filter-label">From Date</label>
+              <label class="filter-label">{{ $t('dashboard.fromDate') }}</label>
               <input v-model="filterDateFrom" type="date" class="filter-select" />
             </div>
             <div class="filter-group">
-              <label class="filter-label">To Date</label>
+              <label class="filter-label">{{ $t('dashboard.toDate') }}</label>
               <input v-model="filterDateTo" type="date" class="filter-select" />
             </div>
           </div>
           <div class="filter-actions">
-            <button class="filter-apply-btn" @click="applyFilters">Apply Filters</button>
-            <button class="filter-reset-btn" @click="resetFilters">Reset</button>
+            <button class="filter-apply-btn" @click="applyFilters">{{ $t('common.applyFilters') }}</button>
+            <button class="filter-reset-btn" @click="resetFilters">{{ $t('common.reset') }}</button>
           </div>
         </div>
       </transition>
@@ -126,22 +126,22 @@
         <div class="glass-chart-card">
           <div class="glass-chart-header">
             <div>
-              <h3 class="glass-chart-title">Members by Status</h3>
-              <p class="glass-chart-sub">{{ filteredTotalCount }} Total Members</p>
+              <h3 class="glass-chart-title">{{ $t('dashboard.membersByStatus') }}</h3>
+              <p class="glass-chart-sub">{{ $t('dashboard.totalMembersCount', { count: filteredTotalCount }) }}</p>
             </div>
-            <span class="glass-chart-badge">Status</span>
+            <span class="glass-chart-badge">{{ $t('ui.status') }}</span>
           </div>
           <div class="donut-wrap">
             <canvas ref="statusChartRef" class="donut-canvas"></canvas>
             <div class="donut-center-label">
               <span class="donut-center-num">{{ filteredTotalCount }}</span>
-              <span class="donut-center-text">Total</span>
+              <span class="donut-center-text">{{ $t('ui.total') }}</span>
             </div>
           </div>
           <div class="glass-legend">
-            <span class="gl-item"><span class="gl-dot" style="background:#4ade80"></span>Approved <strong>{{ filteredApprovedCount }}</strong></span>
-            <span class="gl-item"><span class="gl-dot" style="background:#fbbf24"></span>Pending <strong>{{ filteredPendingCount }}</strong></span>
-            <span class="gl-item"><span class="gl-dot" style="background:#f87171"></span>Rejected <strong>{{ filteredRejectedCount }}</strong></span>
+            <span class="gl-item"><span class="gl-dot" style="background:#4ade80"></span>{{ $t('common.approved') }} <strong>{{ filteredApprovedCount }}</strong></span>
+            <span class="gl-item"><span class="gl-dot" style="background:#fbbf24"></span>{{ $t('common.pending') }} <strong>{{ filteredPendingCount }}</strong></span>
+            <span class="gl-item"><span class="gl-dot" style="background:#f87171"></span>{{ $t('common.rejected') }} <strong>{{ filteredRejectedCount }}</strong></span>
           </div>
         </div>
 
@@ -149,53 +149,88 @@
         <div v-if="isAdmin" class="glass-chart-card">
           <div class="glass-chart-header">
             <div>
-              <h3 class="glass-chart-title">Top 10 Barangays</h3>
-              <p class="glass-chart-sub">By Member Count</p>
+              <h3 class="glass-chart-title">{{ $t('dashboard.topBarangays') }}</h3>
+              <p class="glass-chart-sub">{{ $t('dashboard.byMemberCount') }}</p>
             </div>
-            <button class="sort-toggle-btn" @click="toggleBarangaySort" :title="barangaySortDesc ? 'Sort Ascending' : 'Sort Descending'">
+            <button class="sort-toggle-btn" @click="toggleBarangaySort" :title="barangaySortDesc ? $t('dashboard.sortAsc') : $t('dashboard.sortDesc')">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path v-if="barangaySortDesc" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
                 <path v-else d="M3 20h13M3 16h9m-9-4h9m5 4V4m0 0l-4 4m4-4l4 4"/>
               </svg>
-              {{ barangaySortDesc ? 'Desc' : 'Asc' }}
+              {{ barangaySortDesc ? $t('dashboard.desc') : $t('dashboard.asc') }}
             </button>
           </div>
           <canvas ref="barangayChartRef"></canvas>
         </div>
 
         <!-- Financial Overview -->
-        <div class="glass-chart-card">
+        <div class="glass-chart-card dashboard-insight-card financial-overview-card">
           <div class="glass-chart-header">
             <div>
-              <h3 class="glass-chart-title">Financial Overview</h3>
-              <p class="glass-chart-sub">{{ isAdmin ? 'All Members' : 'My Account' }}</p>
+              <h3 class="glass-chart-title">{{ $t('ui.financialOverview') }}</h3>
+              <p class="glass-chart-sub">{{ isAdmin ? $t('dashboard.allMembers') : $t('dashboard.myAccount') }}</p>
             </div>
-            <span class="glass-chart-badge glass-chart-badge--finance">₱ Finance</span>
+            <span class="glass-chart-badge glass-chart-badge--finance">₱ {{ $t('dashboard.finance') }}</span>
           </div>
-          <canvas ref="financialChartRef"></canvas>
-          <div class="glass-legend" style="margin-top:16px">
-            <span class="gl-item"><span class="gl-dot" style="background:#60a5fa"></span>{{ isAdmin ? 'Outstanding Loans by Barangay' : 'My Shares' }}</span>
-            <span v-if="!isAdmin" class="gl-item"><span class="gl-dot" style="background:#fb923c"></span>My Outstanding Loans</span>
+          <div class="financial-chart-body">
+            <canvas ref="financialChartRef"></canvas>
           </div>
+          <div class="glass-legend financial-chart-legend">
+            <span class="gl-item"><span class="gl-dot" style="background:#60a5fa"></span>{{ isAdmin ? $t('dashboard.outstandingLoansByBarangay') : $t('dashboard.myShares') }}</span>
+            <span v-if="!isAdmin" class="gl-item"><span class="gl-dot" style="background:#fb923c"></span>{{ $t('dashboard.myOutstandingLoans') }}</span>
+          </div>
+        </div>
+
+        <!-- Barangay-scoped machinery usage -->
+        <div v-if="!isAdmin" class="glass-chart-card dashboard-insight-card most-used-card">
+          <div class="glass-chart-header">
+            <div>
+              <h3 class="glass-chart-title">{{ $t('dashboard.mostUsedMachineries') }}</h3>
+              <p class="glass-chart-sub">
+                {{ $t('dashboard.completedUsageIn', { name: mostUsedBarangayName || $t('dashboard.yourBarangay') }) }}
+              </p>
+            </div>
+            <span class="glass-chart-badge machinery-usage-badge">{{ $t('dashboard.usage') }}</span>
+          </div>
+
+          <div v-if="mostUsedLoading" class="machinery-usage-state">
+            {{ $t('dashboard.loadingMachineryStats') }}
+          </div>
+          <div v-else-if="mostUsedError" class="machinery-usage-state machinery-usage-state--error">
+            {{ mostUsedError }}
+          </div>
+          <div v-else-if="mostUsedMachineries.length === 0" class="machinery-usage-state">
+            {{ $t('dashboard.noCompletedUsage') }}
+          </div>
+          <ol v-else class="machinery-usage-list">
+            <li
+              v-for="(machinery, index) in mostUsedMachineries"
+              :key="machinery.machinery_id"
+              class="machinery-usage-item"
+            >
+              <span class="machinery-rank">{{ index + 1 }}</span>
+              <span class="machinery-usage-details">
+                <strong>{{ machinery.machinery_name }}</strong>
+                <small>{{ machinery.machinery_type || $t('ui.machinery') }}</small>
+              </span>
+              <span class="machinery-usage-count">
+                {{ machinery.usage_count }}
+                <small>{{ machinery.usage_count === 1 ? $t('dashboard.useOne') : $t('dashboard.useMany') }}</small>
+              </span>
+            </li>
+          </ol>
         </div>
 
       </div>
     </div>
 
-    <div v-if="isAdmin" class="fab-wrap">
-      <button class="fab-main" @click="toggleFab" aria-label="Quick actions">{{ fabOpen ? '×' : '+' }}</button>
-      <div v-if="fabOpen" class="fab-actions">
-        <button class="fab-action" @click="goToApprovals">Approve Members</button>
-        <button class="fab-action" @click="goToMembers">Add/View Members</button>
-        <button class="fab-action" @click="goToLogs">View Logs</button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { getManilaReferenceDateString } from '../utils/philippineTime'
@@ -206,6 +241,7 @@ Chart.register(...registerables)
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t, locale } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
 
@@ -220,7 +256,6 @@ const loading = ref(false)
 const currentTime = ref('')
 const currentDay = ref('')
 const currentDate = ref('')
-const fabOpen = ref(false)
 let timeInterval = null
 
 // Animated counters
@@ -231,6 +266,10 @@ const animatedPending = ref(0)
 // Farmer-specific financial data
 const farmerShares = ref(0)
 const farmerLoans = ref(0)
+const mostUsedMachineries = ref([])
+const mostUsedBarangayName = ref('')
+const mostUsedLoading = ref(false)
+const mostUsedError = ref('')
 
 // Chart refs
 const statusChartRef = ref(null)
@@ -259,33 +298,27 @@ const appliedDateTo = ref('')
 
 // Computed
 const userRole = computed(() => authStore.currentUser?.role || '')
+const ROLE_LABEL_KEYS = {
+  admin: 'ui.admin',
+  farmer: 'ui.farmer',
+  president: 'ui.president',
+  treasurer: 'ui.treasurer',
+  auditor: 'ui.auditor',
+  operator: 'ui.operator',
+  agriculturist: 'ui.agriculturist',
+  business_manager: 'ui.businessManager',
+  operation_manager: 'ui.operationManager'
+}
+
 const displayUserRole = computed(() => {
   const role = userRole.value
   if (!role) return ''
-  return role
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  const key = ROLE_LABEL_KEYS[role]
+  return key ? t(key) : role
 })
 const isAdmin = computed(() => userRole.value === 'admin')
 const isFarmer = computed(() => userRole.value === 'farmer')
 
-const dashboardEyebrow = computed(() => {
-  if (isAdmin.value) return 'CaLFFA Admin'
-  if (isFarmer.value) return 'CaLFFA Farmer'
-  return 'CaLFFA Operations'
-})
-
-const dashboardSubtitle = computed(() => {
-  if (isFarmer.value) {
-    return 'Your barangay snapshot, member overview, and personal finances'
-  }
-  return 'Agricultural Intelligence & Cooperative Operations'
-})
-
-const farmersStatLabel = computed(() =>
-  isFarmer.value ? 'Members in Your Barangay' : 'Total Farmers'
-)
 const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
 
 const MEMBER_ROLES = ['farmer', 'president', 'treasurer', 'auditor', 'operator', 'operation_manager', 'business_manager']
@@ -345,7 +378,7 @@ const barangaysCount = computed(() => {
   if (isAdmin.value) return barangays.value.length
   return servicePlaces.value.length
 })
-const barangaysLabel = computed(() => isAdmin.value ? 'Barangays' : 'Service Places')
+const barangaysLabel = computed(() => isAdmin.value ? t('nav.barangays') : t('dashboard.servicePlaces'))
 
 // Filtered status counts
 const filteredApprovedCount = computed(() =>
@@ -513,23 +546,31 @@ const loadFarmerFinancialData = async () => {
   }
 }
 
-const goToApprovals = () => {
-  router.push('/farmers-table')
-  fabOpen.value = false
-}
+const loadMostUsedMachineries = async () => {
+  if (isAdmin.value) return
 
-const goToMembers = () => {
-  router.push('/farmers-table')
-  fabOpen.value = false
-}
+  mostUsedLoading.value = true
+  mostUsedError.value = ''
 
-const goToLogs = () => {
-  router.push('/system-activity')
-  fabOpen.value = false
-}
+  try {
+    const response = await fetch('/api/machinery/most-used?limit=5', {
+      headers: authHeaders()
+    })
+    const data = await response.json().catch(() => ({}))
 
-const toggleFab = () => {
-  fabOpen.value = !fabOpen.value
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Unable to load machinery statistics.')
+    }
+
+    mostUsedMachineries.value = data.machineries || []
+    mostUsedBarangayName.value =
+      data.barangay_name || authStore.currentUser?.barangay_name || ''
+  } catch (err) {
+    console.error('Error loading most used machineries:', err)
+    mostUsedError.value = err.message || 'Unable to load machinery statistics.'
+  } finally {
+    mostUsedLoading.value = false
+  }
 }
 
 const toggleBarangaySort = () => {
@@ -559,15 +600,18 @@ const resetFilters = () => {
   nextTick(() => renderCharts())
 }
 
+const dateLocale = computed(() => (locale.value === 'tl' ? 'fil-PH' : 'en-US'))
+
 const updateTime = () => {
   const now = new Date()
-  currentTime.value = now.toLocaleTimeString('en-US', {
+  const loc = dateLocale.value
+  currentTime.value = now.toLocaleTimeString(loc, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
   })
-  currentDay.value = now.toLocaleDateString('en-US', { weekday: 'long' })
-  currentDate.value = now.toLocaleDateString('en-US', {
+  currentDay.value = now.toLocaleDateString(loc, { weekday: 'long' })
+  currentDate.value = now.toLocaleDateString(loc, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -611,7 +655,7 @@ const getChartAxisStyle = () => {
     borderColor: 'rgba(167, 211, 178, 0.5)',
     doughnutBorder: 'rgba(236, 253, 245, 0.12)',
     legendColor: '#ffffff',
-    gridLineWidth: 1.5
+    gridLineWidth: 1
   }
 }
 
@@ -625,6 +669,11 @@ watch(isLight, () => {
   nextTick(() => renderCharts())
 })
 
+watch(locale, () => {
+  updateTime()
+  nextTick(() => renderCharts())
+})
+
 const renderStatusChart = () => {
   if (!statusChartRef.value) return
   if (statusChart) statusChart.destroy()
@@ -634,7 +683,7 @@ const renderStatusChart = () => {
   statusChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Approved', 'Pending', 'Rejected'],
+      labels: [t('common.approved'), t('common.pending'), t('common.rejected')],
       datasets: [{
         data: [filteredApprovedCount.value, filteredPendingCount.value, filteredRejectedCount.value],
         backgroundColor: ['#22c55e', '#facc15', '#fb7185'],
@@ -664,7 +713,7 @@ const renderStatusChart = () => {
           bodyFont: { size: 12, family: 'Inter, system-ui, sans-serif' },
           cornerRadius: 10,
           callbacks: {
-            label: (ctx) => ` ${ctx.label}: ${ctx.parsed} members`
+            label: (ctx) => ` ${ctx.label}: ${t('dashboard.membersCount', { count: ctx.parsed })}`
           }
         }
       }
@@ -696,7 +745,7 @@ const renderBarangayChart = () => {
   filteredAnalyticsFarmers.value.forEach(farmer => {
     if (farmer.status !== 'approved') return
     const id = farmer.barangay_id
-    const name = farmer.barangay_name || idToName[id] || 'Unassigned'
+    const name = farmer.barangay_name || idToName[id] || t('dashboard.unassigned')
     counts[name] = (counts[name] || 0) + 1
   })
 
@@ -713,7 +762,7 @@ const renderBarangayChart = () => {
     data: {
       labels: sorted.map(([name]) => name),
       datasets: [{
-        label: 'Approved Members',
+        label: t('dashboard.approvedMembers'),
         data: sorted.map(([, count]) => count),
         backgroundColor: (context) => {
           const chart = context.chart
@@ -744,7 +793,7 @@ const renderBarangayChart = () => {
           bodyFont: { size: 12, family: 'Inter, system-ui, sans-serif' },
           cornerRadius: 10,
           callbacks: {
-            label: (ctx) => ` ${ctx.parsed.y} members`
+            label: (ctx) => ` ${t('dashboard.membersCount', { count: ctx.parsed.y })}`
           }
         }
       },
@@ -783,7 +832,7 @@ const renderFinancialChart = () => {
   let labels = []
   let data = []
   let colors = []
-  let datasetLabel = 'Amount (₱)'
+  let datasetLabel = t('ui.amountPeso')
 
   if (isAdmin.value) {
     // Admin: outstanding loans grouped by barangay
@@ -794,7 +843,7 @@ const renderFinancialChart = () => {
     barangays.value.forEach(b => { totals[b.name || b.barangay_name || b.barangay] = 0 })
 
     allOutstandingLoans.value.forEach(loan => {
-      const name = loan.barangay_name || idToName[loan.barangay_id] || idToName[loan.farmer_barangay] || 'Unassigned'
+      const name = loan.barangay_name || idToName[loan.barangay_id] || idToName[loan.farmer_barangay] || t('dashboard.unassigned')
       totals[name] = (totals[name] || 0) + outstandingAmount(loan)
     })
 
@@ -802,10 +851,10 @@ const renderFinancialChart = () => {
     labels = sorted.map(([name]) => name)
     data = sorted.map(([, amount]) => amount)
     colors = sorted.map(() => '#60a5fa')
-    datasetLabel = 'Outstanding Loans (₱)'
+    datasetLabel = t('dashboard.outstandingLoansPeso')
   } else {
     // Non-admin: Shares (from Share Capital) vs Outstanding Loans (from Loans)
-    labels = ['My Shares', 'My Outstanding Loans']
+    labels = [t('dashboard.myShares'), t('dashboard.myOutstandingLoans')]
     data = [farmerShares.value, farmerLoans.value]
     colors = ['#60a5fa', '#fb923c']
   }
@@ -869,7 +918,10 @@ const renderFinancialChart = () => {
           grid: { display: false },
           ticks: {
             color: axis.tickColor,
-            font: { size: 12, family: 'Inter, system-ui, sans-serif', weight: '700' }
+            font: { size: 12, family: 'Inter, system-ui, sans-serif', weight: '700' },
+            minRotation: 0,
+            maxRotation: 0,
+            autoSkip: false
           },
           border: { color: axis.borderColor }
         },
@@ -908,7 +960,7 @@ onMounted(async () => {
     tasks.push(loadApprovedLoans(), loadActiveLoans(), loadOverdueLoans(), loadFederationStats())
   } else {
     // Non-admin needs their service places and personal financial data
-    tasks.push(loadServicePlaces(), loadFarmerFinancialData())
+    tasks.push(loadServicePlaces(), loadFarmerFinancialData(), loadMostUsedMachineries())
   }
 
   await Promise.all(tasks)
@@ -1130,7 +1182,7 @@ onUnmounted(() => {
 .header-eyebrow {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 1.4px;
   color: rgba(220, 238, 211, 0.72);
   margin-bottom: 6px;
@@ -1608,6 +1660,134 @@ onUnmounted(() => {
   color: #fef9c3;
 }
 
+.machinery-usage-badge {
+  background: rgba(96, 165, 250, 0.22);
+  border-color: rgba(147, 197, 253, 0.4);
+  color: #dbeafe;
+}
+
+.machinery-usage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.machinery-usage-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* Financial and machinery insight cards share one layout contract.
+   Theme selectors may change colors, borders, and shadows only. */
+.dashboard-insight-card {
+  min-width: 0;
+  min-height: 400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-insight-card > .glass-chart-header {
+  min-height: 58px;
+  flex: 0 0 auto;
+}
+
+.financial-chart-body {
+  position: relative;
+  min-height: 230px;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.financial-chart-body canvas {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.financial-chart-legend {
+  min-height: 28px;
+  margin-top: 16px;
+  flex: 0 0 auto;
+}
+
+.most-used-card .machinery-usage-state {
+  flex: 1 1 auto;
+}
+
+.most-used-card .machinery-usage-list {
+  align-content: start;
+}
+
+.machinery-rank {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.machinery-usage-item:first-child .machinery-rank {
+  background: rgba(251, 191, 36, 0.24);
+  color: #fef08a;
+}
+
+.machinery-usage-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.machinery-usage-details strong {
+  overflow: hidden;
+  color: #ecfbe2;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.machinery-usage-details small,
+.machinery-usage-count small {
+  color: rgba(236, 252, 231, 0.68);
+  font-size: 10px;
+}
+
+.machinery-usage-count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #86efac;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.machinery-usage-state {
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: rgba(236, 252, 231, 0.75);
+  font-size: 13px;
+  text-align: center;
+}
+
+.machinery-usage-state--error {
+  color: #fecaca;
+}
+
 /* Sort Button */
 .sort-toggle-btn {
   display: flex;
@@ -1706,85 +1886,6 @@ canvas {
   max-height: 260px;
 }
 
-/* FAB Button */
-.fab-wrap {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 100;
-}
-
-.fab-main {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #53b476 0%, #2f8f53 100%);
-  color: white;
-  border: none;
-  font-size: 28px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(47, 143, 83, 0.35);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fab-main:hover {
-  transform: scale(1.12) translateY(-4px);
-  box-shadow: 0 12px 32px rgba(47, 143, 83, 0.5);
-}
-
-.fab-main:active {
-  transform: scale(1.08);
-}
-
-.fab-actions {
-  position: absolute;
-  bottom: 80px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.fab-action {
-  background: #273a2d;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  padding: 12px 18px;
-  color: #eaf9e0;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow:
-    10px 10px 18px rgba(7, 12, 9, 0.55),
-    -8px -8px 16px rgba(43, 62, 47, 0.5),
-    inset 1px 1px 0 rgba(255,255,255,0.08),
-    inset -1px -1px 0 rgba(0,0,0,0.34);
-  white-space: nowrap;
-  letter-spacing: 0.3px;
-}
-
-.fab-action:hover {
-  background: #2d4333;
-  border-color: rgba(255,255,255,0.2);
-  transform: translateX(-6px);
-  box-shadow:
-    12px 12px 22px rgba(7, 12, 9, 0.62),
-    -10px -10px 20px rgba(47, 68, 51, 0.56),
-    inset 1px 1px 0 rgba(255,255,255,0.12),
-    inset -1px -1px 0 rgba(0,0,0,0.4);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -1800,8 +1901,6 @@ canvas {
   .glass-charts-grid { grid-template-columns: 1fr; gap: 18px; }
   .analytics-section { padding: 24px 18px 20px; border-radius: 18px; }
   .filter-panel-grid { grid-template-columns: 1fr 1fr; }
-  .fab-wrap { bottom: 20px; right: 20px; }
-  .fab-main { width: 56px; height: 56px; font-size: 24px; }
 }
 
 @media (max-width: 480px) {
@@ -1812,7 +1911,6 @@ canvas {
   .stats-overview { grid-template-columns: 1fr; }
   .dashboard-title { font-size: 22px; }
   .filter-panel-grid { grid-template-columns: 1fr; }
-  .fab-wrap { bottom: 16px; right: 16px; }
 }
 
 /* =============================================
@@ -1829,7 +1927,7 @@ canvas {
 
 .dashboard-container.light-theme .dashboard-header {
   background: linear-gradient(135deg, #ffffff 0%, #f4fdf7 100%);
-  border: 2px solid #86efac;
+  border: 1px solid #86efac;
   box-shadow: 0 10px 30px rgba(22, 101, 52, 0.12);
 }
 
@@ -1839,23 +1937,20 @@ canvas {
 
 .dashboard-container.light-theme .header-eyebrow {
   color: #166534;
-  font-size: 12px;
 }
 
 .dashboard-container.light-theme .dashboard-title {
   color: #052e16;
-  font-size: 40px;
   text-shadow: none;
 }
 
 .dashboard-container.light-theme .dashboard-subtitle {
   color: #14532d;
-  font-size: 15px;
 }
 
 .dashboard-container.light-theme .header-time-card {
   background: #ecfdf5;
-  border: 2px solid #86efac;
+  border: 1px solid #86efac;
   box-shadow: 0 6px 18px rgba(22, 101, 52, 0.1);
 }
 
@@ -1863,12 +1958,10 @@ canvas {
 .dashboard-container.light-theme .header-time-date,
 .dashboard-container.light-theme .header-time-day {
   color: #14532d;
-  font-size: 12px;
 }
 
 .dashboard-container.light-theme .header-time-value {
   color: #065f46;
-  font-size: 26px;
 }
 
 .dashboard-container.light-theme .header-time-role {
@@ -1880,7 +1973,7 @@ canvas {
 
 .dashboard-container.light-theme .stat-card {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border: 1px solid #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1);
 }
 
@@ -1892,12 +1985,10 @@ canvas {
 
 .dashboard-container.light-theme .stat-label {
   color: #166534;
-  font-size: 12px;
 }
 
 .dashboard-container.light-theme .stat-value {
   color: #052e16;
-  font-size: 34px;
   text-shadow: none;
 }
 
@@ -1921,26 +2012,22 @@ canvas {
 
 .dashboard-container.light-theme .analytics-section {
   background: linear-gradient(135deg, #e8f9ed 0%, #d1f5dc 50%, #bbf7d0 100%);
-  border: 2px solid #86efac;
   box-shadow: 0 12px 36px rgba(22, 101, 52, 0.1);
 }
 
 .dashboard-container.light-theme .analytics-section-title {
   color: #052e16;
-  font-size: 28px;
   text-shadow: none;
 }
 
 .dashboard-container.light-theme .analytics-section-sub {
   color: #14532d;
-  font-size: 15px;
 }
 
 .dashboard-container.light-theme .filter-toggle-btn {
   background: #ffffff;
   color: #14532d;
-  border: 2px solid #4ade80;
-  font-size: 14px;
+  border-color: #4ade80;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.08);
 }
 
@@ -1953,18 +2040,17 @@ canvas {
 
 .dashboard-container.light-theme .filter-panel {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border: 1px solid #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08);
 }
 
 .dashboard-container.light-theme .filter-label {
   color: #14532d;
-  font-size: 12px;
 }
 
 .dashboard-container.light-theme .glass-chart-card {
   background: #fffef9;
-  border: 2px solid #86efac;
+  border: 1px solid #86efac;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08);
 }
 
@@ -1980,13 +2066,11 @@ canvas {
 
 .dashboard-container.light-theme .glass-chart-title {
   color: #052e16;
-  font-size: 17px;
   text-shadow: none;
 }
 
 .dashboard-container.light-theme .glass-chart-sub {
   color: #166534;
-  font-size: 13px;
 }
 
 .dashboard-container.light-theme .glass-chart-badge {
@@ -2001,26 +2085,65 @@ canvas {
   border-color: #fbbf24;
 }
 
+.dashboard-container.light-theme .machinery-usage-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.dashboard-container.light-theme .machinery-usage-item {
+  background: #f8fff9;
+  border-color: #bbf7d0;
+}
+
+.dashboard-container.light-theme .machinery-rank {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dashboard-container.light-theme .machinery-usage-item:first-child .machinery-rank {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.dashboard-container.light-theme .machinery-usage-details strong {
+  color: #052e16;
+}
+
+.dashboard-container.light-theme .machinery-usage-details small,
+.dashboard-container.light-theme .machinery-usage-count small {
+  color: #4b5563;
+}
+
+.dashboard-container.light-theme .machinery-usage-count {
+  color: #15803d;
+}
+
+.dashboard-container.light-theme .machinery-usage-state {
+  color: #4b5563;
+}
+
+.dashboard-container.light-theme .machinery-usage-state--error {
+  color: #b91c1c;
+}
+
 .dashboard-container.light-theme .sort-toggle-btn {
   background: #ffffff;
   color: #14532d;
-  border: 2px solid #86efac;
+  border-color: #86efac;
 }
 
 .dashboard-container.light-theme .donut-center-num {
   color: #052e16;
   text-shadow: none;
-  font-size: 30px;
 }
 
 .dashboard-container.light-theme .donut-center-text {
   color: #166534;
-  font-size: 12px;
 }
 
 .dashboard-container.light-theme .gl-item {
   color: #14532d;
-  font-size: 13px;
 }
 
 .dashboard-container.light-theme .gl-item strong {
@@ -2031,15 +2154,328 @@ canvas {
   box-shadow: 0 0 4px rgba(22, 101, 52, 0.2);
 }
 
-.dashboard-container.light-theme .fab-main {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  border-color: #86efac;
-  color: #ffffff;
+/* Desktop compact — same geometry in light and dark (theme files change colors only).
+   !important on radii/fields beats global glass-unified theme rules so both themes stay identical. */
+@media (min-width: 769px) {
+  .dashboard-container {
+    padding: 16px 20px;
+  }
+
+  .dashboard-header {
+    padding: 18px 22px;
+    margin-bottom: 16px;
+    border-radius: 16px !important;
+  }
+
+  .header-top {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  .header-eyebrow {
+    font-size: 10px;
+    margin-bottom: 4px;
+    letter-spacing: 1.1px;
+  }
+
+  .dashboard-title {
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 13px;
+  }
+
+  .header-time-card {
+    min-width: 148px;
+    padding: 8px 12px;
+    border-radius: 12px !important;
+    gap: 1px;
+  }
+
+  .header-time-label {
+    font-size: 9px;
+  }
+
+  .header-time-value {
+    font-size: 20px;
+  }
+
+  .header-time-date,
+  .header-time-day {
+    font-size: 10px;
+  }
+
+  .header-time-role {
+    margin-top: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .stats-overview {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 12px 14px;
+    border-radius: 14px !important;
+    gap: 12px;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .stat-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .stat-emoji {
+    font-size: 20px;
+  }
+
+  .stat-icon-img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .stat-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .analytics-section {
+    margin-bottom: 16px;
+    padding: 20px 20px 18px;
+    border-radius: 16px !important;
+  }
+
+  .analytics-header {
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+
+  .analytics-section-title {
+    font-size: 20px;
+  }
+
+  .analytics-section-sub {
+    font-size: 12px;
+  }
+
+  .filter-toggle-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    min-height: 34px;
+    gap: 5px;
+  }
+
+  .filter-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+  }
+
+  .filter-panel {
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border-radius: 12px !important;
+  }
+
+  .filter-panel-grid {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .filter-group {
+    gap: 4px;
+  }
+
+  .filter-label {
+    font-size: 10px;
+  }
+
+  .filter-select {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+  }
+
+  .filter-apply-btn,
+  .filter-reset-btn {
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    min-height: 34px !important;
+    border-radius: 8px !important;
+  }
+
+  .glass-charts-grid {
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .glass-chart-card {
+    padding: 14px 16px 12px;
+    border-radius: 14px !important;
+  }
+
+  .glass-chart-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .glass-chart-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .glass-chart-title {
+    font-size: 14px;
+  }
+
+  .glass-chart-sub {
+    font-size: 11px;
+  }
+
+  .glass-chart-badge {
+    padding: 3px 10px;
+    font-size: 10px;
+  }
+
+  .dashboard-insight-card {
+    min-height: 300px;
+  }
+
+  .dashboard-insight-card > .glass-chart-header {
+    min-height: 46px;
+  }
+
+  .financial-chart-body {
+    min-height: 176px;
+  }
+
+  .financial-chart-legend {
+    margin-top: 10px;
+    min-height: 22px;
+  }
+
+  .donut-wrap {
+    margin-bottom: 8px;
+  }
+
+  .donut-canvas {
+    max-height: 176px;
+  }
+
+  .donut-center-num {
+    font-size: 22px;
+  }
+
+  .donut-center-text {
+    font-size: 10px;
+  }
+
+  canvas {
+    max-height: 196px;
+  }
+
+  .glass-legend {
+    gap: 12px;
+  }
+
+  .gl-item {
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  .gl-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .sort-toggle-btn {
+    padding: 4px 10px;
+    font-size: 10px;
+    min-height: 28px;
+  }
+
+  .machinery-usage-list {
+    gap: 8px;
+  }
+
+  .machinery-usage-item {
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 10px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+  }
+
+  .machinery-rank {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .machinery-usage-details strong {
+    font-size: 12px;
+  }
+
+  .machinery-usage-count {
+    font-size: 15px;
+  }
+
+  .machinery-usage-state {
+    min-height: 120px;
+    padding: 16px;
+    font-size: 12px;
+  }
 }
 
-.dashboard-container.light-theme .fab-action {
-  background: #ffffff;
-  color: #14532d;
-  border: 2px solid #86efac;
+@media (min-width: 769px) and (max-width: 1280px) {
+  .dashboard-title {
+    font-size: 22px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .analytics-section-title {
+    font-size: 18px;
+  }
+
+  .glass-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .dashboard-insight-card {
+    min-height: 260px;
+  }
+
+  .financial-chart-body {
+    min-height: 156px;
+  }
+
+  canvas {
+    max-height: 168px;
+  }
 }
+
 </style>

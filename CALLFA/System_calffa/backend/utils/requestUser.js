@@ -1,15 +1,21 @@
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../utils/jwtSecret');
 const pool = require('../db');
+const { validateUserSession } = require('../services/session-service');
 
 /**
  * Load the authenticated user from JWT + database (fresh barangay_id).
+ * Rejects tokens whose session was replaced by a newer login.
  */
 async function getRequestUser(req) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const sessionCheck = await validateUserSession(pool, decoded.id, decoded.sid);
+    if (!sessionCheck.ok) return null;
+
     const [users] = await pool.execute(
       `SELECT id, reference_number, full_name, role, barangay_id, status, address
        FROM farmers WHERE id = ?`,

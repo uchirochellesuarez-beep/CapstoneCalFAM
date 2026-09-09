@@ -3,6 +3,7 @@ const {
   formatLocalDate,
   normalizeDateString
 } = require('../utils/philippinesTime');
+const { formatDownPaymentPercentLabel } = require('./booking-workflow');
 
 const STATUS_NOTIFICATION_TYPES = [
   'booking_approved',
@@ -11,7 +12,11 @@ const STATUS_NOTIFICATION_TYPES = [
   'booking_down_payment_required',
   'booking_payment_rejected',
   'booking_payment_verified',
-  'booking_confirmed'
+  'booking_confirmed',
+  'booking_refund_rejected',
+  'booking_refund_completed',
+  'gcash_payment_verified',
+  'gcash_payment_rejected'
 ];
 const OPERATOR_NOTIFICATION_TYPES = [
   'operator_booking_assigned',
@@ -23,20 +28,27 @@ const TREASURER_NOTIFICATION_TYPES = [
   'treasurer_expense_pending',
   'treasurer_expense_reminder',
   'treasurer_down_payment_submitted',
+  'treasurer_down_payment_due',
   'treasurer_balance_payment_submitted',
   'treasurer_collectible_created',
-  'treasurer_refund_requested'
+  'treasurer_refund_requested',
+  'treasurer_gcash_payment_submitted'
 ];
 const ASSISTANCE_NOTIFICATION_TYPES = ['assistance_allocated'];
 const ANNOUNCEMENT_NOTIFICATION_TYPES = ['announcement_posted'];
+const PRESIDENT_NOTIFICATION_TYPES = ['president_income_submitted'];
+const AGRICULTURIST_NOTIFICATION_TYPES = ['agriculturist_income_eligible'];
+const FARMER_INCOME_NOTIFICATION_TYPES = ['income_rejected'];
 const FARMER_REFERENCE_TYPES = ['loan', 'machinery_booking', 'income_assistance_distribution'];
 const OPERATOR_REFERENCE_TYPES = ['operator_machinery_booking', 'operator_income'];
-const TREASURER_REFERENCE_TYPES = ['machinery_expense', 'machinery_booking'];
+const TREASURER_REFERENCE_TYPES = ['machinery_expense', 'machinery_booking', 'loan'];
 const REFERENCE_TYPE_VALUES = [
   ...FARMER_REFERENCE_TYPES,
   ...OPERATOR_REFERENCE_TYPES,
   ...TREASURER_REFERENCE_TYPES,
-  'announcement'
+  'announcement',
+  'gcash_payment_submission',
+  'farmer_income_record'
 ];
 const NOTIFICATION_ENUM_VALUES = [
   'last_month',
@@ -50,6 +62,9 @@ const NOTIFICATION_ENUM_VALUES = [
   ...STATUS_NOTIFICATION_TYPES,
   ...OPERATOR_NOTIFICATION_TYPES,
   ...TREASURER_NOTIFICATION_TYPES,
+  ...PRESIDENT_NOTIFICATION_TYPES,
+  ...AGRICULTURIST_NOTIFICATION_TYPES,
+  ...FARMER_INCOME_NOTIFICATION_TYPES,
   ...ANNOUNCEMENT_NOTIFICATION_TYPES
 ];
 
@@ -64,11 +79,11 @@ async function ensureNotificationSchema() {
       const typeDef = typeColumn[0]?.Type || '';
       const referenceDef = referenceTypeColumn[0]?.Type || '';
 
+      const typeIsVarchar = typeof typeDef === 'string' && typeDef.toLowerCase().startsWith('varchar');
       const needsTypeUpdate =
         typeColumn.length > 0 &&
         typeof typeDef === 'string' &&
-        typeDef.startsWith('enum(') &&
-        !NOTIFICATION_ENUM_VALUES.every((value) => typeDef.includes(`'${value}'`));
+        !typeIsVarchar;
 
       const needsReferenceUpdate =
         referenceTypeColumn.length > 0 &&
@@ -77,11 +92,10 @@ async function ensureNotificationSchema() {
         !REFERENCE_TYPE_VALUES.every((value) => referenceDef.includes(`'${value}'`));
 
       if (needsTypeUpdate) {
-        const enumValuesSql = NOTIFICATION_ENUM_VALUES.map((value) => `'${value}'`).join(', ');
         await pool.query(
-          `ALTER TABLE due_date_notifications MODIFY COLUMN notification_type ENUM(${enumValuesSql}) NOT NULL`
+          'ALTER TABLE due_date_notifications MODIFY COLUMN notification_type VARCHAR(64) NOT NULL'
         );
-        console.log('✅ Updated due_date_notifications.notification_type enum');
+        console.log('✅ Updated due_date_notifications.notification_type to VARCHAR(64)');
       }
 
       if (needsReferenceUpdate) {
@@ -120,17 +134,17 @@ async function upsertNotification(data) {
     );
 
     if (existing.length > 0) {
-      if (data.notification_type === 'overdue_penalty') {
-        const existingTrigger = normalizeDateString(existing[0].trigger_date);
-        if (existingTrigger !== data.trigger_date || existing[0].message !== data.message) {
-          await pool.execute(
-            `UPDATE due_date_notifications
-             SET trigger_date = ?, message = ?, title = ?, is_read = 0
-             WHERE id = ?`,
-            [data.trigger_date, data.message, data.title, existing[0].id]
-          );
-          return true;
-        }
+      const refreshTypes = [
+        'overdue_penalty'
+      ];
+      if (refreshTypes.includes(data.notification_type)) {
+        await pool.execute(
+          `UPDATE due_date_notifications
+           SET trigger_date = ?, message = ?, title = ?, is_read = 0, due_date = ?
+           WHERE id = ?`,
+          [data.trigger_date, data.message, data.title, data.due_date, existing[0].id]
+        );
+        return true;
       }
 
       return false;
@@ -173,7 +187,8 @@ async function createBookingStatusNotification({
   bookingDate,
   rejectionReason = null,
   downPaymentAmount = null,
-  remainingBalance = null
+  remainingBalance = null,
+  downPaymentPercent = null
 }) {
   // Validate required parameters
   if (!farmerId || !bookingId) {
@@ -211,7 +226,9 @@ async function createBookingStatusNotification({
     'Down Payment Verified': 'booking_payment_verified',
     'Booking Confirmed': 'booking_confirmed',
     Rejected: 'booking_rejected',
-    Expired: 'booking_expired'
+    Expired: 'booking_expired',
+    'Refund Rejected': 'booking_refund_rejected',
+    'Refund Completed': 'booking_refund_completed'
   };
 
   const notificationType = notificationTypeMap[normalizedStatus];
@@ -225,17 +242,23 @@ async function createBookingStatusNotification({
   const machineLabel = machineryName || 'Machinery booking';
   const bookingDateLabel = normalizeDateString(bookingDate) || 'the scheduled date';
   const triggerDate = formatLocalDate(new Date());
+  const pctLabel = formatDownPaymentPercentLabel(downPaymentPercent);
+  const amountLabel = downPaymentAmount != null
+    ? `₱${Number(downPaymentAmount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+    : null;
 
   const payloadByStatus = {
     Approved: {
       title: `${machineLabel} Booking Approved`,
-      message: `Your booking scheduled for ${bookingDateLabel} has been approved.`
+      message: `Your booking scheduled for ${bookingDateLabel} has been approved and assigned to an operator. Pay the treasurer after the service is completed.`
     },
     'Awaiting Down Payment': {
       title: `${machineLabel} — Down Payment Required`,
-      message: downPaymentAmount != null
-        ? `Your booking for ${bookingDateLabel} is approved pending payment. Pay 20% down (₱${Number(downPaymentAmount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}) to reserve your slot.`
-        : `Your booking for ${bookingDateLabel} requires a 20% down payment before reservation.`
+      message: amountLabel
+        ? (pctLabel
+          ? `Your booking for ${bookingDateLabel} is approved pending payment. Pay ${pctLabel}% down (${amountLabel}) to reserve your slot.`
+          : `Your booking for ${bookingDateLabel} is approved pending payment. Pay a down payment of ${amountLabel} to reserve your slot.`)
+        : `Your booking for ${bookingDateLabel} requires a down payment before reservation.`
     },
     'Payment Rejected': {
       title: `${machineLabel} — Payment Rejected`,
@@ -245,7 +268,9 @@ async function createBookingStatusNotification({
     },
     'Down Payment Verified': {
       title: `${machineLabel} — Down Payment Verified`,
-      message: `Your 20% down payment has been verified. Awaiting final booking confirmation.`
+      message: pctLabel
+        ? `Your ${pctLabel}% down payment has been verified. Awaiting final booking confirmation.`
+        : `Your down payment has been verified. Awaiting final booking confirmation.`
     },
     'Booking Confirmed': {
       title: `${machineLabel} Booking Confirmed`,
@@ -260,6 +285,14 @@ async function createBookingStatusNotification({
     Expired: {
       title: `${machineLabel} Booking Expired`,
       message: `Your booking scheduled for ${bookingDateLabel} expired because the scheduled date has already passed.`
+    },
+    'Refund Rejected': {
+      title: `${machineLabel} — Refund Request Rejected`,
+      message: `Your down payment refund request for booking on ${bookingDateLabel} was rejected. Contact the treasurer for details.`
+    },
+    'Refund Completed': {
+      title: `${machineLabel} — Down Payment Refunded`,
+      message: `Your down payment for the booking on ${bookingDateLabel} has been refunded.`
     }
   };
 
@@ -291,9 +324,17 @@ async function createBookingStatusNotification({
 
 const BOOKING_REFERENCE_TYPES = ['machinery_booking', 'operator_machinery_booking', 'operator_income'];
 
-async function deleteNotificationsForReference(referenceType, referenceId) {
+async function deleteNotificationsForReference(referenceType, referenceId, notificationType = null) {
   const refId = parseInt(referenceId, 10);
   if (!referenceType || !refId) return 0;
+
+  if (notificationType) {
+    const [result] = await pool.execute(
+      'DELETE FROM due_date_notifications WHERE reference_type = ? AND reference_id = ? AND notification_type = ?',
+      [referenceType, refId, notificationType]
+    );
+    return result.affectedRows || 0;
+  }
 
   const [result] = await pool.execute(
     'DELETE FROM due_date_notifications WHERE reference_type = ? AND reference_id = ?',
@@ -323,16 +364,25 @@ async function purgeOrphanedNotifications() {
     `DELETE n FROM due_date_notifications n
      LEFT JOIN machinery_bookings mb ON mb.id = n.reference_id
      WHERE n.reference_type IN ('machinery_booking', 'operator_machinery_booking', 'operator_income')
+       AND n.notification_type NOT IN ('treasurer_gcash_payment_submitted', 'gcash_payment_verified', 'gcash_payment_rejected')
        AND mb.id IS NULL`,
     `DELETE n FROM due_date_notifications n
      LEFT JOIN machinery_expenses me ON me.id = n.reference_id
      WHERE n.reference_type = 'machinery_expense' AND me.id IS NULL`,
     `DELETE n FROM due_date_notifications n
      LEFT JOIN loans l ON l.id = n.reference_id
-     WHERE n.reference_type = 'loan' AND l.id IS NULL`,
+     WHERE n.reference_type = 'loan'
+       AND n.notification_type NOT IN ('treasurer_gcash_payment_submitted', 'gcash_payment_verified', 'gcash_payment_rejected')
+       AND l.id IS NULL`,
+    `DELETE n FROM due_date_notifications n
+     LEFT JOIN gcash_payment_submissions s ON s.id = n.reference_id
+     WHERE n.reference_type = 'gcash_payment_submission' AND s.id IS NULL`,
     `DELETE n FROM due_date_notifications n
      LEFT JOIN income_assistance_distributions d ON d.id = n.reference_id
      WHERE n.reference_type = 'income_assistance_distribution' AND d.id IS NULL`,
+    `DELETE n FROM due_date_notifications n
+     LEFT JOIN farmer_income_records r ON r.id = n.reference_id
+     WHERE n.reference_type = 'farmer_income_record' AND r.id IS NULL`,
     `DELETE n FROM due_date_notifications n
      LEFT JOIN announcements a ON a.id = n.reference_id
      WHERE n.reference_type = 'announcement' AND a.id IS NULL`,
@@ -342,13 +392,18 @@ async function purgeOrphanedNotifications() {
        AND NOT EXISTS (
          SELECT 1 FROM machinery_booking_refunds r
          WHERE r.booking_id = n.reference_id
-           AND r.refund_status IN ('Refund Requested', 'Under Review', 'Approved', 'Pending')
+           AND r.refund_status IN ('Refund Requested','Under Review','Approved','Pending')
        )`,
     `DELETE n FROM due_date_notifications n
      INNER JOIN machinery_bookings mb ON mb.id = n.reference_id
      WHERE n.reference_type = 'machinery_booking'
        AND n.notification_type = 'treasurer_down_payment_submitted'
        AND mb.status <> 'Awaiting Payment Verification'`,
+    `DELETE n FROM due_date_notifications n
+     INNER JOIN machinery_bookings mb ON mb.id = n.reference_id
+     WHERE n.reference_type = 'machinery_booking'
+       AND n.notification_type = 'treasurer_down_payment_due'
+       AND mb.status NOT IN ('Awaiting Down Payment', 'Payment Rejected')`,
     `DELETE n FROM due_date_notifications n
      WHERE n.notification_type = 'treasurer_balance_payment_submitted'
        AND n.reference_type = 'machinery_booking'
@@ -465,6 +520,122 @@ async function createAnnouncementPostedNotifications({
   return created;
 }
 
+async function createStaffRoleNotification({
+  recipientId,
+  expectedRole,
+  referenceType,
+  referenceId,
+  notificationType,
+  title,
+  message,
+  dueDate = null
+}) {
+  const recipientIdNum = parseInt(recipientId, 10);
+  const referenceIdNum = parseInt(referenceId, 10);
+
+  if (!recipientIdNum || !referenceIdNum || !expectedRole || !notificationType || !title || !message) {
+    return false;
+  }
+
+  const [rows] = await pool.execute(
+    'SELECT id FROM farmers WHERE id = ? AND role = ?',
+    [recipientIdNum, expectedRole]
+  );
+  if (rows.length === 0) return false;
+
+  const triggerDate = formatLocalDate(new Date());
+  const dueDateLabel = dueDate ? normalizeDateString(dueDate) : triggerDate;
+
+  return upsertNotification({
+    farmer_id: recipientIdNum,
+    reference_type: referenceType,
+    reference_id: referenceIdNum,
+    notification_type: notificationType,
+    title,
+    message,
+    due_date: dueDateLabel,
+    trigger_date: triggerDate
+  });
+}
+
+async function notifyBarangayRole({
+  barangayId,
+  role,
+  recordId,
+  notificationType,
+  title,
+  message
+}) {
+  if (!barangayId || !recordId || !role) return 0;
+
+  const [recipients] = await pool.execute(
+    `SELECT id FROM farmers WHERE role = ? AND barangay_id = ? AND status = 'approved'`,
+    [role, barangayId]
+  );
+
+  let notified = 0;
+  for (const recipient of recipients) {
+    const sent = await createStaffRoleNotification({
+      recipientId: recipient.id,
+      expectedRole: role,
+      referenceType: 'farmer_income_record',
+      referenceId: recordId,
+      notificationType,
+      title,
+      message
+    });
+    if (sent) notified += 1;
+  }
+
+  return notified;
+}
+
+async function notifyPresidentsOfIncomeSubmission({ recordId, barangayId, farmerName }) {
+  const farmerLabel = farmerName || 'A farmer';
+  return notifyBarangayRole({
+    barangayId,
+    role: 'president',
+    recordId,
+    notificationType: 'president_income_submitted',
+    title: 'Farm Income Submitted for Review',
+    message: `${farmerLabel} submitted a farm income record. Please review and mark as Eligible if qualified.`
+  });
+}
+
+async function notifyAgriculturistsOfEligibleIncome({ recordId, barangayId, farmerName }) {
+  const farmerLabel = farmerName || 'A farmer';
+  return notifyBarangayRole({
+    barangayId,
+    role: 'agriculturist',
+    recordId,
+    notificationType: 'agriculturist_income_eligible',
+    title: 'Eligible for Fertilizer and Seeds',
+    message: `${farmerLabel} is now eligible. Please allocate fertilizer and seeds assistance.`
+  });
+}
+
+async function createIncomeRejectedNotification({ farmerId, recordId, reason }) {
+  const farmerIdNum = parseInt(farmerId, 10);
+  const recordIdNum = parseInt(recordId, 10);
+  if (!farmerIdNum || !recordIdNum) return false;
+
+  const reasonText = String(reason || '').trim();
+  const triggerDate = formatLocalDate(new Date());
+
+  return upsertNotification({
+    farmer_id: farmerIdNum,
+    reference_type: 'farmer_income_record',
+    reference_id: recordIdNum,
+    notification_type: 'income_rejected',
+    title: 'Farm Income Record Rejected',
+    message: reasonText
+      ? `Your farm income record was not approved. Reason: ${reasonText}. Please update and resubmit.`
+      : 'Your farm income record was not approved. Please update and resubmit.',
+    due_date: triggerDate,
+    trigger_date: triggerDate
+  });
+}
+
 async function createTreasurerNotification({
   treasurerId,
   referenceType,
@@ -579,7 +750,7 @@ async function createOperatorBookingAssignedNotification({
     referenceId: bookingId,
     notificationType: 'operator_booking_assigned',
     title: `${machineLabel} Booking Assigned`,
-    message: `A booking for ${machineLabel} on ${bookingDateLabel} has been confirmed and assigned to you.`,
+    message: `A booking for ${machineLabel} on ${bookingDateLabel} has been approved and assigned to you.`,
     dueDate: bookingDate
   });
 }
@@ -641,7 +812,7 @@ async function createOperatorIncomeNotification({
     referenceId: bookingId,
     notificationType: 'operator_income_credited',
     title: `Income Credited — ${machineLabel}`,
-    message: `You received ₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} labor compensation for booking #${bookingId} (${txDate}).`,
+    message: `You received ₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} labor compensation for ${machineLabel} (${txDate}).`,
     dueDate: txDate
   });
 }
@@ -659,10 +830,85 @@ async function createTreasurerDownPaymentSubmittedNotification({
     referenceType: 'machinery_booking',
     referenceId: bookingId,
     notificationType: 'treasurer_down_payment_submitted',
-    title: `Down Payment Proof — Booking #${bookingId}`,
+    title: 'Down Payment Proof',
     message: `${farmerName || 'A farmer'} submitted down payment proof for ${machineryName || 'machinery'} (₱${Number(amountPaid || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}). Please verify.`,
     dueDate: expenseDate
   });
+}
+
+/**
+ * Notify treasurer (or president for treasurer bookings) that a face-to-face /
+ * GCash down payment is due — before the farmer has submitted proof.
+ */
+async function createDownPaymentDueNotification({
+  recipientId,
+  bookingId,
+  farmerName,
+  machineryName,
+  amountDue,
+  percent = null,
+  bookingDate = null
+}) {
+  const recipientIdNum = parseInt(recipientId, 10);
+  const bookingIdNum = parseInt(bookingId, 10);
+  if (!recipientIdNum || !bookingIdNum) return false;
+
+  const [rows] = await pool.execute(
+    `SELECT id, role FROM farmers
+     WHERE id = ? AND role IN ('treasurer', 'president') AND status = 'approved'`,
+    [recipientIdNum]
+  );
+  if (!rows.length) return false;
+
+  const pctLabel = formatDownPaymentPercentLabel(percent);
+  const amountLabel = `₱${Number(amountDue || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+  const pctPart = pctLabel ? `${pctLabel}% ` : '';
+  const dateLabel = normalizeDateString(bookingDate) || formatLocalDate(new Date());
+
+  return upsertNotification({
+    farmer_id: recipientIdNum,
+    reference_type: 'machinery_booking',
+    reference_id: bookingIdNum,
+    notification_type: 'treasurer_down_payment_due',
+    title: 'Down Payment Due',
+    message: `${farmerName || 'A farmer'} must pay a ${pctPart}down payment of ${amountLabel} for ${machineryName || 'machinery'} (booking date ${dateLabel}). They may pay face-to-face — you can record the cash down payment.`,
+    due_date: dateLabel,
+    trigger_date: formatLocalDate(new Date())
+  });
+}
+
+async function notifyBarangayDownPaymentDue({
+  barangayId,
+  bookingId,
+  farmerName,
+  bookerRole,
+  machineryName,
+  amountDue,
+  percent = null,
+  bookingDate = null
+}) {
+  if (!barangayId || !bookingId) return 0;
+  const { getPaymentVerifierRole } = require('./booking-workflow');
+  const verifierRole = getPaymentVerifierRole(bookerRole);
+  const [verifiers] = await pool.execute(
+    `SELECT id FROM farmers
+     WHERE role = ? AND barangay_id = ? AND status = 'approved'`,
+    [verifierRole, barangayId]
+  );
+  let count = 0;
+  for (const v of verifiers) {
+    const ok = await createDownPaymentDueNotification({
+      recipientId: v.id,
+      bookingId,
+      farmerName,
+      machineryName,
+      amountDue,
+      percent,
+      bookingDate
+    });
+    if (ok) count += 1;
+  }
+  return count;
 }
 
 async function createTreasurerBalancePaymentSubmittedNotification({
@@ -722,6 +968,25 @@ async function createTreasurerRefundRequestedNotification({
   });
 }
 
+async function createTreasurerGcashPaymentSubmittedNotification({
+  treasurerId,
+  referenceType,
+  referenceId,
+  farmerName,
+  typeLabel,
+  refLabel
+}) {
+  return createTreasurerNotification({
+    treasurerId,
+    referenceType,
+    referenceId,
+    notificationType: 'treasurer_gcash_payment_submitted',
+    title: `GCash Payment Proof — ${typeLabel} ${refLabel}`,
+    message: `${farmerName || 'A farmer'} submitted GCash payment proof for ${String(typeLabel || 'transaction').toLowerCase()} ${refLabel}. Please check the screenshot and enter the actual amount paid before confirming.`,
+    dueDate: formatLocalDate(new Date())
+  });
+}
+
 async function createManagerConfirmBookingNotification({
   managerId,
   bookingId,
@@ -746,7 +1011,7 @@ async function createManagerConfirmBookingNotification({
     reference_type: 'machinery_booking',
     reference_id: parseInt(bookingId, 10),
     notification_type: 'booking_down_payment_required',
-    title: `Confirm Booking #${bookingId}`,
+    title: 'Confirm Booking',
     message: `Down payment verified for ${machineryName || 'machinery'} (${farmerName || 'farmer'}). Perform final confirmation for ${dateLabel}.`,
     due_date: dateLabel,
     trigger_date: triggerDate
@@ -756,6 +1021,9 @@ async function createManagerConfirmBookingNotification({
 module.exports = {
   ANNOUNCEMENT_NOTIFICATION_TYPES,
   ASSISTANCE_NOTIFICATION_TYPES,
+  PRESIDENT_NOTIFICATION_TYPES,
+  AGRICULTURIST_NOTIFICATION_TYPES,
+  FARMER_INCOME_NOTIFICATION_TYPES,
   FARMER_REFERENCE_TYPES,
   OPERATOR_NOTIFICATION_TYPES,
   OPERATOR_REFERENCE_TYPES,
@@ -774,11 +1042,17 @@ module.exports = {
   createBookingStatusNotification,
   createIncomeAssistanceNotification,
   createAnnouncementPostedNotifications,
+  notifyPresidentsOfIncomeSubmission,
+  notifyAgriculturistsOfEligibleIncome,
+  createIncomeRejectedNotification,
   createTreasurerPendingExpenseNotification,
   createTreasurerDownPaymentSubmittedNotification,
+  createDownPaymentDueNotification,
+  notifyBarangayDownPaymentDue,
   createTreasurerBalancePaymentSubmittedNotification,
   createTreasurerCollectibleCreatedNotification,
   createTreasurerRefundRequestedNotification,
+  createTreasurerGcashPaymentSubmittedNotification,
   createManagerConfirmBookingNotification,
   createOperatorBookingAssignedNotification,
   createOperatorBookingUpdatedNotification,

@@ -11,9 +11,9 @@
             <line x1="8" y1="9" x2="10" y2="9" />
           </svg>
         </span>
-        Talaan ng Kita ng mga Magsasaka
+        {{ $t('ui.farmerIncomeOfficerTitle') }}
       </h1>
-      <p class="page-subtitle">Suriin ang mga naitatalang kita mula sa mga magsasaka sa iyong barangay</p>
+      <p class="page-subtitle">{{ $t('ui.farmerIncomeOfficerSub') }}</p>
     </div>
 
     <!-- Tab Navigation -->
@@ -48,36 +48,40 @@
 
     <!-- No barangay warning -->
     <div v-if="!currentUser?.barangay_id" class="alert alert-warning">
-      Hindi ka naka-assign sa anumang barangay. Makipag-ugnayan sa admin.
+      {{ $t('ui.noBarangayAssigned') }}
     </div>
 
     <!-- TAB 1: INCOME RECORDS -->
     <template v-if="activeTab === 'records'">
       <!-- Search / Filter -->
       <div class="filter-bar" v-if="records.length > 0">
-        <div class="search-box">
-          <span class="search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            v-model="searchQuery"
-            placeholder="Hanapin ayon sa pangalan ng magsasaka..."
-            class="search-input"
-          />
+        <div class="ih-tools-card sc-tools-card">
+          <div class="tools-card-top">
+            <div class="search-bar">
+              <span class="search-icon-wrap" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                v-model="searchQuery"
+                :placeholder="$t('ui.searchFarmerName')"
+                class="toolbar-input search-input-main"
+              />
+            </div>
+          </div>
         </div>
         <p v-if="filteredRecords.length > 0" class="results-count">
-          {{ filteredRecords.length }} {{ filteredRecords.length === 1 ? 'talaan' : 'mga talaan' }}
+          <span class="results-count-num">{{ filteredRecords.length }}</span>
+          {{ filteredRecords.length === 1 ? 'talaan' : 'mga talaan' }}
         </p>
       </div>
 
       <!-- Loading -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Kinukuha ang mga talaan...</p>
+        <p>{{ $t('ui.loadingRecords') }}</p>
       </div>
 
       <!-- Empty State -->
@@ -88,12 +92,12 @@
             <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
           </svg>
         </div>
-        <p>Wala pang naitatalang kita mula sa mga magsasaka sa iyong barangay.</p>
+        <p>{{ $t('ui.noIncomeInBarangay') }}</p>
       </div>
 
       <!-- Records List -->
       <div v-else class="records-list">
-        <div v-if="filteredRecords.length === 0 && searchQuery.trim()" class="empty-state empty-state--search" aria-label="Walang tumugmang talaan">
+        <div v-if="filteredRecords.length === 0 && searchQuery.trim()" class="empty-state empty-state--search" :aria-label="$t('ui.noMatchingRecords')">
           <div class="empty-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7" />
@@ -105,6 +109,8 @@
           v-for="record in filteredRecords"
           :key="record.id"
           class="record-card"
+          :class="{ 'notification-highlight-card': String(highlightedRecordId) === String(record.id) }"
+          :data-income-record-id="record.id"
         >
           <div class="record-header">
             <div class="farmer-info">
@@ -150,7 +156,7 @@
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
               </span>
-              <span class="detail-label">Lawak:</span>
+              <span class="detail-label">{{ $t('ui.areaColon') }}</span>
               <span>{{ record.area_hectares }} ektarya</span>
             </div>
           </div>
@@ -163,7 +169,7 @@
                     <polyline points="17 6 23 6 23 12" />
                   </svg>
                 </span>
-                <span class="fin-stat-label">Benta</span>
+                <span class="fin-stat-label">{{ $t('ui.sales') }}</span>
               </div>
               <span class="fin-stat-value">₱{{ parseFloat(record.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
@@ -175,7 +181,7 @@
                     <polyline points="17 18 23 18 23 12" />
                   </svg>
                 </span>
-                <span class="fin-stat-label">Gastos</span>
+                <span class="fin-stat-label">{{ $t('ui.expenses') }}</span>
               </div>
               <span class="fin-stat-value">₱{{ parseFloat(record.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
@@ -199,9 +205,15 @@
 
     <!-- VIEW DETAIL MODAL - RECORD -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay farmer-income-hub-modal" :class="{ 'light-theme': isLight }" @click.self="closeDetailModal">
-        <div class="modal-container">
-          <div class="modal-header">
+      <Transition name="app-modal">
+        <div
+          v-if="showDetailModal"
+          class="modal-overlay app-modal-overlay farmer-income-hub-modal"
+          :class="{ 'light-theme': isLight }"
+          @click.self="closeDetailModal"
+        >
+          <div class="modal-content modal-large" role="dialog" aria-modal="true">
+            <div class="modal-header">
             <div class="modal-title-with-status">
               <h2>
                 <span class="modal-title-icon" aria-hidden="true">
@@ -211,7 +223,7 @@
                     <path d="M9 12h6M9 16h6" />
                   </svg>
                 </span>
-                Buong Detalye ng Talaan
+                {{ $t('ui.fullRecordDetails') }}
               </h2>
               <span class="modal-status-badge" :class="'status-' + getStatusClass(selectedRecord.status)">
                 {{ selectedRecord.status }}
@@ -242,11 +254,11 @@
                     <path d="M12 12c0-4 4-8 8-8 0 4-4 8-8 8" />
                   </svg>
                 </span>
-                Detalye ng Taniman
+                {{ $t('incomeForm.farmDetails') }}
               </h3>
               <div class="detail-grid">
                 <div class="detail-cell">
-                  <span class="cell-label">Petsa ng Talaan</span>
+                  <span class="cell-label">{{ $t('ui.recordDate') }}</span>
                   <span class="cell-value">{{ formatDate(selectedRecord.created_at) }}</span>
                 </div>
                 <div class="detail-cell">
@@ -254,11 +266,11 @@
                   <span class="cell-value">{{ selectedRecord.area_hectares }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Paraan ng Pagtatanim</span>
+                  <span class="cell-label">{{ $t('incomeForm.plantingMethod') }}</span>
                   <span class="cell-value">{{ selectedRecord.planting_method === 'sabog' ? 'Sabog' : 'Talok' }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Patubig</span>
+                  <span class="cell-label">{{ $t('ui.irrigation') }}</span>
                   <span class="cell-value">{{ formatIrrigation(selectedRecord.irrigation_type) }}</span>
                 </div>
               </div>
@@ -274,15 +286,16 @@
                     <path d="M12 10v4" />
                   </svg>
                 </span>
-                Mga Ginamit na Abono
+                {{ $t('incomeForm.fertilizersUsed') }}
               </h3>
+              <div class="detail-table-desktop fin-desktop-table">
               <table class="detail-table">
                 <thead>
                   <tr>
-                    <th>Klase</th>
-                    <th>Sako</th>
-                    <th>Presyo/Sako</th>
-                    <th>Kabuuan</th>
+                    <th>{{ $t('ui.classLabel') }}</th>
+                    <th>{{ $t('ui.sacks') }}</th>
+                    <th>{{ $t('ui.pricePerSack') }}</th>
+                    <th>{{ $t('ui.total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -295,11 +308,33 @@
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="3" class="foot-label">Kabuuang Abono:</td>
+                    <td colspan="3" class="foot-label">{{ $t('ui.fertilizerTotalColon') }}</td>
                     <td class="foot-value">₱{{ parseFloat(selectedRecord.total_fertilizer_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
+              <div class="detail-table-mobile fin-mobile-list">
+                <article v-for="f in selectedRecord.fertilizers" :key="'f-m-' + f.id" class="fin-mobile-card">
+                  <div class="fin-mobile-card-top">
+                    <h4 class="fin-mobile-card-name">{{ f.fertilizer_type }}</h4>
+                  </div>
+                  <div class="fin-mobile-card-meta">
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.sacks') }}</span>
+                      <span>{{ f.sacks }}</span>
+                    </div>
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.pricePerSack') }}</span>
+                      <span>₱{{ parseFloat(f.price_per_sack || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.total') }}</span>
+                      <span class="amt">₱{{ parseFloat(f.line_total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
             </div>
             <div class="detail-section" v-else>
               <h3 class="detail-section-title">
@@ -310,9 +345,9 @@
                     <path d="M12 10v4" />
                   </svg>
                 </span>
-                Mga Ginamit na Abono
+                {{ $t('incomeForm.fertilizersUsed') }}
               </h3>
-              <p class="no-data">Walang naitalang abono.</p>
+              <p class="no-data">{{ $t('ui.noFertilizerRecorded') }}</p>
             </div>
 
             <!-- Pesticides -->
@@ -325,15 +360,16 @@
                     <path d="M8 22h8" />
                   </svg>
                 </span>
-                Mga Ginamit na Lason
+                {{ $t('incomeForm.pesticidesUsed') }}
               </h3>
+              <div class="detail-table-desktop fin-desktop-table">
               <table class="detail-table">
                 <thead>
                   <tr>
-                    <th>Klase</th>
-                    <th>Bilang</th>
-                    <th>Presyo/Unit</th>
-                    <th>Kabuuan</th>
+                    <th>{{ $t('ui.classLabel') }}</th>
+                    <th>{{ $t('ui.count') }}</th>
+                    <th>{{ $t('ui.pricePerUnit') }}</th>
+                    <th>{{ $t('ui.total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -346,11 +382,33 @@
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="3" class="foot-label">Kabuuang Lason:</td>
+                    <td colspan="3" class="foot-label">{{ $t('ui.pesticideTotalColon') }}</td>
                     <td class="foot-value">₱{{ parseFloat(selectedRecord.total_pesticide_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
+              <div class="detail-table-mobile fin-mobile-list">
+                <article v-for="p in selectedRecord.pesticides" :key="'p-m-' + p.id" class="fin-mobile-card">
+                  <div class="fin-mobile-card-top">
+                    <h4 class="fin-mobile-card-name">{{ p.pesticide_type }}</h4>
+                  </div>
+                  <div class="fin-mobile-card-meta">
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.count') }}</span>
+                      <span>{{ p.quantity }}</span>
+                    </div>
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.pricePerUnit') }}</span>
+                      <span>₱{{ parseFloat(p.price_per_unit || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                    <div class="fin-mobile-meta-row">
+                      <span class="fin-mobile-label">{{ $t('ui.total') }}</span>
+                      <span class="amt">₱{{ parseFloat(p.line_total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
             </div>
             <div class="detail-section" v-else>
               <h3 class="detail-section-title">
@@ -361,9 +419,9 @@
                     <path d="M8 22h8" />
                   </svg>
                 </span>
-                Mga Ginamit na Lason
+                {{ $t('incomeForm.pesticidesUsed') }}
               </h3>
-              <p class="no-data">Walang naitalang lason.</p>
+              <p class="no-data">{{ $t('ui.noPesticideRecorded') }}</p>
             </div>
 
             <!-- Labor & Expenses -->
@@ -377,11 +435,11 @@
                     <path d="M16 3.13a4 4 0 010 7.75" />
                   </svg>
                 </span>
-                Gastos sa Labor at Iba Pa
+                {{ $t('incomeForm.laborOther') }}
               </h3>
               <div class="expense-grid">
                 <div class="expense-row">
-                  <span>Paghahanda ng Lupa</span>
+                  <span>{{ $t('ui.landPrep') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.land_preparation_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
@@ -434,15 +492,15 @@
                     <path d="M12 12v10" />
                   </svg>
                 </span>
-                Ani
+                {{ $t('ui.harvest') }}
               </h3>
               <div class="detail-grid">
                 <div class="detail-cell">
-                  <span class="cell-label">Sako na Naani</span>
+                  <span class="cell-label">{{ $t('ui.sacksHarvested') }}</span>
                   <span class="cell-value">{{ selectedRecord.sacks_harvested }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Kilo Kada Sako</span>
+                  <span class="cell-label">{{ $t('incomeForm.kgPerSack') }}</span>
                   <span class="cell-value">{{ selectedRecord.kg_per_sack }} kg</span>
                 </div>
                 <div class="detail-cell">
@@ -466,30 +524,28 @@
                     <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
                 </span>
-                Buod
+                {{ $t('incomeForm.summary') }}
               </h3>
               <div class="grand-summary">
                 <div class="grand-row income-row">
-                  <span>Kabuuang Benta</span>
+                  <span>{{ $t('incomeForm.totalSales') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="grand-row expense-summary-row">
-                  <span>Kabuuang Gastos</span>
+                  <span>{{ $t('ui.totalExpenses') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="grand-row" :class="parseFloat(selectedRecord.net_income || 0) >= 0 ? 'net-profit-row' : 'net-loss-row'">
-                  <span>Netong Kita</span>
+                  <span>{{ $t('incomeForm.netIncome') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
               </div>
             </div>
 
           </div>
-          <div class="modal-footer">
-            <button class="btn-close-modal" @click="closeDetailModal">Isara</button>
           </div>
         </div>
-      </div>
+      </Transition>
     </Teleport>
 
 
@@ -497,12 +553,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { useIncomeHubMobile } from '../composables/useIncomeHubMobile'
+import { consumeNotificationDeepLink } from '../utils/paymentHistoryFocus'
+import { getIncomeHighlightId, scrollIncomeRecordIntoView } from '../utils/incomeRecordFocus'
 
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+const route = useRoute()
+const router = useRouter()
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
@@ -516,8 +578,9 @@ const records = ref([])
 const searchQuery = ref('')
 const showDetailModal = ref(false)
 const selectedRecord = ref(null)
+const highlightedRecordId = ref(null)
 
-
+useIncomeHubMobile(() => showDetailModal.value)
 
 // Filter
 const filteredRecords = computed(() => {
@@ -597,9 +660,36 @@ const getStatusClass = (status) => {
 
 
 
-onMounted(() => {
-  fetchRecords()
+onMounted(async () => {
+  await fetchRecords()
+  await applyIncomeHighlightFromRoute()
 })
+
+watch(
+  () => [route.query.highlight, route.query.type, route.query.nav],
+  async () => {
+    if (!getIncomeHighlightId(route.query)) return
+    await fetchRecords()
+    await applyIncomeHighlightFromRoute()
+  }
+)
+
+async function applyIncomeHighlightFromRoute() {
+  const highlightId = getIncomeHighlightId(route.query)
+  if (!highlightId) return
+
+  highlightedRecordId.value = highlightId
+  const eligible = records.value.filter((r) => r.status === 'Eligible')
+  const match = eligible.find((r) => String(r.id) === highlightId)
+  if (match && searchQuery.value.trim()) {
+    searchQuery.value = ''
+  }
+
+  await scrollIncomeRecordIntoView(highlightId, nextTick)
+  consumeNotificationDeepLink(router, route, () => {
+    highlightedRecordId.value = null
+  })
+}
 </script>
 
 <style scoped>
@@ -817,6 +907,11 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
+@keyframes incomeHighlightPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.22); }
+  50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.38); }
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
@@ -866,6 +961,13 @@ onMounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(22, 101, 52, 0.12);
   border-color: #166534;
+}
+
+.record-card.notification-highlight-card {
+  animation: incomeHighlightPulse 2s ease-in-out 3;
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-color: #ef4444;
 }
 
 .record-header {
@@ -1315,7 +1417,7 @@ onMounted(() => {
 }
 
 /* MODALS */
-.modal-overlay {
+.modal-overlay:not(.app-modal-overlay) {
   position: fixed;
   top: 0;
   left: 0;
@@ -1329,7 +1431,8 @@ onMounted(() => {
   padding: 1rem;
 }
 
-.modal-container {
+.modal-container,
+.modal-content {
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -2176,6 +2279,12 @@ onMounted(() => {
 
 .income-hub-subpage:not(.light-theme) .record-card:hover {
   box-shadow: 0 18px 40px rgba(5, 12, 8, 0.28);
+}
+
+.income-hub-subpage:not(.light-theme) .record-card.notification-highlight-card {
+  background: rgba(127, 29, 29, 0.42);
+  border-color: #f87171;
+  outline-color: #f87171;
 }
 
 .income-hub-subpage:not(.light-theme) .record-header {

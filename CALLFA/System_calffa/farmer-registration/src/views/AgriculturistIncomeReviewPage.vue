@@ -1,8 +1,8 @@
 <template>
   <div class="page-container agriculturist-income-page" :class="{ 'light-theme': isLight }">
     <div class="page-header">
-      <h1 class="page-title">Talaan ng Kita at Pamamahagi ng Tulong</h1>
-      <p class="page-subtitle">Tuklasin ang mga inaprubang talaan at pamahalaan ang distribusyon ng tulong sa pagsasaka</p>
+      <h1 class="page-title">{{ $t('ui.farmIncomeAssistTitle') }}</h1>
+      <p class="page-subtitle">{{ $t('ui.discoverApprovedHint') }}</p>
     </div>
 
     <!-- Tab Navigation -->
@@ -12,14 +12,14 @@
         :class="{ active: activeTab === 'eligible' }"
         @click="activeTab = 'eligible'; fetchRecords()"
       >
-        Eligible Records
+        {{ $t('common.eligibleRecords') }}
       </button>
       <button 
         class="tab-btn" 
         :class="{ active: activeTab === 'assistance' }"
         @click="activeTab = 'assistance'; fetchDistributions()"
       >
-        Pamamahagi ng Tulong
+        {{ $t('ui.assistanceDistribution') }}
       </button>
     </div>
 
@@ -35,7 +35,7 @@
 
     <!-- No barangay warning -->
     <div v-if="!currentUser?.barangay_id" class="alert alert-warning">
-      Hindi ka naka-assign sa anumang barangay. Makipag-ugnayan sa admin.
+      {{ $t('ui.noBarangayAssigned') }}
     </div>
 
     <!-- TAB 1: ELIGIBLE RECORDS -->
@@ -43,7 +43,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Kinukuha ang mga talaan...</p>
+        <p>{{ $t('ui.loadingRecords') }}</p>
       </div>
 
       <!-- Empty State -->
@@ -53,7 +53,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
           </svg>
         </div>
-        <p>Walang eligible na naitatalang kita pa sa iyong barangay.</p>
+        <p>{{ $t('ui.noEligibleIncome') }}</p>
       </div>
 
       <!-- Records Grid -->
@@ -62,6 +62,8 @@
           v-for="record in eligibleRecords"
           :key="record.id"
           class="record-card"
+          :class="{ 'notification-highlight-card': String(highlightedRecordId) === String(record.id) }"
+          :data-income-record-id="record.id"
         >
           <!-- Header -->
           <div class="card-header">
@@ -76,37 +78,37 @@
                 <div class="farmer-date">{{ formatDate(record.created_at) }}</div>
               </div>
             </div>
-            <span class="status-badge eligible">Eligible</span>
+            <span class="status-badge eligible">{{ $t('ui.eligible') }}</span>
           </div>
 
           <!-- Farm Info -->
           <div class="card-info">
             <div class="info-row">
-              <span class="info-label">Lawak:</span>
-              <span class="info-value">{{ record.area_hectares }} ektarya</span>
+              <span class="info-label">{{ $t('ui.areaColon') }}</span>
+              <span class="info-value">{{ $t('ui.hectaresValue', { n: record.area_hectares }) }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Pagtatanim:</span>
-              <span class="info-value">{{ record.planting_method === 'sabog' ? 'Sabog' : 'Talok' }}</span>
+              <span class="info-label">{{ $t('ui.plantingColon') }}</span>
+              <span class="info-value">{{ record.planting_method === 'sabog' ? $t('ui.sabog') : $t('ui.talok') }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Ani:</span>
-              <span class="info-value">{{ record.sacks_harvested }} sako</span>
+              <span class="info-label">{{ $t('ui.harvestColon') }}</span>
+              <span class="info-value">{{ $t('ui.sacksValue', { n: record.sacks_harvested }) }}</span>
             </div>
           </div>
 
           <!-- Financials -->
           <div class="card-financials">
             <div class="fin-item">
-              <span>Benta:</span>
+              <span>{{ $t('ui.salesColon') }}</span>
               <span class="fin-value income">₱{{ parseFloat(record.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="fin-item">
-              <span>Gastos:</span>
+              <span>{{ $t('ui.expensesColon') }}</span>
               <span class="fin-value expense">₱{{ parseFloat(record.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
             <div class="fin-item">
-              <span>Net:</span>
+              <span>{{ $t('ui.netColon') }}</span>
               <span class="fin-value" :class="parseFloat(record.net_income || 0) >= 0 ? 'profit' : 'loss'">
                 ₱{{ parseFloat(record.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
               </span>
@@ -116,10 +118,10 @@
           <!-- Actions -->
           <div class="card-actions">
             <button type="button" class="btn-details" @click="openRecordDetail(record)">
-              Detalye
+              {{ $t('ui.details') }}
             </button>
             <button type="button" class="btn-assistance" @click="openAssistanceForm(record)">
-              Gumawa ng Tulong
+              {{ $t('ui.createAssistance') }}
             </button>
           </div>
         </div>
@@ -131,7 +133,7 @@
       <!-- Loading State -->
       <div v-if="loadingDistributions" class="loading-state">
         <div class="spinner"></div>
-        <p>Kinukuha ang mga pamamahagi...</p>
+        <p>{{ $t('ui.loadingDistributions') }}</p>
       </div>
 
       <!-- Empty State -->
@@ -141,16 +143,22 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m16.125 0H3.093m17.157 0a2.28 2.28 0 00-.782-2.063L14.935 3.93a3.089 3.089 0 00-3.873 0L5.943 5.438A2.28 2.28 0 003.093 7.5" />
           </svg>
         </div>
-        <p>Walang programa ng pamamahagi pa sa iyong barangay.</p>
+        <p>{{ $t('ui.noDistributionProgram') }}</p>
       </div>
 
       <!-- Assistance Records Grid -->
       <div v-else class="distributions-container">
         <!-- Active Distributions -->
         <div v-if="activeAssistance.length > 0">
-          <h3 class="section-title">Naghihintay ng Pagtanggap</h3>
+          <h3 class="section-title">{{ $t('ui.awaitingReceipt') }}</h3>
           <div class="records-grid">
-            <div v-for="dist in activeAssistance" :key="dist.id" class="record-card">
+            <div
+              v-for="dist in activeAssistance"
+              :key="dist.id"
+              class="record-card"
+              :class="{ 'notification-highlight-card': String(highlightedRecordId) === String(dist.income_record_id) }"
+              :data-income-record-id="dist.income_record_id"
+            >
               <div class="card-header">
                 <div class="farmer-section">
                   <div class="farmer-avatar" aria-hidden="true">
@@ -163,20 +171,20 @@
                     <div class="farmer-date">{{ formatDate(dist.created_at) }}</div>
                   </div>
                 </div>
-                <span class="status-badge pending">Assistance</span>
+                <span class="status-badge pending">{{ $t('common.assistance') }}</span>
               </div>
 
               <div class="card-info">
                 <div class="info-row">
-                  <span class="info-label">Tulong:</span>
+                  <span class="info-label">{{ $t('ui.assistanceColon') }}</span>
                   <span class="info-value">{{ formatAssistanceType(dist.assistance_type) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Dami:</span>
-                  <span class="info-value">{{ dist.notes ? extractQuantityFromNotes(dist.notes) : dist.quantity + ' ' + (dist.unit || 'sako') }}</span>
+                  <span class="info-label">{{ $t('ui.quantityColon') }}</span>
+                  <span class="info-value">{{ formatAssistanceQuantity(dist) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">SMS:</span>
+                  <span class="info-label">{{ $t('ui.smsColon') }}</span>
                   <span class="info-value">
                     <span class="sms-status" :class="getSmsStatusClass(dist.sms_status)">
                       {{ formatSmsStatus(dist.sms_status) }}
@@ -184,7 +192,7 @@
                   </span>
                 </div>
                 <div v-if="dist.sms_failure_reason" class="info-row">
-                  <span class="info-label">Dahilan:</span>
+                  <span class="info-label">{{ $t('ui.reasonColon') }}</span>
                   <span class="info-value sms-error">{{ dist.sms_failure_reason }}</span>
                 </div>
               </div>
@@ -196,10 +204,10 @@
                   class="btn-sms-retry"
                   @click="retryDistributionSms(dist)"
                 >
-                  Retry SMS
+                  {{ $t('ui.retrySms') }}
                 </button>
                 <button type="button" class="btn-completed" @click="markAsCompleted(dist)">
-                  Tapos na
+                  {{ $t('common.done') }}
                 </button>
               </div>
             </div>
@@ -208,9 +216,15 @@
 
         <!-- Completed Distributions -->
         <div v-if="completedAssistance.length > 0">
-          <h3 class="section-title">Tapos na</h3>
+          <h3 class="section-title">{{ $t('common.completed') }}</h3>
           <div class="records-grid">
-            <div v-for="dist in completedAssistance" :key="dist.id" class="record-card completed">
+            <div
+              v-for="dist in completedAssistance"
+              :key="dist.id"
+              class="record-card completed"
+              :class="{ 'notification-highlight-card': String(highlightedRecordId) === String(dist.income_record_id) }"
+              :data-income-record-id="dist.income_record_id"
+            >
               <div class="card-header">
                 <div class="farmer-section">
                   <div class="farmer-avatar" aria-hidden="true">
@@ -223,20 +237,20 @@
                     <div class="farmer-date">{{ formatDate(dist.created_at) }}</div>
                   </div>
                 </div>
-                <span class="status-badge completed">Completed</span>
+                <span class="status-badge completed">{{ $t('common.completed') }}</span>
               </div>
 
               <div class="card-info">
                 <div class="info-row">
-                  <span class="info-label">Tulong:</span>
+                  <span class="info-label">{{ $t('ui.assistanceColon') }}</span>
                   <span class="info-value">{{ formatAssistanceType(dist.assistance_type) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Dami:</span>
-                  <span class="info-value">{{ dist.notes ? extractQuantityFromNotes(dist.notes) : dist.quantity + ' ' + (dist.unit || 'sako') }}</span>
+                  <span class="info-label">{{ $t('ui.quantityColon') }}</span>
+                  <span class="info-value">{{ formatAssistanceQuantity(dist) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">SMS:</span>
+                  <span class="info-label">{{ $t('ui.smsColon') }}</span>
                   <span class="info-value">
                     <span class="sms-status" :class="getSmsStatusClass(dist.sms_status)">
                       {{ formatSmsStatus(dist.sms_status) }}
@@ -244,7 +258,7 @@
                   </span>
                 </div>
                 <div v-if="dist.distribution_date" class="info-row">
-                  <span class="info-label">Tapos:</span>
+                  <span class="info-label">{{ $t('ui.completedColon') }}</span>
                   <span class="info-value">{{ formatDate(dist.distribution_date) }}</span>
                 </div>
               </div>
@@ -257,52 +271,65 @@
 
   <!-- DETAIL MODAL -->
   <Teleport to="body">
-    <div v-if="showDetailModal" class="modal-overlay agriculturist-income-modal" :class="{ 'light-theme': isLight }" @click.self="closeModal">
-      <div class="modal-container modal-lg">
-        <div class="modal-header">
-          <h2>Detalye ng Talaan ng Kita</h2>
-          <button type="button" class="modal-close" @click="closeModal">&times;</button>
+    <Transition name="app-modal">
+      <div
+        v-if="showDetailModal"
+        class="modal-overlay app-modal-overlay agriculturist-income-modal"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeModal"
+      >
+        <div class="modal-content modal-large" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h2>{{ $t('ui.fullRecordDetails') }}</h2>
+            <button type="button" class="modal-close" @click="closeModal">&times;</button>
+          </div>
+          <div class="modal-body" v-if="selectedRecord">
+          <div class="detail-section">
+            <h3>{{ $t('ui.farmerInformation') }}</h3>
+            <div class="detail-grid">
+              <div><strong>{{ $t('ui.nameColon') }}</strong> {{ selectedRecord.farmer_name }}</div>
+              <div><strong>{{ $t('ui.dateColon') }}</strong> {{ formatDate(selectedRecord.created_at) }}</div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h3>{{ $t('incomeForm.farmDetails') }}</h3>
+            <div class="detail-grid">
+              <div><strong>{{ $t('ui.areaColon') }}</strong> {{ $t('ui.hectaresValue', { n: selectedRecord.area_hectares }) }}</div>
+              <div><strong>{{ $t('ui.plantingColon') }}</strong> {{ selectedRecord.planting_method === 'sabog' ? $t('ui.sabog') : $t('ui.talok') }}</div>
+              <div><strong>{{ $t('ui.harvestColon') }}</strong> {{ $t('ui.harvestQtyLine', { sacks: selectedRecord.sacks_harvested, kg: selectedRecord.kg_per_sack }) }}</div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h3>{{ $t('ui.financialSummary') }}</h3>
+            <div class="detail-grid">
+              <div><strong>{{ $t('ui.harvestValueColon') }}</strong> ₱{{ parseFloat(selectedRecord.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
+              <div><strong>{{ $t('incomeForm.totalExpenses') }}:</strong> ₱{{ parseFloat(selectedRecord.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
+              <div><strong>{{ $t('incomeForm.netIncome') }}:</strong> ₱{{ parseFloat(selectedRecord.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
+            </div>
+          </div>
         </div>
-        <div class="modal-body" v-if="selectedRecord">
-          <div class="detail-section">
-            <h3>Impormasyon ng Magsasaka</h3>
-            <div class="detail-grid">
-              <div><strong>Pangalan:</strong> {{ selectedRecord.farmer_name }}</div>
-              <div><strong>Petsa:</strong> {{ formatDate(selectedRecord.created_at) }}</div>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <h3>Detalye ng Kalasahan</h3>
-            <div class="detail-grid">
-              <div><strong>Lawak:</strong> {{ selectedRecord.area_hectares }} ektarya</div>
-              <div><strong>Pagtatanim:</strong> {{ selectedRecord.planting_method === 'sabog' ? 'Sabog' : 'Talok' }}</div>
-              <div><strong>Ani:</strong> {{ selectedRecord.sacks_harvested }} sako × {{ selectedRecord.kg_per_sack }} kg</div>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <h3>Buod ng Pinansyal</h3>
-            <div class="detail-grid">
-              <div><strong>Halaga ng Ani:</strong> ₱{{ parseFloat(selectedRecord.gross_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
-              <div><strong>Kabuuang Gastos:</strong> ₱{{ parseFloat(selectedRecord.total_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
-              <div><strong>Netong Kita:</strong> ₱{{ parseFloat(selectedRecord.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</div>
-            </div>
-          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 
   <!-- ASSISTANCE FORM MODAL -->
   <Teleport to="body">
-    <div v-if="showAssistanceModal" class="modal-overlay agriculturist-income-modal" :class="{ 'light-theme': isLight }" @click.self="closeModal">
-      <div class="modal-container modal-md assistance-form-modal">
-        <div class="modal-header">
-          <h2>Lumikha ng Tulong</h2>
-          <button type="button" class="modal-close" @click="closeModal" aria-label="Isara">&times;</button>
-        </div>
-        <div v-if="selectedRecord" class="assistance-form-content">
+    <Transition name="app-modal">
+      <div
+        v-if="showAssistanceModal"
+        class="modal-overlay app-modal-overlay agriculturist-income-modal"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeModal"
+      >
+        <div class="modal-content assistance-form-modal" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h2>{{ $t('ui.createAssistance') }}</h2>
+            <button type="button" class="modal-close" @click="closeModal" :aria-label="$t('common.close')">&times;</button>
+          </div>
+          <div v-if="selectedRecord" class="assistance-form-content">
           <div class="modal-body assistance-form-body">
             <div class="assistance-farmer-banner">
               <span class="assistance-farmer-icon" aria-hidden="true">
@@ -312,16 +339,16 @@
                 </svg>
               </span>
               <div class="assistance-farmer-text">
-                <span class="assistance-farmer-label">Magsasaka</span>
+                <span class="assistance-farmer-label">{{ $t('ui.farmer') }}</span>
                 <strong class="assistance-farmer-name">{{ selectedRecord.farmer_name }}</strong>
               </div>
             </div>
 
             <div class="assistance-section">
-              <h3 class="assistance-section-title">Dami ng tulong</h3>
+              <h3 class="assistance-section-title">{{ $t('ui.assistanceQty') }}</h3>
               <div class="assistance-qty-grid">
                 <div class="form-group">
-                  <label for="assistance-fertilizer">Pataba (Fertilizer)</label>
+                  <label for="assistance-fertilizer">{{ $t('incomeForm.assistFertilizer') }}</label>
                   <div class="input-group">
                     <input
                       id="assistance-fertilizer"
@@ -331,11 +358,11 @@
                       placeholder="0"
                       class="form-input"
                     />
-                    <span class="input-unit">sako</span>
+                    <span class="input-unit">{{ $t('incomeForm.sacksUnit') }}</span>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="assistance-seeds">Binhi (Seeds)</label>
+                  <label for="assistance-seeds">{{ $t('incomeForm.assistSeeds') }}</label>
                   <div class="input-group">
                     <input
                       id="assistance-seeds"
@@ -345,18 +372,18 @@
                       placeholder="0"
                       class="form-input"
                     />
-                    <span class="input-unit">sako</span>
+                    <span class="input-unit">{{ $t('incomeForm.sacksUnit') }}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div class="form-group assistance-notes">
-              <label for="assistance-notes">Tala (opsyonal)</label>
+              <label for="assistance-notes">{{ $t('ui.notesOptional') }}</label>
               <textarea
                 id="assistance-notes"
                 v-model="assistanceForm.notes"
-                placeholder="Anumang karagdagang impormasyon..."
+                :placeholder="$t('ui.additionalInfoPh')"
                 class="form-input form-textarea"
                 rows="3"
               ></textarea>
@@ -364,26 +391,35 @@
           </div>
 
           <div class="modal-footer assistance-form-footer">
-            <button type="button" @click="closeModal" class="btn-cancel">Huwag</button>
+            <button type="button" @click="closeModal" class="btn-cancel">{{ $t('common.cancel') }}</button>
             <button type="button" @click="submitAssistance" class="btn-submit" :disabled="submittingAssistance">
-              {{ submittingAssistance ? 'Sinusubmit...' : 'Lumikha' }}
+              {{ submittingAssistance ? $t('common.submitting') : $t('ui.create') }}
             </button>
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { useIncomeHubMobile } from '../composables/useIncomeHubMobile'
+import { consumeNotificationDeepLink } from '../utils/paymentHistoryFocus'
+import { getIncomeHighlightId, scrollIncomeRecordIntoView } from '../utils/incomeRecordFocus'
 
 const authStore = useAuthStore()
+const { t, locale } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
 const currentUser = computed(() => authStore.currentUser)
+const route = useRoute()
+const router = useRouter()
 
 // Tab state
 const activeTab = ref('eligible')
@@ -395,6 +431,7 @@ const successMessage = ref('')
 // Record states
 const loading = ref(false)
 const records = ref([])
+const highlightedRecordId = ref(null)
 const eligibleRecords = computed(() => {
   // Filter eligible records that don't have any distributions yet
   const distributedRecordIds = new Set(distributions.value.map(d => d.income_record_id))
@@ -411,6 +448,8 @@ const completedAssistance = computed(() => distributions.value.filter(d => d.sta
 const showDetailModal = ref(false)
 const showAssistanceModal = ref(false)
 const selectedRecord = ref(null)
+
+useIncomeHubMobile(() => showDetailModal.value || showAssistanceModal.value)
 
 // Assistance form
 const submittingAssistance = ref(false)
@@ -430,7 +469,7 @@ const fetchRecords = async () => {
       headers: { 'Authorization': `Bearer ${authStore.token}` }
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi makuha ang mga talaan.')
+    if (!res.ok) throw new Error(data.error || t('incomeForm.fetchRecordsError'))
     records.value = data
   } catch (err) {
     errorMessage.value = err.message
@@ -449,7 +488,7 @@ const fetchDistributions = async () => {
       headers: { 'Authorization': `Bearer ${authStore.token}` }
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi makuha ang mga pamamahagi.')
+    if (!res.ok) throw new Error(data.error || t('ui.fetchDistributionsError'))
     distributions.value = data
   } catch (err) {
     errorMessage.value = err.message
@@ -486,7 +525,7 @@ const submitAssistance = async () => {
   const seeds = assistanceForm.value.seed_sacks || 0
   
   if (fertilizer === 0 && seeds === 0) {
-    errorMessage.value = 'Maglagay ng dami para sa Pataba o Binhi.'
+    errorMessage.value = t('ui.enterFertOrSeedQty')
     return
   }
   
@@ -517,11 +556,11 @@ const submitAssistance = async () => {
         assistance_type: assistanceType,
         quantity: quantity,
         unit: 'sako',
-        notes: `Pataba: ${fertilizer} sako, Binhi: ${seeds} sako${assistanceForm.value.notes ? ' - ' + assistanceForm.value.notes : ''}`
+        notes: `${t('ui.assistQtyLine', { fertilizer, seeds })}${assistanceForm.value.notes ? ' - ' + assistanceForm.value.notes : ''}`
       })
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'May problema sa paglikha ng distribution record.')
+    if (!res.ok) throw new Error(data.error || t('ui.createDistributionError'))
     
     successMessage.value = getSmsFeedbackMessage(data.sms)
     closeModal()
@@ -537,7 +576,7 @@ const submitAssistance = async () => {
 
 // Mark assistance as completed
 const markAsCompleted = async (distribution) => {
-  if (!confirm('I-confirm na natanggap na ang assistance?')) return
+  if (!confirm(t('ui.confirmAssistanceReceived'))) return
   
   loadingDistributions.value = true
   errorMessage.value = ''
@@ -552,9 +591,9 @@ const markAsCompleted = async (distribution) => {
       body: JSON.stringify({ status: 'Distributed' })
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'May problema.')
+    if (!res.ok) throw new Error(data.error || t('ui.genericProblem'))
     
-    successMessage.value = 'Matagumpay na na-update ang tulong!'
+    successMessage.value = t('ui.assistanceUpdated')
     await fetchDistributions()
   } catch (err) {
     errorMessage.value = err.message
@@ -566,29 +605,46 @@ const markAsCompleted = async (distribution) => {
 // Helpers
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('fil-PH', { year: 'numeric', month: 'long', day: 'numeric' })
+  const loc = locale.value === 'tl' ? 'fil-PH' : 'en-PH'
+  return new Date(dateStr).toLocaleDateString(loc, { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 const formatAssistanceType = (type) => {
-  const map = { 'fertilizer': 'Pataba', 'seeds': 'Binhi', 'both': 'Pataba at Binhi' }
-  return map[type] || type
+  const map = {
+    fertilizer: 'incomeForm.assistFertilizer',
+    seeds: 'incomeForm.assistSeeds',
+    both: 'incomeForm.assistBoth'
+  }
+  return map[type] ? t(map[type]) : type
 }
 
-const extractQuantityFromNotes = (notes) => {
-  // Extract the quantity breakdown from notes (format: "Pataba: X sako, Binhi: Y sako - ...")
-  if (!notes) return ''
-  const quantityPart = notes.split(' - ')[0] // Get the part before any user notes
-  return quantityPart.trim()
+const parseAssistanceQty = (notes) => {
+  if (!notes) return null
+  const quantityPart = notes.split(' - ')[0]
+  const fert = quantityPart.match(/(?:Pataba|Fertilizer):\s*([\d.]+)/i)
+  const seeds = quantityPart.match(/(?:Binhi|Seeds):\s*([\d.]+)/i)
+  if (!fert && !seeds) return null
+  return {
+    fertilizer: fert ? fert[1] : '0',
+    seeds: seeds ? seeds[1] : '0'
+  }
+}
+
+const formatAssistanceQuantity = (dist) => {
+  const parsed = parseAssistanceQty(dist?.notes)
+  if (parsed) return t('ui.assistQtyLine', parsed)
+  const unit = dist?.unit && dist.unit !== 'sako' ? dist.unit : t('incomeForm.sacksUnit')
+  return `${dist?.quantity ?? 0} ${unit}`
 }
 
 const formatSmsStatus = (status) => {
   const map = {
-    sent: 'Naipadala',
-    failed: 'Hindi naipadala',
-    not_configured: 'Hindi naka-set ang SMS (PhilSMS sa server)',
-    pending: 'Nakaabang'
+    sent: 'ui.smsSent',
+    failed: 'ui.smsFailed',
+    not_configured: 'ui.smsNotConfigured',
+    pending: 'ui.smsPending'
   }
-  return map[status] || 'Walang status'
+  return map[status] ? t(map[status]) : t('ui.smsNoStatus')
 }
 
 const getSmsStatusClass = (status) => {
@@ -606,14 +662,14 @@ const canRetrySms = (distribution) => {
 }
 
 const getSmsFeedbackMessage = (sms) => {
-  if (!sms) return 'Matagumpay na lumikha ng tulong!'
+  if (!sms) return t('ui.assistanceCreated')
   if (sms.success) {
-    return `Matagumpay na lumikha ng tulong at naipadala ang SMS sa ${sms.recipient || 'magsasaka'}.`
+    return t('ui.assistanceCreatedSms', { recipient: sms.recipient || t('ui.theFarmer') })
   }
   if (sms.status === 'not_configured') {
-    return 'Matagumpay na lumikha ng tulong. Hindi naipadala ang SMS dahil hindi naka-enable ang PhilSMS o ibang provider sa backend (.env), pero may in-app notification ang magsasaka.'
+    return t('ui.assistanceCreatedNoSms')
   }
-  return `Matagumpay na lumikha ng tulong, pero hindi naipadala ang SMS${sms.error ? `: ${sms.error}` : '.'} May in-app notification pa rin ang magsasaka.`
+  return t('ui.assistanceCreatedSmsFailed', { detail: sms.error ? `: ${sms.error}` : '.' })
 }
 
 const retryDistributionSms = async (distribution) => {
@@ -629,7 +685,7 @@ const retryDistributionSms = async (distribution) => {
       }
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'May problema sa pagpapadala ng SMS.')
+    if (!res.ok) throw new Error(data.error || t('ui.smsRetryError'))
 
     successMessage.value = getSmsFeedbackMessage(data.sms)
     await fetchDistributions()
@@ -640,10 +696,38 @@ const retryDistributionSms = async (distribution) => {
   }
 }
 
-onMounted(() => {
-  fetchRecords()
-  fetchDistributions()
+onMounted(async () => {
+  await Promise.all([fetchRecords(), fetchDistributions()])
+  await applyIncomeHighlightFromRoute()
 })
+
+watch(
+  () => [route.query.highlight, route.query.type, route.query.nav],
+  async () => {
+    if (!getIncomeHighlightId(route.query)) return
+    await Promise.all([fetchRecords(), fetchDistributions()])
+    await applyIncomeHighlightFromRoute()
+  }
+)
+
+async function applyIncomeHighlightFromRoute() {
+  const highlightId = getIncomeHighlightId(route.query)
+  if (!highlightId) return
+
+  highlightedRecordId.value = highlightId
+  const eligible = eligibleRecords.value.find((r) => String(r.id) === highlightId)
+  if (eligible) {
+    activeTab.value = 'eligible'
+  } else {
+    const dist = distributions.value.find((d) => String(d.income_record_id) === highlightId)
+    if (dist) activeTab.value = 'assistance'
+  }
+
+  await scrollIncomeRecordIntoView(highlightId, nextTick)
+  consumeNotificationDeepLink(router, route, () => {
+    highlightedRecordId.value = null
+  })
+}
 </script>
 
 <style scoped>
@@ -683,34 +767,45 @@ onMounted(() => {
 /* Tab Navigation */
 .tab-navigation {
   display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
   background-color: white;
-  padding: 15px 20px;
-  border-radius: 8px;
-  border-bottom: 2px solid #e0e0e0;
+  padding: 0.4rem;
+  border-radius: 10px;
+  border-bottom: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .tab-btn {
-  padding: 10px 20px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  min-height: 2.5rem;
   background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   color: #666;
   transition: all 0.3s ease;
-  font-weight: 500;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .tab-btn.active {
-  color: #2d5016;
-  border-bottom-color: #2d5016;
+  color: #ffffff;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-color: #14532d;
 }
 
 .tab-btn:hover:not(.active) {
-  color: #4a7c1c;
+  color: #14532d;
+  border-color: #86efac;
+  background: rgba(34, 197, 94, 0.06);
 }
 
 /* Alerts */
@@ -787,6 +882,11 @@ onMounted(() => {
   }
 }
 
+@keyframes incomeHighlightPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.22); }
+  50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0.38); }
+}
+
 .empty-icon {
   width: 3.25rem;
   height: 3.25rem;
@@ -825,6 +925,13 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+.record-card.notification-highlight-card {
+  animation: incomeHighlightPulse 2s ease-in-out 3;
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-color: #ef4444;
+}
+
 .record-card.completed {
   opacity: 0.8;
 }
@@ -834,59 +941,63 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
   border-bottom: 1px solid #eee;
 }
 
 .farmer-section {
   display: flex;
-  gap: 12px;
+  gap: 0.45rem;
   align-items: center;
   flex: 1;
   min-width: 0;
 }
 
 .farmer-avatar {
-  width: 52px;
-  height: 52px;
+  width: 1.85rem;
+  height: 1.85rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  border-radius: 8px;
   background: rgba(45, 80, 22, 0.1);
   color: #2d5016;
   flex-shrink: 0;
 }
 
 .farmer-avatar svg {
-  width: 28px;
-  height: 28px;
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .farmer-details {
   display: flex;
   flex-direction: column;
+  gap: 0.05rem;
   min-width: 0;
   text-align: left;
 }
 
 .farmer-name {
-  font-weight: 600;
+  font-weight: 700;
   color: #333;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
   overflow-wrap: break-word;
 }
 
 .farmer-date {
-  font-size: 0.8rem;
+  font-size: 0.62rem;
+  line-height: 1.25;
   color: #999;
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -908,16 +1019,17 @@ onMounted(() => {
 
 /* Card Info */
 .card-info {
-  padding: 16px;
+  padding: 0.45rem 0.65rem;
   flex: 1;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  gap: 0.45rem;
+  margin-bottom: 0.22rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
   align-items: flex-start;
 }
 
@@ -929,11 +1041,13 @@ onMounted(() => {
   color: #999;
   font-weight: 500;
   flex-shrink: 0;
+  font-size: 0.62rem;
 }
 
 .info-value {
   color: #333;
   font-weight: 600;
+  font-size: 0.68rem;
   text-align: right;
   min-width: 0;
   overflow-wrap: break-word;
@@ -975,7 +1089,7 @@ onMounted(() => {
 
 /* Card Financials */
 .card-financials {
-  padding: 16px;
+  padding: 0.45rem 0.65rem;
   background-color: #f9f9f9;
   border-top: 1px solid #eee;
 }
@@ -983,16 +1097,25 @@ onMounted(() => {
 .fin-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  margin-bottom: 0.2rem;
 }
 
 .fin-item:last-child {
   margin-bottom: 0;
 }
 
+.fin-item > span:first-child {
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
 .fin-value {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.7rem;
 }
 
 .fin-value.income {
@@ -1014,19 +1137,20 @@ onMounted(() => {
 /* Card Actions */
 .card-actions {
   display: flex;
-  gap: 8px;
-  padding: 16px;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
   border-top: 1px solid #eee;
 }
 
 .card-actions button {
   flex: 1;
-  padding: 8px 12px;
+  padding: 0.4rem 0.5rem;
+  min-height: 2rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 7px;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.68rem;
+  font-weight: 600;
   transition: all 0.3s ease;
 }
 
@@ -1085,7 +1209,7 @@ onMounted(() => {
 }
 
 /* Modal */
-.modal-overlay {
+.modal-overlay:not(.app-modal-overlay) {
   position: fixed;
   top: 0;
   left: 0;
@@ -1099,7 +1223,8 @@ onMounted(() => {
   padding: 16px;
 }
 
-.modal-container {
+.modal-container,
+.modal-content {
   background: white;
   border-radius: 8px;
   box-shadow: 0 5px 40px rgba(0, 0, 0, 0.3);
@@ -1131,19 +1256,19 @@ onMounted(() => {
 }
 
 .assistance-form-body {
-  padding: 20px 22px 8px;
+  padding: 0.85rem 1rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 0.85rem;
 }
 
 .assistance-farmer-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 2px solid rgba(22, 101, 52, 0.28);
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(22, 101, 52, 0.28);
   background: #f0fdf4;
 }
 
@@ -1151,9 +1276,9 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 10px;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 8px;
   background: #dcfce7;
   border: 1px solid #86efac;
   color: #166534;
@@ -1161,19 +1286,19 @@ onMounted(() => {
 }
 
 .assistance-farmer-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .assistance-farmer-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.1rem;
   min-width: 0;
 }
 
 .assistance-farmer-label {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1181,92 +1306,100 @@ onMounted(() => {
 }
 
 .assistance-farmer-name {
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: #052e16;
-  line-height: 1.3;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .assistance-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.55rem;
 }
 
 .assistance-section-title {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #166534;
-  padding-bottom: 8px;
-  border-bottom: 2px solid rgba(22, 101, 52, 0.22);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(22, 101, 52, 0.22);
 }
 
 .assistance-qty-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 0.55rem;
 }
 
 .assistance-form-body .form-group {
   margin-bottom: 0;
-  gap: 6px;
+  gap: 0.28rem;
 }
 
 .assistance-form-body .form-group label {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #166534;
 }
 
 .assistance-form-body .input-group {
-  min-height: 44px;
+  min-height: 2.35rem;
 }
 
 .assistance-form-body .form-input {
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 10px 0 0 10px;
-  font-size: 0.95rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px 0 0 8px;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
 .assistance-form-body .input-unit {
-  min-width: 3.25rem;
-  padding: 10px 12px;
-  font-size: 0.85rem;
+  min-width: 2.75rem;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 8px 8px 0;
 }
 
 .assistance-notes .form-textarea {
-  min-height: 88px;
-  padding: 12px 14px;
-  border-radius: 10px;
+  min-height: 4.5rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
   resize: vertical;
-  line-height: 1.45;
+  line-height: 1.4;
+  font-size: 0.82rem;
 }
 
 .assistance-form-footer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.5rem;
   margin-top: 0;
-  padding: 16px 22px 22px;
+  padding: 0.75rem 1rem 1rem;
   border-top: 2px solid rgba(22, 101, 52, 0.22);
   background: #fafdfa;
+  box-sizing: border-box;
 }
 
 .assistance-form-footer .btn-cancel,
 .assistance-form-footer .btn-submit {
-  min-height: 46px;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 2.5rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
 .assistance-form-footer .btn-cancel {
-  flex: 0 1 38%;
   background: #ffffff;
   color: #052e16;
   border: 2px solid #86efac;
@@ -1278,7 +1411,9 @@ onMounted(() => {
 }
 
 .assistance-form-footer .btn-submit {
-  flex: 1 1 62%;
+  background: linear-gradient(135deg, #166534, #16a34a);
+  color: #ffffff;
+  border: none;
 }
 
 .modal-header {
@@ -1457,20 +1592,31 @@ onMounted(() => {
   min-height: auto;
 }
 
-/* Dark forest theme */
+/* Dark forest theme — colors only; card geometry matches light */
 .page-container.agriculturist-income-page:not(.light-theme) :is(
   .page-header,
-  .tab-navigation,
-  .record-card,
   .loading-state,
   .empty-state,
-  .detail-section,
-  .card-financials
+  .detail-section
 ) {
   background: linear-gradient(145deg, rgba(20, 38, 28, 0.95), rgba(14, 29, 21, 0.93)) !important;
-  border: 2px solid rgba(4, 14, 10, 0.52) !important;
-  border-radius: 20px;
-  box-shadow: 0 12px 28px rgba(6, 12, 9, 0.24) !important;
+  border: 1px solid rgba(126, 184, 145, 0.28) !important;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(6, 12, 9, 0.24) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .record-card {
+  background: linear-gradient(145deg, rgba(20, 38, 28, 0.95), rgba(14, 29, 21, 0.93)) !important;
+  border: 1px solid rgba(126, 184, 145, 0.28) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), inset 4px 0 0 #22c55e !important;
+  overflow: hidden;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .record-card.notification-highlight-card {
+  background: rgba(127, 29, 29, 0.42) !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.45), inset 4px 0 0 #ef4444 !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-container {
@@ -1490,10 +1636,7 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.page-container.agriculturist-income-page:not(.light-theme) :is(
-  .page-header,
-  .record-card
-)::before {
+.page-container.agriculturist-income-page:not(.light-theme) .page-header::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1517,17 +1660,9 @@ onMounted(() => {
 .page-container.agriculturist-income-page:not(.light-theme) :is(
   .page-subtitle,
   .farmer-name,
-  .farmer-date,
-  .info-label,
   .info-value,
   .info-row,
   .fin-item,
-  .fin-item span,
-  .fin-value,
-  .fin-value.income,
-  .fin-value.expense,
-  .fin-value.profit,
-  .fin-value.loss,
   .section-title,
   .detail-grid div,
   .detail-grid strong,
@@ -1540,36 +1675,73 @@ onMounted(() => {
   .tab-btn.active,
   .sms-error
 ) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .farmer-date,
+.page-container.agriculturist-income-page:not(.light-theme) .info-label,
+.page-container.agriculturist-income-page:not(.light-theme) .fin-item > span:first-child {
+  color: rgba(186, 240, 200, 0.72) !important;
+  -webkit-text-fill-color: rgba(186, 240, 200, 0.72) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-value.income {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-value.expense {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-value.profit {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-value.loss {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .tab-navigation {
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 14px 16px;
-  border-bottom: none;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(126, 184, 145, 0.28) !important;
+  border-radius: 10px !important;
+  background: rgba(12, 28, 20, 0.55) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .tab-btn {
-  min-height: 48px;
-  padding: 12px 20px;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.65rem;
   background: rgba(14, 33, 23, 0.92) !important;
-  border: 2px solid rgba(134, 239, 172, 0.32) !important;
-  border-bottom: 2px solid rgba(134, 239, 172, 0.32) !important;
-  border-radius: 14px;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(134, 239, 172, 0.32) !important;
+  border-radius: 8px;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  font-size: 0.78rem;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22);
+  box-shadow: none;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .tab-btn.active {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  background: linear-gradient(145deg, rgba(28, 116, 68, 0.95), rgba(24, 84, 55, 0.95)) !important;
-  border-color: rgba(134, 239, 172, 0.45) !important;
-  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.28);
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  border-color: rgba(134, 239, 172, 0.55) !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28);
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .tab-btn:hover:not(.active) {
@@ -1598,12 +1770,8 @@ onMounted(() => {
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .records-grid {
-  gap: 1.25rem;
-  margin-bottom: 24px;
-}
-
-.page-container.agriculturist-income-page:not(.light-theme) .record-card {
-  border-radius: 18px;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .record-card.completed {
@@ -1612,30 +1780,53 @@ onMounted(() => {
 
 .page-container.agriculturist-income-page:not(.light-theme) :is(
   .card-header,
-  .card-actions,
-  .detail-grid div,
-  .modal-header,
-  .modal-footer
-) {
-  border-color: rgba(4, 14, 10, 0.44) !important;
-}
-
-.page-container.agriculturist-income-page:not(.light-theme) :is(
-  .card-header,
-  .card-info,
   .card-financials,
   .card-actions
-),
-.modal-overlay.agriculturist-income-modal:not(.light-theme) :is(
-  .modal-header,
-  .modal-body
 ) {
-  padding: 18px;
+  border-color: rgba(126, 184, 145, 0.28) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .card-header {
+  border-bottom: 2px solid rgba(126, 184, 145, 0.28) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .card-financials {
+  border-top: 2px solid rgba(126, 184, 145, 0.28) !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .card-actions {
+  border-top: 2px solid rgba(126, 184, 145, 0.28) !important;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .info-row {
+  border-bottom: 1px solid rgba(126, 184, 145, 0.18);
+  padding-bottom: 0.2rem;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-item {
+  border-bottom: 1px solid rgba(126, 184, 145, 0.16);
+  padding: 0.12rem 0;
+  font-size: 0.68rem;
+}
+
+.page-container.agriculturist-income-page:not(.light-theme) .fin-item:last-child {
+  border-bottom: none;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .farmer-avatar {
   background: rgba(74, 222, 128, 0.12);
-  color: #ffffff;
+  color: #bbf7d0;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .empty-icon {
@@ -1648,39 +1839,34 @@ onMounted(() => {
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .status-badge {
-  padding: 0.45rem 0.85rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.58rem;
   font-weight: 700;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .status-badge.eligible {
-  background-color: rgba(168, 85, 247, 0.16);
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background-color: rgba(168, 85, 247, 0.18);
+  color: #e9d5ff !important;
+  -webkit-text-fill-color: #e9d5ff !important;
+  border: 1px solid rgba(192, 132, 252, 0.45);
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .status-badge.pending {
   background-color: rgba(251, 191, 36, 0.15);
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: #fde68a !important;
+  -webkit-text-fill-color: #fde68a !important;
+  border: 1px solid rgba(251, 191, 36, 0.4);
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .status-badge.completed {
   background-color: rgba(74, 222, 128, 0.14);
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.page-container.agriculturist-income-page:not(.light-theme) .fin-item {
-  padding: 0.65rem 0;
-  font-size: 0.92rem;
-}
-
-.page-container.agriculturist-income-page:not(.light-theme) .card-financials {
-  background: rgba(255, 255, 255, 0.03) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border: 1px solid rgba(134, 239, 172, 0.4);
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) .fin-value {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) :is(
@@ -1691,9 +1877,10 @@ onMounted(() => {
   .btn-submit,
   .btn-sms-retry
 ) {
-  min-height: 42px;
-  border-radius: 10px;
+  min-height: 2rem;
+  border-radius: 7px;
   font-weight: 700;
+  font-size: 0.68rem;
 }
 
 .page-container.agriculturist-income-page:not(.light-theme) :is(
@@ -1752,6 +1939,18 @@ onMounted(() => {
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-header {
   background-color: rgba(255, 255, 255, 0.03);
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .detail-section {
+  padding: 16px 18px !important;
+  margin-bottom: 16px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(126, 184, 145, 0.22);
+  box-sizing: border-box;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .detail-section:last-child {
+  margin-bottom: 0 !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .modal-close {
@@ -1850,18 +2049,31 @@ onMounted(() => {
   -webkit-text-fill-color: #ffffff !important;
 }
 
-/* Light mode — readable white surfaces */
+/* Light mode — readable white surfaces (geometry matches dark cards) */
 .page-container.agriculturist-income-page.light-theme :is(
   .page-header,
-  .tab-navigation,
-  .record-card,
   .loading-state,
   .empty-state
 ) {
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
+  border: 1px solid #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
-  border-radius: 20px;
+  border-radius: 12px;
+}
+
+.page-container.agriculturist-income-page.light-theme .tab-navigation {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.4rem;
+  background: #ffffff !important;
+  border: 1px solid #86efac !important;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.06) !important;
+  border-radius: 10px !important;
+  border-bottom: none !important;
 }
 
 .modal-overlay.agriculturist-income-modal.light-theme .modal-container {
@@ -1886,36 +2098,39 @@ onMounted(() => {
   color: #166534 !important;
 }
 
-.page-container.agriculturist-income-page.light-theme .tab-navigation {
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 14px 16px;
-  border-bottom: none !important;
-}
-
 .page-container.agriculturist-income-page.light-theme .tab-btn {
-  min-height: 48px;
-  padding: 12px 20px;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.65rem;
   background: #ffffff !important;
-  border: 2px solid #86efac !important;
-  border-bottom: 2px solid #86efac !important;
-  border-radius: 14px;
+  border: 1px solid #86efac !important;
+  border-radius: 8px;
   color: #052e16 !important;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .page-container.agriculturist-income-page.light-theme .tab-btn.active {
-  color: #052e16 !important;
-  background: #ffffff !important;
-  border-color: #166534 !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  border-color: #14532d !important;
 }
 
 .page-container.agriculturist-income-page.light-theme .tab-btn:hover:not(.active) {
   border-color: #166534 !important;
+  background: #f0fdf4 !important;
 }
 
 .page-container.agriculturist-income-page.light-theme .record-card {
-  border-left: 4px solid #22c55e !important;
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 10px !important;
+  /* Color accent only — inset shadow avoids layout shift vs dark */
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.1), inset 4px 0 0 #22c55e !important;
+  border-left: none !important;
+  overflow: hidden;
 }
 
 .page-container.agriculturist-income-page.light-theme :is(
@@ -1940,7 +2155,7 @@ onMounted(() => {
 
 .page-container.agriculturist-income-page.light-theme .info-row {
   border-bottom: 1px solid rgba(22, 101, 52, 0.28);
-  padding-bottom: 8px;
+  padding-bottom: 0.2rem;
 }
 
 .page-container.agriculturist-income-page.light-theme .info-row:last-child {
@@ -1949,7 +2164,8 @@ onMounted(() => {
 }
 
 .page-container.agriculturist-income-page.light-theme .fin-item {
-  border-bottom: 2px solid rgba(22, 101, 52, 0.24);
+  border-bottom: 1px solid rgba(22, 101, 52, 0.24);
+  padding: 0.12rem 0;
 }
 
 .page-container.agriculturist-income-page.light-theme .fin-item:last-child {
@@ -2081,8 +2297,9 @@ onMounted(() => {
 
 .modal-overlay.agriculturist-income-modal.light-theme .detail-section {
   background: #ffffff !important;
-  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+  border: 1px solid rgba(22, 101, 52, 0.36) !important;
   border-radius: 14px !important;
+  /* Keep geometry aligned with dark; colors only */
   padding: 16px 18px !important;
   margin-bottom: 16px !important;
   box-shadow: none !important;
@@ -2142,12 +2359,12 @@ onMounted(() => {
 
 /* Assistance form — light mode */
 .modal-overlay.agriculturist-income-modal.light-theme .assistance-form-modal .modal-header {
-  padding: 18px 22px;
+  padding: 0.7rem 0.85rem;
 }
 
 .modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-banner {
   background: #f0fdf4 !important;
-  border: 2px solid rgba(22, 101, 52, 0.36) !important;
+  border: 1px solid rgba(22, 101, 52, 0.36) !important;
 }
 
 .modal-overlay.agriculturist-income-modal.light-theme .assistance-farmer-icon {
@@ -2170,6 +2387,8 @@ onMounted(() => {
 }
 
 .modal-overlay.agriculturist-income-modal.light-theme .assistance-form-footer {
+  display: flex !important;
+  flex-direction: row !important;
   background: #f9fdfb !important;
   border-top-color: rgba(22, 101, 52, 0.36) !important;
 }
@@ -2185,37 +2404,58 @@ onMounted(() => {
   color: #ffffff !important;
 }
 
-/* Assistance form — dark mode */
+/* Assistance form — dark mode (same geometry as light) */
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-banner {
   background: rgba(74, 222, 128, 0.1) !important;
-  border-color: rgba(134, 239, 172, 0.28) !important;
+  border: 1px solid rgba(134, 239, 172, 0.28) !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-icon {
   background: rgba(74, 222, 128, 0.16) !important;
   border-color: rgba(134, 239, 172, 0.32) !important;
-  color: #ffffff !important;
+  color: #bbf7d0 !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-label {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: rgba(186, 240, 200, 0.8) !important;
+  -webkit-text-fill-color: rgba(186, 240, 200, 0.8) !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-farmer-name {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-section-title {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  border-bottom-color: rgba(4, 14, 10, 0.44) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border-bottom-color: rgba(126, 184, 145, 0.28) !important;
 }
 
 .modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-form-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 1rem !important;
   background: rgba(0, 0, 0, 0.14) !important;
-  border-top-color: rgba(4, 14, 10, 0.44) !important;
+  border-top: 2px solid rgba(126, 184, 145, 0.28) !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-form-footer .btn-cancel {
+  flex: 1 1 0 !important;
+  min-height: 2.5rem;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ecfdf5 !important;
+  border: 1px solid rgba(134, 239, 172, 0.35) !important;
+}
+
+.modal-overlay.agriculturist-income-modal:not(.light-theme) .assistance-form-footer .btn-submit {
+  flex: 1 1 0 !important;
+  min-height: 2.5rem;
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  color: #ffffff !important;
+  border: none !important;
 }
 
 .page-container.agriculturist-income-page.light-theme .section-title {
@@ -2261,51 +2501,109 @@ onMounted(() => {
 /* Responsive */
 @media (max-width: 768px) {
   .page-header,
-  .tab-navigation,
-  .card-header,
-  .card-info,
-  .card-financials,
-  .card-actions,
   .modal-header,
   .modal-body {
     padding: 14px;
   }
 
   .tab-navigation {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    padding: 0.3rem;
+    margin-bottom: 0.65rem;
   }
 
   .tab-btn {
-    width: 100%;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.35rem;
+    font-size: 0.68rem;
+  }
+
+  .card-header,
+  .card-info,
+  .card-financials,
+  .card-actions {
+    padding: 0.4rem 0.55rem;
+  }
+
+  .farmer-name {
+    font-size: 0.72rem;
+  }
+
+  .farmer-date,
+  .info-label,
+  .fin-item > span:first-child {
+    font-size: 0.58rem;
+  }
+
+  .info-row,
+  .info-value,
+  .fin-item {
+    font-size: 0.64rem;
+  }
+
+  .fin-value {
+    font-size: 0.66rem;
+  }
+
+  .status-badge {
+    font-size: 0.52rem;
+    padding: 0.1rem 0.32rem;
   }
 
   .records-grid {
     grid-template-columns: 1fr;
+    gap: 0.45rem;
   }
 
   .card-actions {
-    flex-direction: column;
+    flex-direction: row;
+  }
+
+  .card-actions button {
+    min-height: 1.9rem;
+    font-size: 0.64rem;
+    padding: 0.32rem 0.4rem;
   }
 
   .form-row,
   .assistance-qty-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
   }
 
-  .assistance-form-body,
-  .assistance-form-footer {
-    padding-left: 16px;
-    padding-right: 16px;
+  .assistance-form-body {
+    padding: 0.7rem 0.75rem 0.4rem;
+    gap: 0.7rem;
   }
 
   .assistance-form-footer {
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.4rem;
+    padding: 0.65rem 0.75rem 0.85rem;
   }
 
   .assistance-form-footer .btn-cancel,
   .assistance-form-footer .btn-submit {
-    flex: 1 1 auto;
-    width: 100%;
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 2.35rem;
+    font-size: 0.78rem;
+  }
+
+  .assistance-form-modal .modal-header {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .assistance-form-modal .modal-header h2 {
+    font-size: 0.95rem;
   }
 }
 </style>

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const { verifyToken, verifyBookingBarangayAccess, verifyBookingParticipantAccess, verifyBalanceSubmissionBarangayAccess } = require('../middleware/auth');
+const { JWT_SECRET } = require('../utils/jwtSecret');
+const { verifyToken, authorizeRoles, verifyBookingBarangayAccess, verifyBookingParticipantAccess, verifyBalanceSubmissionBarangayAccess } = require('../middleware/auth');
 const { getRequestUser, canAccessBarangay, buildListBarangayScope } = require('../utils/requestUser');
 
 /** JWT + barangay + farmer-ownership checks for booking :id routes */
@@ -10,28 +11,46 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { syncExpiredMachineryBookings } = require('../services/booking-status-sync');
-const { createBookingStatusNotification, formatLocalDate, createOperatorBookingAssignedNotification, createOperatorBookingUpdatedNotification, createOperatorBookingCancelledNotification, createTreasurerDownPaymentSubmittedNotification, createTreasurerBalancePaymentSubmittedNotification, createTreasurerCollectibleCreatedNotification, createTreasurerRefundRequestedNotification, createManagerConfirmBookingNotification, deleteNotificationsForBooking } = require('../services/notification-service');
+const { createBookingStatusNotification, formatLocalDate, createOperatorBookingAssignedNotification, createOperatorBookingUpdatedNotification, createOperatorBookingCancelledNotification, createTreasurerDownPaymentSubmittedNotification, createTreasurerBalancePaymentSubmittedNotification, createTreasurerCollectibleCreatedNotification, createTreasurerRefundRequestedNotification, createManagerConfirmBookingNotification, deleteNotificationsForBooking, notifyBarangayDownPaymentDue } = require('../services/notification-service');
 const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
 const { verifyBalancePaymentSubmission } = require('../services/balance-payment-service');
 const { generateReceiptNumber, recordPaymentReceipt, getPaymentReceipt } = require('../services/receipt-service');
+const { mergeGcashEventsIntoHistory } = require('../services/gcash-payment-service');
 const {
   generateRefundNumber,
   isRefundEligible,
-  createReceivableOnCompleted,
-  reverseMachineryIncomeOnRefund,
-  OPEN_REFUND_STATUSES
+  reverseMachineryIncomeOnRefund
 } = require('../services/refund-service');
 const {
   calculateDownPayment,
+  formatDownPaymentPercentLabel,
   calendarBlockingStatusesSql,
   CALENDAR_BLOCKING_STATUSES,
+  OPERATOR_WORK_STATUSES,
   syncMachineryIncomeFromBooking,
   canUserBookMachinery,
+  canCreateBookingOnBehalf,
+  MACHINERY_BOOKING_ROLES,
   shouldUseNonMemberRate,
   assertCanVerifyMachineryPayment,
   paymentVerifierBookerFilter,
   getPaymentVerifierRole
 } = require('../services/booking-workflow');
+const { verifyDownPaymentForBooking, recordCashDownPaymentForBooking } = require('../services/down-payment-service');
+const {
+  getDownPaymentSettings,
+  setDownPaymentSettings
+} = require('../services/down-payment-settings-service');
+const {
+  normalizeStoredMachineryStatus,
+  withDisplayStatus
+} = require('../services/machinery-status');
+const {
+  resolveRequiresMachineryId,
+  checkMachineryPrerequisite,
+  annotateInventoryPrerequisites
+} = require('../services/machinery-prerequisite');
+const { normalizeInterestRatePercent } = require('../services/machinery-interest-service');
 
 // Configure multer for machinery picture uploads
 const storage = multer.diskStorage({
@@ -100,18 +119,23 @@ router.get('/inventory', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
-    const { status, machinery_type, barangay_id } = req.query;
+    const { status, machinery_type, barangay_id, catalog } = req.query;
+    const isBookingCatalog = String(catalog || '') === '1' || String(catalog || '').toLowerCase() === 'true';
 
     let query = `
       SELECT 
         mi.*,
+        req.machinery_name AS requires_machinery_name,
         f.full_name as created_by_name,
         b.name as barangay_name,
+        COALESCE(b.machinery_down_payment_enabled, 0) AS down_payment_enabled,
+        b.machinery_down_payment_percent AS down_payment_percent,
         op.full_name as assigned_operator_name,
         op.reference_number as assigned_operator_ref,
         pres.full_name as assigned_by_name,
         COUNT(DISTINCT mo.id) as assigned_operators
       FROM machinery_inventory mi
+      LEFT JOIN machinery_inventory req ON mi.requires_machinery_id = req.id
       LEFT JOIN farmers f ON mi.created_by = f.id
       LEFT JOIN barangays b ON mi.barangay_id = b.id
       LEFT JOIN farmers op ON mi.assigned_operator_id = op.id
@@ -121,7 +145,7 @@ router.get('/inventory', async (req, res) => {
     `;
     const params = [];
     
-    if (status) {
+    if (status && isBookingCatalog) {
       query += ' AND mi.status = ?';
       params.push(status);
     }
@@ -131,7 +155,15 @@ router.get('/inventory', async (req, res) => {
       params.push(machinery_type);
     }
 
-    if (barangay_id) {
+    // Management: presidents only see their barangay.
+    // Booking catalog (catalog=1): all barangays so member/non-member pricing works.
+    if (user.role === 'president' && !isBookingCatalog) {
+      if (!user.barangay_id) {
+        return res.json({ success: true, inventory: [], cross_barangay_catalog: false });
+      }
+      query += ' AND mi.barangay_id = ?';
+      params.push(parseInt(user.barangay_id, 10));
+    } else if (barangay_id && !isBookingCatalog) {
       query += ' AND mi.barangay_id = ?';
       params.push(parseInt(barangay_id, 10));
     }
@@ -139,7 +171,21 @@ router.get('/inventory', async (req, res) => {
     query += ' GROUP BY mi.id ORDER BY mi.created_at DESC';
 
     const [inventory] = await pool.execute(query, params);
-    res.json({ success: true, inventory, cross_barangay_catalog: true });
+    let withAvailability = await withDisplayStatus(pool, inventory);
+    if (isBookingCatalog) {
+      withAvailability = withAvailability.map((row) => ({
+        ...row,
+        availability_status: row.stored_status
+      }));
+      withAvailability = await annotateInventoryPrerequisites(pool, withAvailability, user.id);
+    } else if (status) {
+      withAvailability = withAvailability.filter((row) => row.availability_status === status);
+    }
+    res.json({
+      success: true,
+      inventory: withAvailability,
+      cross_barangay_catalog: isBookingCatalog || user.role !== 'president'
+    });
   } catch (error) {
     console.error('Error fetching machinery inventory:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch machinery inventory' });
@@ -186,9 +232,10 @@ router.get('/inventory/:id', async (req, res) => {
       [id]
     );
     
+    const [enriched] = await withDisplayStatus(pool, machinery);
     res.json({ 
       success: true, 
-      machinery: machinery[0],
+      machinery: enriched || machinery[0],
       operators 
     });
   } catch (error) {
@@ -381,7 +428,7 @@ router.post('/inventory', async (req, res) => {
     let userId = null;
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(token, JWT_SECRET);
       userRole = decoded.role;
       userBarangayId = decoded.barangay_id;
       userId = decoded.id;
@@ -456,16 +503,32 @@ router.post('/inventory', async (req, res) => {
     }
     
     console.log('✅ Validation passed. Inserting into database...');
+    const inventoryStatus = normalizeStoredMachineryStatus(status);
+
+    let requiresMachineryId = null;
+    try {
+      requiresMachineryId = await resolveRequiresMachineryId(pool, {
+        requiresMachineryId: req.body.requires_machinery_id,
+        barangayId: finalBarangayId
+      });
+      if (requiresMachineryId === undefined) requiresMachineryId = null;
+    } catch (preErr) {
+      return res.status(preErr.status || 400).json({ success: false, message: preErr.message });
+    }
+    
+    const interestRate = normalizeInterestRatePercent(req.body.interest_rate);
     
     const [result] = await pool.execute(
       `INSERT INTO machinery_inventory 
-       (machinery_name, machinery_type, description, price_per_unit, member_price, non_member_price, unit_type, 
-        max_capacity, capacity_unit, status, created_by, barangay_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (machinery_name, machinery_type, description, price_per_unit, member_price, non_member_price, interest_rate, unit_type, 
+        max_capacity, capacity_unit, status, created_by, barangay_id, requires_machinery_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [machinery_name, machinery_type, description, price_per_unit, 
        req.body.member_price || price_per_unit, 
        req.body.non_member_price || (price_per_unit * 1.25), 
-       unit_type, max_capacity, capacity_unit, status, userId, finalBarangayId]
+       interestRate,
+       unit_type, max_capacity, capacity_unit, inventoryStatus, userId, finalBarangayId,
+       requiresMachineryId]
     );
     
     console.log('✅ Machinery added successfully! ID:', result.insertId);
@@ -498,7 +561,7 @@ router.put('/inventory/:id', async (req, res) => {
     let userId = null;
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(token, JWT_SECRET);
       userRole = decoded.role;
       userBarangayId = decoded.barangay_id;
       userId = decoded.id;
@@ -518,7 +581,10 @@ router.put('/inventory/:id', async (req, res) => {
     }
 
     // Get current machinery to check barangay
-    const [machinery] = await pool.execute('SELECT barangay_id FROM machinery_inventory WHERE id = ?', [id]);
+    const [machinery] = await pool.execute(
+      'SELECT barangay_id, interest_rate FROM machinery_inventory WHERE id = ?',
+      [id]
+    );
     if (machinery.length === 0) {
       return res.status(404).json({ success: false, message: 'Machinery not found' });
     }
@@ -565,17 +631,54 @@ router.put('/inventory/:id', async (req, res) => {
       }
     }
     
-    const [result] = await pool.execute(
-      `UPDATE machinery_inventory 
-       SET machinery_name = ?, machinery_type = ?, description = ?, 
-           price_per_unit = ?, member_price = ?, non_member_price = ?, unit_type = ?, max_capacity = ?, 
-           capacity_unit = ?, status = ?, barangay_id = ?
-       WHERE id = ?`,
-      [machinery_name, machinery_type, description, price_per_unit, 
-       member_price || price_per_unit, 
-       non_member_price || (price_per_unit * 1.25),
-       unit_type, max_capacity, capacity_unit, status, barangay_id || currentBarangayId, id]
-    );
+    const inventoryStatus = normalizeStoredMachineryStatus(status);
+    const targetBarangayId = barangay_id || currentBarangayId;
+    const interestRate = Object.prototype.hasOwnProperty.call(req.body, 'interest_rate')
+      ? normalizeInterestRatePercent(req.body.interest_rate)
+      : normalizeInterestRatePercent(machinery[0].interest_rate);
+
+    let requiresMachineryId;
+    try {
+      requiresMachineryId = await resolveRequiresMachineryId(pool, {
+        machineryId: id,
+        requiresMachineryId: Object.prototype.hasOwnProperty.call(req.body, 'requires_machinery_id')
+          ? req.body.requires_machinery_id
+          : undefined,
+        barangayId: targetBarangayId
+      });
+    } catch (preErr) {
+      return res.status(preErr.status || 400).json({ success: false, message: preErr.message });
+    }
+
+    let result;
+    if (requiresMachineryId === undefined) {
+      [result] = await pool.execute(
+        `UPDATE machinery_inventory 
+         SET machinery_name = ?, machinery_type = ?, description = ?, 
+             price_per_unit = ?, member_price = ?, non_member_price = ?, interest_rate = ?, unit_type = ?, max_capacity = ?, 
+             capacity_unit = ?, status = ?, barangay_id = ?
+         WHERE id = ?`,
+        [machinery_name, machinery_type, description, price_per_unit, 
+         member_price || price_per_unit, 
+         non_member_price || (price_per_unit * 1.25),
+         interestRate,
+         unit_type, max_capacity, capacity_unit, inventoryStatus, targetBarangayId, id]
+      );
+    } else {
+      [result] = await pool.execute(
+        `UPDATE machinery_inventory 
+         SET machinery_name = ?, machinery_type = ?, description = ?, 
+             price_per_unit = ?, member_price = ?, non_member_price = ?, interest_rate = ?, unit_type = ?, max_capacity = ?, 
+             capacity_unit = ?, status = ?, barangay_id = ?, requires_machinery_id = ?
+         WHERE id = ?`,
+        [machinery_name, machinery_type, description, price_per_unit, 
+         member_price || price_per_unit, 
+         non_member_price || (price_per_unit * 1.25),
+         interestRate,
+         unit_type, max_capacity, capacity_unit, inventoryStatus, targetBarangayId,
+         requiresMachineryId, id]
+      );
+    }
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Machinery not found' });
@@ -605,7 +708,7 @@ router.delete('/inventory/:id', async (req, res) => {
     let userId = null;
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(token, JWT_SECRET);
       userRole = decoded.role;
       userBarangayId = decoded.barangay_id;
       userId = decoded.id;
@@ -681,7 +784,7 @@ router.get('/operators/eligible', async (req, res) => {
     }
 
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     const [user] = await pool.execute(
       'SELECT role, barangay_id FROM farmers WHERE id = ?',
       [decoded.id]
@@ -691,7 +794,10 @@ router.get('/operators/eligible', async (req, res) => {
       return res.status(403).json({ success: false, message: 'President or admin access only' });
     }
 
-    const barangayId = req.query.barangay_id || user[0].barangay_id;
+    const barangayId =
+      user[0].role === 'president'
+        ? user[0].barangay_id
+        : (req.query.barangay_id || user[0].barangay_id);
     if (!barangayId) {
       return res.json({ success: true, operators: [] });
     }
@@ -975,6 +1081,238 @@ const formatDateToString = (val) => {
   return String(val).split('T')[0];
 };
 
+async function notifyApprovedBooking({ farmerId, bookingId, operatorId, machineryName, bookingDate }) {
+  await createBookingStatusNotification({
+    farmerId,
+    bookingId,
+    status: 'Approved',
+    machineryName,
+    bookingDate
+  });
+
+  if (operatorId) {
+    await createOperatorBookingAssignedNotification({
+      operatorId,
+      bookingId,
+      machineryName,
+      bookingDate
+    });
+  }
+}
+
+async function insertMachineryBooking({
+  farmerId,
+  machineryId,
+  barangayId,
+  bookingDate,
+  serviceLocation,
+  areaSize,
+  areaUnit,
+  totalPrice,
+  notes,
+  status,
+  placeId = null,
+  approvedBy = null,
+  assignedOperatorId = null
+}) {
+  const columns = [
+    'farmer_id',
+    'machinery_id',
+    'barangay_id',
+    'booking_date',
+    'service_location',
+    'area_size',
+    'area_unit',
+    'total_price',
+    'remaining_balance',
+    'notes',
+    'status'
+  ];
+  const values = [
+    farmerId,
+    machineryId,
+    barangayId,
+    bookingDate,
+    serviceLocation,
+    areaSize,
+    areaUnit,
+    totalPrice,
+    totalPrice,
+    notes,
+    status
+  ];
+  const placeholders = columns.map(() => '?');
+
+  if (placeId != null) {
+    columns.push('barangay_place_id');
+    values.push(placeId);
+    placeholders.push('?');
+  }
+  if (approvedBy) {
+    columns.push('approved_by', 'approved_date');
+    values.push(approvedBy);
+    placeholders.push('?', 'NOW()');
+  }
+  if (assignedOperatorId) {
+    columns.push('assigned_operator_id');
+    values.push(assignedOperatorId);
+    placeholders.push('?');
+  }
+
+  const sql = `INSERT INTO machinery_bookings (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`;
+
+  try {
+    const [result] = await pool.execute(sql, values);
+    return result;
+  } catch (insErr) {
+    if (insErr.code !== 'ER_BAD_FIELD_ERROR') throw insErr;
+    const [result] = await pool.execute(
+      `INSERT INTO machinery_bookings
+       (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size,
+        area_unit, total_price, remaining_balance, notes, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [farmerId, machineryId, barangayId, bookingDate, serviceLocation, areaSize, areaUnit, totalPrice, totalPrice, notes, status]
+    );
+    if (approvedBy || assignedOperatorId) {
+      try {
+        await pool.execute(
+          `UPDATE machinery_bookings
+           SET approved_by = COALESCE(?, approved_by),
+               approved_date = COALESCE(NOW(), approved_date),
+               assigned_operator_id = COALESCE(?, assigned_operator_id)
+           WHERE id = ?`,
+          [approvedBy, assignedOperatorId, result.insertId]
+        );
+      } catch {
+        /* columns may not exist on older schemas */
+      }
+    }
+    return result;
+  }
+}
+
+// GET /api/machinery/down-payment-settings — barangay machinery down payment on/off + percent
+router.get('/down-payment-settings', verifyToken, async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    let barangayId = user.barangay_id;
+    if (user.role === 'admin' && req.query.barangay_id) {
+      barangayId = req.query.barangay_id;
+    } else if (req.query.barangay_id && canAccessBarangay(user, req.query.barangay_id)) {
+      barangayId = req.query.barangay_id;
+    }
+
+    if (!barangayId) {
+      return res.json({
+        success: true,
+        barangay_id: null,
+        enabled: false,
+        percent: null
+      });
+    }
+
+    const settings = await getDownPaymentSettings(barangayId);
+    res.json({ success: true, ...settings });
+  } catch (error) {
+    console.error('Error fetching machinery down payment settings:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch down payment settings' });
+  }
+});
+
+// PATCH /api/machinery/down-payment-settings — President toggles DP and sets percent
+router.patch('/down-payment-settings', verifyToken, authorizeRoles(['president']), async (req, res) => {
+  try {
+    const barangayId = req.user?.barangay_id;
+    if (!barangayId) {
+      return res.status(400).json({
+        success: false,
+        message: 'President must have an assigned barangay to manage machinery down payment.'
+      });
+    }
+
+    const hasEnabled = typeof req.body?.enabled === 'boolean';
+    const hasPercent = Object.prototype.hasOwnProperty.call(req.body || {}, 'percent');
+    if (!hasEnabled && !hasPercent) {
+      return res.status(400).json({
+        success: false,
+        message: 'Request body must include enabled and/or percent.'
+      });
+    }
+
+    const payload = {};
+    if (hasEnabled) payload.enabled = req.body.enabled;
+    if (hasPercent) payload.percent = req.body.percent;
+
+    const settings = await setDownPaymentSettings(barangayId, payload);
+    const pctLabel = formatDownPaymentPercentLabel(settings.percent);
+
+    res.json({
+      success: true,
+      ...settings,
+      message: settings.enabled
+        ? `Machinery down payment is ON. Farmers pay ${pctLabel}% before the booking is reserved.`
+        : 'Machinery down payment is OFF. Farmers pay after the service is completed.'
+    });
+  } catch (error) {
+    console.error('Error updating machinery down payment settings:', error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to update down payment settings'
+    });
+  }
+});
+
+// GET /api/machinery/bookable-farmers - Farmers a manager can book on behalf of
+router.get('/bookable-farmers', verifyToken, async (req, res) => {
+  try {
+    if (!canCreateBookingOnBehalf(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only Operations Managers, Business Managers, or Admin can create bookings on behalf of farmers.'
+      });
+    }
+
+    const rolePlaceholders = MACHINERY_BOOKING_ROLES.map(() => '?').join(', ');
+    let query = `
+      SELECT f.id, f.full_name, f.reference_number, f.phone_number, f.role,
+             f.barangay_id, f.membership_status, f.status, b.name AS barangay_name
+      FROM farmers f
+      LEFT JOIN barangays b ON f.barangay_id = b.id
+      WHERE LOWER(f.status) = 'approved'
+        AND f.role IN (${rolePlaceholders})
+    `;
+    const params = [...MACHINERY_BOOKING_ROLES];
+
+    if (req.user.role !== 'admin') {
+      if (!req.user.barangay_id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account is not assigned to a barangay.'
+        });
+      }
+      query += ' AND f.barangay_id = ?';
+      params.push(req.user.barangay_id);
+    }
+
+    if (req.user.id) {
+      query += ' AND f.id != ?';
+      params.push(req.user.id);
+    }
+
+    query += ' ORDER BY f.full_name ASC';
+    const [farmers] = await pool.execute(query, params);
+
+    res.json({ success: true, farmers });
+  } catch (error) {
+    console.error('Error fetching bookable farmers:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch farmers' });
+  }
+});
+
 // GET /api/machinery/bookings - Get all bookings with barangay filtering
 router.get('/bookings', async (req, res) => {
   try {
@@ -989,7 +1327,7 @@ router.get('/bookings', async (req, res) => {
     
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         userRole = decoded.role || 'guest';
         userBarangayId = decoded.barangay_id;
         userId = decoded.id;
@@ -1025,7 +1363,9 @@ router.get('/bookings', async (req, res) => {
         a.full_name as approved_by_name,
         cb.full_name as completed_by_name,
         ao.full_name as assigned_operator_name,
-        b.name as barangay_name
+        b.name as barangay_name,
+        COALESCE(b.machinery_down_payment_enabled, 0) AS barangay_down_payment_enabled,
+        b.machinery_down_payment_percent AS barangay_down_payment_percent
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
@@ -1048,10 +1388,12 @@ router.get('/bookings', async (req, res) => {
     }
     
     if (status) {
-      // Special case: 'Completed' filter includes both 'In Use' and 'Completed' statuses
       if (status === 'Completed') {
         query += ' AND mb.status IN (?, ?)';
         params.push('In Use', 'Completed');
+      } else if (status === 'Assigned to Operator' || (status === 'Approved' && userRole === 'operator')) {
+        query += ` AND mb.status IN (${OPERATOR_WORK_STATUSES.map(() => '?').join(', ')})`;
+        params.push(...OPERATOR_WORK_STATUSES);
       } else {
         query += ' AND mb.status = ?';
         params.push(status);
@@ -1105,7 +1447,7 @@ router.get('/bookings', async (req, res) => {
       if (!userId) {
         query += ' AND 1=0';
       } else {
-        query += ` AND mb.assigned_operator_id = ? AND mb.status IN ('Assigned to Operator', 'Booking Confirmed', 'In Use', 'Awaiting Final Payment', 'Completed', 'Incomplete')`;
+        query += ` AND mb.assigned_operator_id = ? AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use', 'Awaiting Final Payment', 'Completed', 'Incomplete')`;
         params.push(userId);
       }
     } else if (userRole === 'treasurer' || userRole === 'auditor' || userRole === 'agriculturist') {
@@ -1164,7 +1506,7 @@ router.get('/bookings/pending-down-payments', verifyToken, async (req, res) => {
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
-      WHERE mb.status = 'Awaiting Payment Verification'`;
+      WHERE mb.status IN ('Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected')`;
     const params = [];
     if (effectiveBarangay) {
       query += ' AND mb.barangay_id = ?';
@@ -1173,7 +1515,8 @@ router.get('/bookings/pending-down-payments', verifyToken, async (req, res) => {
     if (bookerFilter) {
       query += ` AND ${bookerFilter}`;
     }
-    query += ' ORDER BY mb.down_payment_submitted_at DESC';
+    query += ` ORDER BY FIELD(mb.status, 'Awaiting Payment Verification', 'Awaiting Down Payment', 'Payment Rejected'),
+                       COALESCE(mb.down_payment_submitted_at, mb.approved_date, mb.created_at) DESC`;
 
     const [bookings] = await pool.execute(query, params);
     res.json({ success: true, bookings });
@@ -1550,7 +1893,7 @@ router.put('/refunds/:id/process', verifyToken, async (req, res) => {
        SET refund_status = 'Refunded', processed_by = ?, processed_at = NOW(),
            refund_date = ?, reason = CONCAT(COALESCE(reason,''), ?)
        WHERE id = ?`,
-      [processed_by, payDate, remarks ? `\n[Processed: ${remarks}]` : '', id]
+      [actorId, payDate, remarks ? `\n[Processed: ${remarks}]` : '', id]
     );
 
     await pool.execute(
@@ -1563,7 +1906,7 @@ router.put('/refunds/:id/process', verifyToken, async (req, res) => {
         -refundAmount,
         receipt,
         remarks || `${paymentFor} · ${refund[0].refund_number}`,
-        processed_by
+        actorId
       ]
     );
 
@@ -1577,7 +1920,7 @@ router.put('/refunds/:id/process', verifyToken, async (req, res) => {
       remainingBalance: 0,
       paymentMethod: 'Cash',
       paymentDate: payDate,
-      collectedBy: processed_by,
+      collectedBy: actorId,
       barangayId: refund[0].barangay_id,
       remarks: paymentFor,
       metadata: {
@@ -1627,7 +1970,7 @@ router.get('/bookings/:id', async (req, res) => {
     
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         userRole = decoded.role || 'guest';
         userBarangayId = decoded.barangay_id;
         userId = decoded.id;
@@ -1662,7 +2005,9 @@ router.get('/bookings/:id', async (req, res) => {
         mi.assigned_operator_id as machinery_assigned_operator_id,
         a.full_name as approved_by_name,
         ao.full_name as assigned_operator_name,
-        b.name as barangay_name
+        b.name as barangay_name,
+        COALESCE(b.machinery_down_payment_enabled, 0) AS barangay_down_payment_enabled,
+        b.machinery_down_payment_percent AS barangay_down_payment_percent
       FROM machinery_bookings mb
       JOIN farmers f ON mb.farmer_id = f.id
       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
@@ -1913,21 +2258,28 @@ router.post('/bookings', verifyToken, async (req, res) => {
       });
     }
 
-    if (!canUserBookMachinery(req.user.role)) {
+    if (!canUserBookMachinery(req.user.role) && !canCreateBookingOnBehalf(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Your role is not permitted to create machinery bookings.'
       });
     }
 
+    const createdByManager = canCreateBookingOnBehalf(req.user.role);
     if (
-      canUserBookMachinery(req.user.role) &&
-      req.user.role !== 'admin' &&
+      !createdByManager &&
       parseInt(farmer_id, 10) !== parseInt(req.user.id, 10)
     ) {
       return res.status(403).json({
         success: false,
         message: 'You can only create bookings for yourself.'
+      });
+    }
+
+    if (createdByManager && parseInt(farmer_id, 10) === parseInt(req.user.id, 10)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Choose the farmer who requested this booking. It will be saved to their account, not yours.'
       });
     }
     
@@ -1943,7 +2295,7 @@ router.post('/bookings', verifyToken, async (req, res) => {
     
     // Get farmer's barangay AND membership status
     const [farmer] = await pool.execute(
-      'SELECT barangay_id, membership_status, role FROM farmers WHERE id = ?',
+      'SELECT barangay_id, membership_status, role, full_name FROM farmers WHERE id = ?',
       [farmer_id]
     );
     
@@ -2042,6 +2394,16 @@ router.post('/bookings', verifyToken, async (req, res) => {
       });
     }
 
+    const prerequisite = await checkMachineryPrerequisite(pool, farmer_id, machinery[0]);
+    if (!prerequisite.ok) {
+      return res.status(403).json({
+        success: false,
+        message: prerequisite.message,
+        requires_machinery_id: prerequisite.requires_machinery_id,
+        requires_machinery_name: prerequisite.requires_machinery_name
+      });
+    }
+
     const machineryBarangayId = machinery[0].barangay_id;
     
     // Check availability for the date
@@ -2070,59 +2432,108 @@ router.post('/bookings', verifyToken, async (req, res) => {
       });
     }
     
-    const bookingInsertBase = [
-      farmer_id,
-      machinery_id,
-      machineryBarangayId,
-      booking_date,
-      resolvedServiceLocation,
-      area_size,
-      area_unit,
-      totalPrice,
-      totalPrice,
-      notes
-    ];
+    const assignedOperatorId = machinery[0].assigned_operator_id || null;
+    const autoApprove = createdByManager;
 
-    let result;
-    if (resolvedPlaceId != null) {
-      try {
-        [result] = await pool.execute(
-          `INSERT INTO machinery_bookings 
-           (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
-            area_unit, total_price, remaining_balance, notes, status, barangay_place_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)`,
-          [...bookingInsertBase, resolvedPlaceId]
-        );
-      } catch (insErr) {
-        if (insErr.code === 'ER_BAD_FIELD_ERROR') {
-          [result] = await pool.execute(
-            `INSERT INTO machinery_bookings 
-             (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
-              area_unit, total_price, remaining_balance, notes, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
-            bookingInsertBase
-          );
-        } else {
-          throw insErr;
-        }
+    if (autoApprove && !assignedOperatorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assign an operator to this machinery in Inventory before creating an approved booking.'
+      });
+    }
+
+    const dpSettings = await getDownPaymentSettings(machineryBarangayId);
+    let bookingStatus = autoApprove ? 'Approved' : 'Pending';
+    let downPaymentAmount = null;
+    let downPaymentPercent = null;
+
+    if (autoApprove && dpSettings.enabled) {
+      const calc = calculateDownPayment(totalPrice, dpSettings.percent);
+      if (!calc.downPayment) {
+        return res.status(400).json({
+          success: false,
+          message: 'Down payment is ON for this barangay, but no percentage is set. The President must enter a down payment percentage first.'
+        });
       }
-    } else {
-      [result] = await pool.execute(
-        `INSERT INTO machinery_bookings 
-         (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, 
-          area_unit, total_price, remaining_balance, notes, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
-        bookingInsertBase
+      bookingStatus = 'Awaiting Down Payment';
+      downPaymentAmount = calc.downPayment;
+      downPaymentPercent = calc.percent;
+    }
+
+    const result = await insertMachineryBooking({
+      farmerId: farmer_id,
+      machineryId: machinery_id,
+      barangayId: machineryBarangayId,
+      bookingDate: booking_date,
+      serviceLocation: resolvedServiceLocation,
+      areaSize: area_size,
+      areaUnit: area_unit,
+      totalPrice,
+      notes,
+      status: bookingStatus,
+      placeId: resolvedPlaceId,
+      approvedBy: autoApprove ? req.user.id : null,
+      assignedOperatorId: autoApprove && bookingStatus === 'Approved' ? assignedOperatorId : null
+    });
+
+    if (downPaymentAmount != null) {
+      await pool.execute(
+        `UPDATE machinery_bookings
+         SET down_payment_amount = ?, down_payment_percent = ?
+         WHERE id = ?`,
+        [downPaymentAmount, downPaymentPercent, result.insertId]
       );
     }
-    
-    console.log('✅ Booking created successfully! Booking ID:', result.insertId);
-    
-    res.json({ 
-      success: true, 
-      message: 'Booking created successfully',
+
+    console.log(`✅ Booking created successfully! Booking ID: ${result.insertId} status=${bookingStatus} farmer=${farmer_id}`);
+
+    if (autoApprove && bookingStatus === 'Approved') {
+      await notifyApprovedBooking({
+        farmerId: farmer_id,
+        bookingId: result.insertId,
+        operatorId: assignedOperatorId,
+        machineryName: machinery[0].machinery_name,
+        bookingDate: booking_date
+      });
+    } else if (autoApprove && bookingStatus === 'Awaiting Down Payment') {
+      await createBookingStatusNotification({
+        farmerId: farmer_id,
+        bookingId: result.insertId,
+        status: 'Awaiting Down Payment',
+        machineryName: machinery[0].machinery_name,
+        bookingDate: booking_date,
+        downPaymentAmount,
+        downPaymentPercent,
+        remainingBalance: totalPrice - downPaymentAmount
+      });
+      await notifyBarangayDownPaymentDue({
+        barangayId: machineryBarangayId,
+        bookingId: result.insertId,
+        farmerName: farmer[0].full_name || null,
+        bookerRole: farmer[0].role,
+        machineryName: machinery[0].machinery_name,
+        amountDue: downPaymentAmount,
+        percent: downPaymentPercent,
+        bookingDate: booking_date
+      });
+    }
+
+    const pctLabel = formatDownPaymentPercentLabel(downPaymentPercent);
+    res.json({
+      success: true,
+      message: autoApprove
+        ? (bookingStatus === 'Awaiting Down Payment'
+          ? `Booking created. The farmer must pay a ${pctLabel}% down payment (₱${Number(downPaymentAmount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}) to reserve the slot.`
+          : 'Booking created and approved. It has been assigned to the operator.')
+        : 'Booking created successfully. Waiting for Operations Manager or Business Manager approval.',
       booking_id: result.insertId,
+      farmer_id: parseInt(farmer_id, 10),
+      status: bookingStatus,
       total_price: totalPrice,
+      remaining_balance: totalPrice,
+      down_payment_amount: downPaymentAmount,
+      down_payment_percent: downPaymentPercent,
+      assigned_operator_id: bookingStatus === 'Approved' ? assignedOperatorId : null,
       barangay_id: machineryBarangayId,
       user_barangay_id: userBarangayId,
       cross_barangay: shouldUseNonMemberRate(membershipStatus, userBarangayId, machineryBarangayId)
@@ -2161,9 +2572,11 @@ router.put('/bookings/:id/approve', ...secureBookingRoute, async (req, res) => {
     }
 
     const [booking] = await pool.execute(
-      `SELECT mb.*, mi.machinery_name, mi.assigned_operator_id
+      `SELECT mb.*, mi.machinery_name, f.full_name AS farmer_name, f.role AS booker_role,
+              COALESCE(mb.assigned_operator_id, mi.assigned_operator_id) AS resolved_operator_id
        FROM machinery_bookings mb
        LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
        WHERE mb.id = ?`,
       [id]
     );
@@ -2185,13 +2598,20 @@ router.put('/bookings/:id/approve', ...secureBookingRoute, async (req, res) => {
         message: 'Only pending bookings can be approved' 
       });
     }
+
+    const assignedOperatorId = booking[0].resolved_operator_id || null;
+    if (!assignedOperatorId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assign an operator to this machinery in Inventory before approving the booking.'
+      });
+    }
     
     const isAvailable = await checkBookingAvailability(
       booking[0].machinery_id, 
       booking[0].booking_date, 
       booking[0].area_size,
-      id,
-      true
+      id
     );
     
     if (!isAvailable) {
@@ -2200,41 +2620,97 @@ router.put('/bookings/:id/approve', ...secureBookingRoute, async (req, res) => {
         message: 'Machinery capacity exceeded for this date' 
       });
     }
-    
-    const { downPayment, remainingBalance } = calculateDownPayment(booking[0].total_price);
 
-    const [result] = await pool.execute(
-      `UPDATE machinery_bookings 
-       SET status = 'Awaiting Down Payment', 
-           approved_by = ?, 
-           approved_date = NOW(),
-           down_payment_amount = ?,
-           remaining_balance = ?
-       WHERE id = ?`,
-      [approved_by, downPayment, booking[0].total_price, id]
-    );
+    const dpSettings = await getDownPaymentSettings(booking[0].barangay_id);
+    if (dpSettings.enabled) {
+      const calc = calculateDownPayment(booking[0].total_price, dpSettings.percent);
+      if (!calc.downPayment) {
+        return res.status(400).json({
+          success: false,
+          message: 'Down payment is ON for this barangay, but no percentage is set. The President must enter a down payment percentage first.'
+        });
+      }
 
-    if (result.affectedRows > 0) {
-      await createBookingStatusNotification({
-        farmerId: booking[0].farmer_id,
-        bookingId: booking[0].id,
+      const [dpResult] = await pool.execute(
+        `UPDATE machinery_bookings
+         SET status = 'Awaiting Down Payment',
+             approved_by = ?,
+             approved_date = NOW(),
+             down_payment_amount = ?,
+             down_payment_percent = ?,
+             remaining_balance = COALESCE(NULLIF(remaining_balance, 0), total_price)
+         WHERE id = ?`,
+        [approved_by, calc.downPayment, calc.percent, id]
+      );
+
+      if (dpResult.affectedRows > 0) {
+        await createBookingStatusNotification({
+          farmerId: booking[0].farmer_id,
+          bookingId: booking[0].id,
+          status: 'Awaiting Down Payment',
+          machineryName: booking[0].machinery_name,
+          bookingDate: booking[0].booking_date,
+          downPaymentAmount: calc.downPayment,
+          downPaymentPercent: calc.percent,
+          remainingBalance: calc.remainingBalance
+        });
+        await notifyBarangayDownPaymentDue({
+          barangayId: booking[0].barangay_id,
+          bookingId: booking[0].id,
+          farmerName: booking[0].farmer_name,
+          bookerRole: booking[0].booker_role,
+          machineryName: booking[0].machinery_name,
+          amountDue: calc.downPayment,
+          percent: calc.percent,
+          bookingDate: booking[0].booking_date
+        });
+      }
+
+      const pctLabel = formatDownPaymentPercentLabel(calc.percent);
+      console.log(`✅ Booking ${id} approved pending ${pctLabel}% down payment by ${manager[0].full_name}`);
+
+      return res.json({
+        success: true,
+        message: `Booking approved. The farmer must pay a ${pctLabel}% down payment (₱${calc.downPayment.toLocaleString('en-PH', { minimumFractionDigits: 2 })}) to reserve the slot.`,
+        booking_id: id,
         status: 'Awaiting Down Payment',
-        machineryName: booking[0].machinery_name,
-        bookingDate: booking[0].booking_date,
-        downPaymentAmount: downPayment,
-        remainingBalance
+        down_payment_amount: calc.downPayment,
+        down_payment_percent: calc.percent,
+        remaining_balance: booking[0].total_price,
+        barangay_verified: true
       });
     }
 
-    console.log(`✅ Booking ${id} approved for down payment by ${manager[0].full_name} (Barangay: ${booking[0].barangay_id})`);
+    const [result] = await pool.execute(
+      `UPDATE machinery_bookings 
+       SET status = 'Approved', 
+           approved_by = ?, 
+           approved_date = NOW(),
+           assigned_operator_id = ?,
+           remaining_balance = COALESCE(NULLIF(remaining_balance, 0), total_price)
+       WHERE id = ?`,
+      [approved_by, assignedOperatorId, id]
+    );
+
+    if (result.affectedRows > 0) {
+      await notifyApprovedBooking({
+        farmerId: booking[0].farmer_id,
+        bookingId: booking[0].id,
+        operatorId: assignedOperatorId,
+        machineryName: booking[0].machinery_name,
+        bookingDate: booking[0].booking_date
+      });
+    }
+
+    console.log(`✅ Booking ${id} approved and assigned to operator by ${manager[0].full_name} (Barangay: ${booking[0].barangay_id})`);
     
     res.json({ 
       success: true, 
-      message: 'Booking approved. Farmer must pay 20% down payment before reservation.',
+      message: 'Booking approved and assigned to the operator. The farmer will pay the treasurer after the service.',
       booking_id: id,
-      status: 'Awaiting Down Payment',
-      down_payment_amount: downPayment,
-      remaining_balance: remainingBalance,
+      status: 'Approved',
+      assigned_operator_id: assignedOperatorId,
+      remaining_balance: booking[0].total_price,
       barangay_verified: true
     });
   } catch (error) {
@@ -2271,9 +2747,10 @@ router.put('/bookings/:id/reject', ...secureBookingRoute, async (req, res) => {
     }
     
     const [booking] = await pool.execute(
-      `SELECT mb.*, mi.machinery_name
+      `SELECT mb.*, mi.machinery_name, f.full_name AS farmer_name, f.role AS booker_role
        FROM machinery_bookings mb
        LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
        WHERE mb.id = ?`,
       [id]
     );
@@ -2288,13 +2765,26 @@ router.put('/bookings/:id/reject', ...secureBookingRoute, async (req, res) => {
         message: 'You can only reject bookings from your assigned barangay.' 
       });
     }
-    
-    if (booking[0].status !== 'Pending') {
+
+    const rejectableStatuses = [
+      'Pending',
+      'Awaiting Down Payment',
+      'Awaiting Payment Verification',
+      'Payment Rejected',
+      'Down Payment Verified'
+    ];
+    if (!rejectableStatuses.includes(booking[0].status)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Only pending bookings can be rejected' 
+        message: `Only bookings awaiting manager action can be rejected (current: ${booking[0].status})` 
       });
     }
+
+    const hadVerifiedDownPayment =
+      Boolean(booking[0].down_payment_verified_at) ||
+      (parseFloat(booking[0].down_payment_amount) > 0 &&
+        parseFloat(booking[0].total_paid) > 0 &&
+        booking[0].status === 'Down Payment Verified');
     
     const [result] = await pool.execute(
       `UPDATE machinery_bookings 
@@ -2303,6 +2793,7 @@ router.put('/bookings/:id/reject', ...secureBookingRoute, async (req, res) => {
       [approved_by, rejection_reason, id]
     );
 
+    let refundQueued = false;
     if (result.affectedRows > 0) {
       await createBookingStatusNotification({
         farmerId: booking[0].farmer_id,
@@ -2312,13 +2803,82 @@ router.put('/bookings/:id/reject', ...secureBookingRoute, async (req, res) => {
         bookingDate: booking[0].booking_date,
         rejectionReason: rejection_reason
       });
+
+      // Slot unavailable after DP paid → auto-queue refund for treasurer
+      if (hadVerifiedDownPayment) {
+        const eligibility = isRefundEligible({
+          ...booking[0],
+          status: 'Rejected',
+          machine_used: 0
+        });
+        if (eligibility.eligible) {
+          const [existing] = await pool.execute(
+            'SELECT id, refund_status FROM machinery_booking_refunds WHERE booking_id = ?',
+            [id]
+          );
+          const openRefund = existing[0] &&
+            ['Refund Requested', 'Under Review', 'Approved', 'Pending', 'Refunded', 'Processed'].includes(
+              existing[0].refund_status
+            );
+          if (!openRefund) {
+            const refundNumber = await generateRefundNumber();
+            const refundAmount = eligibility.refundAmount;
+            const autoReason =
+              `Manager rejected booking (slot unavailable / date conflict). ${rejection_reason}`.trim();
+            if (existing.length > 0 && existing[0].refund_status === 'Rejected') {
+              await pool.execute(
+                `UPDATE machinery_booking_refunds
+                 SET refund_number = ?, refund_amount = ?, original_down_payment = ?, refund_reason = ?,
+                     reason = ?, refund_status = 'Refund Requested', requested_at = NOW(),
+                     reviewed_by = NULL, reviewed_at = NULL, approved_by = NULL, rejection_reason = NULL,
+                     machinery_id = ?, machinery_name = ?, farmer_name = ?
+                 WHERE booking_id = ?`,
+                [
+                  refundNumber, refundAmount, refundAmount, autoReason, autoReason,
+                  booking[0].machinery_id, booking[0].machinery_name, booking[0].farmer_name, id
+                ]
+              );
+            } else if (existing.length === 0) {
+              await pool.execute(
+                `INSERT INTO machinery_booking_refunds
+                 (booking_id, farmer_id, refund_number, refund_amount, original_down_payment, refund_reason, reason,
+                  refund_status, requested_at, machinery_id, machinery_name, farmer_name)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Refund Requested', NOW(), ?, ?, ?)`,
+                [
+                  id, booking[0].farmer_id, refundNumber, refundAmount, refundAmount, autoReason, autoReason,
+                  booking[0].machinery_id, booking[0].machinery_name, booking[0].farmer_name
+                ]
+              );
+            }
+            const verifierRole = getPaymentVerifierRole(booking[0].booker_role);
+            const [verifiers] = await pool.execute(
+              `SELECT id FROM farmers WHERE role = ? AND barangay_id = ? AND status = 'approved'`,
+              [verifierRole, booking[0].barangay_id]
+            );
+            for (const v of verifiers) {
+              await createTreasurerRefundRequestedNotification({
+                treasurerId: v.id,
+                bookingId: id,
+                farmerName: booking[0].farmer_name,
+                machineryName: booking[0].machinery_name,
+                refundAmount,
+                refundNumber
+              });
+            }
+            refundQueued = true;
+          }
+        }
+      }
     }
 
     console.log(`❌ Booking ${id} rejected by ${manager[0].full_name} (Barangay: ${booking[0].barangay_id})`);
     
     res.json({ 
       success: true, 
-      message: 'Booking rejected successfully',
+      message: refundQueued
+        ? 'Booking rejected. Down payment refund was queued for treasurer review.'
+        : 'Booking rejected successfully',
+      refund_queued: refundQueued,
       barangay_verified: true
     });
   } catch (error) {
@@ -2441,11 +3001,22 @@ router.get('/bookings/:id/payments', ...secureBookingRoute, async (req, res) => 
       FROM machinery_booking_payments mbp
       LEFT JOIN farmers f ON mbp.recorded_by = f.id
       WHERE mbp.booking_id = ?
-      ORDER BY mbp.payment_date DESC`,
+      ORDER BY mbp.payment_date ASC, mbp.id ASC`,
       [id]
     );
+
+    let history = payments;
+    try {
+      history = await mergeGcashEventsIntoHistory(pool, {
+        transactionType: 'machinery',
+        referenceId: id,
+        payments
+      });
+    } catch (mergeErr) {
+      console.error('Error merging GCash events into payment history:', mergeErr);
+    }
     
-    res.json({ success: true, payments });
+    res.json({ success: true, payments: history });
   } catch (error) {
     console.error('Error fetching payment history:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch payment history' });
@@ -2665,10 +3236,10 @@ router.put('/bookings/:id/complete', ...secureBookingRoute, async (req, res) => 
       });
     }
     
-    if (!['Assigned to Operator', 'Booking Confirmed', 'In Use'].includes(booking[0].status)) {
+    if (!['Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use'].includes(booking[0].status)) {
       return res.status(400).json({ 
         success: false, 
-        message: `Only assigned/confirmed bookings can be marked completed or incomplete. Current: ${booking[0].status}` 
+        message: `Only approved or assigned bookings can be marked completed or incomplete. Current: ${booking[0].status}` 
       });
     }
     
@@ -2746,7 +3317,7 @@ router.put('/bookings/:id/complete', ...secureBookingRoute, async (req, res) => 
       completed: completedRemaining > 0
         ? 'Rental marked complete. Outstanding balance added to Accounts Receivable. Pending expense entry created for treasurer.'
         : 'Rental marked complete. Pending expense entry created for treasurer.',
-      incomplete: 'Booking marked as incomplete. Farmer may request a down payment refund if eligible.'
+      incomplete: 'Booking marked as incomplete. The farmer will not be charged unless the service is resumed and completed.'
     };
     
     res.json({ 
@@ -3105,6 +3676,16 @@ router.put('/bookings/:id/edit', ...secureBookingRoute, async (req, res) => {
       });
     }
 
+    const prerequisiteOnEdit = await checkMachineryPrerequisite(pool, booking[0].farmer_id, machinery[0]);
+    if (!prerequisiteOnEdit.ok) {
+      return res.status(403).json({
+        success: false,
+        message: prerequisiteOnEdit.message,
+        requires_machinery_id: prerequisiteOnEdit.requires_machinery_id,
+        requires_machinery_name: prerequisiteOnEdit.requires_machinery_name
+      });
+    }
+
     const userBarangayId = farmer[0].barangay_id;
     const membershipStatus = farmer[0].membership_status || 'member';
     const machineryBarangayId = machinery[0].barangay_id;
@@ -3284,7 +3865,7 @@ router.put('/bookings/:id/edit', ...secureBookingRoute, async (req, res) => {
   }
 });
 
-// GET /api/machinery/gcash-qr - Organization GCash QR for down payments
+// GET /api/machinery/gcash-qr - Organization GCash QR (legacy balance payments)
 router.get('/gcash-qr', async (req, res) => {
   const qrPath = process.env.GCASH_QR_PATH || '/uploads/settings/gcash-qr.png';
   const fullPath = path.join(__dirname, '..', qrPath.replace(/^\//, ''));
@@ -3309,8 +3890,12 @@ router.post('/bookings/:id/submit-down-payment', ...secureBookingRoute, uploadPa
       return res.status(400).json({ success: false, message: 'payment_method must be Cash or GCash' });
     }
 
-    if (payment_method === 'GCash' && !req.file) {
-      return res.status(400).json({ success: false, message: 'Payment screenshot is required for GCash' });
+    if (payment_method === 'GCash') {
+      return res.status(400).json({
+        success: false,
+        message:
+          'GCash down payments must be completed online via the Pay with GCash button. Use Cash if paying in person to the treasurer.'
+      });
     }
 
     const [booking] = await pool.execute('SELECT * FROM machinery_bookings WHERE id = ?', [id]);
@@ -3668,81 +4253,109 @@ router.put('/bookings/:id/verify-down-payment', ...secureBookingRoute, async (re
       return res.status(400).json({ success: false, message: 'Booking is not awaiting payment verification' });
     }
 
-    const downAmount = parseFloat(booking[0].down_payment_amount) || 0;
-    const { remainingBalance } = calculateDownPayment(booking[0].total_price);
-    const paymentDate = formatLocalDate(new Date());
-    const receipt = receipt_number || (await generateReceiptNumber(pool));
-
-    await pool.execute(
-      `INSERT INTO machinery_booking_payments
-       (booking_id, payment_type, payment_date, amount, payment_method, receipt_number, remarks, recorded_by)
-       VALUES (?, 'down_payment', ?, ?, ?, ?, '20% down payment verified', ?)`,
-      [id, paymentDate, downAmount, booking[0].down_payment_method || 'Cash', receipt, verified_by]
-    );
-
-    await pool.execute(
-      `UPDATE machinery_bookings
-       SET status = 'Down Payment Verified',
-           down_payment_verified_by = ?,
-           down_payment_verified_at = NOW(),
-           total_paid = ?,
-           remaining_balance = ?,
-           payment_status = 'Partial',
-           payment_date = ?,
-           last_payment_date = ?,
-           receipt_number = ?
-       WHERE id = ?`,
-      [verified_by, downAmount, remainingBalance, paymentDate, paymentDate, receipt, id]
-    );
-
-    await syncMachineryIncomeFromBooking(
-      pool,
-      id,
-      verified_by,
-      `20% down payment — Booking #${id}`
-    );
-
-    await recordPaymentReceipt(pool, {
-      receiptNumber: receipt,
-      module: 'machinery_rental',
-      referenceId: id,
-      referenceType: 'machinery_booking',
-      clientName: booking[0].farmer_name,
-      amountPaid: downAmount,
-      remainingBalance,
-      paymentMethod: booking[0].down_payment_method || 'Cash',
-      paymentDate,
-      collectedBy: verified_by,
-      barangayId: booking[0].barangay_id,
-      remarks: `20% down payment — Booking #${id}`
+    const result = await verifyDownPaymentForBooking(pool, id, {
+      verifiedBy: verified_by,
+      receiptNumber: receipt_number,
+      autoVerified: false
     });
 
-    await createBookingStatusNotification({
-      farmerId: booking[0].farmer_id,
-      bookingId: id,
-      status: 'Down Payment Verified',
-      machineryName: booking[0].machinery_name,
-      bookingDate: booking[0].booking_date
-    });
-
-    const [managers] = await pool.execute(
-      `SELECT id FROM farmers WHERE role IN ('operation_manager', 'business_manager') AND barangay_id = ? AND status = 'approved'`,
-      [booking[0].barangay_id]
-    );
-    for (const m of managers) {
-      await createManagerConfirmBookingNotification({
-        managerId: m.id,
-        bookingId: id,
-        machineryName: booking[0].machinery_name,
-        farmerName: booking[0].farmer_name,
-        bookingDate: booking[0].booking_date
-      });
+    if (!result.ok) {
+      return res.status(result.status || 500).json({ success: false, message: result.message });
     }
 
-    res.json({ success: true, message: 'Down payment verified', status: 'Down Payment Verified', receipt_number: receipt });
+    res.json({
+      success: true,
+      message: 'Down payment verified',
+      status: result.status,
+      receipt_number: result.receipt_number
+    });
   } catch (error) {
     console.error('Error verifying down payment:', error);
     res.status(500).json({ success: false, message: 'Failed to verify down payment' });
+  }
+});
+
+// POST /api/machinery/bookings/:id/record-down-payment — Treasurer records face-to-face cash DP
+router.post('/bookings/:id/record-down-payment', ...secureBookingRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      recorded_by,
+      amount,
+      payment_reference,
+      receipt_number,
+      payment_method = 'Cash',
+      payment_date
+    } = req.body;
+
+    const actorId = recorded_by || req.user.id;
+    if (parseInt(actorId, 10) !== parseInt(req.user.id, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only record payments as yourself.' });
+    }
+
+    if (!['Cash', 'GCash'].includes(payment_method)) {
+      return res.status(400).json({ success: false, message: 'payment_method must be Cash or GCash' });
+    }
+
+    const [recorder] = await pool.execute(
+      'SELECT id, role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [actorId]
+    );
+    if (recorder.length === 0 || !['treasurer', 'president', 'admin'].includes(recorder[0].role)) {
+      return res.status(403).json({ success: false, message: 'Only Treasurer or President can record down payments' });
+    }
+
+    const [booking] = await pool.execute(
+      `SELECT mb.*, f.full_name AS farmer_name, f.role AS booker_role, mi.machinery_name, mi.barangay_id
+       FROM machinery_bookings mb
+       JOIN farmers f ON mb.farmer_id = f.id
+       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       WHERE mb.id = ?`,
+      [id]
+    );
+    if (booking.length === 0) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const accessCheck = assertCanVerifyMachineryPayment(
+      recorder[0],
+      booking[0].farmer_id,
+      booking[0].booker_role,
+      booking[0].barangay_id
+    );
+    if (!accessCheck.ok) {
+      return res.status(403).json({ success: false, message: accessCheck.message });
+    }
+
+    if (!['Awaiting Down Payment', 'Payment Rejected', 'Awaiting Payment Verification'].includes(booking[0].status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot record down payment for status: ${booking[0].status}`
+      });
+    }
+
+    const result = await recordCashDownPaymentForBooking(pool, id, {
+      verifiedBy: actorId,
+      amount: amount != null ? amount : booking[0].down_payment_amount,
+      paymentReference: payment_reference || null,
+      receiptNumber: receipt_number || null,
+      paymentMethod: payment_method,
+      paymentDate: payment_date || null
+    });
+
+    if (!result.ok) {
+      return res.status(result.status || 500).json({ success: false, message: result.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Cash down payment recorded and verified.',
+      status: result.status,
+      receipt_number: result.receipt_number
+    });
+  } catch (error) {
+    console.error('Error recording down payment:', error);
+    res.status(500).json({ success: false, message: 'Failed to record down payment' });
   }
 });
 
@@ -3835,7 +4448,8 @@ router.put('/bookings/:id/confirm-booking', ...secureBookingRoute, async (req, r
     }
 
     const [booking] = await pool.execute(
-      `SELECT mb.*, mi.machinery_name, mi.assigned_operator_id
+      `SELECT mb.*, mi.machinery_name,
+              COALESCE(mb.assigned_operator_id, mi.assigned_operator_id) AS resolved_operator_id
        FROM machinery_bookings mb
        JOIN machinery_inventory mi ON mb.machinery_id = mi.id
        WHERE mb.id = ?`,
@@ -3845,11 +4459,19 @@ router.put('/bookings/:id/confirm-booking', ...secureBookingRoute, async (req, r
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (booking[0].status !== 'Down Payment Verified') {
-      return res.status(400).json({ success: false, message: 'Down payment must be verified before final confirmation' });
+    if (!['Down Payment Verified', 'Approved'].includes(booking[0].status)) {
+      return res.status(400).json({ success: false, message: 'Booking must be approved before it can be assigned to an operator' });
     }
 
-    if (!booking[0].assigned_operator_id) {
+    if (booking[0].status === 'Approved' && booking[0].assigned_operator_id) {
+      return res.json({
+        success: true,
+        message: 'Booking is already approved and assigned to the operator.',
+        status: 'Approved'
+      });
+    }
+
+    if (!booking[0].resolved_operator_id) {
       return res.status(400).json({
         success: false,
         message: 'Assign an operator to this machinery in Inventory before confirming the booking.'
@@ -3868,24 +4490,24 @@ router.put('/bookings/:id/confirm-booking', ...secureBookingRoute, async (req, r
 
     await pool.execute(
       `UPDATE machinery_bookings
-       SET status = 'Assigned to Operator',
+       SET status = 'Approved',
            final_confirmed_by = ?,
            final_confirmed_at = NOW(),
            assigned_operator_id = ?
        WHERE id = ?`,
-      [confirmed_by, booking[0].assigned_operator_id, id]
+      [confirmed_by, booking[0].resolved_operator_id, id]
     );
 
     await createBookingStatusNotification({
       farmerId: booking[0].farmer_id,
       bookingId: id,
-      status: 'Booking Confirmed',
+      status: 'Approved',
       machineryName: booking[0].machinery_name,
       bookingDate: booking[0].booking_date
     });
 
     await createOperatorBookingAssignedNotification({
-      operatorId: booking[0].assigned_operator_id,
+      operatorId: booking[0].resolved_operator_id,
       bookingId: id,
       machineryName: booking[0].machinery_name,
       bookingDate: booking[0].booking_date
@@ -3893,8 +4515,8 @@ router.put('/bookings/:id/confirm-booking', ...secureBookingRoute, async (req, r
 
     res.json({
       success: true,
-      message: 'Booking confirmed and assigned to operator. Dates are now reserved.',
-      status: 'Assigned to Operator'
+      message: 'Booking approved and assigned to operator.',
+      status: 'Approved'
     });
   } catch (error) {
     console.error('Error confirming booking:', error);
@@ -3967,6 +4589,62 @@ router.put('/bookings/:id/verify-final-payment', ...secureBookingRoute, async (r
   }
 });
 
+// GET /api/machinery/most-used - Rank completed machinery usage in the user's barangay
+router.get('/most-used', verifyToken, async (req, res) => {
+  try {
+    const barangayId = parseInt(req.user?.barangay_id, 10);
+    if (!barangayId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not assigned to a barangay.'
+      });
+    }
+
+    let limit = parseInt(req.query.limit, 10);
+    if (Number.isNaN(limit) || limit < 1) limit = 5;
+    if (limit > 10) limit = 10;
+
+    const [rows] = await pool.execute(
+      `SELECT
+         mb.machinery_id,
+         mi.machinery_name,
+         mi.machinery_type,
+         mb.barangay_id,
+         COALESCE(b.name, '') AS barangay_name,
+         COUNT(*) AS usage_count
+       FROM machinery_bookings mb
+       INNER JOIN machinery_inventory mi ON mi.id = mb.machinery_id
+       LEFT JOIN barangays b ON b.id = mb.barangay_id
+       WHERE mb.status = 'Completed'
+         AND mb.barangay_id = ?
+       GROUP BY
+         mb.machinery_id,
+         mi.machinery_name,
+         mi.machinery_type,
+         mb.barangay_id,
+         b.name
+       ORDER BY usage_count DESC, mi.machinery_name ASC
+       LIMIT ${limit}`,
+      [barangayId]
+    );
+
+    res.json({
+      success: true,
+      barangay_id: barangayId,
+      barangay_name: rows[0]?.barangay_name || '',
+      machineries: rows.map((row) => ({
+        machinery_id: row.machinery_id,
+        machinery_name: row.machinery_name,
+        machinery_type: row.machinery_type,
+        usage_count: parseInt(row.usage_count, 10)
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching most used machineries:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch most used machineries' });
+  }
+});
+
 // GET /api/machinery/stats - Get machinery statistics (barangay-scoped)
 router.get('/stats', verifyToken, async (req, res) => {
   try {
@@ -3978,9 +4656,22 @@ router.get('/stats', verifyToken, async (req, res) => {
       SELECT 
         machinery_type,
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) as available,
-        SUM(CASE WHEN status = 'In Use' THEN 1 ELSE 0 END) as in_use,
-        SUM(CASE WHEN status = 'Under Maintenance' THEN 1 ELSE 0 END) as maintenance
+        SUM(CASE
+              WHEN status = 'Available'
+               AND NOT EXISTS (
+                 SELECT 1 FROM machinery_bookings mb
+                 WHERE mb.machinery_id = mi.id
+                   AND mb.status IN ('Assigned to Operator', 'Booking Confirmed', 'In Use')
+               )
+              THEN 1 ELSE 0 END) as available,
+        SUM(CASE
+              WHEN status <> 'Available'
+                OR EXISTS (
+                 SELECT 1 FROM machinery_bookings mb
+                 WHERE mb.machinery_id = mi.id
+                   AND mb.status IN ('Assigned to Operator', 'Booking Confirmed', 'In Use')
+               )
+              THEN 1 ELSE 0 END) as not_available
       FROM machinery_inventory mi
       WHERE 1=1 ${scope.clause}
       GROUP BY machinery_type`;

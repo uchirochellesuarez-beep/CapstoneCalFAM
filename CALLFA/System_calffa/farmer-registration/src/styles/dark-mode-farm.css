@@ -3,7 +3,7 @@
  * Deep forest green with matte, readable surfaces (not cyber/neon black).
  */
 
-body.glass-dark:not(.farmer-user) {
+body.glass-dark {
   --farm-night-bg-deep: #0c2418;
   --farm-night-bg-mid: #123222;
   --farm-night-bg-horizon: #1a4d35;
@@ -63,7 +63,7 @@ body.glass-dark {
 }
 
 /* Ambient — moonlit field, not neon glow */
-body.glass-dark:not(.farmer-user)::before {
+body.glass-dark::before {
   background:
     radial-gradient(ellipse at 12% 6%, rgba(110, 231, 168, 0.07), transparent 50%),
     radial-gradient(ellipse at 88% 10%, rgba(232, 196, 104, 0.05), transparent 48%),
@@ -71,7 +71,7 @@ body.glass-dark:not(.farmer-user)::before {
   opacity: 0.9 !important;
 }
 
-body.glass-dark:not(.farmer-user)::after {
+body.glass-dark::after {
   opacity: 0.28 !important;
   background:
     linear-gradient(122deg, rgba(255, 255, 255, 0.04) 0%, transparent 20%),
@@ -80,7 +80,7 @@ body.glass-dark:not(.farmer-user)::after {
 }
 
 /* Backdrop — deep forest wall */
-body.glass-dark:not(.farmer-user) .backdrop-theme-dark {
+body.glass-dark .backdrop-theme-dark {
   background: linear-gradient(
     160deg,
     #0a1f15 0%,
@@ -90,14 +90,14 @@ body.glass-dark:not(.farmer-user) .backdrop-theme-dark {
   opacity: 0.72 !important;
 }
 
-body.glass-dark:not(.farmer-user) .backdrop-theme-dark::before {
+body.glass-dark .backdrop-theme-dark::before {
   background: radial-gradient(circle at 50% 20%, rgba(232, 196, 104, 0.04) 0%, transparent 55%) !important;
   opacity: 0.35 !important;
   animation: none !important;
 }
 
 /* Header — matte barn board */
-body.glass-dark:not(.farmer-user) .top-header {
+body.glass-dark .top-header {
   background: linear-gradient(
     118deg,
     #143528 0%,
@@ -110,7 +110,7 @@ body.glass-dark:not(.farmer-user) .top-header {
   -webkit-backdrop-filter: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header :is(.icon-btn, .user-profile, .theme-toggle-btn) {
+body.glass-dark .top-header :is(.icon-btn, .user-profile, .theme-toggle-btn) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   border: 2px solid #16a34a !important;
   color: #052e16 !important;
@@ -118,69 +118,93 @@ body.glass-dark:not(.farmer-user) .top-header :is(.icon-btn, .user-profile, .the
   box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header :is(.icon-btn, .theme-toggle-btn) :is(svg, .notification-icon, .logout-icon) {
+body.glass-dark .top-header :is(.icon-btn, .theme-toggle-btn) :is(svg, .notification-icon, .logout-icon) {
   color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn :is(.theme-icon, .theme-icon-sun, .theme-icon-moon) {
+body.glass-dark .top-header .theme-toggle-btn :is(.theme-icon, .theme-icon-sun, .theme-icon-moon) {
   color: #b45309 !important;
   stroke: #b45309 !important;
   fill: #b45309 !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn:hover :is(.theme-icon, .theme-icon-sun, .theme-icon-moon) {
+body.glass-dark .top-header .theme-toggle-btn:hover :is(.theme-icon, .theme-icon-sun, .theme-icon-moon) {
   color: #92400e !important;
   stroke: #92400e !important;
   fill: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn .theme-icon-sun circle,
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn .theme-icon-sun path {
+body.glass-dark .top-header .theme-toggle-btn .theme-icon-sun circle,
+body.glass-dark .top-header .theme-toggle-btn .theme-icon-sun path {
   stroke: #b45309 !important;
   fill: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn:hover .theme-icon-sun circle,
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn:hover .theme-icon-sun path {
+body.glass-dark .top-header .theme-toggle-btn:hover .theme-icon-sun circle,
+body.glass-dark .top-header .theme-toggle-btn:hover .theme-icon-sun path {
   stroke: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn .theme-icon-moon path {
+body.glass-dark .top-header .theme-toggle-btn .theme-icon-moon path {
   fill: #b45309 !important;
   stroke: #b45309 !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .theme-toggle-btn:hover .theme-icon-moon path {
+body.glass-dark .top-header .theme-toggle-btn:hover .theme-icon-moon path {
   fill: #92400e !important;
   stroke: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header :is(.icon-btn, .theme-toggle-btn):hover {
+body.glass-dark .top-header :is(.icon-btn, .theme-toggle-btn):hover {
   background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   filter: brightness(1.04) !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .notification-btn.has-unread {
+body.glass-dark .top-header .notification-btn.has-unread {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
   border-color: #d97706 !important;
   color: #78350f !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .profile-name,
-body.glass-dark:not(.farmer-user) .top-header .profile-id {
+body.glass-dark .top-header .lang-toggle--header {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.2) !important;
+}
+
+body.glass-dark .top-header .lang-toggle--header .lang-btn,
+body.glass-dark .top-header .lang-toggle--header .lang-btn :is(span, .lang-btn-full, .lang-btn-short) {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  background: transparent !important;
+}
+
+body.glass-dark .top-header .lang-toggle--header .lang-btn.active,
+body.glass-dark .top-header .lang-toggle--header .lang-btn.active :is(span, .lang-btn-full, .lang-btn-short) {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-dark .top-header .lang-toggle--header .lang-btn.active {
+  background: #ffffff !important;
+  border-color: #16a34a !important;
+}
+
+body.glass-dark .top-header .profile-name,
+body.glass-dark .top-header .profile-id {
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .profile-id {
+body.glass-dark .top-header .profile-id {
   color: #052e16 !important;
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   border: 1.5px solid #16a34a !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .top-header .profile-status {
+body.glass-dark .top-header .profile-status {
   color: #0f2e1f !important;
   background: linear-gradient(135deg, #a7f3c8 0%, #6ee7a8 100%) !important;
   border-color: rgba(110, 231, 168, 0.45) !important;
@@ -188,7 +212,7 @@ body.glass-dark:not(.farmer-user) .top-header .profile-status {
 }
 
 /* Sidebar — night field panel */
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) {
+body.glass-dark .sidebar:not(.light-theme) {
   background: linear-gradient(
     168deg,
     #0d2218 0%,
@@ -200,35 +224,35 @@ body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) {
   box-shadow: 8px 0 24px rgba(4, 18, 12, 0.3) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme)::before {
+body.glass-dark .sidebar:not(.light-theme)::before {
   opacity: 0.12 !important;
   background-image:
     radial-gradient(ellipse 90% 55% at 18% 8%, rgba(110, 231, 168, 0.08) 0%, transparent 42%),
     radial-gradient(ellipse 70% 50% at 88% 92%, rgba(232, 196, 104, 0.06) 0%, transparent 40%) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .calffa-tagline {
+body.glass-dark .sidebar:not(.light-theme) .calffa-tagline {
   color: var(--farm-night-text-soft) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) :is(.section-header, .section-title) {
+body.glass-dark .sidebar:not(.light-theme) :is(.section-header, .section-title) {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .section-header {
+body.glass-dark .sidebar:not(.light-theme) .section-header {
   background: linear-gradient(152deg, rgba(30, 66, 52, 0.95), rgba(24, 54, 42, 0.92)) !important;
   border-color: var(--farm-night-border) !important;
   box-shadow: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .nav-link {
+body.glass-dark .sidebar:not(.light-theme) .nav-link {
   color: var(--farm-night-text) !important;
   background: linear-gradient(152deg, rgba(30, 66, 52, 0.92), rgba(26, 58, 46, 0.9)) !important;
   border-color: var(--farm-night-border) !important;
   box-shadow: 0 2px 8px rgba(4, 18, 12, 0.18) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .nav-link:hover {
+body.glass-dark .sidebar:not(.light-theme) .nav-link:hover {
   color: #ffffff !important;
   background: linear-gradient(152deg, rgba(37, 82, 65, 0.96), rgba(30, 66, 52, 0.94)) !important;
   border-color: var(--farm-night-border-strong) !important;
@@ -236,76 +260,114 @@ body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .nav-link:hover {
   filter: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .active .nav-link {
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link {
   color: #ffffff !important;
   background: linear-gradient(152deg, rgba(45, 92, 74, 0.98), rgba(37, 82, 65, 0.96)) !important;
   border-color: rgba(232, 196, 104, 0.35) !important;
   box-shadow: 0 0 0 1px rgba(232, 196, 104, 0.12), 0 6px 16px rgba(4, 18, 12, 0.24) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .active .nav-link::before {
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link::before {
   background: linear-gradient(180deg, #f0d78c 0%, #6ee7a8 55%, #3d9a6e 100%) !important;
   box-shadow: 0 0 6px rgba(232, 196, 104, 0.25) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .icon-component {
+body.glass-dark .sidebar:not(.light-theme) .icon-component {
   color: var(--farm-night-text) !important;
   background: rgba(20, 48, 38, 0.75) !important;
   border-color: var(--farm-night-border) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .nav-link:hover .icon-component,
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .active .nav-link .icon-component {
+body.glass-dark .sidebar:not(.light-theme) .nav-link:hover .icon-component,
+body.glass-dark .sidebar:not(.light-theme) .active .nav-link .icon-component {
   background: rgba(45, 92, 74, 0.55) !important;
   border-color: var(--farm-night-border-strong) !important;
   box-shadow: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .sidebar:not(.light-theme) .toggle-btn {
+body.glass-dark .sidebar:not(.light-theme) .toggle-btn {
   background: rgba(37, 82, 65, 0.7) !important;
   border-color: var(--farm-night-border) !important;
   color: var(--farm-night-text) !important;
 }
 
 /* Dashboard — readable matte panels */
-body.glass-dark:not(.farmer-user) .dashboard-container .dashboard-header,
-body.glass-dark:not(.farmer-user) .dashboard-container .filter-panel {
+body.glass-dark .dashboard-container .dashboard-header,
+body.glass-dark .dashboard-container .filter-panel {
   background: var(--farm-night-surface) !important;
   border: 1px solid var(--farm-night-border) !important;
   box-shadow: var(--farm-night-shadow) !important;
 }
 
 /* Live Time — light accent card so it stands out on dark dashboard */
-body.glass-dark:not(.farmer-user) .dashboard-container:not(.light-theme) .header-time-card {
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-card {
   background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 52%, #bbf7d0 100%) !important;
-  border: 2px solid #4ade80 !important;
+  border: 1px solid #4ade80 !important;
   box-shadow:
     0 10px 28px rgba(74, 222, 128, 0.32),
     0 0 0 1px rgba(134, 239, 172, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container:not(.light-theme) .header-time-label {
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-label {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
-  font-weight: 800 !important;
-  letter-spacing: 1px !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container:not(.light-theme) .header-time-value {
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-value {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   text-shadow: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container:not(.light-theme) :is(.header-time-date, .header-time-day) {
+body.glass-dark .dashboard-container:not(.light-theme) :is(.header-time-date, .header-time-day) {
   color: #14532d !important;
   -webkit-text-fill-color: #14532d !important;
-  font-weight: 700 !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .analytics-section {
+/* Role / position badge — must stay readable on the light Live Time card */
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-role {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
+  border: 1px solid #16a34a !important;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.18) !important;
+}
+
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-role.admin {
+  color: #78350f !important;
+  -webkit-text-fill-color: #78350f !important;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2) !important;
+}
+
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-role.president {
+  color: #312e81 !important;
+  -webkit-text-fill-color: #312e81 !important;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+}
+
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-role.treasurer {
+  color: #831843 !important;
+  -webkit-text-fill-color: #831843 !important;
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%) !important;
+  border-color: #db2777 !important;
+  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2) !important;
+}
+
+body.glass-dark .dashboard-container:not(.light-theme) .header-time-role.farmer {
+  color: #1e3a8a !important;
+  -webkit-text-fill-color: #1e3a8a !important;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+}
+
+body.glass-dark .dashboard-container .analytics-section {
   background: linear-gradient(
     135deg,
     #122a1f 0%,
@@ -315,29 +377,28 @@ body.glass-dark:not(.farmer-user) .dashboard-container .analytics-section {
   box-shadow: var(--farm-night-shadow) !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .glass-chart-card {
+body.glass-dark .dashboard-container .glass-chart-card {
   background: linear-gradient(165deg, #1e4234 0%, #255241 55%, #2a5a48 100%) !important;
   border: 1px solid var(--farm-night-border) !important;
   box-shadow: var(--farm-night-shadow) !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .glass-chart-card:hover {
+body.glass-dark .dashboard-container .glass-chart-card:hover {
   box-shadow: 0 12px 32px rgba(4, 18, 12, 0.38) !important;
-  transform: translateY(-2px) !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .stat-card {
+body.glass-dark .dashboard-container .stat-card {
   background: linear-gradient(165deg, #f7fdf9 0%, #eef8f1 55%, #e4f3ea 100%) !important;
   border: 1px solid rgba(167, 211, 178, 0.45) !important;
   box-shadow: 0 4px 14px rgba(4, 18, 12, 0.12) !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .stat-card:hover {
+body.glass-dark .dashboard-container .stat-card:hover {
   box-shadow: 0 8px 22px rgba(4, 18, 12, 0.16) !important;
 }
 
 /* Page shells — cooperative night surfaces */
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container .page-header,
   .page-container .card,
   .page-container .stat-card,
@@ -353,7 +414,7 @@ body.glass-dark:not(.farmer-user) :is(
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .financial-overview-container:not(.light-theme) .stat-label,
   .financial-overview-container:not(.light-theme) .section-title,
   .financial-overview-container:not(.light-theme) .chart-title
@@ -361,7 +422,7 @@ body.glass-dark:not(.farmer-user) :is(
   color: var(--farm-night-text-soft) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .financial-overview-container:not(.light-theme) .stat-value,
   .financial-overview-container:not(.light-theme) .page-title,
   .financial-overview-container:not(.light-theme) .section-title
@@ -369,7 +430,7 @@ body.glass-dark:not(.farmer-user) :is(
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) :is(
+body.glass-dark .financial-overview-container:not(.light-theme) :is(
   .page-subtitle, .stat-label, .filter-label, .chart-subtitle,
   .page-title, .section-title, .chart-title, .page-note,
   .stat-value,
@@ -381,20 +442,20 @@ body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .stat-icon-wrap {
+body.glass-dark .financial-overview-container:not(.light-theme) .stat-icon-wrap {
   -webkit-text-fill-color: initial !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .stat-icon-wrap svg,
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .stat-icon-wrap svg * {
+body.glass-dark .financial-overview-container:not(.light-theme) .stat-icon-wrap svg,
+body.glass-dark .financial-overview-container:not(.light-theme) .stat-icon-wrap svg * {
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .filter-input::placeholder {
+body.glass-dark .financial-overview-container:not(.light-theme) .filter-input::placeholder {
   color: rgba(255, 255, 255, 0.72) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(
+body.glass-dark .farmer-table-page:not(.light-theme) :is(
   .tabs-container, .table-wrap, .section-card, .page-header
 ) {
   background: var(--farm-night-surface) !important;
@@ -402,18 +463,18 @@ body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(
 }
 
 /* Tables — readable rows on green */
-body.glass-dark:not(.farmer-user) :is(.members-table th, .data-table th, .loans-table th, .barangays-table th) {
+body.glass-dark :is(.members-table th, .data-table th, .loans-table th, .barangays-table th) {
   background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
   color: var(--farm-night-text) !important;
   border-bottom-color: var(--farm-night-border-strong) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(.members-table td, .data-table td, .loans-table td, .financial-table td, .barangays-table td, .inv2-table td, .places-table td) {
+body.glass-dark :is(.members-table td, .data-table td, .loans-table td, .financial-table td, .barangays-table td, .inv2-table td, .places-table td) {
   color: var(--farm-night-text-soft) !important;
   border-bottom: 1.5px solid var(--dark-table-grid) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .barangays-table th:not(:last-child),
   .barangays-table td:not(:last-child),
   .members-table th:not(:last-child),
@@ -448,7 +509,7 @@ body.glass-dark:not(.farmer-user) :is(
   border-right: 1.5px solid var(--dark-table-grid) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .barangays-table th,
   .members-table th,
   .places-table th,
@@ -468,7 +529,7 @@ body.glass-dark:not(.farmer-user) :is(
   border-bottom: 2px solid var(--dark-table-header-line) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .table-container,
   .table-wrap,
   .financial-table-wrap,
@@ -485,17 +546,17 @@ body.glass-dark:not(.farmer-user) :is(
   border: 2px solid var(--dark-table-grid) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(.members-table tbody tr:hover td, .data-table tbody tr:hover td) {
+body.glass-dark :is(.members-table tbody tr:hover td, .data-table tbody tr:hover td) {
   background: rgba(110, 231, 168, 0.06) !important;
 }
 
 /* Softer active nav glow globally */
-body.glass-dark:not(.farmer-user) :is(.tab.active, .tab-btn.active, .active .nav-link) {
+body.glass-dark :is(.tab.active, .tab-btn.active, .active .nav-link) {
   box-shadow: 0 0 0 1px rgba(232, 196, 104, 0.2), 0 8px 18px rgba(4, 18, 12, 0.22) !important;
 }
 
 /* Form fields in dark pages */
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container, .financial-overview-container:not(.light-theme), .farmer-table-page:not(.light-theme)
 ) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not(.filter-search-input):not(.filter-select) {
   color: var(--farm-night-text) !important;
@@ -503,7 +564,7 @@ body.glass-dark:not(.farmer-user) :is(
   border: 1px solid var(--farm-night-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container, .financial-overview-container:not(.light-theme)
 ) :is(input, select, textarea):focus {
   border-color: rgba(110, 231, 168, 0.45) !important;
@@ -511,12 +572,12 @@ body.glass-dark:not(.farmer-user) :is(
 }
 
 /* Machinery Management — night farm surfaces */
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) {
+body.glass-dark .machinery-management-page:not(.light-theme) {
   background: linear-gradient(160deg, #0c2418 0%, #123222 42%, #1a3d2e 100%) !important;
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .page-header, .section, .stat-card, .filters-section, .table-container,
   .inventory-table-container, .modal-content, .inv2-modal, .inv2-card
 ) {
@@ -525,32 +586,32 @@ body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :
   box-shadow: var(--farm-night-shadow) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .inventory-table th, .bookings-table th, .inv2-table th
 ) {
   background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .inventory-table td, .bookings-table td, .inv2-table td
 ) {
   color: var(--farm-night-text-soft) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .page-title, .section-title, .stat-value, .inv2-title
 ) {
   color: var(--farm-night-text) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .page-subtitle, .stat-label, .filter-label, .form-label, .inv2-subtitle
 ) {
   color: var(--farm-night-text-soft) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(
+body.glass-dark .machinery-management-page:not(.light-theme) :is(
   .filter-select, .form-input, .form-select, .inv2-search-input, .inv2-select
 ) {
   color: var(--farm-night-text) !important;
@@ -558,28 +619,28 @@ body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :
   border-color: var(--farm-night-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) svg {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.inv2-view-btn, .inv2-close) svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) .inv2-view-btn.active {
+body.glass-dark .machinery-management-page:not(.light-theme) .inv2-view-btn.active {
   background: rgba(45, 92, 74, 0.82) !important;
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) .inv2-close {
+body.glass-dark .machinery-management-page:not(.light-theme) .inv2-close {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.24) !important;
 }
 
 /* Page titles — no green gradient clip in dark mode */
-body.glass-dark:not(.farmer-user) :is(.page-header .page-title, .page-header h1, .page-header h2) {
+body.glass-dark :is(.page-header .page-title, .page-header h1, .page-header h2) {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -588,20 +649,20 @@ body.glass-dark:not(.farmer-user) :is(.page-header .page-title, .page-header h1,
 }
 
 /* Loan Management — readable dark mode */
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme),
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme),
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme),
+body.glass-dark .page-container.officer-loans-page:not(.light-theme),
+body.glass-dark .page-container.machinery-page:not(.light-theme) {
   background: linear-gradient(160deg, #0c2418 0%, #123222 42%, #1a3d2e 100%) !important;
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(
   .page-header, .card, .modal-content, .stat-card, .barangay-filter-bar
 ),
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) :is(
   .glass-header, .card, .modal-content, .stat-card
 ),
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) :is(
+body.glass-dark .page-container.machinery-page:not(.light-theme) :is(
   .glass-header, .card, .modal-content, .stat-card, .machinery-bookings-card
 ) {
   background: var(--farm-night-surface) !important;
@@ -609,20 +670,20 @@ body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-them
   box-shadow: var(--farm-night-shadow) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(
   .page-title, .page-subtitle, .stat-value, .stat-label,
   .barangay-filter-label, .barangay-filter-hint,
   .loans-table th, .loans-table td, .payment-history-table th, .payment-history-table td,
   .empty-state, .detail-item label, .detail-item p, .form-group label, .form-group small,
   .tab, .payer-text, .score-factors, .payer-desc
 ),
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) :is(
   .page-title, .page-subtitle, .stat-value, .stat-label, .card-title,
   .empty-state, .detail-item label, .detail-item p, .form-group label, .form-group small,
   .tab, .application-card .form-group label, .application-card .help-text,
   .amount-summary, .loan-info-title, .terms-grid li, .step-chip
 ),
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) :is(
+body.glass-dark .page-container.machinery-page:not(.light-theme) :is(
   .page-title, .page-subtitle, .stat-value, .stat-label, .card-title,
   .loan-guidance-text, .form-group label, .tab, .empty-cell, .loading-cell,
   .machinery-td-stack, .mach-sub, .mach-machinery-name
@@ -630,11 +691,11 @@ body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-them
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .barangay-filter-select,
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .barangay-filter-select,
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(
   .form-group input, .form-group textarea, .form-group select
 ),
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-form :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-form :is(
   input, select
 ) {
   color: #ffffff !important;
@@ -642,28 +703,28 @@ body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-
   border-color: var(--farm-night-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .tab,
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .tab {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .tab,
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .tab {
   background: rgba(30, 66, 52, 0.92) !important;
   border: 1px solid var(--farm-night-border) !important;
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .tab:hover,
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab:hover,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .tab:hover {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .tab:hover,
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab:hover,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .tab:hover {
   background: rgba(37, 82, 65, 0.96) !important;
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .tab.active {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .tab.active {
   background: rgba(45, 92, 74, 0.98) !important;
   border-color: rgba(232, 196, 104, 0.35) !important;
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab.active {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab.active {
   background: linear-gradient(135deg, #86efac 0%, #4ade80 100%) !important;
   border-color: rgba(187, 247, 208, 0.9) !important;
   color: #052e16 !important;
@@ -671,129 +732,172 @@ body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-
   box-shadow: 0 0 16px rgba(74, 222, 128, 0.4) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .tab.active {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .tab.active {
   background: linear-gradient(135deg, #86efac 0%, #4ade80 100%) !important;
   border-color: rgba(187, 247, 208, 0.9) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   box-shadow: 0 0 16px rgba(74, 222, 128, 0.4) !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .tab:not(.active) {
+  background: rgba(30, 66, 52, 0.92) !important;
+  border: 1px solid var(--farm-night-border) !important;
+  color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .tab:not(.active):hover {
+  background: rgba(37, 82, 65, 0.96) !important;
+  color: #ffffff !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .tab.active {
+  background: linear-gradient(135deg, #86efac 0%, #4ade80 100%) !important;
+  border-color: rgba(187, 247, 208, 0.9) !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.35) !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .section-count {
+  background: #bbf7d0 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border: 1px solid rgba(22, 101, 52, 0.45) !important;
+  font-weight: 700 !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .tab.active .tab-badge {
+  background: #14532d !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 1px solid rgba(187, 247, 208, 0.45) !important;
+}
+
+body.glass-dark .financial-container.machinery-financial-page:not(.light-theme) .tab:not(.active) .tab-badge {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Officer Loans + Machinery Approval — visible icons in dark mode */
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-icon-wrap {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-icon-wrap {
   -webkit-text-fill-color: initial !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap svg,
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap svg *,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-glyph,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-glyph * {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap svg,
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-icon-wrap svg *,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-glyph,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-glyph * {
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-glyph .glyph-fill {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-glyph .glyph-fill {
   fill: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.pending .stat-icon-wrap {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.pending .stat-icon-wrap {
   color: #78350f !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.approved .stat-icon-wrap {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.approved .stat-icon-wrap {
   color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.incomplete .stat-icon-wrap {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.incomplete .stat-icon-wrap {
   color: #854d0e !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.rejected .stat-icon-wrap {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.rejected .stat-icon-wrap {
   color: #7f1d1d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-icon-wrap {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-icon-wrap {
   color: #f8fafc !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-stroke {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-stroke {
   stroke: #f8fafc !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-fill {
+body.glass-dark .page-container.machinery-page:not(.light-theme) .stat-card.expired .stat-glyph .glyph-fill {
   fill: #f8fafc !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-card.pending .stat-icon-wrap {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-card.pending .stat-icon-wrap {
   color: #78350f !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-card.approved .stat-icon-wrap {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-card.approved .stat-icon-wrap {
   color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-card.active .stat-icon-wrap {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-card.active .stat-icon-wrap {
   color: #1e3a8a !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .stat-card.rejected .stat-icon-wrap {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .stat-card.rejected .stat-icon-wrap {
   color: #7f1d1d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .card-title-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .card-title-icon {
   color: #052e16 !important;
   -webkit-text-fill-color: initial !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .card-title-icon-list {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .card-title-icon-list {
   color: #1e3a8a !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .card-title-icon :is(svg, svg *) {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .card-title-icon :is(svg, svg *) {
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab :is(.tab-icon, svg, svg *) {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab :is(.tab-icon, svg, svg *) {
   stroke: currentColor !important;
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab.active :is(.tab-inner, .tab-icon, svg, svg *) {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab.active :is(.tab-inner, .tab-icon, svg, svg *) {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-pending:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-pending:not(.active) .tab-icon {
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-approved:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-approved:not(.active) .tab-icon {
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-repaying:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-repaying:not(.active) .tab-icon {
   color: #1d4ed8 !important;
   -webkit-text-fill-color: #1d4ed8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-rejected:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-rejected:not(.active) .tab-icon {
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-completed:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-completed:not(.active) .tab-icon {
   color: #047857 !important;
   -webkit-text-fill-color: #047857 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .tab-overdue:not(.active) .tab-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .tab-overdue:not(.active) .tab-icon {
   color: #c2410c !important;
   -webkit-text-fill-color: #c2410c !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) :is(
   .field-icon,
   .alert-icon,
   .loan-info-icon,
@@ -802,43 +906,43 @@ body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-
   -webkit-text-fill-color: initial !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .field-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .field-icon {
   color: #16a34a !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .alert-warning .alert-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .alert-warning .alert-icon {
   color: #b45309 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .alert-info .alert-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .alert-info .alert-icon {
   color: #1d4ed8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-info-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-info-icon {
   color: #16a34a !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .empty-state-icon {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .empty-state-icon {
   color: #14532d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-success {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-success {
   color: #14532d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-active {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-active {
   color: #1e3a8a !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-danger {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-danger {
   color: #7f1d1d !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-warning {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .empty-state-icon-warning {
   color: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) :is(
   .field-icon,
   .alert-icon,
   .loan-info-icon,
@@ -848,12 +952,12 @@ body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-
 }
 
 /* Loan cards — black text on light card surface in dark mode */
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-item {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-item {
   background: linear-gradient(135deg, rgba(245, 255, 250, 0.98), rgba(236, 253, 245, 0.96)) !important;
   border: 1px solid rgba(148, 163, 184, 0.35) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-item :is(
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-item :is(
   .loan-amount,
   .approval-stage-text,
   .loan-details,
@@ -865,12 +969,12 @@ body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-
   -webkit-text-fill-color: #000000 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-item .loan-details {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-item .loan-details {
   background: #ffffff !important;
   border-color: #d1fae5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.officer-loans-page:not(.light-theme) .loan-item .secondary-action {
+body.glass-dark .page-container.officer-loans-page:not(.light-theme) .loan-item .secondary-action {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
   background: #ffffff !important;
@@ -893,133 +997,130 @@ body.glass-dark .page-container.glass-module-page .loan-item .secondary-action {
   -webkit-text-fill-color: #000000 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.loans-table th, .payment-history-table th) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
   border-bottom-color: var(--farm-night-border-strong) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .stat-card.overdue {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .stat-card.overdue {
   background: linear-gradient(135deg, #c24141 0%, #991b1b 100%) !important;
   border-color: rgba(248, 113, 113, 0.4) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .stat-card.overdue :is(.stat-value, .stat-label) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .stat-card.overdue :is(.stat-value, .stat-label) {
   color: #ffffff !important;
 }
 
 /* Members Management — readable dark mode */
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) {
+body.glass-dark .farmer-table-page:not(.light-theme) {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(
+body.glass-dark .farmer-table-page:not(.light-theme) :is(
   .page-title, .filter-label, .filter-hint, .state-text,
   .registered-members-title, .registered-members-muted
 ) {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn-count {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn-count {
   color: var(--dark-btn-text) !important;
   background: rgba(5, 46, 22, 0.08) !important;
   border-color: var(--dark-btn-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active .tab-btn-count {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active .tab-btn-count {
   color: var(--dark-btn-text) !important;
   background: rgba(5, 46, 22, 0.12) !important;
 }
 
-/* Members table — dark text on light rows for readability */
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table-container,
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table-scroll-main {
+/* Members table — dark text on light rows for readability (colors + shared geometry) */
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table-container,
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table-scroll-main {
   background: #ffffff !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table {
   background: #ffffff !important;
   border-color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table th {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
-  font-weight: 800 !important;
-  border-bottom: 2px solid #6ee7a8 !important;
+  border-bottom-color: #6ee7a8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table th:not(:last-child),
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table th:not(:last-child),
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table td:not(:last-child) {
+  border-right-color: #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table td {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table td {
   color: #000000 !important;
-  font-weight: 600 !important;
   background: #ffffff !important;
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table td :is(span, strong) {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table td :is(span, strong) {
   color: #000000 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-td-name {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-td-name {
   color: #000000 !important;
-  font-weight: 700 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table tbody tr:nth-child(even) td,
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table tbody tr.members-data-row:nth-child(even) td {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table tbody tr:nth-child(even) td,
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table tbody tr.members-data-row:nth-child(even) td {
   background: #f8fdf9 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table tbody tr:hover td {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table tbody tr:hover td {
   background: #ecfdf5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-empty-row {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-empty-row {
   color: #14532d !important;
   background: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(.role-badge, .member-chip) {
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.role-badge, .member-chip) {
   color: #000000 !important;
   background: #f0fdf4 !important;
   border-color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .member-chip-member {
+body.glass-dark .farmer-table-page:not(.light-theme) .member-chip-member {
   color: #1d4ed8 !important;
   border-color: #93c5fd !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .status-chip-approved {
+body.glass-dark .farmer-table-page:not(.light-theme) .status-chip-approved {
   color: #15803d !important;
   background: #f0fdf4 !important;
   border-color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .status-chip-rejected {
+body.glass-dark .farmer-table-page:not(.light-theme) .status-chip-rejected {
   color: #b91c1c !important;
   background: #fef2f2 !important;
   border-color: #fca5a5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .status-chip-pending {
+body.glass-dark .farmer-table-page:not(.light-theme) .status-chip-pending {
   color: #a16207 !important;
   background: #fffbeb !important;
   border-color: #fde68a !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table .table-select {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table .table-select {
   color: #000000 !important;
   background: #ffffff !important;
   border-color: #cbd5e1 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .registered-members-title {
+body.glass-dark .farmer-table-page:not(.light-theme) .registered-members-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1027,123 +1128,186 @@ body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .register
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-table-scroll-hint {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-table-scroll-hint {
   color: #ecfdf5 !important;
 }
 
 /* ===== Dark mode table grid — same visible lines as light mode (#94a3b8) ===== */
-body.glass-dark:not(.farmer-user) .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th:not(:last-child),
-body.glass-dark:not(.farmer-user) .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td:not(:last-child) {
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th:not(:last-child),
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td:not(:last-child) {
   border-right: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td {
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) td {
   border-bottom: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th {
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.barangays-table, .members-table, .places-table) th {
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.barangays-page:not(.light-theme) :is(.members-table-wrap, .places-table-wrap, .table-wrap) {
+body.glass-dark .page-container.barangays-page:not(.light-theme) :is(.members-table-wrap, .places-table-wrap, .table-wrap) {
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th:not(:last-child),
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td:not(:last-child) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th:not(:last-child),
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td:not(:last-child) {
   border-right: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) td {
   border-bottom: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.loans-table, .payment-history-table) th {
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) :is(.table-container, .payment-history-table-wrap) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) :is(.table-container, .payment-history-table-wrap) {
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th:not(:last-child),
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td:not(:last-child) {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th:not(:last-child),
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td:not(:last-child) {
   border-right: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) td {
   border-bottom: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.bookings-table, .inventory-table, .inv2-table) th {
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .machinery-management-page:not(.light-theme) :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
+body.glass-dark .machinery-management-page:not(.light-theme) :is(.table-container, .inventory-table-container, .inv2-table-wrap) {
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .financial-table th:not(:last-child),
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .financial-table td:not(:last-child) {
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th:not(:last-child),
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td:not(:last-child) {
+  border-right: 1px solid var(--dark-table-grid) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table td {
+  border-bottom: 1px solid var(--dark-table-grid) !important;
+  color: var(--farm-night-text) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .financial-table th {
+  background: linear-gradient(135deg, #255241 0%, #2d5c4a 100%) !important;
+  color: var(--farm-night-text) !important;
+  border-bottom: 1px solid var(--dark-table-header-line) !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(
+  .financial-table-wrap,
+  .financial-table-section > .financial-table,
+  .financial-table-section > .sub-table
+) {
+  border: 1px solid var(--dark-table-grid) !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th:not(:last-child),
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td:not(:last-child) {
   border-right: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .financial-table td {
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td {
   border-bottom: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .financial-table th {
+body.glass-dark .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th {
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) :is(.financial-table-wrap, .financial-table-section > .financial-table) {
+body.glass-dark .financial-container:not(.light-theme) .table-container {
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th:not(:last-child),
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th:not(:last-child),
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table td:not(:last-child) {
+  border-right: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) td {
-  border-bottom: 1.5px solid #94a3b8 !important;
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.expenses-table, .income-table, .ar-table, .collections-table, .tab-content .data-table) th {
-  border-bottom: 2px solid #6ee7a8 !important;
-}
-
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .table-container {
-  border: 2px solid #94a3b8 !important;
-}
-
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table th:not(:last-child),
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
-}
-
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table td {
-  border-bottom: 1.5px solid #94a3b8 !important;
-}
-
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .header-content {
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .page-header-text {
   margin-left: 0 !important;
-  margin-right: auto !important;
+  margin-right: 0 !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
   text-align: left !important;
+  max-width: none !important;
+  gap: 0.35rem !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(.page-header h1, .page-subtitle) {
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(.page-header h1, .page-title, .page-subtitle) {
   text-align: left !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table th {
+body.glass-dark .financial-container.share-capital-page:not(.share-capital-withdrawal-page):not(.light-theme) .page-header h1,
+body.glass-dark .financial-container.share-capital-page:not(.share-capital-withdrawal-page):not(.light-theme) .page-title {
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 0 0.15rem !important;
+}
+
+body.glass-dark .financial-container.share-capital-page:not(.share-capital-withdrawal-page):not(.light-theme) .page-subtitle {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .financial-container.share-capital-withdrawal-page:not(.light-theme) .page-header h1,
+body.glass-dark .financial-container.share-capital-withdrawal-page:not(.light-theme) .page-title {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.01em !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .financial-container.share-capital-withdrawal-page:not(.light-theme) .page-subtitle {
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .financial-container.share-capital-withdrawal-page:not(.light-theme) .page-header,
+body.glass-dark .financial-container.share-capital-withdrawal-page:not(.light-theme) .page-header-split {
+  margin-bottom: 6px !important;
+  padding: 6px 10px !important;
+  gap: 4px !important;
+  border-radius: 10px !important;
+}
+
+@media (max-width: 768px) {
+  body.glass-dark .financial-container.share-capital-page:not(.share-capital-withdrawal-page):not(.light-theme) .page-header h1,
+  body.glass-dark .financial-container.share-capital-page:not(.share-capital-withdrawal-page):not(.light-theme) .page-title {
+    font-size: 1.2rem !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+  }
+
+  body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .page-subtitle {
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+  }
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th {
   border-bottom: 2px solid #6ee7a8 !important;
 }
 
 /* Share Capital — mas malinaw na text sa dark mode */
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .page-header h1 {
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .page-header h1 {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1152,7 +1316,7 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .page-subtitle,
   .card-title,
   .stat-label,
@@ -1174,7 +1338,7 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .empty-text,
   .admin-filter-hint,
   .farmer-meta,
@@ -1185,18 +1349,25 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   opacity: 1 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content .data-table :is(th, td) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  font-weight: 700;
-}
-
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .tab-content table.data-table tbody td.amount {
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table :is(th, td) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table th {
+  font-weight: 700 !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content .data-table td {
+  font-weight: 500 !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .tab-content table.data-table tbody td.amount {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .badge-success,
   .badge-muted,
   .badge
@@ -1205,7 +1376,7 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .filter-input,
   .input,
   .sc-status-select
@@ -1214,46 +1385,109 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .sc-status-select option {
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .sc-status-select option {
   background: #142e22 !important;
   color: #ffffff !important;
 }
 
-/* Seed & Fertilizer Plan — readable text + left header in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .header-content {
-  margin-left: 0 !important;
-  margin-right: auto !important;
+/* Seed & Fertilizer Plan — readable text + left-aligned header (matches Share Capital) */
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-header-text,
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .header-content {
+  margin: 0 !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
   text-align: left !important;
-  width: 100% !important;
+  width: auto !important;
   max-width: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) :is(
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) :is(
   .page-header h1,
   .page-title,
-  .page-subtitle,
-  .inner-subtitle
+  .page-subtitle
 ) {
   text-align: left !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .page-header h1 {
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-header h1,
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  font-size: 1.05rem !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) :is(
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-subtitle {
+  font-size: 0.7rem !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-header,
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .page-header-split {
+  margin-bottom: 6px !important;
+  padding: 6px 10px !important;
+  gap: 4px !important;
+  border-radius: 10px !important;
+}
+
+/* Farmer Income Hub — compact header (desktop geometry) */
+body.glass-dark .page-container.farmer-income-hub-page:not(.light-theme) .page-header-split .page-title {
+  font-size: 1.05rem !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+body.glass-dark .page-container.farmer-income-hub-page:not(.light-theme) .page-header-split .page-subtitle {
+  font-size: 0.7rem !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .page-container.farmer-income-hub-page:not(.light-theme) .page-header-split {
+  margin-bottom: 6px !important;
+  padding: 6px 10px !important;
+  gap: 4px !important;
+  border-radius: 10px !important;
+}
+
+/* Financial Overview — compact header */
+body.glass-dark .financial-overview-container:not(.light-theme) .page-title {
+  font-size: 1.05rem !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) .page-subtitle {
+  font-size: 0.7rem !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+body.glass-dark .financial-overview-container:not(.light-theme) :is(.page-header, .page-header-split) {
+  margin-bottom: 6px !important;
+  padding: 6px 10px !important;
+  gap: 6px !important;
+  border-radius: 10px !important;
+}
+
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) :is(
   .page-subtitle,
   .page-title,
-  .inner-subtitle,
   .card-title,
-  .card-sub,
+  .card-hint,
+  .ledger-note,
   .stat-label,
   .stat-value,
   .empty-title,
@@ -1264,36 +1498,46 @@ body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(
   .pay-date,
   .info-banner,
   .muted,
-  .modal-title,
-  .modal-meta,
-  .form-group label
+  .fin-mobile-card-name,
+  .fin-mobile-meta-row
 ) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content .data-table :is(th, td) {
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .fin-mobile-label,
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .fin-mobile-empty {
+  color: rgba(255, 255, 255, 0.7) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content .data-table :is(th, td) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   font-weight: 700;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content table.data-table tbody td.amount {
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .tab-content table.data-table tbody td.amount {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .badge-dist {
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .badge-dist {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.seed-fertilizer-plan:not(.light-theme) .stat-card {
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .stat-card {
   background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88)) !important;
   border-color: var(--farm-night-edge) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container.seed-fertilizer-plan:not(.light-theme) .fin-mobile-card {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(167, 211, 178, 0.28) !important;
+}
+
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .filter-input,
   .input
 )::placeholder {
@@ -1302,7 +1546,7 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
   opacity: 1 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) :is(
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) :is(
   .btn,
   .btn-small,
   .btn-muted,
@@ -1313,7 +1557,7 @@ body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.l
 }
 
 /* ===== Dark mode — white text on dark-surface pages ===== */
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .machinery-management-page:not(.light-theme),
   .page-container.admin-loans-page:not(.light-theme),
   .page-container.barangays-page:not(.light-theme),
@@ -1329,7 +1573,7 @@ body.glass-dark:not(.farmer-user) :is(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container :is(
+body.glass-dark .dashboard-container :is(
   .glass-chart-title,
   .glass-chart-sub,
   .glass-chart-subtitle,
@@ -1344,18 +1588,18 @@ body.glass-dark:not(.farmer-user) .dashboard-container :is(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .dashboard-container .gl-item strong {
+body.glass-dark .dashboard-container .gl-item strong {
   color: #ecfbe2 !important;
   -webkit-text-fill-color: #ecfbe2 !important;
 }
 
 /* Machinery Financial — Reports tab readable in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .report-generator-panel {
+body.glass-dark .financial-container:not(.light-theme) .report-generator-panel {
   background: linear-gradient(140deg, rgba(14, 36, 27, 0.96) 0%, rgba(17, 48, 33, 0.94) 52%, rgba(12, 32, 25, 0.98) 100%) !important;
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .report-option-card, .actions-card, .custom-date-inputs, .orientation-setting, .filter-checkbox
 ) {
   background: linear-gradient(155deg, rgba(24, 49, 38, 0.95) 0%, rgba(17, 34, 28, 0.98) 100%) !important;
@@ -1363,7 +1607,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .report-option-card h4, .orientation-label, .checkbox-inline, .checkbox-inline span,
   .filter-checkbox span, .date-input-group label, .tab-content h2, .filter-label
 ) {
@@ -1372,31 +1616,31 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   text-shadow: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .btn-action.print:disabled {
+body.glass-dark .financial-container:not(.light-theme) .btn-action.print:disabled {
   background: rgba(30, 66, 52, 0.85) !important;
   color: rgba(255, 255, 255, 0.55) !important;
   border-color: rgba(148, 163, 184, 0.45) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.filters-section, .reports-machinery-filter-bar) {
+body.glass-dark .financial-container:not(.light-theme) :is(.filters-section, .reports-machinery-filter-bar) {
   background: rgba(28, 42, 33, 0.92) !important;
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.filter-input, .form-input-sm) {
+body.glass-dark .financial-container:not(.light-theme) :is(.filter-input, .form-input-sm) {
   background: rgba(20, 48, 38, 0.92) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border: 1.5px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) select option {
+body.glass-dark .financial-container:not(.light-theme) select option {
   color: #052e16 !important;
   background: #ffffff !important;
 }
 
 /* Machinery Financial — summary KPI amounts white in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .summary-cards > .summary-card .card-amount,
   .summary-container > .summary-card .card-amount,
   .card-amount,
@@ -1416,7 +1660,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
 }
 
 /* Machinery Financial — badges & muted text readable in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .badge,
   .status-badge,
   .status-paid,
@@ -1425,7 +1669,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .badge-paid,
   .badge-full,
   .badge-completed,
@@ -1439,7 +1683,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border: 1px solid #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .badge-unpaid,
   .badge-cancelled,
   .badge-expense,
@@ -1452,7 +1696,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border: 1px solid #fca5a5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .badge-pending,
   .badge-partial
 ) {
@@ -1462,7 +1706,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border: 1px solid #fcd34d !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .badge-collection,
   .badge-in-use
 ) {
@@ -1472,25 +1716,25 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border: 1px solid #93c5fd !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .status-badge.full-payment {
+body.glass-dark .financial-container:not(.light-theme) .status-badge.full-payment {
   background: #d1fae5 !important;
   color: #065f46 !important;
   -webkit-text-fill-color: #065f46 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .status-badge.partial-payment {
+body.glass-dark .financial-container:not(.light-theme) .status-badge.partial-payment {
   background: #fef3c7 !important;
   color: #92400e !important;
   -webkit-text-fill-color: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .status-badge.collected {
+body.glass-dark .financial-container:not(.light-theme) .status-badge.collected {
   background: #d1fae5 !important;
   color: #065f46 !important;
   -webkit-text-fill-color: #065f46 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .empty-title,
   .card-title,
   .farmer-name,
@@ -1506,7 +1750,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .empty-text,
   .empty-message,
   .farmer-meta,
@@ -1518,37 +1762,37 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   opacity: 0.92;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-content .data-table :is(th, td) {
+body.glass-dark .financial-container:not(.light-theme) .tab-content .data-table :is(th, td) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-content .data-table td .name {
+body.glass-dark .financial-container:not(.light-theme) .tab-content .data-table td .name {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   font-weight: 700;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-content table.data-table tbody td.amount {
+body.glass-dark .financial-container:not(.light-theme) .tab-content table.data-table tbody td.amount {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Machinery Financial — paper-style report preview (dark text on light surfaces) */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report {
+body.glass-dark .financial-container:not(.light-theme) #printable-report {
   background: linear-gradient(180deg, #f6fdf9 0%, #eefaf3 48%, #f2fbf6 100%) !important;
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .collectibles-form-sheet {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .collectibles-form-sheet {
   background: #ffffff !important;
   border-color: #0f172a !important;
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report :is(
+body.glass-dark .financial-container:not(.light-theme) #printable-report :is(
   .collectibles-main-title,
   .collectibles-main-subtitle,
   .collectibles-meta-label,
@@ -1561,17 +1805,17 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printa
   -webkit-text-fill-color: #0f172a !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .collectibles-main-subtitle {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .collectibles-main-subtitle {
   color: #334155 !important;
   -webkit-text-fill-color: #334155 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .collectibles-meta-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .collectibles-meta-value {
   color: #1e293b !important;
   -webkit-text-fill-color: #1e293b !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report :is(
+body.glass-dark .financial-container:not(.light-theme) #printable-report :is(
   .collectibles-data-table th,
   .collectibles-data-table td,
   .farmer-clients-record-table th,
@@ -1582,17 +1826,17 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printa
   border-color: #1e293b !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .collectibles-data-table th,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .farmer-clients-record-table th {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .collectibles-data-table th,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .farmer-clients-record-table th {
   background: #e2e8f0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .collectibles-data-table .th-tl {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .collectibles-data-table .th-tl {
   color: #475569 !important;
   -webkit-text-fill-color: #475569 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report :is(
+body.glass-dark .financial-container:not(.light-theme) #printable-report :is(
   .sheet-fill-input,
   .collectibles-fill-input
 ) {
@@ -1602,83 +1846,83 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printa
   border-color: #334155 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-section-card {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-section-card {
   background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%) !important;
   border: 2px solid #86efac !important;
   box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-section-card .section-title {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-section-card .section-title {
   border-bottom-color: #d1fae5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-section-card .section-title h4 {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-section-card .section-title h4 {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-section-card .section-count {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-section-card .section-count {
   color: #64748b !important;
   -webkit-text-fill-color: #64748b !important;
   background: #ecfdf5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .data-table :is(th, td),
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-plain-table :is(th, td) {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .data-table :is(th, td),
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-plain-table :is(th, td) {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
   border-color: #334155 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .data-table th {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .data-table th {
   background: #e2e8f0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .data-table td .name {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .data-table td .name {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .data-table tbody td.amount {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .data-table tbody td.amount {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-section-card .badge {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-section-card .badge {
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .expense-card,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .expense-card .summary-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .expense-card,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .expense-card .summary-value {
   color: #991b1b !important;
   -webkit-text-fill-color: #991b1b !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .income-card,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .income-card .summary-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .income-card,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .income-card .summary-value {
   color: #065f46 !important;
   -webkit-text-fill-color: #065f46 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .collection-card,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .collection-card .summary-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .collection-card,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .collection-card .summary-value {
   color: #1e40af !important;
   -webkit-text-fill-color: #1e40af !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .profit-card,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .profit-card .summary-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .profit-card,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .profit-card .summary-value {
   color: #14532d !important;
   -webkit-text-fill-color: #14532d !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .loss-card,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .loss-card .summary-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .loss-card,
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .loss-card .summary-value {
   color: #7f1d1d !important;
   -webkit-text-fill-color: #7f1d1d !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report :is(
+body.glass-dark .financial-container:not(.light-theme) #printable-report :is(
   .report-summary-grid > .summary-card .summary-label,
   .report-summary-grid > .summary-card .summary-count
 ) {
@@ -1686,42 +1930,42 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printa
   -webkit-text-fill-color: #4b5563 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-summary-grid > .summary-card .summary-count {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-summary-grid > .summary-card .summary-count {
   color: #9ca3af !important;
   -webkit-text-fill-color: #9ca3af !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .distribution-summary h4 {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .distribution-summary h4 {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .distribution-summary .dist-details .dist-label {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .distribution-summary .dist-details .dist-label {
   color: #6b7280 !important;
   -webkit-text-fill-color: #6b7280 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .distribution-summary .dist-details .dist-value {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .distribution-summary .dist-details .dist-value {
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-footer :is(p, .footer-date) {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-footer :is(p, .footer-date) {
   color: #64748b !important;
   -webkit-text-fill-color: #64748b !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-footer .footer-date {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-footer .footer-date {
   color: #94a3b8 !important;
   -webkit-text-fill-color: #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) #printable-report .report-refresh-overlay {
+body.glass-dark .financial-container:not(.light-theme) #printable-report .report-refresh-overlay {
   color: #475569 !important;
   -webkit-text-fill-color: #475569 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.glass-module-page:not(.light-theme) .page-header :is(h1, .page-title) {
+body.glass-dark .financial-container.glass-module-page:not(.light-theme) .page-header :is(h1, .page-title) {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -1729,13 +1973,13 @@ body.glass-dark:not(.farmer-user) .financial-container.glass-module-page:not(.li
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container.glass-module-page:not(.light-theme) .stats-grid .stat-card,
-body.glass-dark:not(.farmer-user) .financial-container.glass-module-page:not(.light-theme) .dues-stats-grid .stat-card {
+body.glass-dark .financial-container.glass-module-page:not(.light-theme) .stats-grid .stat-card,
+body.glass-dark .financial-container.glass-module-page:not(.light-theme) .dues-stats-grid .stat-card {
   background: linear-gradient(145deg, rgba(32, 48, 37, 0.92), rgba(24, 36, 28, 0.88)) !important;
   border-color: var(--farm-night-edge) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-content .data-table td :is(
+body.glass-dark .financial-container:not(.light-theme) .tab-content .data-table td :is(
   .badge,
   .badge-paid,
   .badge-unpaid,
@@ -1753,7 +1997,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-co
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .filter-input,
   .input
 )::placeholder {
@@ -1762,12 +2006,12 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   opacity: 1 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .farmer-summary {
+body.glass-dark .financial-container:not(.light-theme) .farmer-summary {
   background: rgba(18, 32, 24, 0.88) !important;
   border-color: var(--farm-night-edge) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .info-text {
+body.glass-dark .financial-container:not(.light-theme) .info-text {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: rgba(18, 32, 24, 0.72) !important;
@@ -1775,7 +2019,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .info-t
 }
 
 /* ===== Dark mode — readable light-surface buttons (global, after white-text rules) ===== */
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1789,7 +2033,7 @@ body.glass-dark:not(.farmer-user) :is(
   .btn-warning, .btn-muted, .btn-submit, .submit-btn, .submit-button, .save-btn, .export-btn,
   .print-btn, .report-type-btn, .btn-action, .btn-summary, .link-btn, .btn-view, .btn-approve,
   .btn-reject, .btn-book, .btn-post, .btn-ghost, .btn-ghost-header, .btn-reset, .btn-close-modal,
-  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn, .inv2-clear-all,
+  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn,
   .btn-view-area, .btn-header-add, .btn-delete-confirm, .btn-inventory-add, .btn-upload-picture,
   .btn-remove-picture, .btn-place-save, .btn-place-cancel, .machinery-inventory-btn, .close-btn,
   .tab, .tab-btn, .export-btn-secondary, .detail-link-btn, .bulk-approve-btn, .refresh-btn, .retry-btn,
@@ -1802,7 +2046,14 @@ body.glass-dark:not(.farmer-user) :is(
     .btn-icon-small,
     .theme-toggle-btn,
     .icon-btn,
-    .financial-container .tabs-container .tab
+    .inv2-clear-all,
+    .inv2-view-btn,
+    .inv2-chip-x,
+    .financial-container .tabs-container .tab,
+    .financial-container .report-type-btn,
+    .financial-container .orient-btn,
+    .financial-container .btn-action,
+    .financial-container .btn-generate
   )
 ) {
   background: var(--dark-btn-surface) !important;
@@ -1816,7 +2067,7 @@ body.glass-dark:not(.farmer-user) :is(
   filter: none !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1830,7 +2081,7 @@ body.glass-dark:not(.farmer-user) :is(
   .btn-warning, .btn-muted, .btn-submit, .submit-btn, .submit-button, .save-btn, .export-btn,
   .print-btn, .report-type-btn, .btn-action, .btn-summary, .link-btn, .btn-view, .btn-approve,
   .btn-reject, .btn-book, .btn-post, .btn-ghost, .btn-ghost-header, .btn-reset, .btn-close-modal,
-  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn, .inv2-clear-all,
+  .btn-primary-action, .btn-small, .btn-generate, .orient-btn, .filter-clear-btn,
   .btn-view-area, .btn-header-add, .btn-delete-confirm, .btn-inventory-add, .btn-upload-picture,
   .btn-remove-picture, .btn-place-save, .btn-place-cancel, .machinery-inventory-btn, .close-btn,
   .tab, .tab-btn, .export-btn-secondary, .detail-link-btn, .bulk-approve-btn, .refresh-btn, .retry-btn,
@@ -1843,7 +2094,14 @@ body.glass-dark:not(.farmer-user) :is(
     .btn-icon-small,
     .theme-toggle-btn,
     .icon-btn,
-    .financial-container .tabs-container .tab
+    .inv2-clear-all,
+    .inv2-view-btn,
+    .inv2-chip-x,
+    .financial-container .tabs-container .tab,
+    .financial-container .report-type-btn,
+    .financial-container .orient-btn,
+    .financial-container .btn-action,
+    .financial-container .btn-generate
   )
 ):hover:not(:disabled) {
   background: var(--dark-btn-surface-hover) !important;
@@ -1853,7 +2111,7 @@ body.glass-dark:not(.farmer-user) :is(
   filter: brightness(1.04) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1873,7 +2131,7 @@ body.glass-dark:not(.farmer-user) :is(
   border-color: var(--dark-btn-primary-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1893,7 +2151,7 @@ body.glass-dark:not(.farmer-user) :is(
   border-color: var(--dark-btn-danger-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1913,7 +2171,7 @@ body.glass-dark:not(.farmer-user) :is(
   border-color: var(--dark-btn-warning-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1932,7 +2190,9 @@ body.glass-dark:not(.farmer-user) :is(
     .btn-icon-small,
     .theme-toggle-btn,
     .icon-btn,
-    .financial-container .tabs-container .tab
+    .financial-container .tabs-container .tab,
+    .financial-container .report-type-btn,
+    .financial-container .orient-btn
   )
 ) {
   background: var(--dark-btn-primary-surface) !important;
@@ -1942,7 +2202,7 @@ body.glass-dark:not(.farmer-user) :is(
   box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25), 0 6px 16px rgba(4, 18, 12, 0.22) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1958,7 +2218,7 @@ body.glass-dark:not(.farmer-user) :is(
   -webkit-text-fill-color: inherit !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(
+body.glass-dark :is(
   .page-container:not(.light-theme),
   .financial-container:not(.light-theme),
   .dashboard-container,
@@ -1977,7 +2237,7 @@ body.glass-dark:not(.farmer-user) :is(
 }
 
 /* Machinery Financial — restore glass tab styling (overrides global button rules) */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-container .tab {
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab {
   background: linear-gradient(155deg, rgba(28, 48, 38, 0.94), rgba(18, 34, 26, 0.97)) !important;
   color: #bbf7d0 !important;
   -webkit-text-fill-color: #bbf7d0 !important;
@@ -1985,57 +2245,132 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-c
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-container .tab :is(.tab-icon, .tab-label, svg) {
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab :is(.tab-icon, .tab-label, svg) {
   color: #bbf7d0 !important;
   -webkit-text-fill-color: #bbf7d0 !important;
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-container .tab:hover {
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab:hover:not(.active) {
   background: linear-gradient(155deg, rgba(36, 68, 52, 0.96), rgba(24, 48, 36, 0.98)) !important;
   border-color: rgba(74, 222, 128, 0.42) !important;
   color: #ecfdf5 !important;
   -webkit-text-fill-color: #ecfdf5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-container .tab.active {
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active,
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active:hover,
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active:focus,
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active:focus-visible {
   background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #166534 100%) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: rgba(167, 243, 208, 0.55) !important;
-  box-shadow: 0 8px 22px rgba(6, 78, 35, 0.45), inset 0 1px 0 rgba(220, 252, 231, 0.18) !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.45), 0 8px 22px rgba(6, 78, 35, 0.45), inset 0 1px 0 rgba(220, 252, 231, 0.18) !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tabs-container .tab.active :is(.tab-icon, .tab-label, svg) {
+body.glass-dark .financial-container:not(.light-theme) .tabs-container .tab.active :is(.tab-icon, .tab-label, svg, span:not(.tab-badge)) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Reports panel buttons — same behavior as Profit Computation / Reports tabs */
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate) {
+  background: linear-gradient(155deg, rgba(28, 48, 38, 0.94), rgba(18, 34, 26, 0.97)) !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  border: 1px solid rgba(134, 239, 172, 0.28) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  filter: none !important;
+  /* Match light mode: no color/filter animation on select */
+  transition: none !important;
+  transform: none !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate) :is(.btn-text, .btn-icon, span, svg) {
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  stroke: currentColor !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate):hover:not(.active):not(:disabled) {
+  background: linear-gradient(155deg, rgba(36, 68, 52, 0.96), rgba(24, 48, 36, 0.98)) !important;
+  border-color: rgba(74, 222, 128, 0.42) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  filter: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .orient-btn, .btn-action:not(.print), .btn-generate):hover:not(.active):not(:disabled) :is(.btn-text, .btn-icon, span, svg) {
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+}
+
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active),
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):hover,
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):focus,
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):focus-visible,
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active):active {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(167, 243, 208, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.45), 0 8px 22px rgba(6, 78, 35, 0.45), inset 0 1px 0 rgba(220, 252, 231, 0.18) !important;
+  filter: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+html body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn.active, .orient-btn.active) :is(.btn-text, .btn-icon, span, svg) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+/* Print stays solid green CTA */
+html body.glass-dark .financial-container:not(.light-theme) .btn-action.print:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #166534 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(167, 243, 208, 0.55) !important;
+}
+
+html body.glass-dark .financial-container:not(.light-theme) .btn-action.print:not(:disabled) :is(.btn-text, .btn-icon, span, svg) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Machinery Financial — profit breakdown accents + readable white text */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .profit-breakdown .breakdown-card h3,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .usage-leaders-card .section-subheader h3,
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .tab-content .section-header h2 {
+body.glass-dark .financial-container:not(.light-theme) .profit-breakdown .breakdown-card h3,
+body.glass-dark .financial-container:not(.light-theme) .usage-leaders-card .section-subheader h3,
+body.glass-dark .financial-container:not(.light-theme) .tab-content .section-header h2 {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .profit-breakdown .breakdown-card .amount {
+body.glass-dark .financial-container:not(.light-theme) .profit-breakdown .breakdown-card .amount {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .profit-breakdown .expense-item :is(span:first-child, span:last-child) {
+body.glass-dark .financial-container:not(.light-theme) .profit-breakdown .expense-item :is(span:first-child, span:last-child) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .usage-leaders-card :is(.data-table th, .data-table td, .data-table td small, .font-semibold) {
+body.glass-dark .financial-container:not(.light-theme) .usage-leaders-card :is(.data-table th, .data-table td, .data-table td small, .font-semibold) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Machinery Financial — visible table & row grid lines in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .expenses-table,
   .income-table,
   .ar-table,
@@ -2046,7 +2381,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border-right: 2px solid rgba(203, 213, 225, 0.62) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .expenses-table,
   .income-table,
   .ar-table,
@@ -2057,7 +2392,7 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border-bottom: 2px solid rgba(203, 213, 225, 0.55) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
+body.glass-dark .financial-container:not(.light-theme) :is(
   .expenses-table,
   .income-table,
   .ar-table,
@@ -2068,95 +2403,98 @@ body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(
   border-bottom: 2px solid rgba(134, 239, 172, 0.78) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .profit-breakdown .expense-item {
+body.glass-dark .financial-container:not(.light-theme) .profit-breakdown .expense-item {
   border-bottom: 1px solid rgba(203, 213, 225, 0.42) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .profit-breakdown .expense-item.total {
+body.glass-dark .financial-container:not(.light-theme) .profit-breakdown .expense-item.total {
   border-top: 2px solid rgba(134, 239, 172, 0.65) !important;
   border-bottom: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.usage-leaders-card, .table-container) {
+body.glass-dark .financial-container:not(.light-theme) :is(.usage-leaders-card, .table-container) {
   border: 2px solid rgba(203, 213, 225, 0.48) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .breakdown-card {
+body.glass-dark .financial-container:not(.light-theme) .breakdown-card {
   border: 1px solid rgba(203, 213, 225, 0.38) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .breakdown-card h3 {
+body.glass-dark .financial-container:not(.light-theme) .breakdown-card h3 {
   border-bottom: 1px solid rgba(203, 213, 225, 0.35) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .summary-cards > .summary-card.income-card .card-amount {
+body.glass-dark .financial-container:not(.light-theme) .summary-cards > .summary-card.income-card .card-amount {
   color: #86efac !important;
   -webkit-text-fill-color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .summary-cards > .summary-card.expense-card .card-amount {
+body.glass-dark .financial-container:not(.light-theme) .summary-cards > .summary-card.expense-card .card-amount {
   color: #fdba74 !important;
   -webkit-text-fill-color: #fdba74 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .summary-cards > .summary-card.profit-card .card-amount {
+body.glass-dark .financial-container:not(.light-theme) .summary-cards > .summary-card.profit-card .card-amount {
   color: #93c5fd !important;
   -webkit-text-fill-color: #93c5fd !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) :is(.report-type-btn, .btn-action) :is(.btn-icon, .btn-text, svg) {
+body.glass-dark .financial-container:not(.light-theme) :is(.report-type-btn, .btn-action) :is(.btn-icon, .btn-text, svg) {
   color: inherit !important;
   -webkit-text-fill-color: inherit !important;
   stroke: currentColor !important;
 }
 
-/* Members Management — tabs, filters, empty states */
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn,
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .btn-summary {
+/* Members Management — tabs, filters, empty states (colors only) */
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn,
+body.glass-dark .farmer-table-page:not(.light-theme) .btn-summary {
   background: var(--dark-btn-surface) !important;
   color: var(--dark-btn-text) !important;
   -webkit-text-fill-color: var(--dark-btn-text) !important;
-  border: 2px solid var(--dark-btn-border) !important;
+  border-color: var(--dark-btn-border) !important;
+  border-width: 1.5px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.22) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count, svg),
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .btn-summary :is(.btn-tab-icon, svg) {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn :is(.tab-icon, .tab-btn-label, .tab-btn-count, svg),
+body.glass-dark .farmer-table-page:not(.light-theme) .btn-summary :is(.btn-tab-icon, svg) {
   color: var(--dark-btn-text) !important;
   -webkit-text-fill-color: var(--dark-btn-text) !important;
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active {
+body.glass-dark .farmer-table-page:not(.light-theme) .members-summary-tabs .tab-btn.active {
   background: var(--dark-btn-primary-surface) !important;
   border-color: var(--dark-btn-primary-border) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(.filter-search-input, .filter-select) {
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.filter-search-input, .filter-select) {
   background: #ffffff !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
-  border: 1.5px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
   box-shadow: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .filter-search-input::placeholder {
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-input::placeholder {
   color: #64748b !important;
   -webkit-text-fill-color: #64748b !important;
   opacity: 1 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .filter-select option {
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-select option {
   background: #ffffff !important;
   color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .filter-search-icon,
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .filter-search-icon svg {
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-icon,
+body.glass-dark .farmer-table-page:not(.light-theme) .filter-search-icon svg {
   color: #15803d !important;
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .registered-members-title {
+body.glass-dark .farmer-table-page:not(.light-theme) .registered-members-title {
   background: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
@@ -2164,166 +2502,252 @@ body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .register
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) {
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) {
   background: #ffffff !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
+  border-width: 1px !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) p {
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.empty-state, .loading-state, .error-state) p {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) :is(.bulk-approve-btn, .refresh-btn, .retry-btn) {
+body.glass-dark .farmer-table-page:not(.light-theme) :is(.bulk-approve-btn, .refresh-btn, .retry-btn) {
   background: var(--dark-btn-primary-surface) !important;
   color: var(--dark-btn-text) !important;
   -webkit-text-fill-color: var(--dark-btn-text) !important;
-  border: 2px solid var(--dark-btn-primary-border) !important;
+  border-color: var(--dark-btn-primary-border) !important;
+  border-width: 1px !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
 }
 
 /* Loan Management — Loan Details modal readable fields */
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item {
   background: #ffffff !important;
   border: 2px solid #94a3b8 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item label {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item label {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item :is(p, .amount) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item :is(p, .amount) {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item-penalty :is(label, p) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .detail-item-penalty :is(label, p) {
   color: #92400e !important;
   -webkit-text-fill-color: #92400e !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-title-text h3 {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-title-text h3 {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-subtitle {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .modal-subtitle {
   color: #bbf7d0 !important;
   -webkit-text-fill-color: #bbf7d0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table :is(th, td) {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table :is(th, td) {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table th {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table td {
+body.glass-dark .page-container.admin-loans-page:not(.light-theme) .loan-details-modal .payment-history-table td {
   background: #ffffff !important;
 }
 
 /* Edit Profile page */
-body.glass-dark:not(.farmer-user) .edit-profile-page.glass-module-page .profile-page-title {
+body.glass-dark .edit-profile-page.glass-module-page .profile-page-title {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .edit-profile-page.glass-module-page .profile-page-subtitle {
+body.glass-dark .edit-profile-page.glass-module-page .profile-page-subtitle {
   color: #bbf7d0 !important;
   -webkit-text-fill-color: #bbf7d0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .edit-profile-page.glass-module-page .save-btn {
+body.glass-dark .edit-profile-page.glass-module-page .save-btn {
   background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%) !important;
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   border: 2px solid #15803d !important;
 }
 
-body.glass-dark:not(.farmer-user) .edit-profile-page.glass-module-page .avatar-upload-btn {
+body.glass-dark .edit-profile-page.glass-module-page .avatar-upload-btn {
   background: #ffffff !important;
   border: 2px solid #16a34a !important;
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
 }
 
-body.glass-dark:not(.farmer-user) .edit-profile-page.glass-module-page .avatar-upload-btn svg {
+body.glass-dark .edit-profile-page.glass-module-page .avatar-upload-btn svg {
   color: #15803d !important;
   stroke: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
 }
 
+/* ── Edit Profile (Settings) — true dark card, colors only (layout identical to light) ── */
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-card {
+  background: linear-gradient(180deg, #10281c 0%, #0c2016 100%) !important;
+  border: 2px solid rgba(74, 222, 128, 0.28) !important;
+  box-shadow: 0 16px 36px rgba(2, 10, 6, 0.55) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-identity {
+  background: linear-gradient(135deg, #143323 0%, #0f2a1c 100%) !important;
+  border-bottom: 2px solid rgba(74, 222, 128, 0.3) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-identity .profile-name {
+  color: #ecfdf5 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-identity .profile-ref,
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-identity .profile-barangay {
+  color: #a7f3d0 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .form-group label {
+  color: #bbf7d0 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class]
+  .profile-form
+  :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not([type='reset']):not([type='hidden']):not([type='file']) {
+  color: #ecfdf5 !important;
+  background: #0d2317 !important;
+  border: 1.5px solid rgba(110, 190, 140, 0.4) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class]
+  .profile-form
+  :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='submit']):not([type='button']):not([type='reset']):not([type='hidden']):not([type='file']):focus {
+  border-color: #4ade80 !important;
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.16) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form :is(input, textarea)::placeholder {
+  color: rgba(187, 247, 208, 0.5) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .readonly-field {
+  background: #11291c !important;
+  border: 2px solid rgba(74, 222, 128, 0.3) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .readonly-field label {
+  color: #86efac !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .readonly-field span {
+  color: #ecfdf5 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .readonly-section {
+  border-top-color: rgba(110, 190, 140, 0.28) !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .upload-msg.text-green-600,
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .form-message.text-green-600 {
+  color: #4ade80 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .upload-msg.text-red-600,
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .form-message.text-red-600 {
+  color: #f87171 !important;
+}
+
+body.glass-dark .edit-profile-page.glass-module-page[class] .upload-msg.text-blue-600,
+body.glass-dark .edit-profile-page.glass-module-page[class] .profile-form .form-message.text-blue-600 {
+  color: #93c5fd !important;
+}
+
 /* Members edit modal — visible custom calendar icon in dark mode */
-body.glass-dark:not(.farmer-user) .modal-edit-member .edit-date-icon,
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .edit-date-icon {
+body.glass-dark .modal-edit-member .edit-date-icon,
+body.glass-dark .edit-member-overlay .edit-date-icon,
+body.glass-dark .farmer-table-page:not(.light-theme) .edit-date-icon {
   color: #052e16 !important;
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   border: 1px solid #16a34a !important;
   stroke: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .modal-edit-member .edit-date-icon :is(rect, line),
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .edit-date-icon :is(rect, line) {
+body.glass-dark .modal-edit-member .edit-date-icon :is(rect, line),
+body.glass-dark .farmer-table-page:not(.light-theme) .edit-date-icon :is(rect, line) {
   stroke: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .edit-input-date,
-body.glass-dark:not(.farmer-user) .modal-edit-member .edit-input-date {
+body.glass-dark .farmer-table-page:not(.light-theme) .edit-input-date,
+body.glass-dark .modal-edit-member .edit-input-date,
+body.glass-dark .edit-member-overlay .edit-input-date {
   color-scheme: light !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-table-page:not(.light-theme) .edit-input-date::-webkit-calendar-picker-indicator,
-body.glass-dark:not(.farmer-user) .modal-edit-member .edit-input-date::-webkit-calendar-picker-indicator {
+body.glass-dark .farmer-table-page:not(.light-theme) .edit-input-date::-webkit-calendar-picker-indicator,
+body.glass-dark .modal-edit-member .edit-input-date::-webkit-calendar-picker-indicator,
+body.glass-dark .edit-member-overlay .edit-input-date::-webkit-calendar-picker-indicator {
   opacity: 0 !important;
   cursor: pointer !important;
   position: absolute;
   right: 0;
-  width: 3.25rem;
-  height: 100%;
+  top: 0;
+  bottom: 0;
+  width: 2.75rem;
+  height: auto;
+  margin: 0;
 }
 
 /* Machinery Financial + Financial Overview — visible calendar icon in dark mode */
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .mf-date-icon,
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .mf-date-icon,
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .mf-date-icon,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .mf-date-icon {
+body.glass-dark .financial-container:not(.light-theme) .mf-date-icon,
+body.glass-dark .financial-overview-container:not(.light-theme) .mf-date-icon,
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .mf-date-icon,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .mf-date-icon {
   color: #ecfdf5 !important;
   background: linear-gradient(135deg, #22c55e 0%, #15803d 100%) !important;
   border: 1px solid #86efac !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .mf-date-icon :is(rect, line),
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .mf-date-icon :is(rect, line),
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .mf-date-icon :is(rect, line),
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .mf-date-icon :is(rect, line) {
+body.glass-dark .financial-container:not(.light-theme) .mf-date-icon :is(rect, line),
+body.glass-dark .financial-overview-container:not(.light-theme) .mf-date-icon :is(rect, line),
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .mf-date-icon :is(rect, line),
+body.glass-dark .page-container.machinery-page:not(.light-theme) .mf-date-icon :is(rect, line) {
   stroke: #ecfdf5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .mf-date-input,
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .mf-date-input,
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .mf-date-input,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .mf-date-input {
+body.glass-dark .financial-container:not(.light-theme) .mf-date-input,
+body.glass-dark .financial-overview-container:not(.light-theme) .mf-date-input,
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .mf-date-input,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .mf-date-input {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   color-scheme: light !important;
 }
 
-body.glass-dark:not(.farmer-user) .financial-container:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
-body.glass-dark:not(.farmer-user) .financial-overview-container:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
-body.glass-dark:not(.farmer-user) .financial-container.share-capital-page:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
-body.glass-dark:not(.farmer-user) .page-container.machinery-page:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator {
+body.glass-dark .financial-container:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
+body.glass-dark .financial-overview-container:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
+body.glass-dark .financial-container:is(.share-capital-page, .share-capital-withdrawal-page):not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator,
+body.glass-dark .page-container.machinery-page:not(.light-theme) .mf-date-input::-webkit-calendar-picker-indicator {
   opacity: 0 !important;
   cursor: pointer !important;
 }
 
 /* Logout confirmation modal — readable light card in dark mode */
-body.glass-dark:not(.farmer-user) .logout-modal {
+body.glass-dark .logout-modal {
   background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%) !important;
   border: 2px solid #86efac !important;
   box-shadow:
@@ -2333,43 +2757,43 @@ body.glass-dark:not(.farmer-user) .logout-modal {
   -webkit-backdrop-filter: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-header {
+body.glass-dark .logout-modal-header {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   border-bottom: 2px solid #bbf7d0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-body {
+body.glass-dark .logout-modal-body {
   background: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-footer {
+body.glass-dark .logout-modal-footer {
   background: #f8fafc !important;
   border-top-color: #e2e8f0 !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-title {
+body.glass-dark .logout-modal-title {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   background: none !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-message {
+body.glass-dark .logout-modal-message {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-hint {
+body.glass-dark .logout-modal-hint {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-modal-close {
+body.glass-dark .logout-modal-close {
   background: #ffffff !important;
   color: #052e16 !important;
   border-color: #16a34a !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-btn-cancel {
+body.glass-dark .logout-btn-cancel {
   background: var(--dark-btn-surface) !important;
   color: var(--dark-btn-text) !important;
   -webkit-text-fill-color: var(--dark-btn-text) !important;
@@ -2377,7 +2801,7 @@ body.glass-dark:not(.farmer-user) .logout-btn-cancel {
   box-shadow: 0 4px 12px rgba(4, 18, 12, 0.12) !important;
 }
 
-body.glass-dark:not(.farmer-user) .logout-btn-confirm {
+body.glass-dark .logout-btn-confirm {
   background: var(--dark-btn-danger-surface) !important;
   color: var(--dark-btn-danger-text) !important;
   -webkit-text-fill-color: var(--dark-btn-danger-text) !important;
@@ -2386,7 +2810,7 @@ body.glass-dark:not(.farmer-user) .logout-btn-confirm {
 }
 
 /* Farmer Income Hub — white text in dark mode */
-body.glass-dark:not(.farmer-user) .farmer-income-hub-page :is(
+body.glass-dark .farmer-income-hub-page:not(.light-theme) :is(
   .page-title,
   .page-subtitle,
   .tab-btn:not(.active),
@@ -2402,14 +2826,14 @@ body.glass-dark:not(.farmer-user) .farmer-income-hub-page :is(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-page .foundation-farmer-select option {
+body.glass-dark .farmer-income-hub-page:not(.light-theme) .foundation-farmer-select option {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   background: #ffffff !important;
 }
 
 /* Tab count badges — high contrast in dark mode (active + inactive tabs) */
-body.glass-dark:not(.farmer-user) .tab-badge {
+body.glass-dark .tab-badge {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2422,21 +2846,21 @@ body.glass-dark:not(.farmer-user) .tab-badge {
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.28) !important;
 }
 
-body.glass-dark:not(.farmer-user) :is(.tab-btn.active, .tab.active) .tab-badge {
+body.glass-dark :is(.tab-btn.active, .tab.active) .tab-badge {
   background: #1e3a8a !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: rgba(219, 234, 254, 0.45) !important;
 }
 
-body.glass-dark:not(.farmer-user) .tab-btn:not(.active) .tab-badge {
+body.glass-dark .tab-btn:not(.active) .tab-badge {
   background: #2563eb !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Agriculturist Income page — white text in dark mode */
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) :is(
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) :is(
   .page-title,
   .page-subtitle,
   .tab-btn,
@@ -2456,44 +2880,75 @@ body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) .tab-btn:not(.active) {
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .tab-btn:not(.active) {
   background: rgba(14, 33, 23, 0.92) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  border: 2px solid rgba(134, 239, 172, 0.32) !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.22) !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
+  border: 1px solid rgba(134, 239, 172, 0.32) !important;
+  box-shadow: none !important;
+  min-height: 2.5rem !important;
+  padding: 0.55rem 0.65rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 8px !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) .tab-btn:not(.active):hover {
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .tab-btn:not(.active):hover {
   background: rgba(24, 48, 34, 0.96) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border-color: rgba(134, 239, 172, 0.45) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) .tab-btn.active {
-  background: linear-gradient(145deg, rgba(28, 116, 68, 0.95), rgba(24, 84, 55, 0.95)) !important;
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .tab-btn.active {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  border-color: rgba(134, 239, 172, 0.45) !important;
-  box-shadow: 0 6px 16px rgba(4, 18, 12, 0.28) !important;
+  border-color: rgba(134, 239, 172, 0.55) !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28) !important;
+  min-height: 2.5rem !important;
+  padding: 0.55rem 0.65rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 8px !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) .btn-details {
+/* Keep semantic financial colors in dark (do not force all-white) */
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .fin-value.income {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .fin-value.expense,
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .fin-value.loss {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .fin-value.profit {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .farmer-date,
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .info-label {
+  color: rgba(186, 240, 200, 0.72) !important;
+  -webkit-text-fill-color: rgba(186, 240, 200, 0.72) !important;
+}
+
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .btn-details {
   background: rgba(14, 33, 23, 0.88) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border: 2px solid rgba(134, 239, 172, 0.32) !important;
 }
 
-body.glass-dark:not(.farmer-user) .page-container.agriculturist-income-page:not(.light-theme) .btn-assistance {
+body.glass-dark .page-container.agriculturist-income-page:not(.light-theme) .btn-assistance {
   background: linear-gradient(135deg, #166534, #16a34a) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   border: 2px solid #15803d !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage:not(.light-theme) :is(
+body.glass-dark .income-hub-subpage:not(.light-theme) :is(
   .page-title,
   .page-subtitle,
   .farmer-name,
@@ -2519,17 +2974,17 @@ body.glass-dark:not(.farmer-user) .income-hub-subpage:not(.light-theme) :is(
   -webkit-text-fill-color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage:not(.light-theme) .fin-stat-label,
-body.glass-dark:not(.farmer-user) .income-hub-subpage:not(.light-theme) .fin-stat-value {
+body.glass-dark .income-hub-subpage:not(.light-theme) .fin-stat-label,
+body.glass-dark .income-hub-subpage:not(.light-theme) .fin-stat-value {
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .search-input::placeholder {
+body.glass-dark .income-hub-subpage:not(.light-theme) .search-input::placeholder {
   color: rgba(255, 255, 255, 0.62) !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.62) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
+body.glass-dark .income-hub-subpage:not(.light-theme) :is(
   .status-eligible,
   .status-received
 ) {
@@ -2539,13 +2994,13 @@ body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
   border-color: rgba(134, 239, 172, 0.45) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .pending-badge {
+body.glass-dark .income-hub-subpage:not(.light-theme) .pending-badge {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: rgba(146, 64, 14, 0.55) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) :is(
   .modal-header h2,
   .modal-body,
   .modal-text,
@@ -2562,45 +3017,45 @@ body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
 }
 
 /* Buod rows — readable on highlighted backgrounds in dark mode */
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .net-profit-row {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .net-profit-row {
   background: #bbf7d0 !important;
   border: 1px solid #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .net-profit-row span {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .net-profit-row span {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   font-weight: 700 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .net-loss-row {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .net-loss-row {
   background: #fecaca !important;
   border: 1px solid #f87171 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .net-loss-row span {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .net-loss-row span {
   color: #7f1d1d !important;
   -webkit-text-fill-color: #7f1d1d !important;
   font-weight: 700 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .income-row span {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .income-row span {
   color: #93c5fd !important;
   -webkit-text-fill-color: #93c5fd !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .expense-summary-row span {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .expense-summary-row span {
   color: #fca5a5 !important;
   -webkit-text-fill-color: #fca5a5 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal:not(.light-theme) .grand-row:not(.net-profit-row):not(.net-loss-row) span {
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) .grand-row:not(.net-profit-row):not(.net-loss-row) span {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Farmer Income Hub — visible icons in dark mode */
-body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
+body.glass-dark .income-hub-subpage:not(.light-theme) :is(
   .title-icon,
   .search-icon,
   .empty-icon,
@@ -2613,7 +3068,7 @@ body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
   .detail-icon,
   .fin-stat-icon
 ) svg,
-body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
+body.glass-dark .income-hub-subpage:not(.light-theme) :is(
   .title-icon,
   .search-icon,
   .empty-icon,
@@ -2629,55 +3084,55 @@ body.glass-dark:not(.farmer-user) .income-hub-subpage :is(
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .title-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .title-icon {
   color: #ffffff !important;
   border-color: rgba(134, 239, 172, 0.4) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .search-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .search-icon {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .empty-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .empty-icon {
   color: #4ade80 !important;
   border-color: rgba(134, 239, 172, 0.32) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .stat-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .stat-icon {
   color: #fde68a !important;
   border-color: rgba(250, 204, 21, 0.4) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .farmer-name .inline-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .farmer-name .inline-icon {
   color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .record-date .inline-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .record-date .inline-icon {
   color: #fde68a !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .detail-icon,
-body.glass-dark:not(.farmer-user) .income-hub-subpage .fin-stat-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .detail-icon,
+body.glass-dark .income-hub-subpage:not(.light-theme) .fin-stat-icon {
   color: inherit !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .pending-badge .inline-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .pending-badge .inline-icon {
   color: #fde68a !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .view-btn .inline-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .view-btn .inline-icon {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .tab-navigation .tab-btn .tab-btn-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn .tab-btn-icon {
   color: rgba(255, 255, 255, 0.96) !important;
 }
 
-body.glass-dark:not(.farmer-user) .income-hub-subpage .tab-navigation .tab-btn.active .tab-btn-icon {
+body.glass-dark .income-hub-subpage:not(.light-theme) .tab-navigation .tab-btn.active .tab-btn-icon {
   color: #052e16 !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) :is(
   .section-title-icon,
   .modal-title-icon,
   .banner-icon
@@ -2687,12 +3142,12 @@ body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
   border: 1px solid rgba(134, 239, 172, 0.32) !important;
 }
 
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) :is(
   .section-title-icon,
   .modal-title-icon,
   .banner-icon
 ) svg,
-body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
+body.glass-dark .farmer-income-hub-modal:not(.light-theme) :is(
   .section-title-icon,
   .modal-title-icon,
   .banner-icon
@@ -2701,13 +3156,13 @@ body.glass-dark:not(.farmer-user) .farmer-income-hub-modal :is(
 }
 
 /* Foundation upload panel — dark mode icon visibility */
-body.glass-dark:not(.farmer-user) .foundation-panel :is(
+body.glass-dark .foundation-panel :is(
   .foundation-title-icon,
   .format-toggle-icon,
   .status-card-icon,
   .btn-icon
 ) svg,
-body.glass-dark:not(.farmer-user) .foundation-panel :is(
+body.glass-dark .foundation-panel :is(
   .foundation-title-icon,
   .format-toggle-icon,
   .status-card-icon,
@@ -2716,27 +3171,27 @@ body.glass-dark:not(.farmer-user) .foundation-panel :is(
   stroke: currentColor !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .foundation-title-icon {
+body.glass-dark .foundation-panel .foundation-title-icon {
   color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .format-toggle-icon {
+body.glass-dark .foundation-panel .format-toggle-icon {
   color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .status-card-icon {
+body.glass-dark .foundation-panel .status-card-icon {
   color: #fde68a !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .foundation-status-card.has-data .status-card-icon {
+body.glass-dark .foundation-panel .foundation-status-card.has-data .status-card-icon {
   color: #86efac !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .btn-foundation.primary .btn-icon {
+body.glass-dark .foundation-panel .btn-foundation.primary .btn-icon {
   color: #ffffff !important;
 }
 
-body.glass-dark:not(.farmer-user) .foundation-panel .btn-foundation.secondary .btn-icon {
+body.glass-dark .foundation-panel .btn-foundation.secondary .btn-icon {
   color: #fecaca !important;
 }
 
@@ -2835,6 +3290,13 @@ body.glass-dark .farmer-income-page:not(.light-theme) :is(
 ) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-dark .farmer-income-page:not(.light-theme) .assistance-card .status-badge.completed {
+  background: #166534 !important;
+  color: #f7fee7 !important;
+  -webkit-text-fill-color: #f7fee7 !important;
+  border: 1px solid #4ade80 !important;
 }
 
 body.glass-dark .farmer-income-page:not(.light-theme) .page-header .page-title {
@@ -3090,7 +3552,7 @@ html body.glass-dark :is(
    SYSTEM-WIDE v2 — all visible lines (dark mode, staff)
    Covers headers, modals, tabs, inputs, tables, dividers
    ========================================================= */
-html body.glass-dark:not(.farmer-user) .main-content :is(
+html body.glass-dark .main-content :is(
   hr,
   .glass-header,
   .modal-content,
@@ -3139,7 +3601,7 @@ html body.glass-dark:not(.farmer-user) .main-content :is(
   border-color: var(--farm-night-edge) !important;
 }
 
-html body.glass-dark:not(.farmer-user) .main-content :is(
+html body.glass-dark .main-content :is(
   .loans-table th,
   .loans-table td,
   .members-table th,
@@ -3178,7 +3640,7 @@ html body.glass-dark:not(.farmer-user) .main-content :is(
   border-color: var(--farm-night-edge-soft) !important;
 }
 
-html body.glass-dark:not(.farmer-user) .main-content :is(
+html body.glass-dark .main-content :is(
   .record-header,
   .record-financials,
   .detail-section,
@@ -3192,11 +3654,39 @@ html body.glass-dark:not(.farmer-user) .main-content :is(
   border-bottom-color: var(--farm-night-divider) !important;
 }
 
-html body.glass-dark:not(.farmer-user) .main-content .tab.active {
+html body.glass-dark .main-content .tab.active {
   border-color: var(--farm-night-edge-strong) !important;
 }
 
-html body.glass-dark:not(.farmer-user) :is(
+/* Notification deep-link highlight: never use a light fill over white dark-mode text */
+html body.glass-dark .notification-highlight-row,
+html body.glass-dark .notification-highlight,
+html body.glass-dark .fin-mobile-card.notification-highlight-row,
+html body.glass-dark .fin-mobile-card.notification-highlight-card,
+html body.glass-dark .record-card.notification-highlight-card {
+  background: rgba(127, 29, 29, 0.42) !important;
+  outline: 2px solid #f87171;
+  color: var(--farm-night-text, #ffffff);
+}
+
+html body.glass-dark .notification-highlight-row td {
+  background: rgba(127, 29, 29, 0.42) !important;
+  color: var(--farm-night-text, #ffffff) !important;
+}
+
+html body.glass-dark .fin-mobile-card.notification-highlight-row .fin-mobile-card-name,
+html body.glass-dark .fin-mobile-card.notification-highlight-row .fin-mobile-meta-row,
+html body.glass-dark .notification-highlight-row .fin-mobile-card-name,
+html body.glass-dark .notification-highlight-row .fin-mobile-meta-row {
+  color: var(--farm-night-text, #ffffff) !important;
+}
+
+html body.glass-dark .fin-mobile-card.notification-highlight-row .fin-mobile-label,
+html body.glass-dark .notification-highlight-row .fin-mobile-label {
+  color: var(--farm-night-text-muted, rgba(255, 255, 255, 0.78)) !important;
+}
+
+html body.glass-dark :is(
   .news-page:not(.light-theme),
   .page-container.admin-loans-page:not(.light-theme),
   .page-container.barangays-page:not(.light-theme),

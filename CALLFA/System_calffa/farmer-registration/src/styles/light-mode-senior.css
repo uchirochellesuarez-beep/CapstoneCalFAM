@@ -33,6 +33,20 @@ body.glass-light {
   color: var(--senior-text-body);
 }
 
+/* Keep the dashboard layout identical between light and dark modes:
+   same base font metrics as dark mode, colors change via other rules. */
+body.glass-light .dashboard-container {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Machinery Financial: match dark rem sizing (body.glass-light is 17px) */
+body.glass-light .financial-container,
+body.glass-light .financial-container.machinery-financial-page {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 body.glass-light .backdrop-dashboard.backdrop-theme-light {
   opacity: 0.55;
 }
@@ -41,29 +55,31 @@ body.glass-light .main-content {
   background: transparent !important;
 }
 
-/* Override dark dashboard rules from glass-unified-theme */
+/* Override dark dashboard rules from glass-unified-theme.
+   Border widths must match dark mode exactly so the layout is identical
+   between themes — only colors differ. */
 body.glass-light .dashboard-container .dashboard-header,
 body.glass-light .dashboard-container.light-theme .dashboard-header {
   background: linear-gradient(135deg, #ffffff 0%, #f4fdf7 100%) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: 1px solid var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow) !important;
 }
 
 body.glass-light .dashboard-container .header-time-card {
   background: var(--senior-surface-alt) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: 1px solid var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .dashboard-container .analytics-section {
   background: linear-gradient(135deg, #e8f9ed 0%, #d1f5dc 52%, #bbf7d0 100%) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: none !important;
   box-shadow: var(--glass-shadow) !important;
 }
 
 body.glass-light .dashboard-container .glass-chart-card {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: 1px solid var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -74,13 +90,13 @@ body.glass-light .dashboard-container .glass-chart-card:hover {
 
 body.glass-light .dashboard-container .filter-panel {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: 1px solid var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .dashboard-container .stat-card {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border: 1px solid var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -90,11 +106,6 @@ body.glass-light .dashboard-container .stat-card :is(.stat-label, .stat-value) {
 
 body.glass-light .dashboard-container .stat-card .stat-label {
   color: var(--senior-text-muted) !important;
-  font-size: 12px !important;
-}
-
-body.glass-light .dashboard-container .stat-card .stat-value {
-  font-size: 34px !important;
 }
 
 body.glass-light .chart-legend .legend-item,
@@ -113,11 +124,12 @@ body.glass-light .chart-amount {
   color: var(--senior-text) !important;
 }
 
-/* Sidebar — light sage panel */
+/* Sidebar — light sage panel (border width must match dark mode so the
+   content area lines up identically between themes) */
 body.glass-light .sidebar.light-theme {
   background: linear-gradient(180deg, #f0faf3 0%, #e3f5e9 55%, #d4f0dc 100%);
   color: var(--senior-text);
-  border-right: 2px solid var(--senior-border-soft);
+  border-right: 1px solid var(--senior-border-soft);
   box-shadow: 8px 0 24px rgba(22, 101, 52, 0.1);
 }
 
@@ -206,7 +218,7 @@ body.glass-light .farmer-table-page.light-theme :is(
   .section-card
 ) {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: var(--senior-text-body) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
@@ -236,34 +248,29 @@ body.glass-light .financial-container {
 body.glass-light .financial-container .tab-content,
 body.glass-light .financial-container.light-theme .tab-content {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: var(--senior-text-body) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .financial-container .page-header,
 body.glass-light .financial-container.light-theme .page-header {
   background: linear-gradient(135deg, #ffffff, #f0fdf4) !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .financial-container .table-container {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .financial-container[class] .summary-card {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .financial-container[class] .summary-cards > .summary-card .card-label,
 body.glass-light .financial-container[class] .summary-card .card-label {
   color: var(--senior-text-muted) !important;
-  font-size: 14px !important;
 }
 
 body.glass-light .financial-container[class] .summary-cards > .summary-card .card-amount {
@@ -290,7 +297,7 @@ body.glass-light .financial-container .filter-label {
 
 body.glass-light .financial-container.light-theme .usage-leaders-card {
   background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .financial-container.light-theme .profit-breakdown .expense-item span,
@@ -307,37 +314,6 @@ body.glass-light .financial-container.light-theme .tab-content .data-table :is(t
   color: var(--senior-text-body) !important;
 }
 
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) :is(th, td) {
-  font-weight: 500 !important;
-}
-
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) th {
-  font-size: 0.58rem !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-}
-
-body.glass-light .financial-container.light-theme :is(
-  .expenses-table,
-  .income-table,
-  .ar-table,
-  .collections-table
-) td {
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-}
-
 body.glass-light .financial-container.light-theme .tab-content .data-table thead {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
 }
@@ -350,7 +326,7 @@ body.glass-light .financial-container.light-theme :is(
   .ar-table,
   .collections-table
 ) :is(th, td):not(:last-child) {
-  border-right: 1px solid #64748b !important;
+  border-right-color: #64748b !important;
 }
 
 body.glass-light .financial-container.light-theme :is(
@@ -361,7 +337,7 @@ body.glass-light .financial-container.light-theme :is(
   .ar-table,
   .collections-table
 ) th:not(:last-child) {
-  border-right: 2px solid #15803d !important;
+  border-right-color: #15803d !important;
 }
 
 body.glass-light .financial-container.light-theme .section-subheader h3,
@@ -372,8 +348,7 @@ body.glass-light .financial-container.light-theme .section-header h2 {
 body.glass-light .financial-container.light-theme .tabs-container .tab {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 1.5px solid #86efac !important;
-  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08) !important;
+  border-color: #86efac !important;
 }
 
 body.glass-light .financial-container.light-theme .tabs-container .tab .tab-icon {
@@ -381,16 +356,51 @@ body.glass-light .financial-container.light-theme .tabs-container .tab .tab-icon
 }
 
 body.glass-light .financial-container.light-theme .tabs-container .tab.active {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
   color: #ffffff !important;
-  border-color: #15803d !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 14px rgba(22, 101, 52, 0.28) !important;
 }
 
-body.glass-light .financial-container.light-theme .tabs-container .tab.active .tab-icon {
+body.glass-light .financial-container.light-theme .tabs-container .tab.active :is(.tab-label, .tab-icon, span:not(.tab-badge)) {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Selected report / orientation buttons — beat global black text */
+body.glass-light .financial-container :is(.report-type-btn.active, .orient-btn.active),
+body.glass-light .financial-container :is(.report-type-btn.active, .orient-btn.active):hover,
+body.glass-light .financial-container :is(.report-type-btn.active, .orient-btn.active):focus {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35), 0 4px 12px rgba(22, 101, 52, 0.25) !important;
+  filter: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+body.glass-light .financial-container :is(.report-type-btn.active, .orient-btn.active) :is(.btn-text, .btn-icon, span) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.glass-light .financial-container .btn-action.print:not(:disabled),
+body.glass-light .financial-container .btn-action.print:not(:disabled) :is(.btn-text, .btn-icon, span) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* ===== Members Management — beat glass-unified dark !important rules ===== */
+/* Keep members table layout identical between light and dark modes:
+   same base font metrics as dark mode, colors change via other rules. */
+body.glass-light .farmer-table-page {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
 body.glass-light .farmer-table-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: var(--senior-text) !important;
@@ -400,7 +410,6 @@ body.glass-light .farmer-table-page.light-theme .page-title {
   color: var(--senior-text) !important;
   background: none !important;
   -webkit-text-fill-color: currentColor !important;
-  font-size: 1.875rem !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .filter-bar {
@@ -409,37 +418,27 @@ body.glass-light .farmer-table-page.light-theme .filter-bar {
 
 body.glass-light .farmer-table-page.light-theme .filter-search-input,
 body.glass-light .farmer-table-page.light-theme .filter-select {
-  font-size: 1rem !important;
   color: #000000 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme :is(
   .filter-label,
   .filter-hint,
-  .tab-btn,
-  .role-tab-label
+  .tab-btn-label
 ) {
-  font-size: 0.9375rem !important;
+  color: #000000 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table th {
-  font-size: 0.58rem !important;
   text-transform: uppercase;
   white-space: normal !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-  line-height: 1.12 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td {
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-  line-height: 1.15 !important;
+  /* color-only; font-weight locked in farmers-table-theme.css */
 }
 
 body.glass-light .farmer-table-page.light-theme .registered-members-title {
-  font-size: 1.25rem !important;
   color: #000000 !important;
   background: none !important;
   -webkit-text-fill-color: currentColor !important;
@@ -460,7 +459,7 @@ body.glass-light .farmer-table-page.light-theme .tab-btn.active .tab-icon {
 
 body.glass-light .farmer-table-page.light-theme .filter-bar {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -470,7 +469,7 @@ body.glass-light .farmer-table-page.light-theme .search-input,
 body.glass-light .farmer-table-page.light-theme .role-select,
 body.glass-light .farmer-table-page.light-theme .edit-input {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
   color: var(--senior-text) !important;
   box-shadow: none !important;
 }
@@ -482,10 +481,9 @@ body.glass-light .farmer-table-page.light-theme .search-input::placeholder {
 
 body.glass-light .farmer-table-page.light-theme .members-summary-tabs .tab-btn {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: #052e16 !important;
   filter: none !important;
-  box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-summary-tabs .tab-btn.active {
@@ -494,18 +492,21 @@ body.glass-light .farmer-table-page.light-theme .members-summary-tabs .tab-btn.a
   color: #ffffff !important;
 }
 
-body.glass-light .farmer-table-page.light-theme .tab-btn,
 body.glass-light .farmer-table-page.light-theme .role-tab,
 body.glass-light .farmer-table-page.light-theme .refresh-btn {
   background: #ffffff !important;
-  border: 1.5px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: var(--senior-text-body) !important;
   box-shadow: none !important;
 }
 
-body.glass-light .farmer-table-page.light-theme .tab-btn:hover,
 body.glass-light .farmer-table-page.light-theme .role-tab:hover,
 body.glass-light .farmer-table-page.light-theme .refresh-btn:hover {
+  background: #f0fdf4 !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-table-page.light-theme .tab-btn:hover {
   background: #f0fdf4 !important;
   color: var(--senior-text) !important;
 }
@@ -519,20 +520,15 @@ body.glass-light .farmer-table-page.light-theme .role-tab.active {
 
 body.glass-light .farmer-table-page.light-theme .role-tabs {
   background: #f4faf6 !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .role-tab-label {
   color: var(--senior-text) !important;
-  font-size: 0.9375rem !important;
-  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .role-tab-count {
   color: var(--senior-accent) !important;
-  font-size: 0.8125rem !important;
-  font-weight: 700 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .role-tab.active .role-tab-label,
@@ -556,14 +552,13 @@ body.glass-light .farmer-table-page.light-theme :is(
   .members-table-container
 ) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: none !important;
 }
 
 body.glass-light .farmer-table-page.light-theme :is(
@@ -589,24 +584,21 @@ body.glass-light .farmer-table-page.light-theme :is(
 body.glass-light .farmer-table-page.light-theme .members-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #052e16 !important;
-  font-weight: 600 !important;
-  border-bottom: 1px solid #86efac !important;
+  border-bottom-color: #86efac !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td {
   color: #000000 !important;
-  font-weight: 500 !important;
   background: #ffffff !important;
+  border-bottom-color: #e2e8f0 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table td :is(span, strong) {
   color: #000000 !important;
-  font-weight: 500 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-td-name {
   color: #000000 !important;
-  font-weight: 500 !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .members-table tbody tr:nth-child(even) td,
@@ -625,8 +617,8 @@ body.glass-light .farmer-table-page.light-theme .members-empty-row {
 }
 
 body.glass-light .farmer-table-page.light-theme .empty-state {
-  background: #f8fdf9 !important;
-  border: 1.5px solid var(--senior-border-soft) !important;
+  background: #ffffff !important;
+  border: 2px solid var(--senior-border-soft) !important;
 }
 
 body.glass-light .farmer-table-page.light-theme .empty-state > p:first-child {
@@ -675,7 +667,7 @@ body.glass-light .farmer-table-page.light-theme .modal-overlay {
 
 body.glass-light .farmer-table-page.light-theme .modal-content {
   background: var(--senior-surface) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: var(--senior-text) !important;
 }
 
@@ -731,6 +723,24 @@ body.glass-light .members-summary-page.light-theme .tab-content-area {
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
+body.glass-light .members-summary-page.light-theme .ms-search-result {
+  border-bottom-color: #d1fae5 !important;
+  color: var(--senior-text) !important;
+  background: #ffffff !important;
+}
+
+body.glass-light .members-summary-page.light-theme .ms-search-result:hover {
+  background: #f0fdf4 !important;
+}
+
+body.glass-light .members-summary-page.light-theme .ms-search-name {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .members-summary-page.light-theme .ms-search-ref {
+  color: #166534 !important;
+}
+
 body.glass-light .members-summary-page.light-theme .search-results-table thead th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
@@ -741,15 +751,18 @@ body.glass-light .members-summary-page.light-theme .search-results-table tbody t
   color: var(--senior-text-body) !important;
 }
 
-/* ===== Community News page ===== */
+/* ===== Community News page — colors only (layout matches dark) ===== */
 body.glass-light .news-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: var(--senior-text) !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
 }
 
 body.glass-light .news-page.light-theme .notice-hero {
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -759,7 +772,8 @@ body.glass-light .news-page.light-theme :is(.notice-hero h1, .hero-desc, .sectio
 
 body.glass-light .news-page.light-theme :is(.search-input, .sort-select) {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
+  border-width: 1px !important;
   color: var(--senior-text) !important;
 }
 
@@ -769,13 +783,15 @@ body.glass-light .news-page.light-theme .search-input::placeholder {
 
 body.glass-light .news-page.light-theme .notice-toolbar {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .news-page.light-theme :deep(.notice-card) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -787,6 +803,13 @@ body.glass-light .news-page.light-theme :deep(.notice-content) {
   color: var(--senior-text-body) !important;
 }
 
+body.glass-light .news-page.light-theme .preview-caption {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  border-width: 1px !important;
+}
+
 /* ===== Official Announcements page ===== */
 body.glass-light .announcement-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
@@ -795,7 +818,8 @@ body.glass-light .announcement-page.light-theme {
 
 body.glass-light .announcement-page.light-theme .notice-hero {
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -805,7 +829,8 @@ body.glass-light .announcement-page.light-theme :is(.notice-hero h1, .hero-desc)
 
 body.glass-light .announcement-page.light-theme :is(.search-input, .sort-select) {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
+  border-width: 1px !important;
   color: var(--senior-text) !important;
 }
 
@@ -815,7 +840,8 @@ body.glass-light .announcement-page.light-theme .search-input::placeholder {
 
 body.glass-light .announcement-page.light-theme .notice-toolbar {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -889,14 +915,6 @@ body.glass-light .announcement-page.light-theme .preview-caption {
   font-weight: 700 !important;
 }
 
-body.glass-light .news-page.light-theme .preview-caption {
-  color: #000000 !important;
-  background: #ffffff !important;
-  border: 2px solid #86efac !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
-}
-
 body.glass-light .announcement-page.light-theme .notice-card {
   background: #ffffff !important;
   border: 2px solid var(--senior-border-soft) !important;
@@ -911,15 +929,17 @@ body.glass-light .announcement-page.light-theme .notice-content {
   color: var(--senior-text-body) !important;
 }
 
-/* ===== Barangay Management page ===== */
+/* ===== Barangay Management page — colors only (layout matches dark) ===== */
 body.glass-light .page-container.barangays-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: var(--senior-text) !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.page-header, .page-header-split) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
@@ -933,94 +953,100 @@ body.glass-light .page-container.barangays-page.light-theme :is(.page-subtitle, 
 
 body.glass-light .page-container.barangays-page.light-theme :is(.stat-card, .tools-card, .card) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   box-shadow: var(--glass-shadow-soft) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input) {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
   color: var(--senior-text) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .members-table-wrap,
 body.glass-light .page-container.barangays-page.light-theme .places-table-wrap {
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
   background: #ffffff !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
-  font-size: 1rem !important;
-  border-bottom: 2px solid #16a34a !important;
+  border-bottom-color: #16a34a !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table td {
   color: var(--senior-text-body) !important;
   background: #ffffff !important;
-  font-size: 1.0625rem !important;
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-table th:not(:last-child),
 body.glass-light .page-container.barangays-page.light-theme .barangays-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .status-pill.active {
-  color: #000000 !important;
-  background: #ffffff !important;
-  border: 2px solid #16a34a !important;
-  font-size: 0.9375rem !important;
+  color: #166534 !important;
+  background: transparent !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-view-area {
   color: #000000 !important;
   background: #ffffff !important;
-  border: 2px solid #16a34a !important;
-  font-size: 0.9375rem !important;
+  border-color: #16a34a !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-places-text {
+  color: #166534 !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-edit-text {
+  color: #9a3412 !important;
+  background: #fff7ed !important;
+  border-color: #fdba74 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .btn-delete-text {
+  color: #991b1b !important;
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-header-add {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  border: 2px solid #14532d !important;
-  font-size: 1.0625rem !important;
-  font-weight: 700 !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
+  border-color: #14532d !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-header-add:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
   filter: none !important;
-  transform: translateY(-1px);
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-submit {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  border: 2px solid #14532d !important;
-  font-size: 1rem !important;
-  font-weight: 700 !important;
+  border-color: #14532d !important;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.28) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-submit:hover {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
   filter: none !important;
-  transform: translateY(-1px);
 }
 
 body.glass-light .page-container.barangays-page.light-theme .btn-secondary {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
   background: #ffffff !important;
-  border: 2px solid #64748b !important;
-  font-size: 1rem !important;
-  font-weight: 700 !important;
+  border-color: #64748b !important;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
   filter: none !important;
   transform: none !important;
@@ -1032,20 +1058,9 @@ body.glass-light .page-container.barangays-page.light-theme .btn-secondary:hover
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
   filter: none !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1) !important;
-}
-
-body.glass-light .page-container.barangays-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input) {
-  font-size: 1.0625rem !important;
-}
-
-body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
-  font-size: 1rem !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td) {
-  font-size: 1.0625rem !important;
   color: #000000 !important;
   background: #ffffff !important;
 }
@@ -1075,11 +1090,8 @@ body.glass-light .page-container.barangays-page.light-theme .barangays-icon-dele
 
 body.glass-light .page-container.barangays-page.light-theme .form-hint-area {
   background: #f0fdf4 !important;
-  border: 2px solid #86efac !important;
+  border-color: #86efac !important;
   color: #000000 !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  line-height: 1.55 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangays-icon-btn:hover {
@@ -1091,35 +1103,43 @@ body.glass-light .page-container.barangays-page.light-theme .barangays-table tbo
   background: #ecfdf5 !important;
 }
 
-body.glass-light .page-container.barangays-page.light-theme .modal-content {
+body.glass-light .page-container.barangays-page.light-theme .modal-content,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .modal-content {
   background: #fffef9 !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
   color: var(--senior-text) !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .barangay-details-modal .modal-title-text h2,
-body.glass-light .page-container.barangays-page.light-theme .barangay-details-modal .modal-subtitle {
+body.glass-light .page-container.barangays-page.light-theme .barangay-details-modal .modal-subtitle,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .barangay-details-modal .modal-title-text h2,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .barangay-details-modal .modal-subtitle {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
 }
 
-body.glass-light .page-container.barangays-page.light-theme .members-table-wrap {
-  border: 2px solid #94a3b8 !important;
+body.glass-light .page-container.barangays-page.light-theme .members-table-wrap,
+body.glass-light .page-container.barangays-page.light-theme .places-table-wrap,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .members-table-wrap,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .places-table-wrap,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .place-item,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .member-card,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .modal-info-item {
+  border-color: #94a3b8 !important;
   background: #ffffff !important;
 }
 
-body.glass-light .page-container.barangays-page.light-theme .places-table-wrap {
-  border: 2px solid #94a3b8 !important;
-  background: #ffffff !important;
-}
-
-body.glass-light .page-container.barangays-page.light-theme .place-form-label {
+body.glass-light .page-container.barangays-page.light-theme .place-form-label,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .place-form-label {
   color: #000000 !important;
 }
 
-body.glass-light .page-container.barangays-page.light-theme .modal-delete .btn-delete-confirm {
+body.glass-light .page-container.barangays-page.light-theme .modal-delete .btn-delete-confirm,
+body.glass-light .barangays-modal-overlay.barangays-ui.light-theme .modal-delete .btn-delete-confirm {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  border-color: #991b1b !important;
   filter: none !important;
   transform: none !important;
 }
@@ -1127,23 +1147,23 @@ body.glass-light .page-container.barangays-page.light-theme .modal-delete .btn-d
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
-  border-bottom: 2px solid #16a34a !important;
+  border-bottom-color: #16a34a !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table th, .places-table th):not(:last-child),
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td):not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme :is(.members-table td, .places-table td) {
   color: var(--senior-text-body) !important;
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
   background: #ffffff !important;
 }
 
 body.glass-light .page-container.barangays-page.light-theme .role-badge {
   background: #f0fdf4 !important;
-  border: 1px solid #86efac !important;
+  border-color: #86efac !important;
   color: var(--senior-text-body) !important;
 }
 
@@ -1178,6 +1198,30 @@ body.glass-light .page-container.barangays-page.light-theme .role-badge.business
   border-color: #bbf7d0 !important;
 }
 
+/* Mobile cards — colors only */
+body.glass-light .page-container.barangays-page.light-theme .barangay-mobile-card {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangay-mobile-main .barangay-name-text {
+  color: #166534 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangay-mobile-chip {
+  color: #166534 !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangay-mobile-actions {
+  border-top-color: #d1fae5 !important;
+}
+
+body.glass-light .page-container.barangays-page.light-theme .barangay-mobile-empty {
+  color: #166534 !important;
+}
+
 /* Barangays toast — teleported to body, must beat global button/theme overrides */
 body.glass-light .barangays-toast {
   background: #ffffff !important;
@@ -1205,22 +1249,36 @@ body.glass-light .barangays-toast-close {
   transform: none !important;
 }
 
-/* ===== Admin Loan Management page ===== */
+/* Keep loan pages on dark-mode metrics so rem sizing matches */
+body.glass-light .page-container.admin-loans-page.light-theme,
+body.glass-light .page-container.officer-loans-page {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ===== Admin / Officer Loan pages — colors only ===== */
 body.glass-light .page-container.admin-loans-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: var(--senior-text) !important;
 }
 
-body.glass-light .page-container.admin-loans-page.light-theme :is(.page-header, .card, .modal-content) {
+body.glass-light .page-container.admin-loans-page.light-theme :is(.page-header, .card, .modal-content),
+body.glass-light .page-container.officer-loans-page.light-theme :is(.page-header, .page-header-split, .card) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #86efac !important;
+  box-shadow: 0 8px 26px rgba(22, 101, 52, 0.1), inset 1px 1px 0 rgba(255, 255, 255, 0.65) !important;
 }
 
-body.glass-light .page-container.admin-loans-page.light-theme .stat-card {
+body.glass-light .page-container.admin-loans-page.light-theme .stat-card,
+body.glass-light .page-container.admin-loans-page.light-theme .stat-card:not([style]) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #86efac !important;
+  border-left-width: 4px !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08), inset 1px 1px 0 rgba(255, 255, 255, 0.65) !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .stat-card.overdue :is(.stat-value, .stat-label) {
@@ -1246,17 +1304,36 @@ body.glass-light .page-container.admin-loans-page.light-theme .status-badge.paid
   color: #15803d !important;
 }
 
-body.glass-light .page-container.admin-loans-page.light-theme .stat-card:not([style]) {
-  background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+body.glass-light .page-container.officer-loans-page.light-theme .stat-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f4fdf7 100%) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #86efac !important;
+  box-shadow: 0 10px 22px rgba(22, 101, 52, 0.1) !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .stat-card .stat-value {
+  color: #052e16 !important;
+}
+
+body.glass-light .page-container.officer-loans-page.light-theme .stat-card .stat-label {
+  color: #166534 !important;
+}
+
+body.glass-light .top-header .profile-id {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border: 1px solid #86efac !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .top-header .user-profile {
+  border-color: #86efac !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.page-title, .stat-value) {
   color: var(--senior-text) !important;
   background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
   -webkit-text-fill-color: currentColor !important;
 }
 
@@ -1266,62 +1343,38 @@ body.glass-light .page-container.admin-loans-page.light-theme :is(.page-subtitle
 
 body.glass-light .page-container.admin-loans-page.light-theme .barangay-filter-select {
   background: #ffffff !important;
-  border: 1.5px solid #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
   color: var(--senior-text) !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .table-container,
 body.glass-light .page-container.admin-loans-page.light-theme .payment-history-table-wrap {
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
   background: #ffffff !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: var(--senior-text) !important;
-  font-size: 0.52rem !important;
-  font-weight: 600 !important;
-  padding: 0.22rem 0.24rem !important;
-  line-height: 1.08 !important;
+  border-bottom-color: #16a34a !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table th, .payment-history-table th):not(:last-child),
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td):not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme :is(.loans-table td, .payment-history-table td) {
   color: #000000 !important;
   background: #ffffff !important;
-  font-size: 0.58rem !important;
-  font-weight: 500 !important;
-  padding: 0.2rem 0.22rem !important;
-  line-height: 1.12 !important;
-}
-
-body.glass-light .page-container.admin-loans-page.light-theme .status-badge {
-  font-size: 0.52rem !important;
-  font-weight: 600 !important;
-}
-
-body.glass-light .page-container.admin-loans-page.light-theme :is(.btn, .btn-view, .btn-approve, .btn-reject, .btn-payment) {
-  font-size: 0.5rem !important;
-  font-weight: 600 !important;
-}
-
-body.glass-light .page-container.admin-loans-page.light-theme :is(.payer-badge, .credit-score-compact) {
-  font-size: 0.5rem !important;
-  font-weight: 500 !important;
+  border-bottom-color: #94a3b8 !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .btn-cancel {
   background: #ffffff !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
-  border: 2px solid #64748b !important;
-  filter: none !important;
-  transform: none !important;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  border-color: #64748b !important;
 }
 
 body.glass-light .page-container.admin-loans-page.light-theme .loan-details-modal .modal-title-text h3,
@@ -1490,6 +1543,193 @@ body.glass-light .machinery-management-page.light-theme .inv2-search-input::plac
   color: #64748b !important;
 }
 
+/* ===== Machinery Booking page ===== */
+/* Same rem base as dark mode so layout/sizing stay identical; only colors change. */
+body.glass-light .machinery-booking-page,
+body.glass-light .machinery-booking-modal {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body.glass-light .machinery-booking-page.light-theme {
+  background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme :is(
+  .page-header,
+  .page-header-split,
+  .section,
+  .stat-card,
+  .glass-stat-card,
+  .tools-card,
+  .machinery-card,
+  .bookings-table-container,
+  .modal-content
+) {
+  background: #ffffff !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme :is(.page-title, .section-title, .stat-value, .machinery-title) {
+  color: var(--senior-text) !important;
+  -webkit-text-fill-color: var(--senior-text) !important;
+  text-shadow: none !important;
+  background: none !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme :is(
+  .page-subtitle,
+  .stat-label,
+  .stats-group-title,
+  .machinery-description,
+  .detail-label,
+  .rate-hint,
+  .form-label,
+  .form-hint,
+  .inv2-mobile-label
+) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme :is(.detail-value, .inv2-mobile-card-name, .booking-machinery, .price-cell) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme :is(.toolbar-input, .toolbar-select, .form-input, .filter-select) {
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  color: #000000 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .toolbar-input::placeholder {
+  color: #64748b !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .bookings-table thead {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .bookings-table th {
+  background: transparent !important;
+  color: #000000 !important;
+  border-bottom-color: #16a34a !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .bookings-table td {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border-bottom-color: #94a3b8 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .bookings-table tbody tr:nth-child(even) td {
+  background: #f8fdf9 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .inv2-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .machinery-action-view-text {
+  color: #1e40af !important;
+  background: #eff6ff !important;
+  border-color: #93c5fd !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .machinery-action-edit-text {
+  color: #9a3412 !important;
+  background: #fff7ed !important;
+  border-color: #fdba74 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .machinery-action-delete-text {
+  color: #991b1b !important;
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .payment-group {
+  border-top-color: #bbf7d0 !important;
+}
+
+body.glass-light .machinery-booking-page.light-theme .empty-state,
+body.glass-light .machinery-booking-page.light-theme .loading-container,
+body.glass-light .machinery-booking-page.light-theme .inv2-empty {
+  color: #166534 !important;
+}
+
+/* ===== Farmer Income page ===== */
+/* Same rem base as dark mode so layout/sizing stay identical; only colors change. */
+body.glass-light .farmer-income-page,
+body.glass-light .farmer-income-page-modal {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body.glass-light .farmer-income-page.light-theme {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-income-page.light-theme :is(
+  .page-header-split,
+  .form-section,
+  .summary-section,
+  .record-card,
+  .assistance-card,
+  .summary-box,
+  .empty-state
+) {
+  background: #ffffff !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: var(--glass-shadow-soft) !important;
+}
+
+body.glass-light .farmer-income-page.light-theme :is(.page-title, .section-title, .summary-value) {
+  color: var(--senior-text) !important;
+  -webkit-text-fill-color: var(--senior-text) !important;
+  text-shadow: none !important;
+}
+
+body.glass-light .farmer-income-page.light-theme :is(.page-subtitle, .form-group label, .detail-label, .info-label, .financial-label) {
+  color: var(--senior-text-body) !important;
+  -webkit-text-fill-color: var(--senior-text-body) !important;
+}
+
+body.glass-light .farmer-income-page.light-theme .tab-btn {
+  background: #ffffff !important;
+  border: 1px solid var(--senior-border-soft) !important;
+  color: var(--senior-text) !important;
+  -webkit-text-fill-color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-income-page.light-theme .tab-btn.active {
+  background: #f0fdf4 !important;
+  border-color: #16a34a !important;
+}
+
+body.glass-light .farmer-income-page.light-theme :is(.form-group input, .form-group select, .dynamic-table td input, .dynamic-table td select) {
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+body.glass-light .farmer-income-page.light-theme :is(.edit-btn, .view-btn) {
+  background: #ffffff !important;
+  border: 1px solid var(--senior-border-soft) !important;
+  color: var(--senior-text) !important;
+  -webkit-text-fill-color: var(--senior-text) !important;
+}
+
+body.glass-light .farmer-income-page-modal.light-theme .modal-container {
+  background: #fffef9 !important;
+  border-color: var(--senior-border-soft) !important;
+}
+
 body.glass-light .sidebar.light-theme .nav-link {
   color: #000000 !important;
   background: #ffffff !important;
@@ -1507,63 +1747,90 @@ body.glass-light .sidebar.light-theme .active .nav-link {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
 }
 
-/* ===== Financial Overview page ===== */
+/* ===== Financial Overview page — colors only (geometry matches dark) ===== */
+body.glass-light .financial-overview-container,
+body.glass-light .financial-overview-container.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 body.glass-light .financial-overview-container.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: var(--senior-text) !important;
+}
+
+/* Barangays + Machinery Management — geometry baseline (colors in page/theme CSS) */
+body.glass-light .page-container.barangays-page.barangays-ui,
+body.glass-light .page-container.barangays-page.barangays-ui.light-theme,
+body.glass-light .page-container.machinery-management-page.machinery-ui,
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme,
+body.glass-light .page-container.machinery-approval-page.machinery-approval-ui,
+body.glass-light .page-container.machinery-approval-page.machinery-approval-ui.light-theme,
+body.glass-light .page-container.machinery-booking-page.machinery-booking-ui,
+body.glass-light .page-container.machinery-booking-page.machinery-booking-ui.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+body.glass-light .members-summary-page,
+body.glass-light .members-summary-page.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 body.glass-light .financial-overview-container.light-theme :is(
   .page-header, .filters-bar, .stat-card, .financial-table-section, .chart-card
 ) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  border-width: 1px !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.1) !important;
 }
 
 body.glass-light .financial-overview-container.light-theme :is(.page-title, .section-title, .chart-title) {
   color: var(--senior-text) !important;
   background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   -webkit-text-fill-color: currentColor !important;
 }
 
-body.glass-light .financial-overview-container.light-theme :is(.stat-label, .filter-label) {
+body.glass-light .financial-overview-container.light-theme :is(.stat-label, .filter-label, .page-subtitle, .stat-meta) {
   color: #374151 !important;
-  font-size: 14px !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .stat-value {
   color: #000000 !important;
-  font-size: 1.375rem !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .filter-input,
 body.glass-light .financial-overview-container.light-theme .filter-clear-btn {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 1.5px solid #94a3b8 !important;
-  font-size: 16px !important;
-  min-height: 48px;
+  border-color: #94a3b8 !important;
+  border-width: 1px !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .filter-clear-btn {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #000000 !important;
-  font-size: 0.9375rem !important;
-  border-bottom: 2px solid #16a34a !important;
+  border-bottom-color: #16a34a !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table th:not(:last-child),
 body.glass-light .financial-overview-container.light-theme .financial-table td:not(:last-child) {
-  border-right: 1.5px solid #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
 }
 
 body.glass-light .financial-overview-container.light-theme .financial-table td {
   color: #000000 !important;
-  font-size: 1.0625rem !important;
-  border-bottom: 1.5px solid #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
   background: #ffffff !important;
 }
 
@@ -1572,59 +1839,120 @@ body.glass-light .financial-overview-container.light-theme .financial-table tbod
 }
 
 body.glass-light .financial-overview-container.light-theme :is(.financial-table-wrap, .financial-table-section > .financial-table) {
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
+  border-width: 1px !important;
 }
 
-body.glass-light .financial-overview-container.light-theme .export-btn {
+body.glass-light .financial-overview-container.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .fin-mobile-card-name,
+body.glass-light .financial-overview-container.light-theme .fin-mobile-meta-row {
+  color: #052e16 !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .fin-mobile-label,
+body.glass-light .financial-overview-container.light-theme .fin-mobile-date,
+body.glass-light .financial-overview-container.light-theme .fin-mobile-empty {
+  color: #64748b !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .export-btn:not(.export-btn-secondary) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: linear-gradient(135deg, #166534, #14532d) !important;
   border-color: #14532d !important;
 }
 
-body.glass-light .financial-overview-container.light-theme .export-btn-secondary {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  background: #ffffff !important;
-  border-color: #94a3b8 !important;
+body.glass-light .financial-overview-container.light-theme .export-btn.export-btn-secondary {
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  background: #f0fdf4 !important;
+  border-color: #166534 !important;
+}
+
+body.glass-light .financial-overview-container.light-theme .export-btn.export-btn-secondary .export-btn-icon {
+  color: #14532d !important;
+  stroke: currentColor !important;
 }
 
 body.glass-light .financial-overview-container.light-theme :is(.inline-link, .view-all-link) {
   color: #15803d !important;
 }
 
-/* ===== Share Capital page ===== */
+/* ===== Share Capital / Dues & Payments page ===== */
+body.glass-light .share-capital-page,
+body.glass-light .share-capital-page.light-theme,
+body.glass-light .share-capital-withdrawal-page,
+body.glass-light .share-capital-withdrawal-page.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 body.glass-light .share-capital-page.light-theme {
   background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
   color: var(--senior-text) !important;
 }
 
-body.glass-light .share-capital-page.light-theme :is(.page-header, .tab-content, .stat-card) {
+body.glass-light .share-capital-page.light-theme :is(.page-header, .page-header-split, .tab-content, .stat-card) {
   background: #ffffff !important;
-  border: 2px solid var(--senior-border-soft) !important;
-  box-shadow: var(--glass-shadow-soft) !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: 0 8px 26px rgba(22, 101, 52, 0.12), inset 1px 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
-body.glass-light .share-capital-page.light-theme .page-header h1 {
+/* Geometry mirrors dark-mode-farm share-capital rules (colors only differ) */
+body.glass-light .share-capital-page.light-theme .page-header h1,
+body.glass-light .share-capital-page.light-theme .page-title,
+body.glass-light .share-capital-withdrawal-page.light-theme .page-header h1,
+body.glass-light .share-capital-withdrawal-page.light-theme .page-title {
   color: var(--senior-text) !important;
   background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   -webkit-text-fill-color: currentColor !important;
+  text-align: left !important;
+}
+
+body.glass-light .share-capital-withdrawal-page.light-theme .page-title {
+  font-size: 1.05rem !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+}
+
+body.glass-light .share-capital-withdrawal-page.light-theme .page-subtitle {
+  font-size: 0.7rem !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .page-header-text {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  max-width: none !important;
 }
 
 body.glass-light .share-capital-page.light-theme :is(.page-subtitle, .admin-filter-label, .empty-text) {
   color: var(--senior-text-body) !important;
 }
 
+body.glass-light .share-capital-page.light-theme .page-subtitle {
+  text-align: left !important;
+}
+
 body.glass-light .share-capital-page.light-theme .admin-filter-bar {
   background: #f0fdf4 !important;
-  border: 2px solid var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .share-capital-page.light-theme .empty-state--panel {
   background: #f8fdf9 !important;
-  border: 2px dashed var(--senior-border-soft) !important;
+  border-color: var(--senior-border-soft) !important;
 }
 
 body.glass-light .share-capital-page.light-theme .empty-title {
@@ -1638,31 +1966,21 @@ body.glass-light .share-capital-page.light-theme :is(.stat-value, .empty-title) 
 body.glass-light .share-capital-page.light-theme .input {
   background: #ffffff !important;
   color: var(--senior-text) !important;
-  border: 1.5px solid #94a3b8 !important;
-  font-size: 16px !important;
+  border-color: #94a3b8 !important;
 }
 
 body.glass-light .share-capital-page.light-theme .admin-filter-label {
   color: #000000 !important;
-  font-size: 14px !important;
-  font-weight: 800 !important;
 }
 
 body.glass-light .share-capital-page.light-theme .tab-content .data-table th {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
   color: #000000 !important;
-  font-size: 0.58rem !important;
-  font-weight: 600 !important;
-  padding: 0.28rem 0.32rem !important;
-  line-height: 1.12 !important;
+  border-bottom-color: #16a34a !important;
 }
 
 body.glass-light .share-capital-page.light-theme .tab-content .data-table td {
   color: #000000 !important;
-  font-size: 0.625rem !important;
-  font-weight: 500 !important;
-  padding: 0.26rem 0.3rem !important;
-  line-height: 1.15 !important;
 }
 
 body.glass-light .share-capital-page.light-theme .input::placeholder {
@@ -1679,8 +1997,8 @@ body.glass-light .share-capital-page.light-theme .btn-primary-action {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
-  border: 2px solid #14532d !important;
-  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.22) !important;
+  border-color: #14532d !important;
+  box-shadow: 0 8px 16px rgba(22, 101, 52, 0.22) !important;
 }
 
 body.glass-light .share-capital-page.light-theme .btn.btn-small,
@@ -1688,7 +2006,7 @@ body.glass-light .share-capital-page.light-theme .btn:not(.btn-primary-action):n
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   background: #ffffff !important;
-  border: 2px solid #166534 !important;
+  border-color: #166534 !important;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
 }
 
@@ -1704,21 +2022,633 @@ body.glass-light .share-capital-page.light-theme .btn-muted {
   color: #052e16 !important;
   -webkit-text-fill-color: #052e16 !important;
   background: #ffffff !important;
-  border: 2px solid #94a3b8 !important;
+  border-color: #94a3b8 !important;
 }
 
 body.glass-light .share-capital-page.light-theme .btn-success {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
-  border: 2px solid #14532d !important;
+  border-color: #14532d !important;
 }
 
 body.glass-light .share-capital-page.light-theme .btn-danger {
   color: #991b1b !important;
   -webkit-text-fill-color: #991b1b !important;
   background: #fee2e2 !important;
-  border: 2px solid #fca5a5 !important;
+  border-color: #fca5a5 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .fin-mobile-card-name,
+body.glass-light .share-capital-page.light-theme .fin-mobile-meta-row {
+  color: #052e16 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .fin-mobile-label {
+  color: #64748b !important;
+}
+
+body.glass-light .share-capital-page.light-theme .sc-tools-card.tools-card {
+  background: #f0fdf4 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .sc-tools-card .search-icon-wrap {
+  color: #166534 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .sc-tools-card .toolbar-input.search-input-main {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  border-color: #94a3b8 !important;
+}
+
+body.glass-light .share-capital-page.light-theme .sc-tools-card .toolbar-input.search-input-main::placeholder {
+  color: #64748b !important;
+}
+
+/* ===== Farmer Income Hub page ===== */
+body.glass-light .farmer-income-hub-page,
+body.glass-light .farmer-income-hub-page.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme {
+  background: transparent !important;
+  color: #052e16 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme :is(
+  .page-header,
+  .page-header-split,
+  .tab-content--main,
+  .foundation-hub-panel,
+  .empty-state
+) {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 8px 22px rgba(22, 101, 52, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .tabs-container {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .page-title {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  background: none !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .page-subtitle,
+body.glass-light .farmer-income-hub-page.light-theme .hub-foundation-intro,
+body.glass-light .farmer-income-hub-page.light-theme .farmer-pick-row label {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme .record-card,
+body.glass-light .farmer-income-hub-page.light-theme .agriculturist-income-page.light-theme .record-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06) !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme .empty-state {
+  background: #ffffff !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme :is(
+  .ih-tools-card.sc-tools-card,
+  .search-box,
+  .record-details
+) {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme :is(
+  .toolbar-input.search-input-main,
+  .search-input,
+  .foundation-farmer-select
+) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #94a3b8 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme :is(
+  .toolbar-input.search-input-main,
+  .search-input
+)::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme .fin-mobile-card-name {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .farmer-income-hub-page.light-theme .income-hub-subpage.light-theme .results-count {
+  color: #166534 !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .modal-content,
+body.glass-light .agriculturist-income-modal.light-theme .modal-content {
+  background: #ffffff !important;
+  border-color: #86efac !important;
+  color: #14532d !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme :is(
+  .detail-cell,
+  .expense-row,
+  .farmer-banner,
+  .fin-mobile-card
+) {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #14532d !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .cell-label,
+body.glass-light .farmer-income-hub-modal.light-theme .fin-mobile-label {
+  color: #64748b !important;
+}
+
+body.glass-light .farmer-income-hub-modal.light-theme .cell-value,
+body.glass-light .farmer-income-hub-modal.light-theme .fin-mobile-card-name {
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+/* ===== Notifications — light mode readability ===== */
+body.glass-light .notifications-modal-overlay {
+  background: rgba(15, 23, 42, 0.38) !important;
+}
+
+body.glass-light .notifications-modal {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.18) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.glass-light .notifications-modal::before {
+  display: none !important;
+}
+
+body.glass-light .notifications-modal .notifications-header {
+  background: #f9fafb !important;
+  border-bottom-color: #e5e7eb !important;
+}
+
+body.glass-light .notifications-modal .notifications-header h3 {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+body.glass-light .notifications-modal .mark-read-btn {
+  background: #ecfdf5 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .notifications-modal .mark-read-btn:hover {
+  background: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+
+body.glass-light .notifications-modal .modal-close {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+}
+
+body.glass-light .notifications-modal .modal-close:hover {
+  background: #e5e7eb !important;
+  color: #111827 !important;
+}
+
+body.glass-light .notifications-modal .notification-item {
+  border-bottom-color: #f3f4f6 !important;
+  border-left: 3px solid transparent !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .notifications-modal .notification-item:not(.unread) {
+  background: #ffffff !important;
+  border-left-color: transparent !important;
+  font-weight: 500 !important;
+}
+
+body.glass-light .notifications-modal .notification-item:not(.unread):hover {
+  background: #f9fafb !important;
+}
+
+body.glass-light .notifications-modal .notification-item.unread {
+  background: #bbf7d0 !important;
+  border-left-color: #15803d !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+body.glass-light .notifications-modal .notification-item.unread:hover {
+  background: #a7f3d0 !important;
+  border-left-color: #15803d !important;
+}
+
+body.glass-light .notifications-modal .notification-icon {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+body.glass-light .notifications-modal .notification-title {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+body.glass-light .notifications-modal .notification-message {
+  color: #4b5563 !important;
+  -webkit-text-fill-color: #4b5563 !important;
+}
+
+body.glass-light .notifications-modal .notification-date,
+body.glass-light .notifications-modal .no-notifications {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+body.glass-light .notifications-modal .unread-indicator {
+  background: #22c55e !important;
+  box-shadow: 0 0 0 2px #ffffff !important;
+}
+
+body.glass-light .notification-center-container .page-header {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.glass-light .notification-center-container .page-title {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+body.glass-light .notification-center-container .page-subtitle {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+body.glass-light .notification-center-container .stat-box,
+body.glass-light .notification-center-container .filters-section,
+body.glass-light .notification-center-container .notification-card,
+body.glass-light .notification-center-container .empty-state {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.glass-light .notification-center-container .stat-icon {
+  background: #f3f4f6 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+body.glass-light .notification-center-container .stat-value,
+body.glass-light .notification-center-container .notification-title {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+body.glass-light .notification-center-container .stat-label,
+body.glass-light .notification-center-container .notification-message,
+body.glass-light .notification-center-container .notification-time,
+body.glass-light .notification-center-container .notification-user,
+body.glass-light .notification-center-container .empty-text {
+  color: #4b5563 !important;
+  -webkit-text-fill-color: #4b5563 !important;
+}
+
+body.glass-light .notification-center-container .notification-meta {
+  color: #6b7280 !important;
+}
+
+body.glass-light .notification-center-container .filter-btn {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+body.glass-light .notification-center-container .filter-btn:hover {
+  background: #e5e7eb !important;
+  color: #111827 !important;
+}
+
+body.glass-light .notification-center-container .filter-btn.active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25) !important;
+}
+
+body.glass-light .notification-center-container .mark-all-read-btn {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2) !important;
+}
+
+body.glass-light .notification-center-container .notification-actions .mark-read-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+}
+
+body.glass-light .notification-center-container .notification-actions .mark-read-btn:hover {
+  background: #e5e7eb !important;
+}
+
+body.glass-light .notification-center-container .action-btn.review {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+body.glass-light .notification-center-container .action-btn.manage {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+body.glass-light .notification-center-container .notification-card.unread {
+  background: #f0fdf4 !important;
+  border-left-color: #10b981 !important;
+}
+
+body.glass-light .notification-center-container .notification-card.urgent {
+  background: #fef2f2 !important;
+  border-left-color: #ef4444 !important;
+}
+
+body.glass-light .notification-center-container .notification-badge.approval {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+  border-color: #93c5fd !important;
+}
+
+body.glass-light .notification-center-container .notification-badge.alert {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+  border-color: #fcd34d !important;
+}
+
+body.glass-light .notification-center-container .notification-badge.system {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+  border-color: #d1d5db !important;
+}
+
+/* ===== Seed & Fertilizer Plan (mirrors Share Capital light geometry) ===== */
+body.glass-light .seed-fertilizer-plan,
+body.glass-light .seed-fertilizer-plan.light-theme {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme {
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme :is(.page-header, .page-header-split, .tab-content, .stat-card) {
+  background: #ffffff !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: 0 8px 26px rgba(22, 101, 52, 0.12), inset 1px 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .page-header h1,
+body.glass-light .seed-fertilizer-plan.light-theme .page-title {
+  color: var(--senior-text) !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-align: left !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .page-header-text {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  max-width: none !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme :is(.page-subtitle, .card-hint, .ledger-note, .empty-text) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .page-subtitle {
+  text-align: left !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .empty-title,
+body.glass-light .seed-fertilizer-plan.light-theme .stat-value,
+body.glass-light .seed-fertilizer-plan.light-theme .card-title {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .input {
+  background: #ffffff !important;
+  color: var(--senior-text) !important;
+  border-color: #94a3b8 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .tab-content .data-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #000000 !important;
+  border-bottom-color: #16a34a !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .tab-content .data-table td {
+  color: #000000 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .btn.btn-primary-action,
+body.glass-light .seed-fertilizer-plan.light-theme .btn-primary-action {
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .btn.btn-small,
+body.glass-light .seed-fertilizer-plan.light-theme .btn:not(.btn-primary-action):not(.btn-success):not(.btn-danger) {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #166534 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .btn-success {
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #14532d !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .btn-muted {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  border-color: #94a3b8 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .fin-mobile-card-name,
+body.glass-light .seed-fertilizer-plan.light-theme .fin-mobile-meta-row {
+  color: #052e16 !important;
+}
+
+body.glass-light .seed-fertilizer-plan.light-theme .fin-mobile-label {
+  color: #64748b !important;
+}
+
+/* ===== Association Dues (mirrors Share Capital light geometry) ===== */
+body.glass-light .association-dues-view.light-theme {
+  background: linear-gradient(155deg, #d8f3de 0%, #bfeccc 42%, #a8e4b8 100%) !important;
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .association-dues-view.light-theme :is(
+  .page-header,
+  .page-header-split,
+  .tab-content,
+  .stat-card,
+  .tab-content .card,
+  .ad-member-detail-card
+) {
+  background: #ffffff !important;
+  border-color: var(--senior-border-soft) !important;
+  box-shadow: 0 8px 26px rgba(22, 101, 52, 0.12), inset 1px 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.glass-light .association-dues-view.light-theme .tab-content .card-header {
+  background: #f0fdf4 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+body.glass-light .association-dues-view.light-theme :is(
+  .page-title,
+  .card-title,
+  .stat-value,
+  .farmer-name,
+  .fin-mobile-card-name
+) {
+  color: var(--senior-text) !important;
+}
+
+body.glass-light .association-dues-view.light-theme :is(
+  .page-subtitle,
+  .stat-label,
+  .farmer-meta,
+  .fin-mobile-meta-row
+) {
+  color: var(--senior-text-body) !important;
+}
+
+body.glass-light .association-dues-view.light-theme .farmer-summary {
+  background: #f0fdf4 !important;
+  border-color: var(--senior-border-soft) !important;
+}
+
+body.glass-light .association-dues-view.light-theme .sc-tools-card.tools-card {
+  background: #f0fdf4 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+body.glass-light .association-dues-view.light-theme .sc-tools-card .toolbar-input.search-input-main {
+  background: #ffffff !important;
+  color: var(--senior-text) !important;
+  border-color: #94a3b8 !important;
+}
+
+body.glass-light .association-dues-view.light-theme .fin-mobile-card {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+}
+
+body.glass-light .association-dues-view.light-theme .table-container {
+  background: #ffffff !important;
+  border-color: var(--senior-border-soft) !important;
+}
+
+body.glass-light .association-dues-view.light-theme .tab-content .data-table th {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #000000 !important;
+  border-bottom-color: #16a34a !important;
+}
+
+body.glass-light .association-dues-view.light-theme .tab-content .data-table td {
+  color: #000000 !important;
+}
+
+body.glass-light .association-dues-view.light-theme .badge-paid {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #16a34a !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+body.glass-light .association-dues-view.light-theme .badge-unpaid {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  -webkit-text-fill-color: #991b1b !important;
 }
 
 /* ============================================================
@@ -1807,16 +2737,61 @@ body.glass-light :is(
 body.glass-light :is(
   .btn-primary,
   .btn-success,
-  .export-btn,
+  .export-btn:not(.export-btn-secondary),
   .btn-submit,
   .btn-header-add,
   .inv2-add-btn,
   .login-btn,
   .submit-btn,
-  button.btn-primary-action
+  button.btn-primary-action,
+  .financial-container .tab.active,
+  .financial-container .tab.active .tab-label,
+  .financial-container .report-type-btn.active,
+  .financial-container .report-type-btn.active .btn-text,
+  .financial-container .orient-btn.active,
+  .financial-container .btn-action.print:not(:disabled)
 ) {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Tab count badges — always red + white number (readable even if tab text is forced white) */
+html body.glass-light .financial-container.light-theme .tabs-container .tab .tab-badge,
+html body.glass-light .financial-container .tabs-container .tab .tab-badge {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #7f1d1d !important;
+  box-shadow: 0 1px 2px rgba(127, 29, 29, 0.3) !important;
+}
+
+html body.glass-light .financial-container.light-theme .tabs-container .tab.active .tab-badge,
+html body.glass-light .financial-container .tabs-container .tab.active .tab-badge {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1.5px solid #7f1d1d !important;
+}
+
+/* Keep Down Payments Due count readable on primary buttons in light mode
+   (white chip + dark red number — beats inherited white button text) */
+html body.glass-light .financial-container .dp-queue-btn .dp-queue-badge,
+html body.glass-light .financial-container.light-theme .dp-queue-btn .dp-queue-badge,
+body.glass-light .financial-container .dp-queue-badge {
+  background: #ffffff !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border: 1.5px solid #991b1b !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html body.glass-light .financial-container .dp-queue-btn:is(:hover, :active, :focus, :focus-visible) .dp-queue-badge {
+  background: #ffffff !important;
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+  border-color: #7f1d1d !important;
 }
 
 /* Beat page-scoped colored role/status overrides */
@@ -1852,13 +2827,15 @@ body.glass-light .glass-legend :is(.legend-item, .legend-label, .legend-value, s
    ============================================================ */
 
 /* Hero tagline stays light on the background photo */
-body.glass-light .login-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption),
-body.glass-light .signup-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption) {
+body.glass-light .login-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption, .identity-name, .identity-org),
+body.glass-light .signup-page.glass-auth-page :is(.identity-badge, .identity-title, .identity-caption, .identity-name, .identity-org) {
   -webkit-text-fill-color: currentColor !important;
 }
 
 body.glass-light .login-page.glass-auth-page .identity-badge,
-body.glass-light .signup-page.glass-auth-page .identity-badge {
+body.glass-light .signup-page.glass-auth-page .identity-badge,
+body.glass-light .login-page.glass-auth-page .identity-name,
+body.glass-light .signup-page.glass-auth-page .identity-name {
   color: #ffd966 !important;
 }
 
@@ -1868,33 +2845,43 @@ body.glass-light .signup-page.glass-auth-page .identity-title {
 }
 
 body.glass-light .login-page.glass-auth-page .identity-caption,
-body.glass-light .signup-page.glass-auth-page .identity-caption {
+body.glass-light .signup-page.glass-auth-page .identity-caption,
+body.glass-light .login-page.glass-auth-page .identity-org,
+body.glass-light .signup-page.glass-auth-page .identity-org {
   color: rgba(255, 252, 245, 0.96) !important;
 }
 
 /* Swap dark glass card for a bright senior-friendly surface */
 body.glass-light .login-page.glass-auth-page .login-card,
 body.glass-light .signup-page.glass-auth-page .signup-card {
-  background: linear-gradient(155deg, #ffffff 0%, #f0fdf4 48%, #ecfdf5 100%) !important;
-  border: 2px solid #86efac !important;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(240, 253, 244, 0.46) 48%,
+    rgba(236, 253, 245, 0.5) 100%
+  ) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.62) !important;
   box-shadow:
-    0 20px 48px rgba(22, 101, 52, 0.16),
-    0 4px 14px rgba(22, 101, 52, 0.08) !important;
+    0 20px 48px rgba(22, 101, 52, 0.1),
+    0 4px 14px rgba(22, 101, 52, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(26px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
 }
 
 body.glass-light .login-page.glass-auth-page .login-card::before,
 body.glass-light .signup-page.glass-auth-page .signup-card::before {
   background: linear-gradient(
     135deg,
-    rgba(220, 252, 231, 0.55) 0%,
-    rgba(187, 247, 208, 0.35) 45%,
-    rgba(254, 243, 199, 0.2) 100%
+    rgba(220, 252, 231, 0.16) 0%,
+    rgba(187, 247, 208, 0.08) 45%,
+    rgba(254, 243, 199, 0.06) 100%
   ) !important;
 }
 
 body.glass-light .login-page.glass-auth-page .login-card::after,
 body.glass-light .signup-page.glass-auth-page .signup-card::after {
-  border-color: rgba(134, 239, 172, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
 }
 
 body.glass-light .login-page.glass-auth-page :is(.form-title, .form-label),
@@ -1926,33 +2913,49 @@ body.glass-light .signup-page.glass-auth-page .auth-divider-line {
   ) !important;
 }
 
-body.glass-light .login-page.glass-auth-page .form-footer,
+body.glass-light .login-page.glass-auth-page .submit-btn {
+  background: #14532d !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(20, 83, 45, 0.22) !important;
+}
+
+body.glass-light .login-page.glass-auth-page .submit-btn:hover:not(:disabled) {
+  background: #166534 !important;
+  transform: translateY(-1px) !important;
+  filter: none !important;
+}
 body.glass-light .signup-page.glass-auth-page .form-footer {
-  background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
-  border-top: 2px solid #86efac !important;
+  background: transparent !important;
+  border-top: none !important;
 }
 
 body.glass-light .login-page.glass-auth-page .form-footer :is(.footer-text, p),
 body.glass-light .signup-page.glass-auth-page .form-footer :is(.footer-text, p) {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  color: #4b5563 !important;
+  -webkit-text-fill-color: #4b5563 !important;
 }
 
 body.glass-light .login-page.glass-auth-page .link-btn,
 body.glass-light .signup-page.glass-auth-page .link-btn {
-  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
-  border: 2px solid #16a34a !important;
-  color: #14532d !important;
-  -webkit-text-fill-color: #14532d !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+  background: transparent !important;
+  border: none !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
 }
 
 body.glass-light .login-page.glass-auth-page .link-btn:hover,
 body.glass-light .signup-page.glass-auth-page .link-btn:hover {
-  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 45%, #22c55e 100%) !important;
-  border-color: #15803d !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: transparent !important;
+  border: none !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  transform: none !important;
 }
 
 body.glass-light .login-page.glass-auth-page .success-message,
@@ -1998,24 +3001,31 @@ body.glass-light .signup-page.glass-auth-page .lang-btn.active {
 }
 
 body.glass-light .signup-page.glass-auth-page .registration-legal {
-  background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-  border: 2px solid #86efac !important;
-  color: #000000 !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(134, 239, 172, 0.5) !important;
+  color: #374151 !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
 
-body.glass-light .signup-page.glass-auth-page .registration-legal-title {
+body.glass-light .signup-page.glass-auth-page .registration-legal-toggle-title {
   color: #14532d !important;
 }
 
 body.glass-light .signup-page.glass-auth-page .registration-legal-section h4 {
-  color: #000000 !important;
+  color: #14532d !important;
 }
 
 body.glass-light .signup-page.glass-auth-page .registration-legal-agree,
 body.glass-light .signup-page.glass-auth-page .registration-legal-summary {
-  color: #000000 !important;
+  color: #374151 !important;
 }
 
 body.glass-light .signup-page.glass-auth-page .registration-legal-toggle-action {
   color: #15803d !important;
+}
+
+body.glass-light .signup-page.glass-auth-page .registration-legal-agree {
+  align-items: center !important;
+  padding-bottom: 0.1rem !important;
 }

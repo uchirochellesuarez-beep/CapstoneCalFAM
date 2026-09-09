@@ -373,15 +373,95 @@ router.get('/announcements', verifyToken, async (_req, res) => {
     const [rows] = await pool.execute(
       `SELECT a.id, a.title, a.content, a.image, a.author_id, a.author_role, a.created_at, a.updated_at,
               COALESCE(f.full_name, CONCAT('User #', a.author_id)) AS author_name,
-              f.profile_picture AS author_profile
+              f.profile_picture AS author_profile,
+              (
+                SELECT COUNT(*)
+                FROM announcement_views av
+                WHERE av.announcement_id = a.id
+              ) AS view_count
        FROM announcements a
        LEFT JOIN farmers f ON f.id = a.author_id
        ORDER BY a.created_at DESC`
     );
-    return res.json({ success: true, data: rows });
+    const data = (rows || []).map((row) => ({
+      ...row,
+      view_count: Number(row.view_count) || 0
+    }));
+    return res.json({ success: true, data });
   } catch (err) {
     console.error('Error fetching announcements:', err);
     return res.status(500).json({ success: false, message: 'Failed to fetch announcements' });
+  }
+});
+
+// POST /announcements/:id/view — record one unique view per farmer
+router.post('/announcements/:id/view', verifyToken, async (req, res) => {
+  try {
+    const announcementId = Number(req.params.id);
+    const farmerId = Number(req.user?.id);
+
+    if (!Number.isInteger(announcementId) || announcementId <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid announcement id.' });
+    }
+    if (!Number.isInteger(farmerId) || farmerId <= 0) {
+      return res.status(401).json({ success: false, message: 'Invalid user session.' });
+    }
+
+    const [existingAnnouncement] = await pool.execute(
+      'SELECT id FROM announcements WHERE id = ? LIMIT 1',
+      [announcementId]
+    );
+    if (!existingAnnouncement.length) {
+      return res.status(404).json({ success: false, message: 'Announcement not found.' });
+    }
+
+    const [existingView] = await pool.execute(
+      'SELECT id FROM announcement_views WHERE announcement_id = ? AND farmer_id = ? LIMIT 1',
+      [announcementId, farmerId]
+    );
+
+    let recorded = false;
+    if (existingView.length === 0) {
+      await pool.execute(
+        'INSERT INTO announcement_views (announcement_id, farmer_id, viewed_at) VALUES (?, ?, NOW())',
+        [announcementId, farmerId]
+      );
+      recorded = true;
+    }
+
+    const [countRows] = await pool.execute(
+      'SELECT COUNT(*) AS view_count FROM announcement_views WHERE announcement_id = ?',
+      [announcementId]
+    );
+    const viewCount = Number(countRows[0]?.view_count) || 0;
+
+    return res.json({
+      success: true,
+      recorded,
+      already_viewed: !recorded,
+      view_count: viewCount
+    });
+  } catch (err) {
+    // Race: unique key collision means another request already recorded this view
+    if (err && (err.code === 'ER_DUP_ENTRY' || err.errno === 1062)) {
+      try {
+        const announcementId = Number(req.params.id);
+        const [countRows] = await pool.execute(
+          'SELECT COUNT(*) AS view_count FROM announcement_views WHERE announcement_id = ?',
+          [announcementId]
+        );
+        return res.json({
+          success: true,
+          recorded: false,
+          already_viewed: true,
+          view_count: Number(countRows[0]?.view_count) || 0
+        });
+      } catch (countErr) {
+        console.error('Error counting announcement views after duplicate:', countErr);
+      }
+    }
+    console.error('Error recording announcement view:', err);
+    return res.status(500).json({ success: false, message: 'Failed to record announcement view' });
   }
 });
 
@@ -538,6 +618,7 @@ const deleteAnnouncementByRules = async (req, res, announcementId) => {
     });
   }
 
+  await pool.execute('DELETE FROM announcement_views WHERE announcement_id = ?', [announcementId]);
   await pool.execute('DELETE FROM announcements WHERE id = ?', [announcementId]);
 
   if (item.image && item.image.startsWith('/uploads/announcements/')) {

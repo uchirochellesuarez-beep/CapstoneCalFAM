@@ -1,0 +1,549 @@
+/* Machinery Management — stable global layout (loaded from main.js) */
+
+.page-container.machinery-management-page.machinery-ui {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.page-container.machinery-management-page.machinery-ui .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-container.machinery-management-page.machinery-ui .stats-grid--machinery {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.page-container.machinery-management-page.machinery-ui .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table-wrap,
+.page-container.machinery-management-page.machinery-ui .bookings-table-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(24rem, 55vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table,
+.page-container.machinery-management-page.machinery-ui .bookings-table {
+  min-width: 48rem;
+  width: 100%;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-actions,
+.page-container.machinery-management-page.machinery-ui .action-buttons {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.page-container.machinery-management-page.machinery-ui .machinery-action-btn.machinery-action-icon {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .machinery-action-btn.machinery-action-icon svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+/* Tools + search — fixed icon alignment (all viewports) */
+.page-container.machinery-management-page.machinery-ui .tools-card,
+.page-container.machinery-management-page.machinery-ui .bookings-tools-card {
+  --tools-h: 28px;
+}
+
+.page-container.machinery-management-page.machinery-ui .tools-card-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .search-bar {
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: var(--tools-h) !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .search-icon-wrap {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 2rem !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .search-svg {
+  display: block !important;
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .toolbar-input.search-input-main {
+  width: 100% !important;
+  height: var(--tools-h) !important;
+  min-height: var(--tools-h) !important;
+  max-height: var(--tools-h) !important;
+  padding: 0 8px 0 2rem !important;
+  box-sizing: border-box !important;
+  line-height: var(--tools-h) !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .toolbar-select {
+  height: var(--tools-h) !important;
+  min-height: var(--tools-h) !important;
+  max-height: var(--tools-h) !important;
+  padding: 0 1.75rem 0 8px !important;
+  box-sizing: border-box !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-view-toggle {
+  flex-shrink: 0 !important;
+  height: var(--tools-h) !important;
+  width: calc(var(--tools-h) * 2 + 4px) !important;
+  padding: 2px !important;
+  border-radius: 6px !important;
+}
+
+/* Table — compact rows, readable cells */
+.page-container.machinery-management-page.machinery-ui .inv2-table {
+  table-layout: fixed !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-col-name { width: 13%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-type { width: 8%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-barangay { width: 11%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-member { width: 13%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-nonmember { width: 13%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-interest { width: 7%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-capacity { width: 9%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-status { width: 9%; }
+.page-container.machinery-management-page.machinery-ui .inv2-col-actions { width: 12%; }
+
+/* President table — tighter column balance */
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-name { width: 14%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-type { width: 8%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-operator { width: 11%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-member { width: 14%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-nonmember { width: 14%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-interest { width: 7%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-status { width: 9%; }
+.page-container.machinery-management-page.machinery-ui .inv2-table-president .inv2-col-actions { width: 12%; }
+
+.page-container.machinery-management-page.machinery-ui .inv2-table th,
+.page-container.machinery-management-page.machinery-ui .inv2-table td {
+  padding: 5px 6px !important;
+  line-height: 1.2 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table th {
+  font-size: 9px !important;
+  padding: 4px 5px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table td {
+  font-size: 11px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-td-operator {
+  max-width: 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .operator-assigned__name {
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .operator-assigned__date {
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-interest {
+  font-size: 10px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table .machinery-action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 6px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table .machinery-action-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-name {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  word-break: break-word !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-price {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-unit {
+  font-size: 9px !important;
+  font-weight: 500 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-cap,
+.page-container.machinery-management-page.machinery-ui .inv2-na {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .barangay-badge {
+  display: inline-block !important;
+  max-width: 100% !important;
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .status-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px 6px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px 6px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-td-rate {
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-td-center {
+  text-align: center !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-th-rate {
+  text-align: right !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-table-wrap {
+  border-width: 1px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .inv2-actions {
+  min-width: 0 !important;
+  gap: 4px !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .filter-group {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.page-container.machinery-management-page.machinery-ui .filter-group-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 768px) {
+  .page-container.machinery-management-page.machinery-ui .stats-grid--machinery {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .page-container.machinery-management-page.machinery-ui .stats-grid--machinery {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.machinery-management-page.machinery-ui {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 8px 12px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .page-header,
+  html body .page-container.machinery-management-page.machinery-ui .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .btn-header-add {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .btn-header-icon {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stats-group {
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stats-grid--machinery {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    border-left-width: 3px !important;
+    gap: 0 !important;
+    transform: none !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-card::after {
+    display: none !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-card:hover {
+    transform: none !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-label {
+    font-size: 8px !important;
+    margin: 0 0 1px !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .tools-card,
+  html body .page-container.machinery-management-page.machinery-ui .bookings-tools-card {
+    padding: 5px 8px !important;
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+    --tools-h: 28px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .toolbar-select {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 1.75rem 0 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .toolbar-input.search-input-main {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 8px 0 2rem !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    line-height: 28px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-view-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-data-card,
+  html body .page-container.machinery-management-page.machinery-ui .card {
+    padding: 6px 8px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-card-meta-bar {
+    margin-bottom: 4px !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-table th,
+  html body .page-container.machinery-management-page.machinery-ui .bookings-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-table td,
+  html body .page-container.machinery-management-page.machinery-ui .bookings-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .status-badge,
+  html body .page-container.machinery-management-page.machinery-ui .badge,
+  html body .page-container.machinery-management-page.machinery-ui .barangay-badge {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 999px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .barangay-badge {
+    border-radius: 4px !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-chip {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .inv2-clear-all {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    min-height: 24px !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .bookings-section .section-title {
+    font-size: 0.82rem !important;
+    margin-bottom: 4px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.machinery-management-page.machinery-ui .stats-grid.stats-grid--machinery {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  html body .page-container.machinery-management-page.machinery-ui .search-icon-wrap {
+    width: 2rem !important;
+  }
+}
+
+/* Light mode — colors only (search + filters geometry unchanged) */
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .search-icon-wrap {
+  color: #64748b !important;
+}
+
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .toolbar-input.search-input-main {
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .toolbar-input.search-input-main::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+}
+
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .toolbar-select {
+  background: #ffffff !important;
+  border: 1px solid #94a3b8 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .tools-card,
+body.glass-light .page-container.machinery-management-page.machinery-ui.light-theme .bookings-tools-card {
+  background: #ffffff !important;
+  border: 1px solid #86efac !important;
+}

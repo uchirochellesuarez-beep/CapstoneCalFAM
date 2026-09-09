@@ -1,159 +1,344 @@
 <template>
   <div class="login-page glass-auth-page" :class="{ 'light-theme': isLight }">
+    <div class="auth-backdrop" aria-hidden="true">
+      <img :src="farmerPhoto" alt="" class="auth-farmer" />
+      <div class="auth-overlay"></div>
+    </div>
+
     <div class="page-top-controls">
       <ThemeToggle variant="floating" />
-      <div class="page-language-toggle" role="group" aria-label="Language selector">
-      <button
-        type="button"
-        @click="language = 'en'"
-        :class="['lang-btn', { active: language === 'en' }]"
-      >
-        English
-      </button>
-      <button
-        type="button"
-        @click="language = 'tl'"
-        :class="['lang-btn', { active: language === 'tl' }]"
-      >
-        Tagalog
-      </button>
-      </div>
+      <LanguageToggle variant="floating" />
     </div>
 
     <main class="layout-shell">
       <section class="tagline-panel" aria-label="Platform highlight">
         <div class="tagline-content">
           <div class="identity-block">
-            <span class="identity-badge">{{ language === 'tl' ? 'Portal ng Magsasaka' : 'Farmer Portal' }}</span>
-            <p class="identity-title">{{ language === 'tl' ? 'Mula Binhi Hanggang Tagumpay' : 'From Seeds to Success' }}</p>
-            <p class="identity-caption">{{ language === 'tl' ? 'Mag-sign in upang ma-access ang mga serbisyo ng kooperatiba.' : 'Sign in to access cooperative services.' }}</p>
+            <div class="identity-brand">
+              <img :src="calffaLogo" :alt="t('brand.name')" class="identity-logo" />
+              <div class="identity-brand-text">
+                <p class="identity-name">{{ t('brand.name') }}</p>
+                <p class="identity-org">{{ t('brand.fullName') }}</p>
+              </div>
+            </div>
+            <p class="identity-title">{{ t('brand.title') }}</p>
+            <p class="identity-caption">
+              {{ isResetFlow ? t('auth.resetCaption') : t('brand.loginCaption') }}
+            </p>
           </div>
         </div>
       </section>
 
-      <section class="form-side" aria-label="Login section">
+      <section class="form-side" :aria-label="isResetFlow ? t('auth.resetAria') : t('auth.loginAria')">
         <div class="login-card">
           <div class="login-card-inner">
           <div class="form-header">
-            <h2 class="form-title">{{ language === 'tl' ? 'Mag-login' : 'Sign In' }}</h2>
-            <p class="form-subtitle">{{ language === 'tl' ? 'Magsimula ng iyong paglalakbay' : 'Begin your journey' }}</p>
+            <h2 class="form-title">{{ formTitle }}</h2>
           </div>
 
           <div v-if="successMessage" class="message success-message">
             {{ successMessage }}
           </div>
+          <div v-if="!isResetFlow && sessionNotice" class="message error-message">
+            {{ sessionNotice }}
+          </div>
           <div v-if="errorMessage" class="message error-message">
             {{ errorMessage }}
           </div>
 
-          <form @submit.prevent="submitLogin" class="auth-form">
-            <div class="form-group">
-              <label class="form-label">{{ language === 'tl' ? 'Reference Number' : 'Reference Number' }}</label>
-              <div class="field-input-wrapper">
-                <span class="field-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="16" rx="3" ry="3" />
-                    <path d="M8 9h8M8 13h5" />
-                  </svg>
-                </span>
-                <input
-                  v-model="loginForm.referenceNumber"
-                  type="text"
-                  required
-                  minlength="19"
-                  maxlength="19"
-                  pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
-                  inputmode="numeric"
-                  class="form-input"
-                  :placeholder="language === 'tl' ? 'Ilagay ang iyong reference number' : 'Enter your reference number'"
-                  @input="handleLoginReferenceInput"
-                />
+          <!-- ========= LOGIN ========= -->
+          <template v-if="!isResetFlow">
+            <form @submit.prevent="submitLogin" class="auth-form">
+              <div class="form-group">
+                <label class="form-label">{{ t('auth.referenceNumber') }}</label>
+                <div class="field-input-wrapper">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="16" rx="3" ry="3" />
+                      <path d="M8 9h8M8 13h5" />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="loginForm.referenceNumber"
+                    type="text"
+                    required
+                    minlength="19"
+                    maxlength="19"
+                    pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
+                    inputmode="numeric"
+                    class="form-input"
+                    :placeholder="t('auth.referencePlaceholder')"
+                    @input="handleLoginReferenceInput"
+                  />
+                </div>
               </div>
+
+              <div class="form-group">
+                <div class="password-label-row">
+                  <label class="form-label">{{ t('auth.password') }}</label>
+                  <button type="button" class="forgot-link" @click="goToForgotPassword">
+                    {{ t('auth.forgotPassword') }}
+                  </button>
+                </div>
+                <div class="password-input-wrapper field-input-wrapper">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="loginForm.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    required
+                    class="form-input"
+                    autocomplete="current-password"
+                    :placeholder="t('auth.passwordPlaceholder')"
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle"
+                    @mousedown.prevent
+                    @click="showPassword = !showPassword"
+                    :aria-label="showPassword ? t('auth.hidePassword') : t('auth.showPassword')"
+                    :aria-pressed="showPassword"
+                  >
+                    <svg
+                      v-if="showPassword"
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                :disabled="authStore.loading"
+                class="submit-btn"
+              >
+                <span v-if="authStore.loading" class="loading-spinner"></span>
+                <span>
+                  {{ authStore.loading ? t('common.loading') : t('auth.signIn') }}
+                </span>
+              </button>
+            </form>
+
+            <div class="auth-divider" aria-hidden="true">
+              <span class="auth-divider-line"></span>
+              <span class="auth-divider-text">{{ t('auth.orSignInWith') }}</span>
+              <span class="auth-divider-line"></span>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">{{ language === 'tl' ? 'Password' : 'Password' }}</label>
-              <div class="password-input-wrapper field-input-wrapper">
-                <span class="field-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
-                    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-                  </svg>
-                </span>
-                <input
-                  v-model="loginForm.password"
-                  :type="showPassword ? 'text' : 'password'"
-                  required
-                  class="form-input"
-                  autocomplete="current-password"
-                  :placeholder="language === 'tl' ? 'Ilagay ang iyong password' : 'Enter your password'"
-                />
-                <button
-                  type="button"
-                  class="password-toggle"
-                  @mousedown.prevent
-                  @click="showPassword = !showPassword"
-                  :aria-label="
-                    language === 'tl'
-                      ? (showPassword ? 'Itago ang password' : 'Ipakita ang password')
-                      : (showPassword ? 'Hide password' : 'Show password')
-                  "
-                  :aria-pressed="showPassword"
-                >
-                  <svg
-                    v-if="showPassword"
-                    class="password-toggle-svg"
-                    viewBox="0 0 24 24"
-                    width="1.2em"
-                    height="1.2em"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  <svg
-                    v-else
-                    class="password-toggle-svg"
-                    viewBox="0 0 24 24"
-                    width="1.2em"
-                    height="1.2em"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              :disabled="authStore.loading"
-              class="submit-btn"
-            >
-              <span v-if="authStore.loading" class="loading-spinner"></span>
-              <span>
-                {{ authStore.loading
-                  ? (language === 'tl' ? 'Naglo-load...' : 'Loading...')
-                  : (language === 'tl' ? 'Mag-login' : 'Sign In') }}
-              </span>
-            </button>
+            <GoogleSignInButton class="login-google-block" />
 
             <div class="form-footer">
               <div class="footer-cta">
-                <p class="footer-text">{{ language === 'tl' ? 'Wala pang account?' : "Don't have an account?" }}</p>
+                <p class="footer-text">{{ t('auth.noAccount') }}</p>
                 <button type="button" class="link-btn" @click="goToSignUp">
-                  {{ language === 'tl' ? 'Gumawa ng account' : 'Create Account' }}
+                  {{ t('auth.createAccount') }}
                 </button>
               </div>
             </div>
-          </form>
+          </template>
+
+          <!-- ========= FORGOT / RESET PASSWORD ========= -->
+          <template v-else>
+            <div v-if="resetStep === 'google'" class="reset-panel">
+              <p class="reset-lead">{{ t('auth.forgotPasswordHint') }}</p>
+              <div class="message info-message" role="note">
+                {{ resetConnectTip }}
+              </div>
+
+              <div class="auth-divider" aria-hidden="true">
+                <span class="auth-divider-line"></span>
+                <span class="auth-divider-text">{{ t('auth.continueGoogle') }}</span>
+                <span class="auth-divider-line"></span>
+              </div>
+
+              <GoogleSignInButton
+                mode="reset"
+                class="login-google-block"
+                @reset-verified="onResetVerified"
+              />
+            </div>
+
+            <form
+              v-else-if="resetStep === 'password'"
+              class="auth-form"
+              @submit.prevent="submitNewPassword"
+            >
+              <p class="reset-lead">{{ t('auth.createNewPasswordHint') }}</p>
+
+              <div class="form-group">
+                <label class="form-label">{{ t('auth.newPassword') }}</label>
+                <div class="password-input-wrapper field-input-wrapper">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="passwordForm.password"
+                    :type="showNewPassword ? 'text' : 'password'"
+                    required
+                    class="form-input"
+                    autocomplete="new-password"
+                    :placeholder="t('signup.passwordPlaceholder')"
+                    @input="validatePasswordInput"
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle"
+                    @mousedown.prevent
+                    @click="showNewPassword = !showNewPassword"
+                    :aria-label="showNewPassword ? t('auth.hidePassword') : t('auth.showPassword')"
+                  >
+                    <svg
+                      v-if="showNewPassword"
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  </button>
+                </div>
+                <p v-if="passwordError" class="field-hint-error">{{ passwordError }}</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">{{ t('auth.confirmNewPassword') }}</label>
+                <div class="password-input-wrapper field-input-wrapper">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="4" y="11" width="16" height="9" rx="2" ry="2" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="passwordForm.confirmPassword"
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    required
+                    class="form-input"
+                    autocomplete="new-password"
+                    :placeholder="t('signup.confirmPasswordPlaceholder')"
+                    @input="validateConfirmPassword"
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle"
+                    @mousedown.prevent
+                    @click="showConfirmPassword = !showConfirmPassword"
+                    :aria-label="showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')"
+                  >
+                    <svg
+                      v-if="showConfirmPassword"
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="password-toggle-svg"
+                      viewBox="0 0 24 24"
+                      width="1.2em"
+                      height="1.2em"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  </button>
+                </div>
+                <p v-if="confirmError" class="field-hint-error">{{ confirmError }}</p>
+              </div>
+
+              <button
+                type="submit"
+                class="submit-btn"
+                :disabled="authStore.loading || !canSubmitPassword"
+              >
+                <span v-if="authStore.loading" class="loading-spinner"></span>
+                <span>
+                  {{ authStore.loading ? t('common.loading') : t('auth.updatePassword') }}
+                </span>
+              </button>
+            </form>
+
+            <div v-else class="reset-panel">
+              <div class="message success-message">
+                {{ t('auth.resetSuccessBody') }}
+              </div>
+              <button type="button" class="submit-btn" @click="goToLogin">
+                {{ t('auth.backToSignIn') }}
+              </button>
+            </div>
+
+            <div class="form-footer">
+              <div class="footer-cta">
+                <p class="footer-text">{{ t('auth.rememberPassword') }}</p>
+                <button type="button" class="link-btn" @click="goToLogin">
+                  {{ t('auth.backToSignIn') }}
+                </button>
+              </div>
+            </div>
+          </template>
           </div>
         </div>
       </section>
@@ -162,26 +347,67 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
+import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageToggle from '../components/LanguageToggle.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import farmerPhoto from '../assets/landing/farmer-hero.jpg'
+import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t, te } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
 
-const language = ref('en')
+const resetConnectTip = computed(() => {
+  if (te('auth.resetConnectFirstTip')) return t('auth.resetConnectFirstTip')
+  return 'Important: Your Google account must already be connected in Settings. If it is not connected yet, sign in with your reference number first, connect Google, then come back here.'
+})
+
+const isResetFlow = computed(() => route.path === '/forgot-password')
+
 const showPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const sessionNotice = computed(() => authStore.sessionNotice)
+
+const resetStep = ref('google') // google | password | done
+const resetToken = ref('')
+const passwordError = ref('')
+const confirmError = ref('')
+const passwordForm = ref({
+  password: '',
+  confirmPassword: ''
+})
 
 const loginForm = ref({
   referenceNumber: '',
   password: '',
   role: 'farmer'
+})
+
+const formTitle = computed(() => {
+  if (!isResetFlow.value) return t('auth.signIn')
+  if (resetStep.value === 'password') return t('auth.createNewPassword')
+  if (resetStep.value === 'done') return t('auth.resetSuccessTitle')
+  return t('auth.forgotPasswordTitle')
+})
+
+const canSubmitPassword = computed(() => {
+  return (
+    passwordForm.value.password.length >= 8 &&
+    passwordForm.value.confirmPassword.length >= 8 &&
+    !passwordError.value &&
+    !confirmError.value
+  )
 })
 
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
@@ -204,22 +430,39 @@ const handleLoginReferenceInput = () => {
   loginForm.value.referenceNumber = formatReferenceNumberInput(loginForm.value.referenceNumber)
 }
 
+const resetForgotState = () => {
+  resetStep.value = 'google'
+  resetToken.value = ''
+  passwordForm.value = { password: '', confirmPassword: '' }
+  passwordError.value = ''
+  confirmError.value = ''
+  errorMessage.value = ''
+  successMessage.value = ''
+}
+
+watch(
+  () => route.path,
+  () => {
+    errorMessage.value = ''
+    successMessage.value = ''
+    if (isResetFlow.value) {
+      resetForgotState()
+    }
+  }
+)
+
 const submitLogin = async () => {
   errorMessage.value = ''
   successMessage.value = ''
+  authStore.sessionNotice = null
 
   if (!loginForm.value.referenceNumber || !loginForm.value.password) {
-    errorMessage.value = language.value === 'tl'
-      ? 'Pakipunan ang lahat ng mga field'
-      : 'Please fill in all fields'
+    errorMessage.value = t('auth.fillAllFields')
     return
   }
 
   if (!REFERENCE_FORMAT_REGEX.test(loginForm.value.referenceNumber)) {
-    errorMessage.value =
-      language.value === 'tl'
-        ? 'Ang Reference Number ay dapat nasa format na 00-00-00-000-000000'
-        : 'Reference Number must follow 00-00-00-000-000000 format'
+    errorMessage.value = t('auth.referenceFormat')
     return
   }
 
@@ -236,24 +479,109 @@ const submitLogin = async () => {
     return
   }
 
-  errorMessage.value = result.error || (language.value === 'tl'
-    ? 'Nabigo ang pag-login. Pakisubukan muli.'
-    : 'Login failed. Please try again.')
+  errorMessage.value = result.error || t('auth.loginFailed')
+}
+
+const onResetVerified = ({ resetToken: token }) => {
+  errorMessage.value = ''
+  successMessage.value = t('auth.resetGoogleVerified')
+  resetToken.value = token
+  resetStep.value = 'password'
+}
+
+const validatePasswordInput = () => {
+  const password = passwordForm.value.password
+  passwordError.value = ''
+
+  if (!password) return
+
+  if (password.length < 8) {
+    passwordError.value = t('signup.passwordMinLength')
+    return
+  }
+
+  const hasLetters = /[a-zA-Z]/.test(password)
+  const hasNumbers = /[0-9]/.test(password)
+  if (!hasLetters || !hasNumbers) {
+    passwordError.value = t('signup.passwordLettersNumbers')
+  }
+
+  if (passwordForm.value.confirmPassword) {
+    validateConfirmPassword()
+  }
+}
+
+const validateConfirmPassword = () => {
+  confirmError.value = ''
+  if (!passwordForm.value.confirmPassword) return
+  if (passwordForm.value.password !== passwordForm.value.confirmPassword) {
+    confirmError.value = t('signup.passwordMismatch')
+  }
+}
+
+const submitNewPassword = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+  validatePasswordInput()
+  validateConfirmPassword()
+
+  if (!passwordForm.value.password || !passwordForm.value.confirmPassword) {
+    errorMessage.value = t('auth.fillAllFields')
+    return
+  }
+
+  if (passwordError.value || confirmError.value) return
+
+  if (!resetToken.value) {
+    errorMessage.value = t('auth.resetSessionExpired')
+    resetStep.value = 'google'
+    return
+  }
+
+  const result = await authStore.completeGooglePasswordReset({
+    resetToken: resetToken.value,
+    password: passwordForm.value.password,
+    confirmPassword: passwordForm.value.confirmPassword
+  })
+
+  if (!result.success) {
+    errorMessage.value = result.error || t('auth.resetUpdateFailed')
+    if (String(result.error || '').toLowerCase().includes('expired')) {
+      resetToken.value = ''
+      resetStep.value = 'google'
+    }
+    return
+  }
+
+  resetToken.value = ''
+  passwordForm.value = { password: '', confirmPassword: '' }
+  successMessage.value = ''
+  resetStep.value = 'done'
 }
 
 const goToSignUp = () => {
   router.push('/signup')
 }
+
+const goToForgotPassword = () => {
+  resetForgotState()
+  router.push('/forgot-password')
+}
+
+const goToLogin = () => {
+  resetForgotState()
+  router.push('/login')
+}
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap');
 
 .login-page {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   --primary-orange: #e57431;
   --primary-green: #6bbf59;
   --accent-gold: #ffd966;
@@ -264,29 +592,84 @@ const goToSignUp = () => {
   --text-soft: #eee8da;
   --field-bg: rgba(10, 30, 15, 0.32);
   --field-border: rgba(127, 177, 145, 0.42);
-  background: url('https://i.pinimg.com/1200x/1d/73/0c/1d730c5473037a32dd743b05ac2bb466.jpg') center/cover no-repeat fixed;
+  background: #0f2a1c;
 }
 
 .login-page::before {
   display: none;
 }
 
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.auth-farmer {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 42%;
+}
+
+.auth-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(7, 24, 16, 0.68) 0%,
+    rgba(7, 24, 16, 0.38) 42%,
+    rgba(7, 24, 16, 0.18) 100%
+  );
+}
+
+.login-page.light-theme .auth-overlay {
+  background: linear-gradient(
+    105deg,
+    rgba(7, 24, 16, 0.42) 0%,
+    rgba(7, 24, 16, 0.2) 38%,
+    rgba(7, 24, 16, 0.06) 62%,
+    transparent 100%
+  );
+}
+
 .page-top-controls {
+  --control-h: 38px;
   position: fixed;
-  top: 0.8rem;
-  right: 0.8rem;
+  top: 0.9rem;
+  right: 1rem;
   z-index: 300;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+/* Match the theme toggle and language pill to one exact height;
+   neutralizes the global button min-height: 44px */
+.page-top-controls :deep(.theme-toggle-floating) {
+  box-sizing: border-box !important;
+  width: var(--control-h) !important;
+  height: var(--control-h) !important;
+  min-width: var(--control-h) !important;
+  min-height: var(--control-h) !important;
+  max-height: var(--control-h) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 0 0 auto;
+}
+
 .page-language-toggle {
+  box-sizing: border-box !important;
   display: inline-flex;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.18rem;
-  padding: 0.24rem;
+  align-items: stretch;
+  gap: 2px;
+  height: var(--control-h) !important;
+  min-height: var(--control-h) !important;
+  max-height: var(--control-h) !important;
+  margin: 0 !important;
+  padding: 3px;
   border-radius: 999px;
   border: 1px solid #0d3f28;
   background: rgba(18, 58, 38, 0.72);
@@ -299,11 +682,18 @@ const goToSignUp = () => {
 }
 
 .lang-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
   border-radius: 999px;
-  padding: 0.34rem 0.9rem;
+  padding: 0 0.85rem !important;
   font-family: inherit;
   font-weight: 600;
-  font-size: 0.73rem;
+  font-size: 0.72rem;
+  line-height: 1;
   border: 1px solid transparent;
   background: transparent;
   color: rgba(196, 230, 205, 0.95);
@@ -341,18 +731,17 @@ const goToSignUp = () => {
   position: relative;
   overflow: hidden;
   border-radius: 26px;
-  border: 2px solid rgba(74, 222, 128, 0.32) !important;
+  border: 1px solid rgba(134, 239, 172, 0.38) !important;
   background: linear-gradient(155deg,
-    rgba(13, 28, 21, 0.97) 0%,
-    rgba(11, 24, 18, 0.96) 45%,
-    rgba(9, 20, 15, 0.98) 100%) !important;
+    rgba(13, 28, 21, 0.68) 0%,
+    rgba(11, 24, 18, 0.62) 45%,
+    rgba(9, 20, 15, 0.7) 100%) !important;
   box-shadow:
-    16px 16px 34px rgba(4, 10, 7, 0.72),
-    -8px -8px 20px rgba(34, 60, 45, 0.18),
-    inset 0 1px 0 rgba(134, 239, 172, 0.1),
-    inset 0 0 0 1px rgba(74, 222, 128, 0.08) !important;
-  backdrop-filter: blur(14px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
+    0 24px 48px rgba(4, 10, 7, 0.38),
+    inset 0 1px 0 rgba(187, 247, 208, 0.14),
+    inset 0 0 0 1px rgba(74, 222, 128, 0.1) !important;
+  backdrop-filter: blur(20px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(145%) !important;
 }
 
 .login-card::before {
@@ -417,13 +806,53 @@ const goToSignUp = () => {
   box-shadow: 0 0 18px rgba(107, 191, 89, 0.18);
 }
 
+.identity-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+}
+
+.identity-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  background: #fff;
+}
+
+.identity-brand-text {
+  min-width: 0;
+}
+
+.identity-name {
+  margin: 0;
+  color: #ffd966 !important;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-transform: none;
+  text-shadow: 0 2px 10px rgba(20, 24, 18, 0.3);
+}
+
+.identity-org {
+  margin: 0.18rem 0 0;
+  color: rgba(249, 244, 231, 0.92) !important;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-shadow: 0 2px 10px rgba(18, 26, 18, 0.28);
+}
+
 .identity-badge {
   display: inline-block;
   color: #ffd966;
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.14em;
-  font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   text-transform: uppercase;
   text-shadow: 0 2px 10px rgba(20, 24, 18, 0.3);
 }
@@ -444,7 +873,7 @@ const goToSignUp = () => {
   margin: 0.78rem 0 0;
   max-width: 30ch;
   color: rgba(249, 244, 231, 0.94);
-  font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   font-size: 0.94rem;
   font-weight: 500;
   line-height: 1.65;
@@ -465,14 +894,47 @@ const goToSignUp = () => {
 }
 
 .login-card {
-  width: min(100%, 470px);
-  max-width: 470px;
+  width: min(100%, 400px);
+  max-width: 400px;
   min-height: 0;
-  padding: 0.76rem 0.82rem;
+  padding: 1rem 1.05rem 0.95rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: cardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Continue with Google sits under the Sign In button */
+.login-google-block {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.login-card :deep(.google-signin-btn) {
+  min-height: 2.7rem;
+  padding: 0.7rem 1rem;
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: none;
+}
+
+.login-card :deep(.google-signin-btn:hover:not(.disabled)) {
+  border-color: #94a3b8;
+  background: #f8fafc;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transform: none;
+  filter: none;
+}
+
+.login-card :deep(.google-btn-text) {
+  font-family: inherit;
+  font-weight: 600;
 }
 
 .login-card-inner {
@@ -487,20 +949,16 @@ const goToSignUp = () => {
 
 .form-header {
   text-align: center;
-  margin-bottom: 0.46rem;
+  margin-bottom: 0.55rem;
 }
 
 .form-title {
   margin: 0;
   color: var(--text-strong);
+  font-family: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
-}
-
-.form-subtitle {
-  margin: 0.14rem 0 0;
-  font-size: 0.8rem;
-  color: rgba(215, 207, 191, 0.92);
+  letter-spacing: -0.02em;
 }
 
 .message {
@@ -524,11 +982,50 @@ const goToSignUp = () => {
   color: #fef2f2;
 }
 
+.info-message {
+  background: rgba(56, 189, 248, 0.2);
+  color: #e0f2fe;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+}
+
+.login-page.light-theme .info-message {
+  background: #e0f2fe;
+  color: #075985;
+  border-color: #7dd3fc;
+}
+
+.reset-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reset-lead {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(227, 255, 238, 0.9);
+}
+
+.login-page.light-theme .reset-lead {
+  color: #355445;
+}
+
+.field-hint-error {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #fecaca;
+}
+
+.login-page.light-theme .field-hint-error {
+  color: #b91c1c;
+}
+
 .auth-divider {
-  margin: 0.75rem 0 0.2rem;
+  margin: 0.85rem 0 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   color: rgba(211, 218, 206, 0.72);
 }
 
@@ -539,11 +1036,12 @@ const goToSignUp = () => {
 }
 
 .auth-divider-text {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   text-align: center;
   line-height: 1.38;
+  white-space: nowrap;
 }
 
 @media (min-width: 521px) {
@@ -558,32 +1056,71 @@ const goToSignUp = () => {
   }
 
   .auth-divider-text {
-    white-space: normal;
-    font-size: 0.67rem;
-    max-width: 11.5rem;
-    text-wrap: balance;
+    font-size: 0.72rem;
   }
 }
 
 .auth-form {
-  margin-top: 0.35rem;
+  margin-top: 0.15rem;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  gap: 0.52rem;
+  gap: 0.55rem;
   width: 100%;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.12rem;
+}
+
+.password-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.15rem;
+}
+
+.password-label-row .form-label {
+  margin-bottom: 0;
+}
+
+.forgot-link {
+  border: none;
+  background: transparent;
+  color: var(--accent-gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-page.light-theme .forgot-link {
+  color: #14532d;
+  font-weight: 700;
+}
+
+.login-page.light-theme .forgot-link:hover {
+  color: #0f3d22;
+  text-decoration: underline;
 }
 
 .form-label {
   color: var(--text-soft);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  /* Neutralize global label touch-target rules (padding + mobile margin-bottom) */
+  margin: 0 0 0 0.15rem;
+  padding: 0;
+  display: block;
+  cursor: default;
 }
 
 .field-input-wrapper {
@@ -598,18 +1135,36 @@ const goToSignUp = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.85rem;
+  line-height: 0;
   color: #64748b;
   pointer-events: none;
+  z-index: 2;
+}
+
+.field-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+  stroke: currentColor;
 }
 
 .form-input {
   width: 100%;
+  box-sizing: border-box;
+  /* Fixed height: switching between password dots and plain text must not resize the field.
+     min-height 0 + margin 0 beat the global input touch-target rules in style.css. */
+  height: 2.3rem;
+  min-height: 0;
+  margin: 0;
   border: 1px solid var(--field-border);
   background: var(--field-bg);
   color: var(--text-soft);
-  border-radius: 13px;
-  padding: 0.56rem 0.72rem 0.56rem 2.15rem;
-  font-size: 0.84rem;
+  border-radius: 11px;
+  padding: 0 0.66rem 0 2rem;
+  font-size: 0.78rem;
+  /* normal line-height lets the browser center text natively, regardless of border width */
+  line-height: normal;
   font-family: inherit;
   transition: border-color 0.24s, background 0.24s, box-shadow 0.24s;
 }
@@ -642,12 +1197,16 @@ const goToSignUp = () => {
 
 .password-toggle {
   position: absolute;
-  right: 0.62rem;
+  right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 3;
-  width: 2.2rem;
-  height: 2.2rem;
+  /* Exact size + min 0: the global 44px button touch-target rule must not inflate
+     the toggle beyond the input height (that's what pushed the eye out of the box) */
+  width: 1.8rem;
+  height: 1.8rem;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   margin: 0;
   background: transparent !important;
@@ -675,12 +1234,17 @@ const goToSignUp = () => {
   color: #111827;
 }
 
+/* The toggle must never move: same position on hover, focus, active, pressed */
+.password-toggle:hover,
 .password-toggle:focus,
-.password-toggle:active {
+.password-toggle:active,
+.password-toggle[aria-pressed='true'],
+.password-toggle[aria-pressed='false'] {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  transform: translateY(-50%);
+  transform: translateY(-50%) !important;
+  top: 50% !important;
 }
 
 .password-toggle:focus-visible {
@@ -705,107 +1269,82 @@ const goToSignUp = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.42rem 0.96rem;
-  border-radius: 999px;
-  border: 2px solid rgba(110, 231, 183, 0.55);
-  background: rgba(15, 46, 31, 0.72);
-  color: #d1fae5;
-  font-size: 0.8rem;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #86efac;
+  font-family: inherit;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(4, 18, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.22s;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: color 0.18s ease, opacity 0.18s ease;
 }
 
 .link-btn:hover {
-  background: linear-gradient(128deg,
-    rgba(20, 83, 45, 0.95) 0%,
-    rgba(22, 101, 52, 0.92) 50%,
-    rgba(34, 197, 94, 0.88) 100%);
-  border-color: rgba(134, 239, 172, 0.72);
-  color: #ecfdf5;
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(4, 18, 12, 0.35), 0 0 20px rgba(52, 211, 153, 0.2);
+  background: transparent;
+  border: none;
+  color: #bbf7d0;
+  transform: none;
+  box-shadow: none;
 }
 
 .submit-btn {
   position: relative;
   overflow: hidden;
-  border: 2px solid rgba(110, 231, 183, 0.5);
-  background: linear-gradient(128deg,
-    #1a4d32 0%,
-    #1f5c3a 42%,
-    #247647 100%);
-  color: #f0fdf4;
-  border-radius: 999px;
+  margin-top: 0.2rem;
+  border: none;
+  background: #14532d;
+  color: #ffffff;
+  border-radius: 12px;
+  font-family: inherit;
   font-weight: 700;
-  font-size: 0.86rem;
-  letter-spacing: 0.03em;
-  padding: 0.62rem 1.36rem;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  padding: 0.78rem 1.2rem;
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
+  min-height: 2.7rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow:
-    0 10px 28px rgba(4, 18, 12, 0.38),
-    0 0 20px rgba(52, 211, 153, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  transition:
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.22s ease,
-    background 0.3s ease,
-    filter 0.22s ease;
+  box-shadow: 0 8px 20px rgba(4, 18, 12, 0.28);
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .submit-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 45%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.28) 50%,
-    rgba(255, 255, 255, 0) 100%);
-  transform: skewX(-20deg);
-  transition: left 0.42s ease;
+  display: none;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(128deg,
-    #1f5c3a 0%,
-    #247647 45%,
-    #2d9160 100%);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 14px 32px rgba(4, 18, 12, 0.42),
-    0 0 22px rgba(52, 211, 153, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  filter: brightness(1.05);
+  background: #166534;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(4, 18, 12, 0.32);
+  filter: none;
 }
 
 .submit-btn:hover:not(:disabled)::before {
-  left: 120%;
+  display: none;
 }
 
 .submit-btn:focus-visible {
   outline: none;
-  box-shadow:
-    0 0 0 3px rgba(74, 222, 128, 0.38),
-    0 12px 32px rgba(4, 18, 12, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.38), 0 8px 20px rgba(4, 18, 12, 0.28);
 }
 
 .submit-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
 }
 
 .loading-spinner {
@@ -821,18 +1360,15 @@ const goToSignUp = () => {
 }
 
 .form-footer {
-  margin-top: auto;
-  border-top: 1px solid rgba(134, 239, 172, 0.35);
-  padding-top: 0.52rem;
+  margin-top: 0.85rem;
+  border-top: none;
+  padding: 0;
   display: flex;
   justify-content: center;
   color: rgba(227, 255, 238, 0.92);
-  font-size: 0.72rem;
-  background: linear-gradient(140deg,
-    rgba(20, 78, 44, 0.36) 0%,
-    rgba(28, 110, 58, 0.28) 52%,
-    rgba(16, 62, 36, 0.4) 100%);
-  border-radius: 14px;
+  font-size: 0.82rem;
+  background: transparent;
+  border-radius: 0;
   margin-bottom: 0.08rem;
 }
 
@@ -900,13 +1436,13 @@ const goToSignUp = () => {
 }
 
 .login-page:not(.light-theme) .form-header {
-  padding-bottom: 0.55rem !important;
+  padding-bottom: 0 !important;
   margin-bottom: 0.55rem !important;
-  border-bottom: 2px solid rgba(74, 222, 128, 0.28) !important;
+  border-bottom: none !important;
 }
 
-.login-page:not(.light-theme) .form-subtitle {
-  color: rgba(187, 247, 208, 0.88) !important;
+.login-page:not(.light-theme) .form-title {
+  color: #f8fafc !important;
 }
 
 .login-page:not(.light-theme) .auth-form .form-input,
@@ -965,67 +1501,89 @@ const goToSignUp = () => {
 }
 
 .login-page:not(.light-theme) .form-footer {
-  border-top: 2px solid rgba(74, 222, 128, 0.32) !important;
-  background: linear-gradient(140deg,
-    rgba(12, 36, 24, 0.55) 0%,
-    rgba(15, 46, 31, 0.45) 52%,
-    rgba(10, 30, 20, 0.5) 100%) !important;
+  border-top: none !important;
+  background: transparent !important;
 }
 
 .login-page:not(.light-theme) .submit-btn {
-  background: linear-gradient(128deg, #1a4d32 0%, #1f5c3a 42%, #247647 100%) !important;
-  border-color: rgba(110, 231, 183, 0.5) !important;
-  color: #f0fdf4 !important;
-  box-shadow:
-    0 8px 22px rgba(4, 18, 12, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  background: #16a34a !important;
+  border: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(4, 18, 12, 0.35) !important;
 }
 
 .login-page:not(.light-theme) .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(128deg, #1f5c3a 0%, #247647 45%, #2d9160 100%) !important;
+  background: #22c55e !important;
+  transform: translateY(-1px) !important;
+  filter: none !important;
 }
 
 .login-page:not(.light-theme) .submit-btn :is(span, svg, svg *) {
-  color: #f0fdf4 !important;
-  -webkit-text-fill-color: #f0fdf4 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.login-page:not(.light-theme) .login-card :deep(.google-signin-btn) {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(134, 239, 172, 0.45) !important;
+  color: #1f2937 !important;
+}
+
+.login-page:not(.light-theme) .link-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  box-shadow: none !important;
+}
+
+.login-page:not(.light-theme) .link-btn:hover {
+  background: transparent !important;
+  color: #bbf7d0 !important;
+  -webkit-text-fill-color: #bbf7d0 !important;
+  transform: none !important;
 }
 
 /* Light mode — component-scoped so it wins over dark defaults below */
 .login-page.light-theme .login-card {
-  background: linear-gradient(155deg, #ffffff 0%, #f8fdf9 48%, #f0fdf4 100%) !important;
-  border: 2.5px solid #14532d !important;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(248, 253, 249, 0.46) 48%,
+    rgba(236, 253, 245, 0.5) 100%
+  ) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.62) !important;
   box-shadow:
-    0 20px 48px rgba(22, 101, 52, 0.14),
-    0 4px 14px rgba(22, 101, 52, 0.08),
-    inset 0 0 0 1px rgba(22, 101, 52, 0.12) !important;
+    0 20px 48px rgba(22, 101, 52, 0.1),
+    0 4px 14px rgba(22, 101, 52, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(134, 239, 172, 0.22) !important;
+  backdrop-filter: blur(26px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
 }
 
 .login-page.light-theme .login-card::before {
   background: linear-gradient(
     135deg,
-    rgba(220, 252, 231, 0.55) 0%,
-    rgba(187, 247, 208, 0.35) 45%,
-    rgba(254, 243, 199, 0.2) 100%
+    rgba(220, 252, 231, 0.16) 0%,
+    rgba(187, 247, 208, 0.08) 45%,
+    rgba(254, 243, 199, 0.06) 100%
   ) !important;
 }
 
 .login-page.light-theme .login-card::after {
-  border: 1.5px solid rgba(21, 128, 61, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
 }
 
 .login-page.light-theme .form-header {
-  padding-bottom: 0.55rem !important;
+  padding-bottom: 0 !important;
   margin-bottom: 0.55rem !important;
-  border-bottom: 2px solid rgba(21, 128, 61, 0.45) !important;
+  border-bottom: none !important;
 }
 
 .login-page.light-theme .form-title {
   color: #052e16 !important;
-}
-
-.login-page.light-theme .form-subtitle {
-  color: #14532d !important;
-  font-weight: 600 !important;
 }
 
 .login-page.light-theme .form-label {
@@ -1050,12 +1608,14 @@ const goToSignUp = () => {
 }
 
 .login-page.light-theme .auth-form .form-input {
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   color: #000000 !important;
-  border: 2.5px solid #166534 !important;
+  border: 2px solid rgba(22, 101, 52, 0.45) !important;
   box-shadow:
-    inset 0 1px 2px rgba(22, 101, 52, 0.06),
-    0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    inset 0 1px 2px rgba(22, 101, 52, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 .login-page.light-theme .auth-form .form-input::placeholder {
@@ -1064,7 +1624,7 @@ const goToSignUp = () => {
 
 .login-page.light-theme .auth-form .form-input:focus {
   border-color: #14532d !important;
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.94) !important;
   box-shadow:
     0 0 0 3px rgba(74, 222, 128, 0.28),
     inset 0 0 0 1px rgba(21, 128, 61, 0.2) !important;
@@ -1098,31 +1658,19 @@ const goToSignUp = () => {
 }
 
 .login-page.light-theme .submit-btn {
-  background: linear-gradient(
-    128deg,
-    #ea580c 0%,
-    #f59e0b 32%,
-    #fbbf24 58%,
-    #16a34a 100%
-  ) !important;
+  background: #14532d !important;
   color: #ffffff !important;
-  border: 2.5px solid #14532d !important;
-  box-shadow:
-    0 10px 28px rgba(180, 60, 10, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(20, 83, 45, 0.25) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 8px 20px rgba(20, 83, 45, 0.22) !important;
 }
 
 .login-page.light-theme .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(
-    128deg,
-    #f97316 0%,
-    #fbbf24 35%,
-    #fde047 58%,
-    #22c55e 100%
-  ) !important;
+  background: #166534 !important;
   color: #ffffff !important;
-  border-color: #166534 !important;
+  border: none !important;
+  transform: translateY(-1px) !important;
+  filter: none !important;
 }
 
 .login-page.light-theme .submit-btn :is(span, svg, svg *) {
@@ -1131,26 +1679,35 @@ const goToSignUp = () => {
 }
 
 .login-page.light-theme .link-btn {
-  background: linear-gradient(128deg, #fef3c7 0%, #fde68a 48%, #bbf7d0 100%) !important;
-  border: 2.5px solid #14532d !important;
-  color: #14532d !important;
-  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.12) !important;
+  background: transparent !important;
+  border: none !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+  box-shadow: none !important;
 }
 
 .login-page.light-theme .link-btn:hover {
-  background: linear-gradient(128deg, #ea580c 0%, #f59e0b 45%, #22c55e 100%) !important;
-  border-color: #15803d !important;
-  color: #ffffff !important;
+  background: transparent !important;
+  border: none !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  transform: none !important;
 }
 
 .login-page.light-theme .form-footer {
-  background: linear-gradient(140deg, #f0fdf4 0%, #dcfce7 52%, #ecfdf5 100%) !important;
-  border-top: 2.5px solid #166534 !important;
-  color: #052e16 !important;
+  background: transparent !important;
+  border-top: none !important;
+  color: #374151 !important;
 }
 
 .login-page.light-theme .footer-text {
-  color: #052e16 !important;
+  color: #4b5563 !important;
+}
+
+.login-page.light-theme .login-card :deep(.google-signin-btn) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #1f2937 !important;
 }
 
 .login-page.light-theme .success-message {
@@ -1190,89 +1747,291 @@ const goToSignUp = () => {
 
 @media (min-width: 920px) {
   .layout-shell {
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: minmax(0, 1.05fr) minmax(440px, 480px);
     align-items: center;
-    column-gap: 1.8rem;
-    padding: 4.35rem 1.5rem 1.1rem 2.5rem;
+    column-gap: 3.25rem;
+    max-width: 1180px;
+    margin-inline: auto;
+    width: 100%;
+    padding: 5rem 3.25rem 2.4rem;
     height: 100dvh;
+    box-sizing: border-box;
   }
 
   .tagline-panel {
-    min-height: calc(100dvh - 5.6rem);
+    min-height: 0;
     align-items: center;
-    padding: 0.8rem 1.2rem 0.8rem 0.7rem;
+    padding: 0.5rem 0.4rem 0.5rem 0;
   }
 
   .identity-block {
-    transform: translateY(16px);
+    transform: none;
+    max-width: 30rem;
+    padding-left: 1.35rem;
+  }
+
+  .identity-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .identity-name {
+    font-size: 1.2rem;
+  }
+
+  .identity-org {
+    font-size: 0.82rem;
+  }
+
+  .form-side {
+    justify-content: flex-end;
+    padding: 0;
   }
 
   .login-card {
+    width: 100%;
+    max-width: 480px;
     margin-top: 0;
     height: auto;
     max-height: none;
-    padding: 0.98rem 1.02rem;
-    transform: translateY(-14px);
+    padding: 2.15rem 2.1rem 1.9rem;
+    border-radius: 24px;
+    transform: none;
+  }
+
+  .form-header {
+    margin-bottom: 1.2rem;
+  }
+
+  .login-page.light-theme .form-header {
+    margin-bottom: 1.2rem !important;
+  }
+
+  .form-title {
+    font-size: 1.7rem;
+  }
+
+  .auth-form {
+    margin-top: 0.15rem;
+    gap: 1rem;
+  }
+
+  .form-group {
+    gap: 0.32rem;
+  }
+
+  .form-label {
+    font-size: 0.84rem;
+  }
+
+  .form-input {
+    height: 2.9rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    padding: 0 0.9rem 0 2.4rem;
+  }
+
+  .password-input-wrapper .form-input {
+    padding-right: 2.75rem;
+  }
+
+  .field-icon {
+    left: 0.88rem;
+    font-size: 1rem;
+  }
+
+  .password-toggle {
+    right: 0.55rem;
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .submit-btn {
+    margin-top: 0.35rem;
+    min-height: 3.05rem;
+    font-size: 1.02rem;
+    border-radius: 13px;
+    padding: 0.85rem 1.2rem;
+  }
+
+  .login-card :deep(.google-signin-btn) {
+    min-height: 3.05rem;
+    padding: 0.8rem 1.05rem;
+    font-size: 0.95rem;
+    border-radius: 13px;
+  }
+
+  .auth-divider {
+    margin: 1.15rem 0 1.05rem;
+  }
+
+  .auth-divider-text {
+    font-size: 0.8rem;
+  }
+
+  .form-footer {
+    margin-top: 1.15rem;
+  }
+
+  .footer-text,
+  .link-btn {
+    font-size: 0.92rem;
+  }
+}
+
+/* Mobile / narrow screens: everything must fit in one viewport, no scrolling */
+@media (max-width: 919px) {
+  .layout-shell {
+    height: 100dvh;
+    min-height: 0;
+    /* Clear space below the floating theme/language controls */
+    padding: 4rem 0.6rem 0.6rem;
+    /* Flex column centered as ONE group: leftover space goes above the tagline
+       and below the card, never between them */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    overflow: hidden;
+  }
+
+  .tagline-panel {
+    min-height: 0;
+    flex: 0 0 auto;
+    padding: 0.3rem 0.3rem;
+  }
+
+  .identity-logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .identity-name {
+    font-size: 0.95rem;
+  }
+
+  .identity-org {
+    font-size: 0.68rem;
+  }
+
+  .identity-title {
+    margin-top: 0.32rem;
+    font-size: clamp(2.05rem, 7.5vw, 3rem);
+    line-height: 0.96;
+  }
+
+  .identity-caption {
+    margin-top: 0.4rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .identity-block {
+    padding-left: 0.85rem;
+  }
+
+  .form-side {
+    /* Shrinkable so the whole group always fits the viewport (card scrolls inside if needed) */
+    flex: 0 1 auto;
+    min-height: 0;
+    padding: 0 0.4rem;
+  }
+
+  .login-card {
+    border-radius: 18px;
+    padding: 0.85rem 0.85rem 0.8rem;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  /* Inputs: 16px font prevents iOS focus-zoom (which visually breaks icon alignment);
+     fixed height keeps the icons and the eye toggle perfectly centered */
+  .form-input {
+    height: 2.5rem;
+    font-size: 1rem;
+    padding: 0 0.7rem 0 2.2rem;
+    line-height: normal;
+  }
+
+  .password-input-wrapper .form-input {
+    padding-right: 2.6rem;
+  }
+
+  .field-icon {
+    left: 0.78rem;
+    font-size: 0.95rem;
+  }
+
+  .password-toggle {
+    right: 0.55rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .form-label {
+    font-size: 0.78rem;
+  }
+
+  .auth-divider {
+    margin: 0.75rem 0 0.7rem;
+  }
+
+  .auth-form {
+    margin-top: 0;
+  }
+
+  .form-group {
+    gap: 0.18rem;
   }
 }
 
 @media (max-width: 420px) {
   .page-top-controls {
-    top: 0.48rem;
-    right: 0.48rem;
-    gap: 0.35rem;
+    top: 0.6rem;
+    right: 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .page-top-controls {
+    --control-h: 34px;
+  }
+
+  .lang-btn {
+    padding: 0 0.7rem !important;
+    font-size: 0.68rem;
   }
 
   .layout-shell {
-    padding: 4rem 0.45rem 0.45rem;
-    gap: 0.5rem;
-  }
-
-  .login-card {
-    border-radius: 20px;
-  }
-
-  .tagline-panel {
-    min-height: 150px;
-    padding: 0.8rem 0.2rem;
-  }
-
-  .identity-title {
-    font-size: 2.35rem;
-    line-height: 0.96;
-  }
-
-  .identity-caption {
-    font-size: 0.84rem;
-  }
-
-  .identity-badge {
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-  }
-
-  .identity-block {
-    padding-left: 0.95rem;
-  }
-
-  .login-card {
-    padding: 0.82rem 0.82rem;
-    min-height: 0;
-    height: auto;
-    max-height: none;
-  }
-
-  .form-input {
-    font-size: 0.8rem;
-    padding: 0.54rem 0.72rem 0.54rem 2.05rem;
-  }
-
-  .password-input-wrapper .form-input {
-    padding-right: 2.38rem;
+    padding: 3.7rem 0.45rem 0.45rem;
   }
 
   .submit-btn {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Short laptop viewports: keep professional sizing, only tighten outer padding */
+@media (min-width: 920px) and (max-height: 760px) {
+  .layout-shell {
+    padding: 4.2rem 2.4rem 1.4rem;
+    column-gap: 2.4rem;
+  }
+
+  .login-card {
+    padding: 1.7rem 1.8rem 1.55rem;
+  }
+
+  .identity-title {
+    font-size: clamp(2.4rem, 5.4vw, 4.2rem);
+  }
+
+  .form-header,
+  .login-page.light-theme .form-header {
+    margin-bottom: 0.95rem !important;
+  }
+
+  .auth-form {
+    gap: 0.82rem;
   }
 }
 

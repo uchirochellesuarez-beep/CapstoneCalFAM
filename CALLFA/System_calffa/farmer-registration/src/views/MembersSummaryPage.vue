@@ -1,13 +1,20 @@
-<template>
-  <div class="members-summary-page min-h-screen p-4 lg:p-6" :class="{ 'light-theme': isLight }">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex items-center justify-between gap-3 mb-6">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">Members Summary</h1>
-          <p class="text-sm text-gray-500">Search a farmer first, then view the full summary.</p>
+﻿<template>
+  <div
+    class="members-summary-page min-h-screen p-4 lg:p-6"
+    :class="{ 'light-theme': isLight, 'is-agriculturist': isAgriculturist }"
+  >
+    <div class="max-w-6xl mx-auto ms-page-inner">
+      <div class="page-header page-header-split">
+        <div class="page-header-text">
+          <h1 class="page-title">{{ $t('common.membersSummary') }}</h1>
+          <p class="page-subtitle">{{ $t('ui.searchFarmer') }}</p>
         </div>
-        <div class="flex items-center flex-wrap justify-end gap-3">
+        <div
+          v-if="!isAgriculturist || selectedFarmer"
+          class="page-header-actions"
+        >
           <button
+            v-if="!isAgriculturist"
             type="button"
             @click="goToMembersManagement"
             class="back-to-management-btn"
@@ -15,7 +22,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="back-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Members Management
+            {{ $t('common.backToMembers') }}
           </button>
           <button
             v-if="selectedFarmer"
@@ -26,7 +33,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="back-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Search
+            {{ $t('common.backToSearch') }}
           </button>
         </div>
       </div>
@@ -36,13 +43,14 @@
       </div>
 
       <!-- SEARCH-FIRST -->
-      <div v-if="!selectedFarmer" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Search farmer (name or reference #)</label>
+      <div v-if="!selectedFarmer" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 ms-search-panel">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">{{ $t('ui.searchFarmerLabel') }}</label>
         <input
           v-model="query"
           type="text"
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
-          placeholder="Type a name or reference number…"
+          :placeholder="$t('ui.typeNameOrRef')"
+          autocomplete="off"
         />
 
         <div class="mt-4">
@@ -50,65 +58,21 @@
             Start typing to search.
           </div>
 
-          <div v-else class="border rounded-lg overflow-hidden">
+          <div v-else class="ms-search-results border rounded-lg overflow-hidden">
             <div class="max-h-[520px] overflow-y-auto overflow-x-hidden">
-              <table class="search-results-table w-full">
-                <thead>
-                  <tr>
-                    <th>Photo</th>
-                    <th>Ref #</th>
-                    <th>Name</th>
-                    <th>DOB</th>
-                    <th>Address</th>
-                    <th>Phone</th>
-                    <th>Education</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="f in filteredFarmers"
-                    :key="f.id"
-                    class="result-row"
-                    @click="selectFarmer(f)"
-                  >
-                    <td class="photo-cell">
-                      <img
-                        v-if="getProfilePictureUrl(f.profile_picture)"
-                        :src="getProfilePictureUrl(f.profile_picture)"
-                        alt="Profile"
-                        class="row-avatar"
-                      />
-                      <div v-else class="row-avatar row-avatar-fallback">
-                        <svg class="avatar-fallback-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                          <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="currentColor"/>
-                          <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                    </td>
-                    <td>{{ f.reference_number || 'N/A' }}</td>
-                    <td class="name-cell">
-                      <div class="name-primary">{{ f.full_name }}</div>
-                      <div class="name-secondary">{{ (f.role || 'farmer') }} • {{ (f.status || 'approved') }}</div>
-                    </td>
-                    <td>{{ formatDate(f.date_of_birth) }}</td>
-                    <td class="resume-cell">
-                      <span class="resume-label">Address</span>
-                      <span class="resume-value">{{ f.address || (f.barangay_name || ('Barangay #' + (f.barangay_id ?? 'N/A'))) }}</span>
-                    </td>
-                    <td class="resume-cell">
-                      <span class="resume-label">Phone</span>
-                      <span class="resume-value">{{ f.phone_number || 'N/A' }}</span>
-                    </td>
-                    <td class="resume-cell">
-                      <span class="resume-label">Education</span>
-                      <span class="resume-value">{{ f.educational_status || 'N/A' }}</span>
-                    </td>
-                  </tr>
-                  <tr v-if="filteredFarmers.length === 0">
-                    <td colspan="7" class="p-6 text-center text-sm text-gray-500">No matches.</td>
-                  </tr>
-                </tbody>
-              </table>
+              <button
+                v-for="f in filteredFarmers"
+                :key="f.id"
+                type="button"
+                class="ms-search-result"
+                @click="selectFarmer(f)"
+              >
+                <span class="ms-search-name">{{ f.full_name }}</span>
+                <span class="ms-search-ref">{{ f.reference_number || 'N/A' }}</span>
+              </button>
+              <div v-if="filteredFarmers.length === 0" class="p-6 text-center text-sm text-gray-500">
+                {{ $t('ui.noMatches') }}
+              </div>
             </div>
           </div>
         </div>
@@ -117,7 +81,7 @@
       <!-- SINGLE-FARMER SUMMARY -->
       <div v-else class="profile-wrapper">
 
-        <!-- ── Hero Header Card ── -->
+        <!-- â”€â”€ Hero Header Card â”€â”€ -->
         <div class="profile-hero">
           <!-- Top Action Bar -->
           <div class="hero-topbar">
@@ -125,27 +89,8 @@
               <svg class="action-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M6 8V4M6 4H10M6 4C7.45904 2.75027 9.3511 2 11.4167 2C15.895 2 19.5833 5.68833 19.5833 10.1667C19.5833 14.645 15.895 18.3333 11.4167 18.3333C7.8048 18.3333 4.74267 15.9947 3.66667 12.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              {{ loading ? 'Loading…' : 'Refresh' }}
+              {{ loading ? 'Loading...' : 'Refresh' }}
             </button>
-            <div class="hero-actions">
-              <button class="action-btn btn-edit">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5V6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Edit
-              </button>
-              <button class="action-btn btn-delete">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M5 7H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M9 7V5.5C9 4.67157 9.67157 4 10.5 4H13.5C14.3284 4 15 4.67157 15 5.5V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M8 10V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M12 10V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M16 10V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M6.5 7L7.2 18.2C7.26067 19.1707 8.06598 19.9286 9.0386 19.9286H14.9614C15.934 19.9286 16.7393 19.1707 16.8 18.2L17.5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-                Delete
-              </button>
-            </div>
           </div>
 
           <!-- Identity Row: avatar + name + badges -->
@@ -154,7 +99,7 @@
               <img
                 v-if="getProfilePictureUrl(selectedFarmer.profile_picture)"
                 :src="getProfilePictureUrl(selectedFarmer.profile_picture)"
-                alt="Profile"
+                :alt="$t('ui.profile')"
                 class="hero-avatar"
               />
               <div v-else class="hero-avatar hero-avatar-fallback">
@@ -218,7 +163,7 @@
                 </svg>
               </div>
               <div class="info-tile-body">
-                <div class="info-tile-label">Barangay</div>
+                <div class="info-tile-label">{{ $t('ui.barangay') }}</div>
                 <div class="info-tile-value">{{ selectedFarmer.barangay_name || (selectedFarmer.barangay_id ? 'Brgy #' + selectedFarmer.barangay_id : 'N/A') }}</div>
               </div>
             </div>
@@ -242,7 +187,7 @@
                 </svg>
               </div>
               <div class="info-tile-body">
-                <div class="info-tile-label">Address</div>
+                <div class="info-tile-label">{{ $t('ui.address') }}</div>
                 <div class="info-tile-value">{{ selectedFarmer.address || 'N/A' }}</div>
               </div>
             </div>
@@ -252,40 +197,25 @@
         <!-- Error -->
         <div v-if="summaryError" class="profile-error">{{ summaryError }}</div>
 
-        <!-- ── Tab Navigation ── -->
+        <!-- â”€â”€ Tab Navigation â”€â”€ -->
         <div class="profile-tabs-nav">
-          <button class="tab-pill" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">
-            <svg class="tab-pill-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M5 19V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M12 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M19 19V8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-            Overview
+          <button type="button" class="tab-pill" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">
+            <span class="tab-pill-label">{{ $t('common.overview') }}</span>
           </button>
-          <button class="tab-pill" :class="{ active: activeTab === 'personal' }" @click="activeTab = 'personal'">
-            <svg class="tab-pill-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="currentColor"/>
-              <path d="M4.5 20C4.5 16.9624 7.85786 14.5 12 14.5C16.1421 14.5 19.5 16.9624 19.5 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-            Personal
+          <button type="button" class="tab-pill" :class="{ active: activeTab === 'personal' }" @click="activeTab = 'personal'">
+            <span class="tab-pill-label">{{ $t('common.personal') }}</span>
           </button>
-          <button class="tab-pill" :class="{ active: activeTab === 'share' }" @click="activeTab = 'share'">
-            <svg class="tab-pill-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M12 3V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M16.5 7.5C16.5 6.11929 14.4853 5 12 5C9.51472 5 7.5 6.11929 7.5 7.5C7.5 8.88071 9.51472 10 12 10C14.4853 10 16.5 11.1193 16.5 12.5C16.5 13.8807 14.4853 15 12 15C9.51472 15 7.5 13.8807 7.5 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Share Capital
+          <button type="button" class="tab-pill" :class="{ active: activeTab === 'share' }" @click="activeTab = 'share'">
+            <span class="tab-pill-label tab-pill-label-full">{{ $t('ui.shareCapital') }}</span>
+            <span class="tab-pill-label tab-pill-label-short">{{ $t('common.share') }}</span>
           </button>
-          <button class="tab-pill" :class="{ active: activeTab === 'assistance' }" @click="activeTab = 'assistance'">
-            <svg class="tab-pill-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M8 12L10.5 14.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 3L19 7V12C19 16.4183 15.866 20.1744 12 21C8.13401 20.1744 5 16.4183 5 12V7L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-            </svg>
-            Assistance
+          <button type="button" class="tab-pill" :class="{ active: activeTab === 'assistance' }" @click="activeTab = 'assistance'">
+            <span class="tab-pill-label tab-pill-label-full">{{ $t('common.assistance') }}</span>
+            <span class="tab-pill-label tab-pill-label-short">Assist</span>
           </button>
         </div>
 
-        <!-- ── Tab Content ── -->
+        <!-- â”€â”€ Tab Content â”€â”€ -->
         <div class="tab-content-area">
 
           <!-- Overview Tab: Financial Summary -->
@@ -299,13 +229,13 @@
             </h3>
             <div class="fin-cards-grid">
               <div class="fin-card fin-card-blue">
-                <div class="fin-card-label">Loan Balance</div>
-                <div class="fin-card-value">₱{{ formatNumber(summary?.loans?.total_remaining_balance || 0) }}</div>
+                <div class="fin-card-label">{{ $t('ui.loanBalance') }}</div>
+                <div class="fin-card-value">{{ formatCurrency(summary?.loans?.total_remaining_balance || 0) }}</div>
                 <div class="fin-card-sub">{{ summary?.loans?.active_count || 0 }} active / overdue loans</div>
               </div>
               <div class="fin-card fin-card-amber">
-                <div class="fin-card-label">Machinery Outstanding</div>
-                <div class="fin-card-value">₱{{ formatNumber(summary?.machinery?.outstanding_balance || 0) }}</div>
+                <div class="fin-card-label">{{ $t('ui.machineryOutstanding') }}</div>
+                <div class="fin-card-value">{{ formatCurrency(summary?.machinery?.outstanding_balance || 0) }}</div>
                 <div class="fin-card-sub">{{ summary?.machinery?.unpaid_count || 0 }} unpaid bookings</div>
               </div>
             </div>
@@ -321,15 +251,12 @@
               Personal Information
             </h3>
             <div class="personal-info-grid">
-              <div class="pi-item"><div class="pi-label">Date of Birth</div><div class="pi-value">{{ formatDate(selectedFarmer.date_of_birth) }}</div></div>
-              <div class="pi-item"><div class="pi-label">Educational Status</div><div class="pi-value">{{ selectedFarmer.educational_status || 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Membership Status</div><div class="pi-value capitalize">{{ selectedFarmer.membership_status || 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Membership Type</div><div class="pi-value">{{ selectedFarmer.membership_type || 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Primary Crop</div><div class="pi-value">{{ selectedFarmer.primary_crop || 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Land Area</div><div class="pi-value">{{ selectedFarmer.land_area ? selectedFarmer.land_area + ' sq.m' : 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Farm Location</div><div class="pi-value">{{ selectedFarmer.farm_location || 'N/A' }}</div></div>
-              <div class="pi-item"><div class="pi-label">Registered On</div><div class="pi-value">{{ formatDate(selectedFarmer.registered_on) }}</div></div>
-              <div class="pi-item"><div class="pi-label">Last Activity</div><div class="pi-value">{{ formatDateTime(selectedFarmer.last_activity) || 'N/A' }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.dateOfBirth') }}</div><div class="pi-value">{{ formatDate(selectedFarmer.date_of_birth) }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.educationalStatus') }}</div><div class="pi-value">{{ selectedFarmer.educational_status || 'N/A' }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.membershipStatus') }}</div><div class="pi-value capitalize">{{ selectedFarmer.membership_status || 'N/A' }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.landArea') }}</div><div class="pi-value">{{ selectedFarmer.land_area ? selectedFarmer.land_area + ' sq.m' : 'N/A' }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.farmLocation') }}</div><div class="pi-value">{{ selectedFarmer.farm_location || 'N/A' }}</div></div>
+              <div class="pi-item"><div class="pi-label">{{ $t('ui.registeredOn') }}</div><div class="pi-value">{{ formatDate(selectedFarmer.registered_on) }}</div></div>
             </div>
           </div>
 
@@ -340,20 +267,20 @@
                 <path d="M12 3V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <path d="M16.5 7.5C16.5 6.11929 14.4853 5 12 5C9.51472 5 7.5 6.11929 7.5 7.5C7.5 8.88071 9.51472 10 12 10C14.4853 10 16.5 11.1193 16.5 12.5C16.5 13.8807 14.4853 15 12 15C9.51472 15 7.5 13.8807 7.5 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Share Capital
+              {{ $t('ui.shareCapital') }}
             </h3>
             <div class="share-cards-grid">
               <div class="fin-card fin-card-green">
-                <div class="fin-card-label">Contributed</div>
-                <div class="fin-card-value">₱{{ formatNumber(summary?.shareCapital?.totals?.total_contributed || 0) }}</div>
+                <div class="fin-card-label">{{ $t('ui.contributed') }}</div>
+                <div class="fin-card-value">{{ formatCurrency(summary?.shareCapital?.totals?.total_contributed || 0) }}</div>
               </div>
               <div class="fin-card fin-card-red">
-                <div class="fin-card-label">Withdrawn</div>
-                <div class="fin-card-value">₱{{ formatNumber(summary?.shareCapital?.totals?.total_withdrawn || 0) }}</div>
+                <div class="fin-card-label">{{ $t('ui.withdrawn') }}</div>
+                <div class="fin-card-value">{{ formatCurrency(summary?.shareCapital?.totals?.total_withdrawn || 0) }}</div>
               </div>
               <div class="fin-card fin-card-purple">
-                <div class="fin-card-label">Balance</div>
-                <div class="fin-card-value">₱{{ formatNumber(summary?.shareCapital?.totals?.balance || 0) }}</div>
+                <div class="fin-card-label">{{ $t('ui.balance') }}</div>
+                <div class="fin-card-value">{{ formatCurrency(summary?.shareCapital?.totals?.balance || 0) }}</div>
               </div>
             </div>
           </div>
@@ -365,13 +292,13 @@
                 <path d="M8 12L10.5 14.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M12 3L19 7V12C19 16.4183 15.866 20.1744 12 21C8.13401 20.1744 5 16.4183 5 12V7L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
               </svg>
-              Tulong na Natanggap <span class="count-chip">{{ summary?.assistance?.count || 0 }}</span>
+              {{ $t('incomeForm.assistanceReceived') }} <span class="count-chip">{{ summary?.assistance?.count || 0 }}</span>
             </h3>
             <div v-if="(summary?.assistance?.items || []).length" class="assistance-list">
               <div v-for="a in summary.assistance.items" :key="a.id" class="assistance-item">
                 <div class="assist-left">
                   <div class="assist-type capitalize">{{ a.assistance_type }}</div>
-                  <div class="assist-meta">{{ a.quantity }} {{ a.unit || '' }} • {{ formatDateTime(a.created_at) }}</div>
+                  <div class="assist-meta">{{ a.quantity }} {{ a.unit || '' }} - {{ formatDateTime(a.created_at) }}</div>
                 </div>
                 <span
                   class="assist-badge"
@@ -388,7 +315,7 @@
                   <path d="M5 8L12 13L19 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <div class="empty-text">No assistance records received yet.</div>
+              <div class="empty-text">{{ $t('ui.noAssistanceYet') }}</div>
             </div>
           </div>
 
@@ -410,6 +337,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+const isAgriculturist = computed(() => authStore.currentUser?.role === 'agriculturist')
 
 const pageError = ref('')
 const farmers = ref([])
@@ -460,8 +388,8 @@ const getProfilePictureUrl = (profilePicture) => {
   if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
     return profilePicture
   }
-  // Otherwise, prepend localhost for uploaded pictures
-  return `http://localhost:3000${profilePicture}`
+  // Relative path works via Vite proxy (localhost + phone on same Wi-Fi)
+  return `${profilePicture}`
 }
 
 const isAllowed = computed(() => {
@@ -529,13 +457,32 @@ const refreshSummary = async () => {
 
     const loansList = loansRaw?.loans || []
     const unpaidBookings = machineryBalanceRaw?.unpaid_bookings || []
+    const shareTotals = shareCapitalRaw?.totals || {}
 
     summary.value = {
       assistance: {
         count: Array.isArray(assistanceRaw) ? assistanceRaw.length : 0,
         items: Array.isArray(assistanceRaw) ? assistanceRaw : []
       },
-      shareCapital: shareCapitalRaw || null,
+      shareCapital: shareCapitalRaw
+        ? {
+            ...shareCapitalRaw,
+            totals: {
+              ...shareTotals,
+              // Normalize API field names for Members Summary UI
+              total_contributed:
+                shareTotals.total_savings ??
+                shareTotals.share_capital_collected ??
+                shareTotals.total_contributed ??
+                0,
+              total_withdrawn: shareTotals.total_withdrawn ?? 0,
+              balance:
+                shareTotals.withdrawable_balance ??
+                shareTotals.balance ??
+                0
+            }
+          }
+        : null,
       loans: buildLoanSummary(loansList),
       machinery: {
         outstanding_balance: machineryBalanceRaw?.total_outstanding_balance || 0,
@@ -552,15 +499,14 @@ const refreshSummary = async () => {
 const selectFarmer = async (f) => {
   selectedFarmer.value = f
   activeTab.value = 'overview'
-  // Fetch complete farmer profile to get all fields including primary_crop, membership_type, last_activity
   try {
     const fullProfile = await fetchJson(`/api/farmers/${f.id}/profile`)
-    if (fullProfile) {
-      selectedFarmer.value = { ...selectedFarmer.value, ...fullProfile }
+    const farmerData = fullProfile?.farmer || fullProfile
+    if (farmerData && typeof farmerData === 'object') {
+      selectedFarmer.value = { ...selectedFarmer.value, ...farmerData }
     }
   } catch (e) {
     console.error('Could not fetch full profile:', e.message)
-    // Continue with partial data if full profile fetch fails
   }
   await refreshSummary()
 }
@@ -575,6 +521,7 @@ const resetSelection = () => {
 const goToMembersManagement = () => router.push('/farmers-table')
 
 const formatNumber = (num) => new Intl.NumberFormat('en-PH').format(num || 0)
+const formatCurrency = (num) => `\u20B1${formatNumber(num)}`
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const d = new Date(dateString)
@@ -602,6 +549,259 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.members-summary-page {
+  font-family: var(--glass-font, 'Plus Jakarta Sans', 'Segoe UI', sans-serif);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
+}
+
+.members-summary-page :is(h1, h2, h3, h4, button, input, label, table, th, td, span, p, div) {
+  font-family: inherit;
+}
+
+.ms-page-inner {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Header — match Share Capital page-header-split */
+.members-summary-page .page-header,
+.members-summary-page .page-header-split {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(28, 42, 33, 0.92);
+  border: 1px solid rgba(190, 235, 203, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3), inset 1px 1px 0 rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+
+.members-summary-page .page-header-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.members-summary-page .page-header::before,
+.members-summary-page .page-header-split::before {
+  content: '';
+  position: absolute;
+  top: -62px;
+  right: -72px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.members-summary-page .page-header::after,
+.members-summary-page .page-header-split::after {
+  content: '';
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.42), rgba(45, 212, 191, 0.12));
+  pointer-events: none;
+}
+
+.members-summary-page .page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.15rem;
+  color: #eefde6;
+  text-align: left;
+}
+
+.members-summary-page .page-subtitle {
+  color: rgba(229, 235, 231, 0.82);
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-weight: 700;
+  text-align: left;
+}
+
+.members-summary-page .page-header-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.ms-search-results {
+  background: transparent;
+}
+
+.ms-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ms-search-result:last-child {
+  border-bottom: none;
+}
+
+.ms-search-result:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.ms-search-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: inherit;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.ms-search-ref {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .ms-search-panel {
+    padding: 0.85rem !important;
+    border-radius: 14px !important;
+  }
+
+  .ms-search-results {
+    border-radius: 10px;
+  }
+
+  .ms-search-result {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.2rem;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0.7rem 0.85rem;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .ms-search-name {
+    display: block;
+    width: 100%;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    font-weight: 700;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .ms-search-ref {
+    display: block;
+    width: 100%;
+    flex-shrink: 1;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    opacity: 0.78;
+  }
+
+  .members-summary-page {
+    padding: 0.75rem !important;
+  }
+
+  .members-summary-page .page-header,
+  .members-summary-page .page-header-split {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.95rem;
+    gap: 0.55rem;
+  }
+
+  .members-summary-page .page-header::after,
+  .members-summary-page .page-header-split::after {
+    display: none;
+  }
+
+  .members-summary-page .page-header-text {
+    gap: 0.15rem;
+  }
+
+  .members-summary-page .page-title {
+    font-size: 1.2rem !important;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .members-summary-page .page-subtitle {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .members-summary-page .page-header-actions {
+    width: 100%;
+    justify-content: stretch;
+    gap: 0.4rem;
+  }
+
+  .back-to-management-btn,
+  .back-to-members-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.75rem;
+    border-radius: 9px;
+  }
+
+  .back-btn-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .ms-search-panel input[type="text"] {
+    min-height: 2.45rem;
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.88rem !important;
+  }
+}
+
 .back-to-management-btn {
   display: inline-flex;
   align-items: center;
@@ -864,13 +1064,24 @@ onMounted(async () => {
   font-size: 22px;
 }
 
-/* ── Dark green theme — only when dark mode is active ── */
+/* â”€â”€ Dark green theme â€” only when dark mode is active â”€â”€ */
 .members-summary-page:not(.light-theme) {
   background: linear-gradient(145deg, #0a1a0f 0%, #0f2518 30%, #163020 60%, #1c3d28 100%) !important;
 }
 
-.members-summary-page:not(.light-theme) :is(h1, .text-gray-800) { color: #ffffff !important; }
-.members-summary-page:not(.light-theme) .text-gray-500 { color: rgba(200, 235, 210, 0.7) !important; }
+.members-summary-page:not(.light-theme) .ms-search-result {
+  border-bottom-color: rgba(100, 200, 130, 0.15) !important;
+  color: #ffffff !important;
+}
+.members-summary-page:not(.light-theme) .ms-search-result:hover {
+  background: rgba(100, 200, 130, 0.12) !important;
+}
+.members-summary-page:not(.light-theme) .ms-search-ref {
+  color: rgba(200, 235, 210, 0.75) !important;
+}
+
+.members-summary-page:not(.light-theme) :is(h1, .page-title, .text-gray-800) { color: #eefde6 !important; }
+.members-summary-page:not(.light-theme) :is(.text-gray-500, .page-subtitle) { color: rgba(229, 235, 231, 0.82) !important; }
 .members-summary-page:not(.light-theme) button.border { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.18) !important; color: #ffffff !important; }
 .members-summary-page:not(.light-theme) .bg-white { background: rgba(20, 45, 28, 0.95) !important; border-color: rgba(100, 200, 130, 0.18) !important; color: #ffffff !important; }
 .members-summary-page:not(.light-theme) input[type="text"] { background: rgba(0, 0, 0, 0.3) !important; border-color: rgba(100, 200, 130, 0.3) !important; color: #ffffff !important; }
@@ -900,9 +1111,9 @@ onMounted(async () => {
 .members-summary-page:not(.light-theme) .bg-green-100 { background: rgba(20, 90, 45, 0.5) !important; }
 .members-summary-page:not(.light-theme) .text-green-800 { color: #a8f0c0 !important; }
 
-/* ══════════════════════════════════════════════════════
-   FARMER PROFILE REDESIGN — Modern Card UI
-   ══════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   FARMER PROFILE REDESIGN â€” Modern Card UI
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .profile-wrapper {
   display: flex;
@@ -910,7 +1121,7 @@ onMounted(async () => {
   gap: 14px;
 }
 
-/* ── Hero Card ── */
+/* â”€â”€ Hero Card â”€â”€ */
 .profile-hero {
   background: linear-gradient(145deg, #0d2416 0%, #112b1a 50%, #163520 100%);
   border: 1px solid rgba(100, 200, 130, 0.22);
@@ -942,24 +1153,6 @@ onMounted(async () => {
 }
 .refresh-btn:hover:not(:disabled) { background: rgba(100, 200, 130, 0.13); }
 .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.hero-actions { display: flex; gap: 10px; }
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.btn-edit  { background: rgba(59,130,246,0.14); color: #93c5fd; border: 1px solid rgba(59,130,246,0.28); }
-.btn-edit:hover  { background: rgba(59,130,246,0.24); }
-.btn-delete { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.24); }
-.btn-delete:hover { background: rgba(239,68,68,0.22); }
 
 /* Identity row */
 .hero-identity {
@@ -1046,11 +1239,163 @@ onMounted(async () => {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
+@media (max-width: 768px) {
+  .profile-wrapper {
+    gap: 0.65rem;
+  }
+
+  .profile-hero {
+    padding: 0.85rem 0.9rem 0.8rem;
+    border-radius: 14px;
+  }
+
+  .hero-topbar {
+    margin-bottom: 0.75rem;
+  }
+
+  .refresh-btn {
+    min-height: 2.2rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.72rem;
+    border-radius: 8px;
+  }
+
+  .hero-name {
+    font-size: 1.05rem !important;
+    line-height: 1.25;
+  }
+
+  .hero-since {
+    font-size: 0.7rem !important;
+  }
+
+  .info-tile {
+    gap: 0.55rem;
+    padding: 0.65rem 0.7rem;
+    border-radius: 10px;
+  }
+
+  .info-tile-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+    border-radius: 7px;
+  }
+
+  .info-tile-label {
+    font-size: 0.58rem;
+  }
+
+  .info-tile-value,
+  .ref-highlight {
+    font-size: 0.78rem;
+  }
+
+  .profile-tabs-nav {
+    flex-wrap: nowrap !important;
+    gap: 3px;
+    padding: 4px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  .tab-pill {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 0.55rem 0.2rem !important;
+    font-size: 0.7rem !important;
+    gap: 3px !important;
+    border-radius: 8px !important;
+    min-height: 2.4rem;
+  }
+
+  .tab-pill-icon {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  .tab-pill-label-full { display: none !important; }
+  .tab-pill-label-short { display: inline !important; }
+
+  .tab-content-area {
+    padding: 0.75rem !important;
+    border-radius: 12px !important;
+  }
+
+  .tab-section-heading {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.55rem !important;
+  }
+
+  .fin-cards-grid,
+  .share-cards-grid {
+    gap: 0.5rem !important;
+  }
+
+  .fin-card {
+    padding: 0.7rem 0.75rem !important;
+    border-radius: 10px !important;
+  }
+
+  .fin-card-label {
+    font-size: 0.62rem !important;
+  }
+
+  .fin-card-value {
+    font-size: 0.95rem !important;
+  }
+
+  .fin-card-sub {
+    font-size: 0.65rem !important;
+  }
+
+  .pi-item,
+  .assistance-item {
+    padding: 0.55rem 0.65rem !important;
+  }
+
+  .pi-label,
+  .assist-meta {
+    font-size: 0.62rem !important;
+  }
+
+  .pi-value,
+  .assist-type {
+    font-size: 0.78rem !important;
+  }
+}
+
 @media (max-width: 640px) {
-  .quick-info-grid { grid-template-columns: 1fr; }
-  .hero-identity    { flex-direction: column; align-items: flex-start; }
+  .members-summary-page {
+    padding: 0.65rem !important;
+  }
+
+  .quick-info-grid { grid-template-columns: 1fr; gap: 0.45rem; }
+  .hero-identity    { flex-direction: column; align-items: flex-start; gap: 0.65rem; }
   .fin-cards-grid, .share-cards-grid { grid-template-columns: 1fr !important; }
   .personal-info-grid { grid-template-columns: 1fr !important; }
+
+  .hero-topbar {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .hero-avatar,
+  .hero-avatar-fallback {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+    min-width: 3.25rem !important;
+    min-height: 3.25rem !important;
+  }
+
+  .members-summary-page .page-title {
+    font-size: 1.1rem !important;
+  }
+
+  .back-to-management-btn,
+  .back-to-members-btn {
+    width: 100%;
+  }
 }
 
 .info-tile {
@@ -1089,7 +1434,7 @@ onMounted(async () => {
   color: #edf8f1; line-height: 1.35; word-break: break-word;
 }
 .info-tile-value-row { display: flex; align-items: center; gap: 8px; }
-.ref-highlight { font-size: 14px; font-weight: 700; color: #86efac; font-family: monospace; }
+.ref-highlight { font-size: 14px; font-weight: 700; color: #86efac; }
 
 .copy-btn {
   background: rgba(100,200,130,0.11);
@@ -1109,23 +1454,36 @@ onMounted(async () => {
   border-radius: 10px; color: #fca5a5; font-size: 14px;
 }
 
-/* ── Tab Navigation ── */
+/* â”€â”€ Tab Navigation â”€â”€ */
 .profile-tabs-nav {
-  display: flex; gap: 6px; flex-wrap: wrap;
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
   background: rgba(10, 24, 15, 0.7);
-  padding: 7px; border-radius: 14px;
+  padding: 7px;
+  border-radius: 14px;
   border: 1px solid rgba(100,200,130,0.12);
 }
 .tab-pill {
-  flex: 1; min-width: 90px;
-  padding: 10px 14px; border-radius: 10px;
-  font-size: 13px; font-weight: 600;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
   color: rgba(200,235,210,0.6);
-  background: transparent; border: none;
-  cursor: pointer; transition: all 0.2s ease;
-  text-align: center; white-space: nowrap;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
+.tab-pill-label-short { display: none; }
 .tab-pill:hover:not(.active) { background: rgba(100,200,130,0.08); color: rgba(200,235,210,0.9); }
 .tab-pill.active {
   background: rgba(100,200,130,0.18);
@@ -1133,7 +1491,7 @@ onMounted(async () => {
   box-shadow: 0 1px 6px rgba(0,0,0,0.25);
 }
 
-/* ── Tab Content Area ── */
+/* â”€â”€ Tab Content Area â”€â”€ */
 .tab-content-area {
   background: rgba(10, 24, 15, 0.6);
   border: 1px solid rgba(100,200,130,0.12);
@@ -1232,16 +1590,25 @@ onMounted(async () => {
 .empty-icon  { margin-bottom: 12px; }
 .empty-text  { font-size: 14px; }
 
-/* ===== LIGHT MODE — Senior-friendly bright theme ===== */
+/* ===== LIGHT MODE â€” Senior-friendly bright theme ===== */
 .members-summary-page.light-theme {
   background: linear-gradient(160deg, #f7fdf9 0%, #f0fdf4 45%, #e8f8ec 100%) !important;
   color: #052e16;
 }
 
+.members-summary-page.light-theme .page-header,
+.members-summary-page.light-theme .page-header-split {
+  background: #ffffff !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 8px 26px rgba(22, 101, 52, 0.12), inset 1px 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.members-summary-page.light-theme .page-title,
 .members-summary-page.light-theme :is(h1, .text-gray-800) {
   color: #052e16 !important;
 }
 
+.members-summary-page.light-theme .page-subtitle,
 .members-summary-page.light-theme :is(.text-gray-500, .text-gray-600, .text-gray-700) {
   color: #166534 !important;
 }

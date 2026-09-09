@@ -172,6 +172,35 @@ async function getPaymentReceipt(pool, receiptNumber) {
     }
   }
 
+  if (receipt?.module === 'operator_labor' && receipt.reference_id) {
+    const [incomeRows] = await pool.execute(
+      `SELECT oi.*, mi.machinery_name, op.full_name AS operator_name,
+              f.full_name AS farmer_name, mb.booking_date
+       FROM operator_income oi
+       LEFT JOIN machinery_inventory mi ON oi.machinery_id = mi.id
+       LEFT JOIN farmers op ON oi.operator_id = op.id
+       LEFT JOIN machinery_bookings mb ON oi.booking_id = mb.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
+       WHERE oi.id = ?`,
+      [receipt.reference_id]
+    );
+    if (incomeRows[0]) {
+      const incomeRow = incomeRows[0];
+      receipt.metadata = receipt.metadata && typeof receipt.metadata === 'object'
+        ? receipt.metadata
+        : {};
+      receipt.metadata.machinery_name = incomeRow.machinery_name || receipt.metadata.machinery_name;
+      receipt.metadata.operator_name = incomeRow.operator_name || receipt.metadata.operator_name;
+      receipt.metadata.farmer_name = incomeRow.farmer_name || null;
+      receipt.metadata.labor_cost_amount = incomeRow.labor_cost_amount;
+      receipt.metadata.booking_id = incomeRow.booking_id;
+      if (!receipt.client_name) receipt.client_name = incomeRow.operator_name;
+      if (!receipt.payment_for) {
+        receipt.payment_for = receipt.remarks || `Labor compensation — ${incomeRow.machinery_name || 'Machinery'}`;
+      }
+    }
+  }
+
   return receipt;
 }
 

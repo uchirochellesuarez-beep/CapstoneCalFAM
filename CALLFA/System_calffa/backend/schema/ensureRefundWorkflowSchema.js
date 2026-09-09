@@ -1,11 +1,22 @@
 /**
- * Extends machinery_booking_refunds for farmer-requested refund workflow.
+ * Ensures machinery down-payment refund tables and columns exist.
+ * Farmers can request refunds when a paid booking ends Incomplete / Expired / Cancelled
+ * (slot lost or service not completed) without machine use.
  */
 async function columnExists(pool, table, column) {
   const [rows] = await pool.execute(
     `SELECT 1 FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column]
+  );
+  return rows.length > 0;
+}
+
+async function tableExists(pool, table) {
+  const [rows] = await pool.execute(
+    `SELECT 1 FROM information_schema.TABLES
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+    [table]
   );
   return rows.length > 0;
 }
@@ -18,6 +29,43 @@ async function ensureRefundWorkflowSchema(pool) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  if (!(await tableExists(pool, 'machinery_booking_refunds'))) {
+    await pool.execute(`
+      CREATE TABLE machinery_booking_refunds (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        booking_id INT NOT NULL,
+        farmer_id INT NOT NULL,
+        refund_number VARCHAR(32) NULL,
+        refund_amount DECIMAL(10,2) NOT NULL,
+        original_down_payment DECIMAL(10,2) NULL,
+        machinery_id INT NULL,
+        machinery_name VARCHAR(255) NULL,
+        farmer_name VARCHAR(255) NULL,
+        reason TEXT,
+        refund_reason TEXT NULL,
+        refund_status ENUM(
+          'Refund Requested','Under Review','Approved','Rejected','Refunded',
+          'Pending','Processed'
+        ) DEFAULT 'Refund Requested',
+        requested_at DATETIME NULL,
+        reviewed_by INT NULL,
+        reviewed_at DATETIME NULL,
+        approved_by INT NULL,
+        rejection_reason TEXT NULL,
+        refund_date DATE NULL,
+        processed_by INT NULL,
+        processed_at DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_booking_id (booking_id),
+        INDEX idx_farmer_id (farmer_id),
+        UNIQUE KEY unique_booking_refund (booking_id),
+        UNIQUE KEY uk_refund_number (refund_number)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log('✅ Created machinery_booking_refunds table');
+  }
 
   const refundColumns = [
     { name: 'refund_number', sql: 'VARCHAR(32) NULL' },
@@ -103,12 +151,28 @@ async function ensureRefundWorkflowSchema(pool) {
     console.log(`✅ Migrated ${legacy[0].cnt} legacy Awaiting Final Payment booking(s) to Completed`);
   }
 
-  // Remove income rows for bookings that were already refunded
+  // Keep income consistent for already-refunded bookings
   await pool.execute(`
     DELETE minc FROM machinery_income minc
     INNER JOIN machinery_booking_refunds r ON r.booking_id = minc.booking_id
     WHERE r.refund_status IN ('Refunded', 'Processed')
   `);
+
+  // payment_status may need Refunded for processed refunds
+  const [payStatusCol] = await pool.execute(
+    "SHOW COLUMNS FROM machinery_bookings LIKE 'payment_status'"
+  );
+  if (payStatusCol.length > 0) {
+    const typeDef = String(payStatusCol[0].Type || '');
+    if (!typeDef.includes("'Refunded'")) {
+      await pool.query(`
+        ALTER TABLE machinery_bookings
+        MODIFY COLUMN payment_status ENUM('Unpaid','Partial','Paid','Refunded') DEFAULT 'Unpaid'
+      `);
+      console.log('✅ Extended machinery_bookings.payment_status with Refunded');
+    }
+  }
+
   await pool.execute(`
     UPDATE machinery_bookings mb
     INNER JOIN machinery_booking_refunds r ON r.booking_id = mb.id

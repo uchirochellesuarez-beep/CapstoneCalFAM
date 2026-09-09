@@ -1,0 +1,225 @@
+/* Barangays page — stable global layout (loaded from main.js) */
+
+.page-container.barangays-page.barangays-ui {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.page-container.barangays-page.barangays-ui .stat-icon-wrap {
+  display: none !important;
+}
+
+.page-container.barangays-page.barangays-ui .stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-container.barangays-page.barangays-ui .stats-grid--barangays {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.page-container.barangays-page.barangays-ui .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.page-container.barangays-page.barangays-ui .barangays-desktop-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(24rem, 55vh);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.page-container.barangays-page.barangays-ui .barangays-table {
+  min-width: 42rem;
+  width: 100%;
+}
+
+.page-container.barangays-page.barangays-ui .barangays-action-row {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.page-container.barangays-page.barangays-ui .barangays-icon-btn {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+}
+
+@media (max-width: 768px) {
+  .page-container.barangays-page.barangays-ui .stats-grid--barangays {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.barangays-page.barangays-ui {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 8px 12px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .page-header,
+  html body .page-container.barangays-page.barangays-ui .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .btn-header-add {
+    padding: 4px 10px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .btn-header-icon {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stats-group {
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stats-grid--barangays {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    border-left-width: 3px !important;
+    gap: 0 !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stat-label {
+    font-size: 8px !important;
+    margin: 0 0 1px !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stat-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .tools-card {
+    padding: 5px 8px !important;
+    margin-bottom: 6px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .toolbar-input,
+  html body .page-container.barangays-page.barangays-ui .toolbar-select {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .search-input-main {
+    padding-left: 2rem !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .card {
+    padding: 6px 8px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .barangays-table {
+    font-size: 11px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .barangays-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .barangays-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .status-pill {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 999px !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .barangays-table col.col-actions {
+    width: 22% !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .page-container.barangays-page.barangays-ui .stats-grid.stats-grid--barangays {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  html body .page-container.barangays-page.barangays-ui .stat-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+}

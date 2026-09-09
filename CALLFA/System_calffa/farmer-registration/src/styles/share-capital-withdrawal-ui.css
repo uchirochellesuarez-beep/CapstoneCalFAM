@@ -1,0 +1,465 @@
+/* Share Capital Withdrawals — stable global layout (loaded from main.js, not Vue @import) */
+
+.share-capital-withdrawal-page .sc-tools-card.tools-card {
+  --tools-h: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+}
+
+.share-capital-withdrawal-page .sc-tools-card .tools-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.share-capital-withdrawal-page .sc-tools-card .search-bar {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--tools-h);
+}
+
+.share-capital-withdrawal-page .sc-tools-card .search-icon-wrap {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(186, 240, 200, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.share-capital-withdrawal-page .sc-tools-card .search-svg {
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.share-capital-withdrawal-page .sc-tools-card .toolbar-input.search-input-main {
+  width: 100%;
+  height: var(--tools-h);
+  min-height: var(--tools-h);
+  padding: 0 0.65rem 0 2rem;
+  border-radius: 6px;
+  border: 1px solid rgba(190, 235, 203, 0.22);
+  background: rgba(10, 18, 14, 0.55);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  box-sizing: border-box;
+}
+
+.share-capital-withdrawal-page.light-theme .sc-tools-card.tools-card {
+  background: #f8fdf9 !important;
+  border-bottom-color: #bbf7d0 !important;
+}
+
+.share-capital-withdrawal-page.light-theme .sc-tools-card .toolbar-input.search-input-main {
+  background: #ffffff !important;
+  border-color: #94a3b8 !important;
+  color: #000000 !important;
+}
+
+.share-capital-withdrawal-page .stats-grid {
+  display: grid !important;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.share-capital-withdrawal-page .stats-grid--withdrawal {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.share-capital-withdrawal-page .stat-card {
+  min-width: 0;
+}
+
+.share-capital-withdrawal-page .grid-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.share-capital-withdrawal-page .grid-2 > .card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.share-capital-withdrawal-page .sc-member-detail-card {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .share-capital-withdrawal-page .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .share-capital-withdrawal-page .stats-grid--withdrawal {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page {
+    padding: 8px 12px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    border-radius: 12px !important;
+    min-height: 0 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-header,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-header-split {
+    margin-bottom: 6px !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-header-text {
+    gap: 2px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page h1.page-title,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-title {
+    font-size: 1.05rem !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-subtitle {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-header::before {
+    top: -36px !important;
+    right: -44px !important;
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .page-header::after {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 0.35rem !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content--main {
+    padding-top: 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .info-banner {
+    padding: 6px 10px !important;
+    margin-bottom: 6px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stats-group {
+    margin-bottom: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stats-grid {
+    display: grid !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stat-card {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stat-label {
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stat-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stats-grid--withdrawal {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .card {
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .card-header {
+    gap: 6px !important;
+    padding: 5px 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .card-title {
+    font-size: 0.82rem !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .card-header .btn-primary-action {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    min-height: 28px !important;
+    white-space: nowrap !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-tools-card.tools-card {
+    --tools-h: 28px;
+    gap: 4px !important;
+    padding: 5px 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-tools-card .toolbar-input.search-input-main {
+    font-size: 11px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .admin-filter-bar {
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    padding: 5px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .admin-filter-label,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .admin-filter-hint {
+    font-size: 10px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .table-container {
+    padding: 5px 8px 6px !important;
+    overflow: hidden !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .fin-desktop-table,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .withdrawal-history-desktop {
+    max-height: min(22rem, 52vh) !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .withdrawal-history-desktop {
+    max-height: min(11rem, 32vh) !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page table.data-table {
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table th {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table tbody tr {
+    height: 1.9rem !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content table.data-table tbody td.amount,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table td.td-amount {
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .tab-content .data-table .btn-small {
+    padding: 2px 7px !important;
+    font-size: 10px !important;
+    min-height: 24px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page td.actions-cell .table-action-btn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    border-radius: 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page td.actions-cell .table-action-btn svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .table-empty {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger
+  ) {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    min-height: 28px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .btn-small {
+    padding: 2px 7px !important;
+    font-size: 10px !important;
+    min-height: 24px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .input,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page select.input {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    border-width: 1px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .sc-member-detail-body {
+    padding: 6px 8px 8px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .withdrawal-form-grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 0.85fr) minmax(0, 1fr) auto !important;
+    gap: 3px 6px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .payment-field .inline-label {
+    font-size: 7px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .payment-field .input {
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .withdrawal-submit-btn {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    min-height: 26px !important;
+    height: 26px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .sc-member-detail-card .ledger-table-withdrawal-history {
+    min-width: 0 !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .ledger-table-withdrawal-members {
+    min-width: 32rem !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .empty-state {
+    padding: 14px 10px !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .empty-title {
+    font-size: 0.85rem !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .empty-text,
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .ledger-note {
+    font-size: 11px !important;
+  }
+
+  body.glass-dark .financial-container.share-capital-withdrawal-page.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger,
+    .btn-small
+  ),
+  body.glass-light .financial-container.share-capital-withdrawal-page.glass-module-page :is(
+    .btn,
+    .btn-primary-action,
+    .btn-muted,
+    .btn-success,
+    .btn-danger,
+    .btn-small
+  ) {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .fin-desktop-table {
+    max-height: min(20rem, 48vh) !important;
+  }
+}
+
+/* Layout lock — stable on refresh and client-side navigation */
+@media (min-width: 769px) {
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .stats-grid.stats-grid--withdrawal {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+
+  html body .financial-container.share-capital-withdrawal-page.glass-module-page .grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}

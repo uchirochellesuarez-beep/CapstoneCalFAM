@@ -1,20 +1,11 @@
 /**
- * Schema for 20% down payment booking workflow.
+ * Schema for configurable machinery down-payment booking workflow.
  */
 async function columnExists(pool, table, column) {
   const [rows] = await pool.execute(
     `SELECT 1 FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column]
-  );
-  return rows.length > 0;
-}
-
-async function tableExists(pool, table) {
-  const [rows] = await pool.execute(
-    `SELECT 1 FROM information_schema.TABLES
-     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
-    [table]
   );
   return rows.length > 0;
 }
@@ -40,7 +31,8 @@ async function ensureDownPaymentSchema(pool) {
   }
 
   const bookingColumns = [
-    { name: 'down_payment_amount', sql: 'DECIMAL(10,2) NULL COMMENT \'20% down payment required\'' },
+    { name: 'down_payment_amount', sql: 'DECIMAL(10,2) NULL COMMENT \'Required down payment amount\'' },
+    { name: 'down_payment_percent', sql: 'DECIMAL(5,2) NULL COMMENT \'Percent used when this booking was approved\'' },
     { name: 'down_payment_method', sql: "ENUM('Cash','GCash') NULL" },
     { name: 'down_payment_proof', sql: 'VARCHAR(500) NULL COMMENT \'Uploaded GCash screenshot path\'' },
     { name: 'down_payment_reference', sql: 'VARCHAR(100) NULL' },
@@ -68,33 +60,23 @@ async function ensureDownPaymentSchema(pool) {
     console.log('✅ Added machinery_booking_payments.payment_type');
   }
 
-  if (!(await tableExists(pool, 'machinery_booking_refunds'))) {
-    await pool.execute(`
-      CREATE TABLE machinery_booking_refunds (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        booking_id INT NOT NULL,
-        farmer_id INT NOT NULL,
-        refund_amount DECIMAL(10,2) NOT NULL,
-        reason TEXT,
-        refund_status ENUM('Pending','Processed','Rejected') DEFAULT 'Pending',
-        processed_by INT NULL,
-        processed_at DATETIME NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_booking_id (booking_id),
-        INDEX idx_farmer_id (farmer_id),
-        UNIQUE KEY unique_booking_refund (booking_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-    console.log('✅ Created machinery_booking_refunds table');
-  }
+  const barangayColumns = [
+    {
+      name: 'machinery_down_payment_enabled',
+      sql: "TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1=require machinery down payment, 0=pay after service'"
+    },
+    {
+      name: 'machinery_down_payment_percent',
+      sql: "DECIMAL(5,2) NULL COMMENT 'President-set down payment percent'"
+    }
+  ];
 
-  // Migrate legacy Approved bookings that blocked calendar → Booking Confirmed
-  await pool.execute(`
-    UPDATE machinery_bookings
-    SET status = 'Booking Confirmed'
-    WHERE status = 'Approved'
-  `);
+  for (const col of barangayColumns) {
+    if (!(await columnExists(pool, 'barangays', col.name))) {
+      await pool.execute(`ALTER TABLE barangays ADD COLUMN ${col.name} ${col.sql}`);
+      console.log(`✅ Added barangays.${col.name}`);
+    }
+  }
 }
 
 module.exports = { ensureDownPaymentSchema };

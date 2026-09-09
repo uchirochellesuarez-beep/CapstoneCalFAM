@@ -30,11 +30,14 @@ export const useMachineryStore = defineStore('machinery', {
     error: null,
     selectedMachinery: null,
     selectedBooking: null,
-    machineryTypes: []
+    machineryTypes: [],
+    bookableFarmers: [],
+    bookingsFetchSeq: 0
   }),
 
   getters: {
-    availableMachinery: (state) => state.inventory.filter(m => m.status === 'Available'),
+    availableMachinery: (state) =>
+      state.inventory.filter((m) => (m.availability_status || m.status) === 'Available'),
     pendingBookings: (state) => state.bookings.filter(b => b.status === 'Pending'),
     approvedBookings: (state) => state.bookings.filter(b => b.status === 'Approved'),
     myBookings: (state) => (farmerId) => state.bookings.filter(b => b.farmer_id === farmerId),
@@ -454,6 +457,7 @@ export const useMachineryStore = defineStore('machinery', {
     async fetchBookings(filters = {}) {
       this.loading = true
       this.error = null
+      const fetchSeq = ++this.bookingsFetchSeq
       
       try {
         const params = new URLSearchParams(filters)
@@ -466,6 +470,7 @@ export const useMachineryStore = defineStore('machinery', {
         }
         
         const data = await response.json()
+        if (fetchSeq !== this.bookingsFetchSeq) return this.bookings
         this.bookings = data.bookings
         return data.bookings
       } catch (error) {
@@ -500,7 +505,7 @@ export const useMachineryStore = defineStore('machinery', {
       }
     },
 
-    async createBooking(bookingData) {
+    async createBooking(bookingData, { skipRefresh = false } = {}) {
       this.loading = true
       this.error = null
       
@@ -523,7 +528,9 @@ export const useMachineryStore = defineStore('machinery', {
           throw new Error(data.message || 'Failed to create booking')
         }
         
-        await this.fetchBookings() // Refresh bookings
+        if (!skipRefresh) {
+          await this.fetchBookings()
+        }
         return data
       } catch (error) {
         this.error = error.message
@@ -532,6 +539,16 @@ export const useMachineryStore = defineStore('machinery', {
       } finally {
         this.loading = false
       }
+    },
+
+    async fetchBookableFarmers() {
+      const response = await fetch(`${API_BASE_URL}/bookable-farmers`, {
+        headers: authHeadersOnly()
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Failed to fetch farmers')
+      this.bookableFarmers = data.farmers || []
+      return this.bookableFarmers
     },
 
     async approveBooking(id, approvalData) {
@@ -673,6 +690,17 @@ export const useMachineryStore = defineStore('machinery', {
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Failed to verify payment')
+      return data
+    },
+
+    async recordCashDownPayment(id, payload) {
+      const response = await fetch(`${API_BASE_URL}/bookings/${id}/record-down-payment`, {
+        method: 'POST',
+        headers: authJsonHeaders(),
+        body: JSON.stringify(payload)
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Failed to record down payment')
       return data
     },
 

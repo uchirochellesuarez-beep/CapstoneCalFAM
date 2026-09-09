@@ -3,6 +3,7 @@ const { calculateDownPayment, syncMachineryIncomeFromBooking } = require('./book
 const { generateReceiptNumber, recordPaymentReceipt } = require('./receipt-service');
 const { createPendingExpenseForBooking } = require('./pending-expense-service');
 const { formatLocalDate } = require('./notification-service');
+const { calculatePartialPaymentInterest } = require('./machinery-interest-service');
 
 async function verifyBalancePaymentSubmission(submissionId, verifiedBy, options = {}) {
   const { receiptNumber: manualReceipt } = options;
@@ -24,11 +25,13 @@ async function verifyBalancePaymentSubmission(submissionId, verifiedBy, options 
             mb.total_paid,
             mb.remaining_balance,
             mb.total_price,
+            mb.pending_interest,
             mb.status AS booking_status,
             mb.barangay_id,
             f.full_name AS farmer_name,
             mi.machinery_name,
-            mi.barangay_id
+            mi.barangay_id,
+            COALESCE(mi.interest_rate, 0) AS machinery_interest_rate
      FROM machinery_balance_payment_submissions s
      JOIN machinery_bookings mb ON s.booking_id = mb.id
      JOIN farmers f ON mb.farmer_id = f.id
@@ -52,6 +55,10 @@ async function verifyBalancePaymentSubmission(submissionId, verifiedBy, options 
 
   const payAmount = parseFloat(sub.amount) || 0;
   const remaining = parseFloat(sub.remaining_balance) || 0;
+  const currentTotalPaid = parseFloat(sub.total_paid || 0) || 0;
+  let totalPrice = parseFloat(sub.total_price) || 0;
+  const existingInterest = parseFloat(sub.pending_interest) || 0;
+  const machineryInterestRate = parseFloat(sub.machinery_interest_rate) || 0;
   if (payAmount <= 0) {
     const err = new Error('Invalid payment amount');
     err.status = 400;
@@ -65,15 +72,30 @@ async function verifyBalancePaymentSubmission(submissionId, verifiedBy, options 
 
   const paymentDate = formatLocalDate(new Date());
   const receipt = manualReceipt || (await generateReceiptNumber(pool));
-  const newTotalPaid = parseFloat(sub.total_paid || 0) + payAmount;
-  const newRemaining = Math.max(0, parseFloat(sub.total_price) - newTotalPaid);
+
+  const initialRemainingBalance = totalPrice - currentTotalPaid;
+  const isPartialPayment = payAmount < (initialRemainingBalance - 0.01);
+  let interestAmt = 0;
+  if (isPartialPayment && existingInterest <= 0) {
+    interestAmt = calculatePartialPaymentInterest(totalPrice, machineryInterestRate);
+  }
+  if (interestAmt > 0) {
+    totalPrice += interestAmt;
+    await pool.execute(
+      `UPDATE machinery_bookings SET total_price = ?, pending_interest = ?, interest_applied_date = ? WHERE id = ?`,
+      [totalPrice, interestAmt, paymentDate, sub.booking_id]
+    );
+  }
+
+  const newTotalPaid = currentTotalPaid + payAmount;
+  const newRemaining = Math.max(0, totalPrice - newTotalPaid);
   const isFullPayment = newRemaining <= 0.01;
   const paymentType = isFullPayment ? 'final_payment' : 'partial';
 
   const [payResult] = await pool.execute(
     `INSERT INTO machinery_booking_payments
-     (booking_id, payment_type, payment_date, amount, payment_method, receipt_number, remarks, recorded_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+     (booking_id, payment_type, payment_date, amount, payment_method, receipt_number, remarks, recorded_by, interest_amount, interest_applied, interest_season)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       sub.booking_id,
       paymentType,
@@ -82,7 +104,10 @@ async function verifyBalancePaymentSubmission(submissionId, verifiedBy, options 
       sub.payment_method,
       receipt,
       isFullPayment ? 'Final balance payment verified' : 'Partial balance payment verified',
-      verifiedBy
+      verifiedBy,
+      interestAmt > 0 ? interestAmt : 0,
+      interestAmt > 0 ? 1 : 0,
+      interestAmt > 0 ? 1 : 0
     ]
   );
 

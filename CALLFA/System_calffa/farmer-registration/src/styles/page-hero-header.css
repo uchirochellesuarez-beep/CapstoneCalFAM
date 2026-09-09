@@ -1,0 +1,79 @@
+/**
+ * Centered page hero headers — matches Machinery Booking Service layout.
+ * Title + subtitle stacked and centered inside .page-header.
+ */
+
+.page-header > .glass-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.page-header .header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.page-header .header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.page-header .hero-subtitle,
+.page-header .header-text .page-subtitle,
+.page-header .header-content .page-subtitle,
+.page-header .header-content .hero-subtitle {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-header.hero-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.page-header.hero-centered .page-subtitle {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-header.hero-centered-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.page-header.hero-centered-stack .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.page-header.glass-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

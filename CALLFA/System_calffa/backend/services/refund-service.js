@@ -1,6 +1,8 @@
 const pool = require('../db');
 
 const REFUND_ELIGIBLE_STATUSES = [
+  'Down Payment Verified',
+  'Booking Confirmed',
   'Incomplete',
   'Cancelled',
   'Rejected',
@@ -43,13 +45,19 @@ function isRefundEligible(booking) {
     return { eligible: false, reason: 'Machinery service was already rendered' };
   }
   if (!REFUND_ELIGIBLE_STATUSES.includes(booking.status)) {
-    return { eligible: false, reason: `Refunds are not available for status: ${booking.status}` };
+    return {
+      eligible: false,
+      reason: `Refunds are available after down payment is verified when the booking is not yet completed / machine not used (current: ${booking.status})`
+    };
   }
-  const downPaid = parseFloat(booking.total_paid) || parseFloat(booking.down_payment_amount) || 0;
+  const downPaid = parseFloat(booking.down_payment_amount) || parseFloat(booking.total_paid) || 0;
   if (downPaid <= 0 && !booking.down_payment_verified_at) {
     return { eligible: false, reason: 'No verified down payment to refund' };
   }
-  return { eligible: true, refundAmount: parseFloat(booking.down_payment_amount) || downPaid };
+  return {
+    eligible: true,
+    refundAmount: parseFloat(booking.down_payment_amount) || downPaid
+  };
 }
 
 /** SQL fragment: booking alias must be `mb` */
@@ -62,8 +70,8 @@ const REFUNDED_BOOKING_NOT_EXISTS_SQL = `
 `;
 
 /** Remove machinery income and zero paid amounts when a down payment is refunded. */
-async function reverseMachineryIncomeOnRefund(pool, bookingId) {
-  const [rows] = await pool.execute(
+async function reverseMachineryIncomeOnRefund(dbPool, bookingId) {
+  const [rows] = await dbPool.execute(
     'SELECT total_price FROM machinery_bookings WHERE id = ?',
     [bookingId]
   );
@@ -71,8 +79,8 @@ async function reverseMachineryIncomeOnRefund(pool, bookingId) {
 
   const totalPrice = parseFloat(rows[0].total_price) || 0;
 
-  await pool.execute('DELETE FROM machinery_income WHERE booking_id = ?', [bookingId]);
-  await pool.execute(
+  await dbPool.execute('DELETE FROM machinery_income WHERE booking_id = ?', [bookingId]);
+  await dbPool.execute(
     `UPDATE machinery_bookings
      SET total_paid = 0,
          remaining_balance = ?,

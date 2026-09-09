@@ -1,15 +1,21 @@
 <template>
-  <div v-if="show && src" class="proof-preview-overlay" @click.self="$emit('close')">
-    <div class="proof-preview-panel">
-      <div class="proof-preview-header">
-        <strong>{{ title }}</strong>
-        <button type="button" class="proof-preview-close" aria-label="Close" @click="$emit('close')">×</button>
-      </div>
-      <div class="proof-preview-body">
-        <img :src="src" alt="Payment proof" class="proof-preview-image" />
+  <Teleport to="body">
+    <div
+      v-if="show && src"
+      class="proof-preview-overlay"
+      @click.self="$emit('close')"
+    >
+      <div class="proof-preview-panel">
+        <div class="proof-preview-header">
+          <strong>{{ title }}</strong>
+          <button type="button" class="proof-preview-close" :aria-label="$t('common.close')" @click="$emit('close')">×</button>
+        </div>
+        <div class="proof-preview-body">
+          <img :src="src" :alt="$t('ui.proof')" class="proof-preview-image" />
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -26,8 +32,8 @@ defineEmits(['close']);
 .proof-preview-overlay {
   position: fixed;
   inset: 0;
-  z-index: 12000;
-  background: rgba(0, 0, 0, 0.72);
+  z-index: 13000 !important;
+  background: rgba(0, 0, 0, 0.78);
   display: flex;
   align-items: center;
   justify-content: center;

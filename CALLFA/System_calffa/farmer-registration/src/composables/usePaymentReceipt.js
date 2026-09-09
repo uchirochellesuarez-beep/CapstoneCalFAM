@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { mountAndPrintPaymentReceipt } from '../utils/printPaymentReceiptDirect'
 
 export function todayISODate() {
   const d = new Date()
@@ -47,10 +48,15 @@ export function usePaymentReceipt() {
     return enrichReceipt(data.receipt)
   }
 
-  const showAndPrintReceipt = async (receiptNumber) => {
+  const showAndPrintReceipt = async (receiptNumber, options = {}) => {
     if (!receiptNumber) return
     lastReceipt.value = await fetchReceipt(receiptNumber)
-    receiptAutoPrint.value = true
+    // Mobile browsers often blank auto-print from non-gesture iframes; caller can override.
+    const preferAuto =
+      typeof options.autoPrint === 'boolean'
+        ? options.autoPrint
+        : true
+    receiptAutoPrint.value = preferAuto
     showReceiptModal.value = true
   }
 
@@ -59,12 +65,19 @@ export function usePaymentReceipt() {
     receiptAutoPrint.value = false
   }
 
+  const printReceiptDirect = async (receiptNumber, options = {}) => {
+    if (!receiptNumber) return
+    const receipt = await fetchReceipt(receiptNumber)
+    await mountAndPrintPaymentReceipt(receipt, options)
+  }
+
   return {
     showReceiptModal,
     lastReceipt,
     receiptAutoPrint,
     fetchReceipt,
     showAndPrintReceipt,
+    printReceiptDirect,
     closeReceiptModal,
     todayISODate
   }

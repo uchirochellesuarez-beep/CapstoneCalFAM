@@ -1,13 +1,30 @@
 <template>
   <header class="top-header">
     <div class="header-content">
+      <!-- Left: Hamburger (mobile/tablet only) -->
+      <button
+        class="icon-btn hamburger-btn"
+        :class="{ 'is-open': mobileNavOpen }"
+        :aria-expanded="mobileNavOpen"
+        :aria-label="t('header.toggleNav')"
+        :title="t('header.menu')"
+        @click="$emit('toggle-mobile-nav')"
+      >
+        <span class="hamburger-lines" aria-hidden="true">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </span>
+      </button>
+
       <!-- Right: User Controls -->
       <div class="user-controls">
-        <ThemeToggle v-if="canToggleDarkMode" variant="header" class="theme-toggle-btn" />
+        <LanguageToggle variant="header" />
+        <ThemeToggle variant="header" class="theme-toggle-btn" />
 
         <!-- Notifications -->
         <div class="notification-container">
-          <button class="icon-btn notification-btn" :class="{ 'has-unread': notificationCount > 0 }" @click="toggleNotifications" title="Notifications">
+          <button class="icon-btn notification-btn" :class="{ 'has-unread': notificationCount > 0 }" @click="toggleNotifications" :title="t('header.notifications')">
             <svg class="notification-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 9.5C18 6.55 15.87 4 12.9 4H11.1C8.13 4 6 6.55 6 9.5V13.28L4.86 15.34C4.37 16.23 4.95 17.33 5.97 17.33H18.03C19.05 17.33 19.63 16.23 19.14 15.34L18 13.28V9.5Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M9.7 18.25C10.16 19.37 11.09 20 12 20C12.91 20 13.84 19.37 14.3 18.25" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
@@ -16,51 +33,22 @@
           </button>
         </div>
 
-        <!-- Logout -->
-        <button class="icon-btn logout-btn" @click="handleLogout" title="Logout">
-          <svg
-            width="21"
-            height="21"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="logout-icon"
-          >
-            <path
-              d="M9.5 4.5H7.1C6.27 4.5 5.6 5.17 5.6 6V18C5.6 18.83 6.27 19.5 7.1 19.5H9.5"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M13.2 8L17.2 12L13.2 16"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M17.2 12H9.5"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+        <!-- Compact profile button (mobile/tablet): same .icon-btn as its neighbors -->
+        <button class="icon-btn profile-icon-btn" @click="goToSettings" :title="t('header.editProfile')" :aria-label="t('header.editProfile')">
+          <img :src="userAvatar" class="profile-btn-avatar" :alt="t('header.userAvatar')" />
         </button>
 
-        <!-- User Profile -->
-        <div class="user-profile" @click="goToSettings" title="Edit Profile">
+        <!-- Full profile pill (desktop) -->
+        <div class="user-profile" @click="goToSettings" :title="t('header.editProfile')">
           <div class="profile-avatar-shell">
-            <img :src="userAvatar" class="profile-avatar" alt="User Avatar" />
+            <img :src="userAvatar" class="profile-avatar" :alt="t('header.userAvatar')" />
             <span class="profile-online-dot" aria-hidden="true"></span>
           </div>
           <div class="profile-info">
             <div class="profile-name">{{ userName }}</div>
             <div class="profile-meta">
-              <div class="profile-id">ID: {{ userId }}</div>
-              <span class="profile-status">Online</span>
+              <div class="profile-id">{{ t('common.id') }}: {{ userId }}</div>
+              <span class="profile-status">{{ t('common.online') }}</span>
             </div>
           </div>
           <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -75,9 +63,9 @@
       <div v-if="showNotifications" class="notifications-modal-overlay" @click="showNotifications = false">
         <div class="notifications-modal" @click.stop ref="notificationsRef">
           <div class="notifications-header">
-            <h3>Notifications</h3>
+            <h3>{{ t('header.notifications') }}</h3>
             <div class="notifications-header-actions">
-              <button v-if="unreadCount > 0" class="mark-read-btn" @click="markAllAsRead">Mark all read</button>
+              <button v-if="unreadCount > 0" class="mark-read-btn" @click="markAllAsRead">{{ t('header.markAllRead') }}</button>
               <button class="modal-close" @click="showNotifications = false">&times;</button>
             </div>
           </div>
@@ -87,54 +75,21 @@
               v-for="notification in notifications" 
               :key="notification.id"
               class="notification-item"
-              :class="{ unread: !notification.is_read }"
+              :class="{ unread: !isNotificationRead(notification) }"
               @click="handleNotificationClick(notification)"
             >
               <div class="notification-icon">{{ notification.icon }}</div>
               <div class="notification-content">
-                <div class="notification-title">{{ notification.title }}</div>
-                <div class="notification-message">{{ notification.message }}</div>
+                <div class="notification-title">{{ formatNotificationTitle(notification) }}</div>
+                <div class="notification-message">{{ formatNotificationMessage(notification) }}</div>
                 <div class="notification-date">{{ formatNotificationDate(notification.created_at || notification.trigger_date) }}</div>
               </div>
-              <div v-if="!notification.is_read" class="unread-indicator"></div>
+              <div v-if="!isNotificationRead(notification)" class="unread-indicator"></div>
             </div>
             <div v-if="notifications.length === 0" class="no-notifications">
               <span class="empty-icon">✅</span>
-              <span>All caught up!</span>
+              <span>{{ t('header.allCaughtUp') }}</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- Logout Confirmation Modal (teleported to body to avoid parent transform breaking fixed positioning) -->
-    <Teleport to="body">
-      <div v-if="showLogoutConfirm" class="logout-modal-overlay" @click="showLogoutConfirm = false">
-        <div
-          class="logout-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="logout-modal-title"
-          @click.stop
-        >
-          <div class="logout-modal-header">
-            <h3 id="logout-modal-title" class="logout-modal-title">Confirm Logout</h3>
-            <button
-              type="button"
-              class="logout-modal-close"
-              aria-label="Close"
-              @click="showLogoutConfirm = false"
-            >
-              &times;
-            </button>
-          </div>
-          <div class="logout-modal-body">
-            <p class="logout-modal-message">Are you sure you want to logout?</p>
-            <p class="logout-modal-hint">You will need to sign in again to access your account.</p>
-          </div>
-          <div class="logout-modal-footer">
-            <button type="button" class="logout-btn-cancel" @click="showLogoutConfirm = false">No, Stay</button>
-            <button type="button" class="logout-btn-confirm" @click="confirmLogout">Yes, Logout</button>
           </div>
         </div>
       </div>
@@ -145,19 +100,34 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
+import { useGcashPaymentStore, fetchGcashSubmissionById } from '../stores/gcashPaymentStore'
 import ThemeToggle from './ThemeToggle.vue'
-import { useBackdropTheme } from '../composables/useBackdropTheme'
+import LanguageToggle from './LanguageToggle.vue'
+import {
+  formatNotificationTitle as translateNotificationTitle,
+  formatNotificationMessage as translateNotificationMessage
+} from '../utils/formatNotificationI18n'
+
+defineProps({
+  mobileNavOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+defineEmits(['toggle-mobile-nav'])
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { canToggleDarkMode } = useBackdropTheme()
+const gcashStore = useGcashPaymentStore()
+const { t } = useI18n()
 
 const systemStatus = ref(true)
 const currentTime = ref('')
 const showNotifications = ref(false)
 const notificationsRef = ref(null)
-const showLogoutConfirm = ref(false)
 
 // Unified notifications array (Facebook-style)
 const notifications = ref([])
@@ -167,11 +137,12 @@ const unreadCount = ref(0)
 const userRole = computed(() => authStore.currentUser?.role)
 const isAdminRole = computed(() => ['admin', 'treasurer', 'president'].includes(userRole.value))
 
-const userName = computed(() => authStore.currentUser?.full_name || 'Juan Dela Cruz')
-const userId = computed(() => authStore.currentUser?.reference_number || 'CALFFA-00123')
+const userName = computed(() => authStore.currentUser?.full_name || '')
+const userId = computed(() => authStore.currentUser?.reference_number || '')
 
 const userInitials = computed(() => {
   const name = userName.value
+  if (!name.trim()) return '?'
   const parts = name.trim().split(/\s+/)
   if (parts.length >= 2) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
@@ -193,9 +164,10 @@ const userAvatar = computed(() => {
     return profilePicture
   }
   // Fallback to generated initials avatar if no profile picture
+  const label = userName.value || 'User'
   return (
     "https://ui-avatars.com/api/?name=" +
-    encodeURIComponent(userName.value) +
+    encodeURIComponent(label) +
     "&background=4CAF50&color=fff&size=128"
   )
 })
@@ -237,10 +209,13 @@ const loadNotifications = async () => {
       const responseText = await notifRes.text()
       console.error(`❌ [/api/notifications] Status: ${notifRes.status} ${notifRes.statusText}`)
       console.error('Response:', responseText.substring(0, 200))
-      if (notifRes.status === 401) {
+      // Do not auto-login or swap accounts on 401 — only clear session and go to login
+      if (notifRes.status === 401 && authStore.token) {
         console.error('🔐 Authentication failed - Please login again')
-        authStore.logout()
-        router.push('/login')
+        await authStore.logout()
+        if (router.currentRoute.value.path !== '/login') {
+          router.push('/login')
+        }
       }
       return
     }
@@ -256,7 +231,13 @@ const loadNotifications = async () => {
     // Transform to unified format with icons
     notifications.value = notifs.map(n => ({
       ...n,
-      icon: getNotificationIcon(n.reference_type)
+      title: String(n.title || '')
+        .replace(/^Confirm Booking #\d+$/i, 'Confirm Booking')
+        .replace(/\s*[—–-]\s*Booking #\d+\s*$/i, '')
+        .replace(/\s+Booking #\d+\s*$/i, '')
+        .trim(),
+      is_read: isNotificationRead(n) ? 1 : 0,
+      icon: getNotificationIcon(n)
     }))
     
     console.log(`✅ [loadNotifications] Loaded ${notifs.length} notifications`)
@@ -268,14 +249,26 @@ const loadNotifications = async () => {
   }
 }
 
-const getNotificationIcon = (referenceType) => {
+const getNotificationIcon = (notification) => {
+  const type = String(notification?.notification_type || '').toLowerCase()
+  if (type.includes('gcash')) return '💳'
   const icons = {
     'loan': '💰',
     'machinery_booking': '🚜',
     'announcement': '📢',
-    'income_assistance_distribution': '🌾'
+    'income_assistance_distribution': '🌾',
+    'farmer_income_record': '🌾'
   }
-  return icons[referenceType] || '🔔'
+  return icons[notification?.reference_type] || '🔔'
+}
+
+const formatNotificationTitle = (notification) => translateNotificationTitle(notification, t)
+
+const formatNotificationMessage = (notification) => translateNotificationMessage(notification, t)
+
+const isNotificationRead = (notification) => {
+  const value = notification?.is_read
+  return value === 1 || value === true || value === '1'
 }
 
 const parseLocalDate = (dateStr) => {
@@ -329,12 +322,12 @@ const calendarDayDiff = (from, to) => {
 }
 
 const formatNotificationDate = (dateStr) => {
-  if (!dateStr) return 'No date'
+  if (!dateStr) return t('header.rel.noDate')
 
   try {
     const d = parseLocalDate(dateStr)
     if (!d) {
-      return String(dateStr).substring(0, 10) || 'Invalid date'
+      return String(dateStr).substring(0, 10) || t('header.rel.invalidDate')
     }
 
     const now = new Date()
@@ -342,67 +335,278 @@ const formatNotificationDate = (dateStr) => {
 
     if (dayDiff === 0) {
       const diffMs = now.getTime() - d.getTime()
-      if (diffMs < 60 * 1000) return 'Just now'
-      if (diffMs < 60 * 60 * 1000) return `${Math.max(1, Math.floor(diffMs / (60 * 1000)))} min ago`
-      return `Today, ${formatManilaTime(d)}`
+      if (diffMs < 60 * 1000) return t('header.rel.justNow')
+      if (diffMs < 60 * 60 * 1000) {
+        return t('header.rel.minAgo', { n: Math.max(1, Math.floor(diffMs / (60 * 1000))) })
+      }
+      return t('header.rel.todayAt', { time: formatManilaTime(d) })
     }
 
-    if (dayDiff === 1) return 'Tomorrow'
-    if (dayDiff === -1) return 'Yesterday'
-    if (dayDiff > 1 && dayDiff < 7) return `In ${dayDiff} days`
-    if (dayDiff < -1 && dayDiff > -7) return `${Math.abs(dayDiff)} days ago`
+    if (dayDiff === 1) return t('header.rel.yesterday')
+    if (dayDiff === -1) return t('header.rel.tomorrow')
+    if (dayDiff > 1 && dayDiff < 7) return t('header.rel.daysAgo', { n: dayDiff })
+    if (dayDiff < -1 && dayDiff > -7) return t('header.rel.inDays', { n: Math.abs(dayDiff) })
 
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   } catch (err) {
     console.error('Error formatting notification date:', err)
-    return String(dateStr).substring(0, 10) || 'Invalid date'
+    return String(dateStr).substring(0, 10) || t('header.rel.invalidDate')
   }
 }
 
-// ─── Click handler: mark as read and navigate ───
-const handleNotificationClick = async (notification) => {
-  // Mark as read
+const markNotificationRead = async (notification) => {
   try {
     const headers = { ...getAuthHeaders(), 'Content-Type': 'application/json' }
     const response = await fetch(`/api/notifications/${notification.id}/read`, { method: 'PUT', headers })
-    if (!response.ok) {
+    if (response.ok) {
+      notification.is_read = 1
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    } else {
       console.error(`Failed to mark notification as read: ${response.status}`)
-      return
     }
-    notification.is_read = 1
-    unreadCount.value = Math.max(0, unreadCount.value - 1)
   } catch (e) {
     console.error('Error marking notification read:', e)
+  }
+}
+
+const goToRecord = (path, query = {}) => {
+  router.push({
+    path,
+    query: {
+      ...query,
+      nav: String(Date.now())
+    }
+  })
+}
+
+const isGcashSubmissionRef = (value) => String(value || '') === 'gcash_payment_submission'
+
+const gcashHistoryQuery = (submission, fallbackRefId, fallbackRefType, focus) => {
+  const isLoan = submission
+    ? String(submission.transaction_type || '').toLowerCase() === 'loan'
+    : String(fallbackRefType || '') === 'loan'
+  const txId = submission?.reference_id || fallbackRefId
+  const query = {
+    highlight: txId,
+    type: isLoan ? 'loan' : 'booking',
+    open: '1',
+    focus
+  }
+  if (submission?.id) query.sid = String(submission.id)
+  return { isLoan, query }
+}
+
+const resolveGcashSubmission = async (notification) => {
+  const refId = notification.reference_id
+  const refType = String(notification.reference_type || '')
+  if (isGcashSubmissionRef(refType)) {
+    return fetchGcashSubmissionById(refId)
+  }
+  return gcashStore.fetchLookup(refType === 'loan' ? 'loan' : 'machinery', refId)
+}
+
+const routeTreasurerGcashNotification = async (notification) => {
+  const refId = notification.reference_id
+  const refType = String(notification.reference_type || '')
+  let submission = null
+  try {
+    submission = await resolveGcashSubmission(notification)
+  } catch (error) {
+    console.error('Error routing treasurer GCash notification:', error)
+  }
+
+  const isLoan = submission
+    ? String(submission.transaction_type || '').toLowerCase() === 'loan'
+    : refType === 'loan'
+  const txId = submission?.reference_id || refId
+  const pendingQuery = {
+    tab: 'inventory',
+    highlight: txId,
+    type: isLoan ? 'gcash-loan' : 'gcash-booking'
+  }
+  if (submission?.id) pendingQuery.sid = String(submission.id)
+
+  const status = String(submission?.status || '')
+  if (status === 'pending_verification' || !submission) {
+    goToRecord('/machinery-financial', pendingQuery)
+    return
+  }
+  const focus = status === 'rejected' ? 'gcash-rejected' : 'gcash-verified'
+  goToRecord('/machinery-financial', {
+    tab: 'inventory',
+    view: 'history',
+    type: 'gcash-history',
+    highlight: submission?.id || refId,
+    sid: String(submission?.id || ''),
+    focus
+  })
+}
+
+// ─── Click handler: go to the record first, mark as read in the background ───
+const handleNotificationClick = (notification) => {
+  showNotifications.value = false
+  void markNotificationRead(notification)
+
+  const role = authStore.currentUser?.role
+  const type = String(notification.notification_type || '')
+  const refId = notification.reference_id
+  const refType = String(notification.reference_type || '')
+
+  const isOperatorBookingNotification =
+    refType === 'operator_machinery_booking' ||
+    ['operator_booking_assigned', 'operator_booking_updated', 'operator_booking_cancelled'].includes(type)
+
+  if (isOperatorBookingNotification) {
+    if (!refId) {
+      goToRecord('/operator-dashboard')
+      return
+    }
+    if (role === 'operator') {
+      goToRecord('/operator-dashboard', { highlight: refId, type: 'booking' })
+    } else {
+      goToRecord('/machinery-approval', { highlight: refId, type: 'booking' })
+    }
     return
   }
 
-  showNotifications.value = false
+  if (refType === 'operator_income' || type === 'operator_income_credited') {
+    goToRecord('/operator-dashboard', { highlight: refId, type: 'income' })
+    return
+  }
 
-  // Navigate based on reference type
-  if (notification.reference_type === 'loan') {
-    const role = authStore.currentUser?.role
-    if (['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(role)) {
-      router.push({ path: '/admin-loans', query: { highlight: notification.reference_id, type: 'loan' } })
-    } else if (role === 'operator') {
-      router.push({ path: '/officer-loans', query: { highlight: notification.reference_id, type: 'loan' } })
+  const loanPath = () => {
+    if (role === 'farmer') return '/loan'
+    if (['admin', 'treasurer', 'president', 'operation_manager', 'business_manager'].includes(role)) return '/admin-loans'
+    return '/officer-loans'
+  }
+
+  const bookingPath = () => {
+    if (role === 'farmer') return '/machinery-booking'
+    if (['admin', 'treasurer', 'president'].includes(role)) return '/machinery-financial'
+    if (['operation_manager', 'business_manager', 'operator'].includes(role)) return '/machinery-approval'
+    return '/machinery-booking'
+  }
+
+  const gcashFocus =
+    type === 'gcash_payment_rejected'
+      ? 'gcash-rejected'
+      : type === 'gcash_payment_verified'
+        ? 'gcash-verified'
+        : ''
+
+  if (type === 'treasurer_gcash_payment_submitted') {
+    void routeTreasurerGcashNotification(notification)
+    return
+  }
+
+  if (type === 'treasurer_down_payment_due' || type === 'treasurer_down_payment_submitted') {
+    goToRecord('/machinery-financial', {
+      tab: 'ar',
+      highlight: refId,
+      type: 'booking',
+      open: 'dp'
+    })
+    return
+  }
+
+  if (type === 'treasurer_refund_requested') {
+    goToRecord('/machinery-financial', {
+      tab: 'ar',
+      highlight: refId,
+      type: 'refund',
+      open: 'refund'
+    })
+    return
+  }
+
+  // Shared type: farmer "Down Payment Required" OR manager "Confirm Booking"
+  if (type === 'booking_down_payment_required') {
+    if (['operation_manager', 'business_manager', 'admin', 'operator'].includes(role)) {
+      goToRecord('/machinery-approval', {
+        highlight: refId,
+        type: 'booking'
+      })
     } else {
-      router.push({ path: '/officer-loans', query: { highlight: notification.reference_id, type: 'loan' } })
+      // Farmer (and any other booker): open My Bookings on the source booking
+      goToRecord('/machinery-booking', {
+        highlight: refId,
+        type: 'booking'
+      })
     }
-  } else if (notification.reference_type === 'machinery_booking') {
-    const role = authStore.currentUser?.role
+    return
+  }
+
+  if (type === 'gcash_payment_verified' || type === 'gcash_payment_rejected') {
+    void (async () => {
+      let submission = null
+      try {
+        if (isGcashSubmissionRef(refType)) {
+          submission = await fetchGcashSubmissionById(refId)
+        }
+      } catch (error) {
+        console.error('Error resolving GCash notification:', error)
+      }
+
+      if (isGcashSubmissionRef(refType) && !submission?.reference_id) {
+        goToRecord('/machinery-booking')
+        return
+      }
+
+      const { isLoan, query } = gcashHistoryQuery(submission, refId, refType, gcashFocus)
+      const path = isLoan
+        ? loanPath()
+        : (bookingPath() === '/machinery-financial' ? '/machinery-booking' : bookingPath())
+      goToRecord(path, query)
+    })()
+    return
+  }
+
+  if (refType === 'loan') {
+    goToRecord(loanPath(), { highlight: refId, type: 'loan', open: '1' })
+  } else if (refType === 'machinery_booking' || refType === 'operator_machinery_booking') {
     if (['admin', 'treasurer', 'president'].includes(role)) {
-      router.push({ path: '/machinery-financial', query: { highlight: notification.reference_id, type: 'booking' } })
+      const title = String(notification.title || '')
+      const isRefundNotif =
+        type === 'treasurer_refund_requested' || /^Refund Request/i.test(title)
+      const query = {
+        tab: 'ar',
+        highlight: refId,
+        type: isRefundNotif ? 'refund' : 'booking'
+      }
+      if (isRefundNotif) query.open = 'refund'
+      else if (type.includes('down_payment')) query.open = 'dp'
+      goToRecord('/machinery-financial', query)
+    } else if (['operation_manager', 'business_manager', 'operator'].includes(role)) {
+      goToRecord('/machinery-approval', {
+        highlight: refId,
+        type: 'booking'
+      })
     } else {
-      router.push({ path: '/machinery-booking', query: { highlight: notification.reference_id, type: 'booking' } })
+      // Farmer: highlight the booking card in My Bookings (do not auto-open form)
+      goToRecord('/machinery-booking', {
+        highlight: refId,
+        type: 'booking'
+      })
     }
-  } else if (notification.reference_type === 'income_assistance_distribution') {
-    const role = authStore.currentUser?.role
+  } else if (refType === 'income_assistance_distribution') {
     if (role === 'farmer') {
-      router.push({ path: '/farmer-income', query: { tab: 'assistance' } })
+      goToRecord('/farmer-income', { tab: 'assistance' })
     } else {
-      router.push({ path: '/farmer-income-hub', query: { tab: role === 'agriculturist' ? 'distribution' : 'eligible' } })
+      goToRecord('/farmer-income-hub', { tab: role === 'agriculturist' ? 'distribution' : 'eligible' })
     }
-  } else if (notification.reference_type === 'announcement') {
+  } else if (refType === 'farmer_income_record' || type === 'president_income_submitted' || type === 'agriculturist_income_eligible' || type === 'income_rejected') {
+    if (type === 'income_rejected' || role === 'farmer') {
+      goToRecord('/farmer-income', { tab: 'history', highlight: refId, type: 'income' })
+    } else if (role === 'agriculturist') {
+      goToRecord('/farmer-income-hub', { tab: 'distribution', highlight: refId, type: 'income' })
+    } else {
+      goToRecord('/farmer-income-hub', {
+        tab: type === 'president_income_submitted' ? 'verify' : 'eligible',
+        highlight: refId,
+        type: 'income'
+      })
+    }
+  } else if (refType === 'announcement') {
     router.push('/announcement')
   }
 }
@@ -451,16 +655,6 @@ const handleClickOutside = (event) => {
 
 const goToSettings = () => {
   router.push('/settings')
-}
-
-const handleLogout = () => {
-  showLogoutConfirm.value = true
-}
-
-const confirmLogout = () => {
-  showLogoutConfirm.value = false
-  authStore.logout()
-  router.push('/login')
 }
 
 onMounted(() => {
@@ -532,6 +726,9 @@ onMounted(() => {
   max-width: 100%;
   height: 100%;
   display: flex;
+  /* Explicit row: a global mobile rule turns .header-content into a column */
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
@@ -669,6 +866,54 @@ onMounted(() => {
   .logo-text {
     font-size: 8px;
   }
+}
+
+/* Hamburger menu — mobile/tablet only; desktop keeps the permanent sidebar.
+   Doubled class beats the later `.icon-btn { display: flex }` rule. */
+.icon-btn.hamburger-btn {
+  display: none;
+  margin-right: auto;
+}
+
+@media (max-width: 1024px) {
+  .icon-btn.hamburger-btn {
+    display: flex;
+  }
+}
+
+.hamburger-lines {
+  position: relative;
+  width: 20px;
+  height: 14px;
+  display: block;
+}
+
+.hamburger-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.28s ease, opacity 0.2s ease, top 0.28s ease;
+}
+
+.hamburger-line:nth-child(1) { top: 0; }
+.hamburger-line:nth-child(2) { top: 6px; }
+.hamburger-line:nth-child(3) { top: 12px; }
+
+.hamburger-btn.is-open .hamburger-line:nth-child(1) {
+  top: 6px;
+  transform: rotate(45deg);
+}
+
+.hamburger-btn.is-open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-btn.is-open .hamburger-line:nth-child(3) {
+  top: 6px;
+  transform: rotate(-45deg);
 }
 
 /* Notifications */
@@ -863,25 +1108,6 @@ onMounted(() => {
   }
 }
 
-.logout-icon {
-  transition: transform 0.2s ease;
-}
-
-.logout-btn {
-  color: #fca5a5;
-}
-
-.logout-btn:hover {
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.56);
-  background: rgba(63, 25, 25, 0.95);
-  box-shadow: 0 10px 18px rgba(127, 29, 29, 0.45);
-}
-
-.logout-btn:hover .logout-icon {
-  transform: translateX(1px) scale(1.05);
-}
-
 .notification-btn {
   position: relative;
 }
@@ -905,9 +1131,11 @@ onMounted(() => {
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 14px 6px 8px;
-  border-radius: 16px;
+  gap: 10px;
+  /* Same 44px height as the icon buttons beside it */
+  height: 44px;
+  padding: 0 12px 0 4px;
+  border-radius: 14px;
   border: 1px solid rgba(118, 176, 142, 0.42);
   background: linear-gradient(145deg, rgba(13, 36, 27, 0.98), rgba(10, 28, 21, 0.97));
   box-shadow:
@@ -917,7 +1145,7 @@ onMounted(() => {
   transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease, filter 0.28s ease;
   cursor: pointer;
   flex-shrink: 0;
-  min-height: 56px;
+  min-height: 0;
 }
 
 .top-header.farmer-theme .user-profile {
@@ -954,8 +1182,8 @@ onMounted(() => {
 
 .profile-avatar-shell {
   position: relative;
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   padding: 2px;
   background: linear-gradient(145deg, #9eead4 0%, #4ade80 100%);
@@ -1065,25 +1293,44 @@ onMounted(() => {
   color: #9ac5ae;
 }
 
+/* Compact profile button: a real .icon-btn, so it is always identical in
+   size and styling to the theme/bell buttons. Shown ≤1024px only. */
+.icon-btn.profile-icon-btn {
+  display: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.profile-btn-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .icon-btn.profile-icon-btn {
+    display: flex;
+  }
+
+  /* Hide the desktop pill in compact mode */
+  .user-profile {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
-  .profile-avatar-shell {
-    width: 38px;
-    height: 38px;
-  }
-
-  .profile-info {
-    display: none;
-  }
-
-  .profile-chevron {
-    display: none;
+  .profile-btn-avatar {
+    width: 32px;
+    height: 32px;
   }
 }
 
 @media (max-width: 480px) {
-  .profile-avatar-shell {
-    width: 34px;
-    height: 34px;
+  .profile-btn-avatar {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -1241,23 +1488,33 @@ onMounted(() => {
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid rgba(127, 177, 145, 0.14);
-  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   position: relative;
 }
 
-.notifications-modal .notification-item:hover {
-  background: rgba(29, 40, 35, 0.7);
-}
-
+/* Unread — green left accent + tinted panel (dark mode) */
 .notifications-modal .notification-item.unread {
+  border-left-color: #4ade80;
   background: rgba(22, 52, 38, 0.72);
-  box-shadow: inset 3px 0 0 rgba(107, 191, 89, 0.9);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .notifications-modal .notification-item.unread:hover {
   background: rgba(27, 64, 45, 0.76);
+}
+
+/* Read — no side accent */
+.notifications-modal .notification-item:not(.unread) {
+  background: transparent;
+  border-left-color: transparent;
+  font-weight: 500;
+}
+
+.notifications-modal .notification-item:not(.unread):hover {
+  background: rgba(29, 40, 35, 0.7);
 }
 
 .notifications-modal .unread-indicator {
@@ -1332,180 +1589,6 @@ onMounted(() => {
   .notifications-modal {
     width: 95%;
     max-width: none;
-  }
-}
-
-/* Logout Confirmation Modal - unscoped because it's teleported to body */
-.logout-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 12, 8, 0.58);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  padding: 16px;
-}
-
-.logout-modal {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  overflow: hidden;
-  border-radius: 18px;
-  border: 2px solid #86efac !important;
-  background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%) !important;
-  box-shadow:
-    0 24px 48px rgba(4, 18, 12, 0.32),
-    0 8px 20px rgba(22, 101, 52, 0.14) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  animation: logoutModalSlideUp 0.28s ease;
-}
-
-@keyframes logoutModalSlideUp {
-  from {
-    transform: translateY(16px) scale(0.98);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-.logout-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px;
-  border-bottom: 2px solid #bbf7d0;
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-}
-
-.logout-modal-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 800;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-  background: none !important;
-  letter-spacing: -0.01em;
-}
-
-.logout-modal-close {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 2px solid #16a34a;
-  background: #ffffff;
-  color: #052e16;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
-}
-
-.logout-modal-close:hover {
-  background: #ecfdf5;
-  transform: scale(1.04);
-}
-
-.logout-modal-body {
-  padding: 22px 20px;
-  background: #ffffff;
-}
-
-.logout-modal-message {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.55;
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
-}
-
-.logout-modal-hint {
-  margin: 10px 0 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: #166534 !important;
-  -webkit-text-fill-color: #166534 !important;
-}
-
-.logout-modal-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 16px 20px;
-  border-top: 2px solid #e2e8f0;
-  background: #f8fafc;
-}
-
-.logout-btn-cancel,
-.logout-btn-confirm {
-  min-width: 118px;
-  padding: 11px 18px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-}
-
-.logout-btn-cancel {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #052e16;
-  border: 2px solid #16a34a;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.12);
-}
-
-.logout-btn-cancel:hover {
-  background: linear-gradient(135deg, #ecfdf5 0%, #86efac 100%);
-  transform: translateY(-1px);
-}
-
-.logout-btn-confirm {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #7f1d1d;
-  border: 2px solid #dc2626;
-  box-shadow: 0 4px 12px rgba(127, 29, 29, 0.14);
-}
-
-.logout-btn-confirm:hover {
-  background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.22);
-}
-
-@media (max-width: 480px) {
-  .logout-modal {
-    max-width: none;
-  }
-
-  .logout-modal-header,
-  .logout-modal-body,
-  .logout-modal-footer {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .logout-modal-footer {
-    flex-direction: column-reverse;
-  }
-
-  .logout-btn-cancel,
-  .logout-btn-confirm {
-    width: 100%;
-    min-width: 0;
   }
 }
 </style>

@@ -2,8 +2,7 @@
  * Backdrop Theme Composable
  *
  * Manages the system-wide backdrop theme for the smart farming dashboard.
- * Farmers always use senior-friendly light mode; staff (admin, operations, etc.)
- * can switch between light and dark.
+ * All roles (farmers, officers, admin) can switch between light and dark mode.
  */
 
 import { ref, computed } from 'vue'
@@ -29,8 +28,8 @@ export function isFarmerRole(role = getStoredUserRole()) {
   return role === 'farmer'
 }
 
-export function canUseDarkMode(role = getStoredUserRole()) {
-  return !isFarmerRole(role)
+export function canUseDarkMode() {
+  return true
 }
 
 function updateFarmerBodyClass(role = getStoredUserRole()) {
@@ -42,7 +41,7 @@ function updateFarmerBodyClass(role = getStoredUserRole()) {
  */
 export function useBackdropTheme() {
   const isDark = computed(() => themeMode.value !== 'light')
-  const canToggleDarkMode = computed(() => canUseDarkMode())
+  const canToggleDarkMode = computed(() => true)
 
   const backdropThemeClass = computed(() =>
     themeMode.value === 'light' ? 'backdrop-theme-light' : 'backdrop-theme-dark'
@@ -54,25 +53,22 @@ export function useBackdropTheme() {
    * @param {{ persist?: boolean }} options
    */
   const setTheme = (mode, { persist = true } = {}) => {
-    const role = getStoredUserRole()
     const requested = normalizeMode(mode === 'standard' ? 'dark' : mode)
-    const normalized = isFarmerRole(role) ? 'light' : requested
-    if (!['light', 'dark'].includes(normalized)) return
+    if (!['light', 'dark'].includes(requested)) return
 
-    themeMode.value = normalized
-    applyTheme(normalized)
-    updateFarmerBodyClass(role)
+    themeMode.value = requested
+    applyTheme(requested)
+    updateFarmerBodyClass()
 
-    if (persist && canUseDarkMode(role)) {
-      localStorage.setItem('backdrop-theme', normalized)
+    if (persist) {
+      localStorage.setItem('backdrop-theme', requested)
     }
   }
 
   /**
-   * Toggle between light and dark modes (staff only)
+   * Toggle between light and dark modes
    */
   const toggleTheme = () => {
-    if (!canUseDarkMode()) return
     setTheme(themeMode.value === 'light' ? 'dark' : 'light')
   }
 
@@ -80,9 +76,7 @@ export function useBackdropTheme() {
    * Apply theme to the document body
    */
   const applyTheme = (mode) => {
-    const normalized = normalizeMode(mode)
-    const role = getStoredUserRole()
-    const effective = isFarmerRole(role) ? 'light' : normalized
+    const effective = normalizeMode(mode)
 
     document.body.classList.remove(
       'backdrop-theme',
@@ -100,7 +94,7 @@ export function useBackdropTheme() {
 
     document.documentElement.setAttribute('data-theme', effective)
     document.documentElement.classList.toggle('dark', effective === 'dark')
-    updateFarmerBodyClass(role)
+    updateFarmerBodyClass()
   }
 
   /**
@@ -108,11 +102,6 @@ export function useBackdropTheme() {
    */
   const initTheme = () => {
     updateFarmerBodyClass()
-
-    if (isFarmerRole()) {
-      setTheme('light', { persist: false })
-      return
-    }
 
     const savedTheme = localStorage.getItem('backdrop-theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -147,11 +136,6 @@ export function useBackdropTheme() {
       return
     }
 
-    if (isFarmerRole(user.role)) {
-      setTheme('light', { persist: false })
-      return
-    }
-
     const savedTheme = localStorage.getItem('backdrop-theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
       setTheme(savedTheme)
@@ -169,13 +153,13 @@ export function useBackdropTheme() {
       const lightModeQuery = window.matchMedia('(prefers-color-scheme: light)')
 
       const handleDarkChange = (e) => {
-        if (e.matches && !localStorage.getItem('backdrop-theme') && canUseDarkMode()) {
+        if (e.matches && !localStorage.getItem('backdrop-theme')) {
           setTheme('dark')
         }
       }
 
       const handleLightChange = (e) => {
-        if (e.matches && !localStorage.getItem('backdrop-theme') && canUseDarkMode()) {
+        if (e.matches && !localStorage.getItem('backdrop-theme')) {
           setTheme('light')
         }
       }
@@ -210,8 +194,7 @@ export function useBackdropTheme() {
 export function applyBackdropToElement(element, variant = 'dashboard', mode = null) {
   if (!element) return
 
-  const role = getStoredUserRole()
-  const currentMode = isFarmerRole(role) ? 'light' : (mode || themeMode.value)
+  const currentMode = normalizeMode(mode || themeMode.value)
   const variantClass = `backdrop-${variant}`
   const themeClass = currentMode === 'light'
     ? 'backdrop-theme-light'
@@ -238,8 +221,7 @@ export function createBackdropElement(container, variant = 'dashboard', mode = n
   if (!container) return null
 
   const backdrop = document.createElement('div')
-  const role = getStoredUserRole()
-  const currentMode = isFarmerRole(role) ? 'light' : (mode || themeMode.value)
+  const currentMode = normalizeMode(mode || themeMode.value)
   const variantClass = `backdrop-${variant}`
   const themeClass = currentMode === 'light'
     ? 'backdrop-theme-light'

@@ -6,9 +6,12 @@
 @media print {
   html,
   body {
+    width: 100% !important;
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body.receipt-print-active > :not(#receipt-print-clone-root) {
@@ -19,44 +22,55 @@
     display: block !important;
     position: static !important;
     width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
+    overflow: visible !important;
   }
 
   body.receipt-print-active #receipt-print-clone-root .receipt-print-root {
     display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
     gap: 0 !important;
+    overflow: visible !important;
   }
 
   body.receipt-print-active #receipt-print-clone-root .payment-receipt,
   body.receipt-print-active #receipt-print-clone-root .expense-receipt {
     display: block !important;
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
-    background: #fff !important;
-    color: #111 !important;
-    border: 2px solid #111 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #2d8f4e !important;
     box-shadow: none !important;
     overflow: visible !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* Payment receipt layout fallback */
-  body.receipt-print-active #receipt-print-clone-root .receipt-top {
-    display: flex !important;
-    justify-content: space-between;
-    padding: 16px 20px 10px;
-    border-bottom: 2px solid #111;
+  body.receipt-print-active #receipt-print-clone-root .receipt-top,
+  body.receipt-print-active #receipt-print-clone-root .expense-title {
+    background: rgba(45, 143, 78, 0.1) !important;
+    border-bottom: 2px solid #2d8f4e !important;
   }
 
-  body.receipt-print-active #receipt-print-clone-root .receipt-title {
-    font-size: 24px;
-    font-weight: 800;
-    color: #111 !important;
-    margin: 0;
+  body.receipt-print-active #receipt-print-clone-root .receipt-title,
+  body.receipt-print-active #receipt-print-clone-root .expense-title,
+  body.receipt-print-active #receipt-print-clone-root .receipt-field label,
+  body.receipt-print-active #receipt-print-clone-root .info-label,
+  body.receipt-print-active #receipt-print-clone-root .meta-label,
+  body.receipt-print-active #receipt-print-clone-root .words-label,
+  body.receipt-print-active #receipt-print-clone-root .receipt-org strong,
+  body.receipt-print-active #receipt-print-clone-root .org-block strong,
+  body.receipt-print-active #receipt-print-clone-root .barangay-line,
+  body.receipt-print-active #receipt-print-clone-root .chapter-line {
+    color: #2d8f4e !important;
   }
 
   body.receipt-print-active #receipt-print-clone-root .field-line,
@@ -64,20 +78,85 @@
   body.receipt-print-active #receipt-print-clone-root .meta-value,
   body.receipt-print-active #receipt-print-clone-root td,
   body.receipt-print-active #receipt-print-clone-root th {
-    color: #111 !important;
+    color: #000000 !important;
   }
 
   body.receipt-print-active #receipt-print-clone-root .receipt-footer-bar,
   body.receipt-print-active #receipt-print-clone-root .footer-bar,
-  body.receipt-print-active #receipt-print-clone-root .panel-head,
   body.receipt-print-active #receipt-print-clone-root .expense-table thead th {
+    background: #2d8f4e !important;
+    color: #ffffff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .panel-head,
+  body.receipt-print-active #receipt-print-clone-root .total-row td {
+    background: rgba(45, 143, 78, 0.1) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table-wrap {
+    width: 100%;
+    overflow: visible !important;
   }
 
   body.receipt-print-active #receipt-print-clone-root .expense-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
+    border: 2px solid #2d8f4e;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table thead {
+    display: table-header-group;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table tbody {
+    display: table-row-group;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table tfoot {
+    display: table-footer-group;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table tr {
+    display: table-row;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table th,
+  body.receipt-print-active #receipt-print-clone-root .expense-table td {
+    display: table-cell;
+    border: 1px solid rgba(45, 143, 78, 0.28);
+    padding: 8px 10px;
+    font-size: 12px;
+    vertical-align: middle;
+    word-wrap: break-word;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table thead th {
+    border: 1px solid #2d8f4e;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table th:nth-child(4),
+  body.receipt-print-active #receipt-print-clone-root .expense-table td.amount-col {
+    text-align: right;
+    width: 18%;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table tfoot .total-row td {
+    border-top: 2px solid #2d8f4e !important;
+    font-weight: 700;
+    padding: 10px 12px;
+  }
+
+  body.receipt-print-active #receipt-print-clone-root .expense-table tfoot .total-row td.amount-col {
+    text-align: right;
   }
 
   body.receipt-print-active #receipt-print-clone-root .no-print {
@@ -85,6 +164,7 @@
   }
 
   @page {
-    margin: 12mm;
+    size: A4 portrait;
+    margin: 10mm;
   }
 }

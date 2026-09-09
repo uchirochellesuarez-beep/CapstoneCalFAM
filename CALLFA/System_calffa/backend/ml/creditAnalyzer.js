@@ -35,8 +35,7 @@ async function getFarmerLoanData(farmerId) {
   try {
     // Fetch farmer profile
     const [farmers] = await pool.execute(
-      `SELECT id, full_name, reference_number, membership_status, membership_date, 
-              primary_crop, land_area, registered_on
+      `SELECT id, full_name, reference_number, membership_status, land_area, registered_on
        FROM farmers WHERE id = ?`,
       [farmerId]
     );

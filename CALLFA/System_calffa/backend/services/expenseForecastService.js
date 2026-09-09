@@ -6,13 +6,13 @@ const { fetchExpenseForecastFromMlService } = require('./mlExpenseClient');
  * Expense forecasting: prefers Python sklearn service (see ML_API_URL) when configured;
  * falls back to Node OLS linear trend on indices.
  *
- * User foundation: `data/user_expense_historical/<farmer_id>/foundation.json` — ina-upload ng magsasaka o president
- * (API), palaging isinasama bago ang bundled samples at DB rows. Bawat puntos sa upload ay dapat may
- * `farmer_id` na tumutugma sa URL (tinatanggi ang halo ng ibang magsasaka). `period_index` ay opsyonal.
+ * Training data (live forecast):
+ * 1. `farmer_income_records` for that farmer with status Eligible only
+ *    (Pending and Rejected saved forms are excluded)
+ * 2. Optional uploaded foundation JSON/CSV (`data/user_expense_historical/<farmer_id>/foundation.json`)
  *
- * Bundled JSON: default auto — kung may folder `data/expense_training_samples/<farmer_id>/` at kulang ang DB rows,
- * isasama ang panel. Opsiyon: EXPENSE_FORECAST_SAMPLE_FARMER_IDS (non-empty = limitado lamang ang IDs na iyon).
- * Opsiyon: EXPENSE_FORECAST_DISABLE_BUNDLED_SAMPLES=1 = huwag gumamit ng JSON panel.
+ * Bundled JSON under `data/expense_training_samples/` is NOT used unless
+ * EXPENSE_FORECAST_ENABLE_BUNDLED_SAMPLES=1 (dev only).
  */
 const SAMPLES_ROOT = path.join(__dirname, '../data/expense_training_samples');
 /** User- or president-uploaded historical totals (JSON per farmer) — always merged before DB/bundled samples */
@@ -25,14 +25,14 @@ const MAX_FOUNDATION_FILE_BYTES = 256 * 1024;
 const PUBLIC_DISCLAIMER_PH =
   'Ang numero ng hula ay gabay lamang batay sa trend ng nakatalang gastos — hindi garantiya ng aktwal na babayarin. Mga presyo sa merkado, klima, peste, at patakaran ay maaaring magbago. Mas maraming tala sa paglipas ng panahon = mas kapani-paniwalang resulta.';
 
-function bundledSamplesGloballyDisabled() {
-  const v = String(process.env.EXPENSE_FORECAST_DISABLE_BUNDLED_SAMPLES || '')
+function bundledSamplesExplicitlyEnabled() {
+  const v = String(process.env.EXPENSE_FORECAST_ENABLE_BUNDLED_SAMPLES || '')
     .trim()
     .toLowerCase();
   return v === '1' || v === 'true' || v === 'yes';
 }
 
-/** Non-empty env = whitelist only; empty = automatic kung may `samples/<numeric_id>/` sa disk */
+/** Non-empty env = whitelist only when bundled samples are enabled */
 function bundledFarmerIdWhitelist() {
   const raw = process.env.EXPENSE_FORECAST_SAMPLE_FARMER_IDS || '';
   const ids = new Set();
@@ -50,9 +50,9 @@ function hasBundledExpenseSampleFiles(farmerId) {
   return fs.readdirSync(dir).some((f) => f.endsWith('.json'));
 }
 
-/** True if forecast may merge on-disk JSON when DB rows are below threshold */
+/** Dev only: merge on-disk sample JSON when DB rows are below threshold */
 function mayAugmentWithBundledSamples(farmerId) {
-  if (bundledSamplesGloballyDisabled()) return false;
+  if (!bundledSamplesExplicitlyEnabled()) return false;
   const whitelist = bundledFarmerIdWhitelist();
   if (whitelist.size > 0) return whitelist.has(Number(farmerId));
   return hasBundledExpenseSampleFiles(farmerId);
@@ -197,10 +197,14 @@ function loadBundledExpenseSamples(farmerId) {
   return rows;
 }
 
+function isEligibleSavedIncomeRecord(row) {
+  return String(row?.status || '').trim() === 'Eligible';
+}
+
 function seriesFromDatabaseRecords(rows) {
-  const sorted = [...rows].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  const sorted = [...(rows || [])]
+    .filter(isEligibleSavedIncomeRecord)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   return sorted.map((r) => ({
     source: 'db',
     id: r.id,
@@ -213,6 +217,65 @@ function seriesFromDatabaseRecords(rows) {
 }
 
 const MIN_TRAIN_ROWS = 3;
+
+function roundPesoTen(n) {
+  return Math.max(0, Math.round(n / 10) * 10);
+}
+
+/**
+ * Forecast when there are 1–2 saved points (OLS/ML need 3).
+ * Uses the farmer's own recorded expenses only.
+ */
+function buildSparseResponse(series, augmented) {
+  const y = series.map((s) => s.total_expenses);
+  const last = y[y.length - 1] || 0;
+  const stepNext = series.length + 1;
+  let predicted;
+  let ciLow;
+  let ciHigh;
+  let model;
+  let method;
+
+  if (series.length === 1) {
+    predicted = roundPesoTen(last);
+    ciLow = roundPesoTen(last * 0.7);
+    ciHigh = roundPesoTen(last * 1.3);
+    model = 'last_saved_expense';
+    method =
+      'Ginamit ang tanging naka-save na gastos sa Farm Income. Magtala pa ng 2 season para may trend (OLS/ML).';
+  } else {
+    const delta = y[1] - y[0];
+    predicted = roundPesoTen(last + delta);
+    const spread = Math.max(Math.abs(delta) * 1.5, last * 0.2, 500);
+    ciLow = roundPesoTen(predicted - spread);
+    ciHigh = roundPesoTen(predicted + spread);
+    model = 'two_point_trend';
+    method =
+      'Simpleng trend mula sa 2 naka-save na gastos sa Farm Income. Magtala pa ng 1 season para sa OLS/ML.';
+  }
+
+  return {
+    ok: true,
+    ml_engine: 'node_sparse_fallback',
+    model,
+    method_description_ph: method,
+    disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+    forecast_quality_hint_ph:
+      'Bababa ang kasiguraduhan dahil isa o dalawa pa lang ang naka-save na tala. Magpatuloy sa pagtala ng tunay na gastos.',
+    history: series,
+    forecast_next: {
+      step_index: stepNext,
+      label: `Susunod na tinataya (hakbang ${stepNext})`,
+      predicted_total_expenses: predicted,
+      ci95_low: ciLow,
+      ci95_high: ciHigh,
+      r_squared: null,
+      residual_rmse: null,
+    },
+    augmented_with_samples: augmented,
+    training_n: series.length,
+  };
+}
 
 function augmentThresholdDbRows() {
   const raw = process.env.EXPENSE_FORECAST_AUGMENT_IF_DB_UNDER;
@@ -426,19 +489,20 @@ async function forecastFutureTotalExpenses(farmerId, dbRows) {
     dbRows
   );
 
-  if (series.length < MIN_TRAIN_ROWS) {
-    const extra =
-      bundledSamplesGloballyDisabled() || !hasBundledExpenseSampleFiles(farmerId)
-        ? ' Magtala ng hindi bababa sa 3 beses ng kabuuang gastos, mag-upload ng pundasyong datos (JSON/CSV) sa tab na Hula ng gastos, o (dev) ilagay ang JSON sa backend/data/expense_training_samples/<numerong farmer_id>/ at i-restart ang server para auto-seed.'
-        : '';
+  if (series.length === 0) {
     return {
       ok: false,
-      error: `Kulang ang datos sa paghula. Kailangan ng hindi bababa sa 3 puntos ng kabuuang gastos (database, naka-upload na pundasyon, at/o awtomatikong panel kung may sample folder para sa farmer_id na ito).${extra}`,
+      error:
+        'Wala pang naka-save na gastos. Magtala muna sa Farm Income form, tapos i-run ulit ang forecast.',
       disclaimer_ph: PUBLIC_DISCLAIMER_PH,
       history: series,
       augmented_with_samples: augmented,
       user_upload_count: userUploadCount,
     };
+  }
+
+  if (series.length < MIN_TRAIN_ROWS) {
+    return { ...buildSparseResponse(series, augmented), user_upload_count: userUploadCount };
   }
 
   const y = series.map((s) => s.total_expenses);

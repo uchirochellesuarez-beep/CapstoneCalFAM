@@ -1,77 +1,69 @@
 <template>
-  <div class="signup-page glass-auth-page">
+  <div class="signup-page glass-auth-page" :class="{ 'light-theme': isLight }">
+    <div class="auth-backdrop" aria-hidden="true">
+      <img :src="farmerPhoto" alt="" class="auth-farmer" />
+      <div class="auth-overlay"></div>
+    </div>
+
     <div class="page-top-controls">
       <ThemeToggle variant="floating" />
-      <div class="page-language-toggle" role="group" aria-label="Language selector">
-      <button
-        type="button"
-        @click="language = 'en'"
-        :class="['lang-btn', { active: language === 'en' }]"
-      >
-        English
-      </button>
-      <button
-        type="button"
-        @click="language = 'tl'"
-        :class="['lang-btn', { active: language === 'tl' }]"
-      >
-        Tagalog
-      </button>
-      </div>
+      <LanguageToggle variant="floating" />
     </div>
 
     <main class="layout-shell">
       <section class="tagline-panel tagline-panel--desktop" aria-label="Platform highlight">
         <div class="tagline-content">
           <div class="identity-block">
-            <span class="identity-badge">{{ language === 'tl' ? 'Portal ng Magsasaka' : 'Farmer Portal' }}</span>
-            <p class="identity-title">{{ language === 'tl' ? 'Mula Binhi Hanggang Tagumpay' : 'From Seeds to Success' }}</p>
+            <div class="identity-brand">
+              <img :src="calffaLogo" :alt="t('brand.name')" class="identity-logo" />
+              <div class="identity-brand-text">
+                <p class="identity-name">{{ t('brand.name') }}</p>
+                <p class="identity-org">{{ t('brand.fullName') }}</p>
+              </div>
+            </div>
+            <p class="identity-title">{{ t('brand.title') }}</p>
             <p class="identity-caption">
-              {{
-                language === 'tl'
-                  ? 'Gumawa ng account upang ma-access ang mga serbisyo ng kooperatiba.'
-                  : 'Create your account to access cooperative services.'
-              }}
+              {{ t('brand.signupCaption') }}
             </p>
           </div>
         </div>
       </section>
 
-      <section class="form-side" aria-label="Registration form">
+      <section class="form-side" :aria-label="t('signup.formAria')">
         <div class="signup-card">
           <div class="signup-card-inner">
           <div class="form-header">
-            <h2 class="form-title">{{ ui.title }}</h2>
+            <h2 class="form-title">{{ t('signup.title') }}</h2>
           </div>
 
-          <div v-if="success" class="message success-message">{{ ui.successMessage }}</div>
+          <div v-if="success" class="message success-message">{{ t('signup.successMessage') }}</div>
           <div v-if="error" class="message error-message">{{ error }}</div>
 
           <GoogleSignInButton class="signup-google-block" />
 
           <div class="auth-divider" aria-hidden="true">
             <span class="auth-divider-line"></span>
-            <span class="auth-divider-text">{{ ui.dividerForm }}</span>
+            <span class="auth-divider-text">{{ t('signup.dividerForm') }}</span>
             <span class="auth-divider-line"></span>
           </div>
 
         <form @submit.prevent="register" class="registration-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.fullName }}</label>
+              <label class="form-label">{{ t('signup.fullName') }}</label>
               <input
                 v-model="form.full_name"
                 type="text"
                 required
                 class="form-input"
-                :placeholder="ui.fullNamePlaceholder"
+                :placeholder="t('signup.fullNamePlaceholder')"
               />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.birthDate }}</label>
+              <label class="form-label">{{ t('signup.birthDate') }}</label>
               <div class="date-input-wrapper">
                 <input
                   v-model="form.date_of_birth"
@@ -86,7 +78,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.barangay }}</label>
+              <label class="form-label">{{ t('signup.barangay') }}</label>
               <select
                 v-model="form.barangay_id"
                 required
@@ -94,7 +86,7 @@
                 :disabled="barangaysLoading"
               >
                 <option value="" disabled>
-                  {{ barangaysLoading ? (language === 'tl' ? 'Naglo-load...' : 'Loading...') : ui.selectBarangay }}
+                  {{ barangaysLoading ? t('common.loading') : t('signup.selectBarangay') }}
                 </option>
                 <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
                   {{ barangay.name }}
@@ -105,24 +97,24 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.landArea }}</label>
+              <label class="form-label">{{ t('signup.landArea') }}</label>
               <TypedNumberInput
                 v-model="form.land_area"
                 :min="0.01"
-                :placeholder="ui.landAreaPlaceholder"
+                :placeholder="t('signup.landAreaPlaceholder')"
               />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.phoneNumber }}</label>
+              <label class="form-label">{{ t('signup.phoneNumber') }}</label>
               <input
                 v-model="form.phone_number"
                 type="tel"
                 required
                 class="form-input"
-                :placeholder="ui.phonePlaceholder"
+                :placeholder="t('signup.phonePlaceholder')"
                 maxlength="11"
                 @input="form.phone_number = form.phone_number.replace(/\D/g, '').slice(0, 11)"
               />
@@ -131,29 +123,29 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">{{ ui.education }}</label>
+              <label class="form-label">{{ t('signup.education') }}</label>
               <select
                 v-model="form.educational_status"
                 required
                 class="form-input"
               >
-                <option value="">{{ ui.selectEducation }}</option>
-                <option value="No Formal Education">{{ ui.noFormalEducation }}</option>
-                <option value="Elementary Level">{{ ui.elementaryLevel }}</option>
-                <option value="Elementary Graduate">{{ ui.elementaryGraduate }}</option>
-                <option value="High School Level">{{ ui.highSchoolLevel }}</option>
-                <option value="High School Graduate">{{ ui.highSchoolGraduate }}</option>
-                <option value="Vocational">{{ ui.vocational }}</option>
-                <option value="College Level">{{ ui.collegeLevel }}</option>
-                <option value="College Graduate">{{ ui.collegeGraduate }}</option>
-                <option value="Post Graduate">{{ ui.postGraduate }}</option>
+                <option value="">{{ t('signup.selectEducation') }}</option>
+                <option value="No Formal Education">{{ t('signup.noFormalEducation') }}</option>
+                <option value="Elementary Level">{{ t('signup.elementaryLevel') }}</option>
+                <option value="Elementary Graduate">{{ t('signup.elementaryGraduate') }}</option>
+                <option value="High School Level">{{ t('signup.highSchoolLevel') }}</option>
+                <option value="High School Graduate">{{ t('signup.highSchoolGraduate') }}</option>
+                <option value="Vocational">{{ t('signup.vocational') }}</option>
+                <option value="College Level">{{ t('signup.collegeLevel') }}</option>
+                <option value="College Graduate">{{ t('signup.collegeGraduate') }}</option>
+                <option value="Post Graduate">{{ t('signup.postGraduate') }}</option>
               </select>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group form-group-full">
-              <label class="form-label">{{ ui.referenceNumber }}</label>
+              <label class="form-label">{{ t('signup.referenceNumber') }}</label>
               <div class="field-input-wrapper">
                 <span class="field-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
@@ -170,7 +162,7 @@
                   pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
                   inputmode="numeric"
                   class="form-input"
-                  :placeholder="ui.referencePlaceholder"
+                  :placeholder="t('signup.referencePlaceholder')"
                   @input="handleReferenceInput"
                 />
               </div>
@@ -178,8 +170,21 @@
           </div>
 
           <div class="form-row">
+            <div class="form-group form-group-full">
+              <label class="form-label">{{ t('signup.address') }}</label>
+              <input
+                v-model="form.address"
+                type="text"
+                required
+                class="form-input"
+                :placeholder="t('signup.addressPlaceholder')"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group password-group">
-              <label class="form-label">{{ ui.password }}</label>
+              <label class="form-label">{{ t('signup.password') }}</label>
               <div class="password-input-wrapper field-input-wrapper">
                 <span class="field-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
@@ -193,18 +198,14 @@
                   required
                   class="form-input"
                   autocomplete="new-password"
-                  :placeholder="ui.passwordPlaceholder"
+                  :placeholder="t('signup.passwordPlaceholder')"
                   @input="validatePasswordInput"
                 />
                 <button
                   type="button"
                   @click="showPassword = !showPassword"
                   class="password-toggle"
-                  :aria-label="
-                    language === 'tl'
-                      ? (showPassword ? 'Itago ang password' : 'Ipakita ang password')
-                      : (showPassword ? 'Hide password' : 'Show password')
-                  "
+                  :aria-label="showPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                   :aria-pressed="showPassword"
                 >
                   <svg
@@ -243,7 +244,7 @@
 
           <div class="form-row">
             <div class="form-group confirm-password-group">
-              <label class="form-label">{{ ui.confirmPassword }}</label>
+              <label class="form-label">{{ t('signup.confirmPassword') }}</label>
               <div class="password-input-wrapper field-input-wrapper">
                 <span class="field-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2">
@@ -257,17 +258,13 @@
                   required
                   class="form-input"
                   autocomplete="new-password"
-                  :placeholder="ui.confirmPasswordPlaceholder"
+                  :placeholder="t('signup.confirmPasswordPlaceholder')"
                 />
                 <button
                   type="button"
                   @click="showConfirmPassword = !showConfirmPassword"
                   class="password-toggle"
-                  :aria-label="
-                    language === 'tl'
-                      ? (showConfirmPassword ? 'Itago ang password' : 'Ipakita ang password')
-                      : (showConfirmPassword ? 'Hide password' : 'Show password')
-                  "
+                  :aria-label="showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')"
                   :aria-pressed="showConfirmPassword"
                 >
                   <svg
@@ -304,7 +301,7 @@
           </div>
 
           <div class="form-row form-row-legal">
-            <RegistrationLegalNotice v-model:agreed="agreedToTerms" :language="language" />
+            <RegistrationLegalNotice v-model:agreed="agreedToTerms" />
           </div>
 
           <div class="form-row form-row-actions">
@@ -313,15 +310,15 @@
               :disabled="loading"
               class="submit-btn"
             >
-              {{ loading ? ui.registering : ui.createAccount }}
+              {{ loading ? t('signup.registering') : t('signup.createAccount') }}
             </button>
           </div>
 
           <div class="form-row form-row-footer">
-            <div class="form-footer">
-              <div class="footer-cta">
-                <p class="footer-text">{{ ui.alreadyHaveAccount }}</p>
-                <router-link to="/login" class="link-btn">{{ ui.signIn }}</router-link>
+          <div class="form-footer">
+            <div class="footer-cta">
+              <p class="footer-text">{{ t('signup.alreadyHaveAccount') }}</p>
+              <router-link to="/login" class="link-btn">{{ t('signup.signIn') }}</router-link>
               </div>
             </div>
           </div>
@@ -336,102 +333,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
+import { useBackdropTheme } from '../composables/useBackdropTheme'
+import farmerPhoto from '../assets/landing/farmer-hero.jpg'
+import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
 const router = useRouter()
-const language = ref('en')
-
-const labels = {
-  en: {
-    title: 'Farmer Registration',
-    subtitle: 'Begin your journey',
-    dividerForm: 'or use the form below',
-    fullName: 'Full Name',
-    fullNamePlaceholder: 'Enter your full name',
-    birthDate: 'Date of Birth',
-    barangay: 'Barangay',
-    selectBarangay: 'Select your barangay',
-    landArea: 'Farm area (hectares)',
-    landAreaPlaceholder: 'e.g. 1.25',
-    landAreaHint: 'Total hectares you farm. Barangay land totals come from approved members.',
-    phoneNumber: 'Phone Number',
-    phonePlaceholder: 'Enter your phone number',
-    education: 'Educational Status',
-    selectEducation: 'Select educational attainment',
-    noFormalEducation: 'No Formal Education',
-    elementaryLevel: 'Elementary Level',
-    elementaryGraduate: 'Elementary Graduate',
-    highSchoolLevel: 'High School Level',
-    highSchoolGraduate: 'High School Graduate',
-    vocational: 'Vocational',
-    collegeLevel: 'College Level',
-    collegeGraduate: 'College Graduate',
-    postGraduate: 'Post Graduate',
-    educationHint: 'Select your highest educational attainment',
-    referenceNumber: 'Reference Number',
-    referencePlaceholder: '00-00-00-000-000000',
-    password: 'Password',
-    passwordPlaceholder: 'Enter your password',
-    confirmPassword: 'Confirm Password',
-    confirmPasswordPlaceholder: 'Confirm your password',
-    createAccount: 'Create Account',
-    registering: 'Registering...',
-    alreadyHaveAccount: 'Already have an account?',
-    signIn: 'Sign In',
-    successMessage: 'Registration successful! Please login with your credentials.',
-    referenceFormatError: 'Reference number must follow 00-00-00-000-000000 format.',
-    landAreaError: 'Farm area (hectares) must be a number greater than 0.',
-    registerError: 'An error occurred during registration',
-    agreeRequired: 'You must agree to the terms and conditions and data privacy policy before registering.'
-  },
-  tl: {
-    title: 'Pagrehistro ng Magsasaka',
-    subtitle: 'Magsimula ng iyong paglalakbay',
-    dividerForm: 'o gamitin ang form sa ibaba',
-    fullName: 'Buong Pangalan',
-    fullNamePlaceholder: 'Ilagay ang iyong buong pangalan',
-    birthDate: 'Petsa ng Kapanganakan',
-    barangay: 'Barangay',
-    selectBarangay: 'Piliin ang iyong barangay',
-    landArea: 'Lawak ng sakahan (ektarya)',
-    landAreaPlaceholder: 'hal. 1.25',
-    landAreaHint: 'Kabuuang ektarya ng inyong sakahan. Ang kabuuang lupa ng barangay ay mula sa aprubadong miyembro.',
-    phoneNumber: 'Numero ng Telepono',
-    phonePlaceholder: 'Ilagay ang numero ng telepono',
-    education: 'Antas ng Edukasyon',
-    selectEducation: 'Piliin ang natapos na edukasyon',
-    noFormalEducation: 'Walang Pormal na Edukasyon',
-    elementaryLevel: 'Elementarya (Hindi Tapos)',
-    elementaryGraduate: 'Elementarya (Tapos)',
-    highSchoolLevel: 'High School (Hindi Tapos)',
-    highSchoolGraduate: 'High School (Tapos)',
-    vocational: 'Bokasyonal',
-    collegeLevel: 'Kolehiyo (Hindi Tapos)',
-    collegeGraduate: 'Kolehiyo (Tapos)',
-    postGraduate: 'Post Graduate',
-    educationHint: 'Piliin ang pinakamataas na antas ng edukasyon',
-    referenceNumber: 'Reference Number',
-    referencePlaceholder: '00-00-00-000-000000',
-    password: 'Password',
-    passwordPlaceholder: 'Ilagay ang password',
-    confirmPassword: 'Kumpirmahin ang Password',
-    confirmPasswordPlaceholder: 'Kumpirmahin ang iyong password',
-    createAccount: 'Gumawa ng Account',
-    registering: 'Nagre-rehistro...',
-    alreadyHaveAccount: 'Mayroon nang account?',
-    signIn: 'Mag-login',
-    successMessage: 'Matagumpay ang pagrehistro! Paki-login gamit ang inyong credentials.',
-    referenceFormatError: 'Ang reference number ay dapat sumunod sa format na 00-00-00-000-000000.',
-    landAreaError: 'Ang lawak ng sakahan (ektarya) ay dapat na numero na mas mataas sa 0.',
-    registerError: 'May error sa pagrehistro',
-    agreeRequired: 'Dapat sumang-ayon sa mga tuntunin at data privacy policy bago magrehistro.'
-  }
-}
-
-const ui = computed(() => labels[language.value])
+const { t } = useI18n()
+const { isDark } = useBackdropTheme()
+const isLight = computed(() => !isDark.value)
 
 const form = ref({
   full_name: '',
@@ -441,6 +356,7 @@ const form = ref({
   phone_number: '',
   educational_status: '',
   reference_number: '',
+  address: '',
   password: '',
   confirmPassword: ''
 })
@@ -492,9 +408,7 @@ const loadBarangays = async () => {
     barangays.value = data.barangays || []
   } catch (err) {
     console.error('Failed to load barangays:', err)
-    error.value = language.value === 'tl'
-      ? 'Hindi ma-load ang listahan ng barangay. Paki-refresh ang pahina.'
-      : 'Could not load barangay list. Please refresh the page.'
+    error.value = t('signup.barangayLoadError')
   } finally {
     barangaysLoading.value = false
   }
@@ -517,14 +431,12 @@ const calculateAge = (birthDate) => {
 
 const validateAge = () => {
   if (!form.value.date_of_birth) {
-    error.value = language.value === 'tl' ? 'Kinakailangan ang petsa ng kapanganakan' : 'Date of birth is required'
+    error.value = t('signup.birthDateRequired')
     return false
   }
   const age = calculateAge(form.value.date_of_birth)
   if (age < 18) {
-    error.value = language.value === 'tl'
-      ? `Dapat ay hindi bababa sa 18 taong gulang. Kayo ay ${age} taong gulang.`
-      : `You must be at least 18 years old to register. You are currently ${age} years old.`
+    error.value = t('signup.ageRequirement', { age })
     return false
   }
   return true
@@ -533,9 +445,7 @@ const validateAge = () => {
 const validatePhoneNumber = () => {
   const phoneNumber = form.value.phone_number.replace(/\D/g, '')
   if (phoneNumber.length !== 11) {
-    error.value = language.value === 'tl'
-      ? `Ang numero ng telepono ay dapat eksaktong 11 digit. ${phoneNumber.length} ang nailagay.`
-      : `Phone number must be exactly 11 digits. You entered ${phoneNumber.length} digits.`
+    error.value = t('signup.phoneDigits', { count: phoneNumber.length })
     return false
   }
   return true
@@ -545,9 +455,7 @@ const validatePassword = () => {
   const password = form.value.password
 
   if (password.length < 8) {
-    error.value = language.value === 'tl'
-      ? 'Ang password ay dapat may hindi bababa sa 8 karakter'
-      : 'Password must be at least 8 characters long'
+    error.value = t('signup.passwordMinLength')
     return false
   }
 
@@ -555,9 +463,7 @@ const validatePassword = () => {
   const hasNumbers = /[0-9]/.test(password)
 
   if (!hasLetters || !hasNumbers) {
-    error.value = language.value === 'tl'
-      ? 'Ang password ay dapat may parehong letra at numero'
-      : 'Password must contain both letters and numbers'
+    error.value = t('signup.passwordLettersNumbers')
     return false
   }
 
@@ -577,19 +483,17 @@ const validatePasswordInput = () => {
   const length = password.length
 
   if (length < 8) {
-    passwordError.value = language.value === 'tl'
-      ? `${8 - length} pang karakter ang kailangan`
-      : `${8 - length} more character(s) needed`
+    passwordError.value = t('signup.passwordMoreChars', { count: 8 - length })
     return
   }
 
   if (!hasLetters && hasNumbers) {
-    passwordError.value = language.value === 'tl' ? 'Magdagdag ng mga letra (A-Z o a-z)' : 'Add letters (A-Z or a-z)'
+    passwordError.value = t('signup.passwordAddLetters')
     return
   }
 
   if (hasLetters && !hasNumbers) {
-    passwordError.value = language.value === 'tl' ? 'Magdagdag ng mga numero (0-9)' : 'Add numbers (0-9)'
+    passwordError.value = t('signup.passwordAddNumbers')
     return
   }
 
@@ -610,22 +514,22 @@ const register = async () => {
   }
 
   if (form.value.password !== form.value.confirmPassword) {
-    error.value = language.value === 'tl' ? 'Hindi magkatugma ang password' : 'Passwords do not match'
+    error.value = t('signup.passwordMismatch')
     return
   }
   if (!REFERENCE_FORMAT_REGEX.test(form.value.reference_number)) {
-    error.value = ui.value.referenceFormatError
+    error.value = t('signup.referenceFormatError')
     return
   }
 
   const landHa = parseFloat(form.value.land_area)
   if (!Number.isFinite(landHa) || landHa <= 0) {
-    error.value = ui.value.landAreaError
+    error.value = t('signup.landAreaError')
     return
   }
 
   if (!agreedToTerms.value) {
-    error.value = ui.value.agreeRequired
+    error.value = t('signup.agreeRequired')
     return
   }
 
@@ -638,9 +542,7 @@ const register = async () => {
       (b) => String(b.id) === String(form.value.barangay_id)
     )
     if (!selectedBarangay) {
-      error.value = language.value === 'tl'
-        ? 'Pumili ng wastong barangay.'
-        : 'Please select a valid barangay.'
+      error.value = t('signup.selectValidBarangay')
       loading.value = false
       return
     }
@@ -653,7 +555,7 @@ const register = async () => {
       body: JSON.stringify({
         full_name: form.value.full_name,
         date_of_birth: form.value.date_of_birth,
-        address: selectedBarangay.name,
+        address: form.value.address.trim() || selectedBarangay.name,
         phone_number: form.value.phone_number,
         educational_status: form.value.educational_status,
         reference_number: form.value.reference_number,
@@ -679,6 +581,7 @@ const register = async () => {
       phone_number: '',
       educational_status: '',
       reference_number: '',
+      address: '',
       password: '',
       confirmPassword: ''
     }
@@ -687,7 +590,7 @@ const register = async () => {
       router.push('/login')
     }, 3000)
   } catch (err) {
-    error.value = err.message || ui.value.registerError
+    error.value = err.message || t('signup.registerError')
   } finally {
     loading.value = false
   }
