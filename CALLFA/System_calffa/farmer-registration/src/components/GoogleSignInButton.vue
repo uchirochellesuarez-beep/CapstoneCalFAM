@@ -1,7 +1,12 @@
 <template>
   <div class="google-signin-container">
-    <!-- Custom full-width look; invisible official GIS button handles the click -->
-    <div class="google-signin-btn" :class="{ disabled: isLoading }">
+    <button
+      type="button"
+      class="google-signin-btn"
+      :class="{ disabled: isLoading }"
+      :disabled="isLoading"
+      @click="onGoogleClick"
+    >
       <svg viewBox="0 0 24 24" class="google-icon" aria-hidden="true">
         <path
           fill="#4285F4"
@@ -21,14 +26,7 @@
         />
       </svg>
       <span class="google-btn-text">{{ buttonLabel }}</span>
-
-      <div
-        ref="gsiButtonHost"
-        class="google-signin-btn-host"
-        :class="{ hidden: isLoading }"
-        aria-label="Continue with Google"
-      ></div>
-    </div>
+    </button>
 
     <p v-if="showOriginHint" class="google-origin-hint">
       Current site origin: <strong>{{ currentOrigin }}</strong>
@@ -49,10 +47,10 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
-import { ensureGoogleInitialized, setGoogleCredentialHandler } from '../utils/googleGsi'
+import { ensureGoogleInitialized, promptGoogleSignIn, setGoogleCredentialHandler } from '../utils/googleGsi'
 
 const props = defineProps({
   mode: {
@@ -76,7 +74,6 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const showOriginHint = ref(false)
 const showFedcmHint = ref(false)
-const gsiButtonHost = ref(null)
 const authStore = useAuthStore()
 const { t, te } = useI18n()
 const currentOrigin = typeof window !== 'undefined' ? window.location.origin : ''
@@ -84,9 +81,6 @@ const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '
 let consoleHookInstalled = false
 let originalConsoleWarn = null
 let originalConsoleError = null
-let resizeObserver = null
-let resizeTimer = 0
-let lastButtonWidth = 0
 
 const MSG = {
   resetNotLinked:
@@ -223,53 +217,6 @@ const parseJsonResponse = async (response, fallbackMessage) => {
   }
 }
 
-const hostWidth = () => {
-  const el = gsiButtonHost.value
-  if (!el) return 320
-  const parent = el.parentElement
-  const w = Math.floor(parent?.getBoundingClientRect?.().width || el.offsetWidth || 320)
-  // GIS requires width between ~200 and 400 typically; stretch via CSS after render.
-  return Math.max(200, Math.min(400, w))
-}
-
-const renderGsiButton = async (force = false) => {
-  await nextTick()
-  if (!gsiButtonHost.value || !window.google?.accounts?.id?.renderButton) return
-
-  const width = hostWidth()
-  const alreadyRendered = gsiButtonHost.value.querySelector('iframe, div[role="button"]')
-  if (!force && alreadyRendered && Math.abs(width - lastButtonWidth) < 24) return
-
-  gsiButtonHost.value.innerHTML = ''
-  lastButtonWidth = width
-  window.google.accounts.id.renderButton(gsiButtonHost.value, {
-    theme: 'outline',
-    size: 'large',
-    shape: 'rectangular',
-    text: 'continue_with',
-    logo_alignment: 'left',
-    width,
-    ux_mode: 'popup'
-  })
-}
-
-const scheduleRerender = () => {
-  if (resizeTimer) clearTimeout(resizeTimer)
-  resizeTimer = window.setTimeout(() => {
-    resizeTimer = 0
-    renderGsiButton(false)
-  }, 300)
-}
-
-const attachResizeObserver = () => {
-  if (typeof ResizeObserver === 'undefined') return
-  resizeObserver?.disconnect()
-  const target = gsiButtonHost.value?.parentElement
-  if (!target) return
-  resizeObserver = new ResizeObserver(() => scheduleRerender())
-  resizeObserver.observe(target)
-}
-
 const handleGoogleCredentialResponse = async (response) => {
   try {
     errorMessage.value = ''
@@ -380,13 +327,15 @@ const handleGoogleCredentialResponse = async (response) => {
   }
 }
 
-const setupGoogleButton = async () => {
+const onGoogleClick = async () => {
+  if (isLoading.value) return
+  errorMessage.value = ''
+  showOriginHint.value = false
+  showFedcmHint.value = false
   try {
-    errorMessage.value = ''
     setGoogleCredentialHandler(handleGoogleCredentialResponse)
     await ensureGoogleInitialized(import.meta.env.VITE_GOOGLE_CLIENT_ID)
-    await renderGsiButton(true)
-    attachResizeObserver()
+    promptGoogleSignIn()
   } catch (error) {
     const message = String(error?.message || '')
     if (message.toLowerCase().includes('origin') || message.includes('403')) {
@@ -399,29 +348,28 @@ const setupGoogleButton = async () => {
 }
 
 onMounted(() => {
-  setGoogleCredentialHandler(handleGoogleCredentialResponse)
   installGsiConsoleHook()
-  window.setTimeout(() => {
-    setupGoogleButton()
-  }, 700)
-  window.addEventListener('resize', scheduleRerender)
+  setGoogleCredentialHandler(handleGoogleCredentialResponse)
+  ensureGoogleInitialized(import.meta.env.VITE_GOOGLE_CLIENT_ID).catch((error) => {
+    const message = String(error?.message || '')
+    if (message.toLowerCase().includes('origin') || message.includes('403')) {
+      markOriginMismatch()
+    } else if (message) {
+      errorMessage.value = message
+    }
+  })
 })
 
 watch(
   () => props.mode,
   () => {
     setGoogleCredentialHandler(handleGoogleCredentialResponse)
-    setupGoogleButton()
   }
 )
 
 onBeforeUnmount(() => {
   setGoogleCredentialHandler(null)
   removeGsiConsoleHook()
-  resizeObserver?.disconnect()
-  resizeObserver = null
-  if (resizeTimer) clearTimeout(resizeTimer)
-  window.removeEventListener('resize', scheduleRerender)
 })
 </script>
 
@@ -454,6 +402,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
+  cursor: pointer;
   overflow: hidden;
   transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -486,30 +435,7 @@ onBeforeUnmount(() => {
   z-index: 1;
   display: block;
   overflow: hidden;
-  /* Prevent color fringing / red edge artifacts on light backgrounds */
   shape-rendering: geometricPrecision;
-}
-
-.google-signin-btn-host {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  opacity: 0;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.google-signin-btn-host.hidden {
-  pointer-events: none;
-}
-
-/* Stretch invisible GIS iframe to fill the custom button */
-.google-signin-btn-host :deep(div[role='button']),
-.google-signin-btn-host :deep(iframe) {
-  width: 100% !important;
-  max-width: none !important;
-  height: 100% !important;
-  min-width: 100% !important;
 }
 
 .google-origin-hint,

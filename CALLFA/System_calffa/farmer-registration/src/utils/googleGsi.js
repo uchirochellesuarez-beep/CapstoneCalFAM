@@ -62,3 +62,10 @@ export async function ensureGoogleInitialized(clientId) {
 
   gsiClientIdReady = clientId
 }
+
+export function promptGoogleSignIn() {
+  if (!window.google?.accounts?.id?.prompt) {
+    throw new Error('Google Sign-In is not ready')
+  }
+  window.google.accounts.id.prompt()
+}
