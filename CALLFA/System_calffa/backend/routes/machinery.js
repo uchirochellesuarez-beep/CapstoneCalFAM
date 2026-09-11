@@ -11,6 +11,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { syncExpiredMachineryBookings } = require('../services/booking-status-sync');
+const { sqlLimit } = require('../utils/sqlLimit');
 const { createBookingStatusNotification, formatLocalDate, createOperatorBookingAssignedNotification, createOperatorBookingUpdatedNotification, createOperatorBookingCancelledNotification, createTreasurerDownPaymentSubmittedNotification, createTreasurerBalancePaymentSubmittedNotification, createTreasurerCollectibleCreatedNotification, createTreasurerRefundRequestedNotification, createManagerConfirmBookingNotification, deleteNotificationsForBooking, notifyBarangayDownPaymentDue } = require('../services/notification-service');
 const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
 const { verifyBalancePaymentSubmission } = require('../services/balance-payment-service');
@@ -1464,8 +1465,7 @@ router.get('/bookings', async (req, res) => {
       query += ' AND 1=0';
     }
     
-    query += ' ORDER BY mb.booking_date DESC, mb.created_at DESC LIMIT ?';
-    params.push(parseInt(limit));
+    query += ` ORDER BY mb.booking_date DESC, mb.created_at DESC LIMIT ${sqlLimit(limit, 100, 500)}`;
     
     const [bookings] = await pool.execute(query, params);
     
@@ -1480,7 +1480,11 @@ router.get('/bookings', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch bookings' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch bookings',
+      details: error.sqlMessage || error.message
+    });
   }
 });
 

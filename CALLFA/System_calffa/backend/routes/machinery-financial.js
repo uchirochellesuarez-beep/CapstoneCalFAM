@@ -7,6 +7,7 @@ const { generateReceiptNumber, recordPaymentReceipt, ensureReceiptTables } = req
 const { REFUNDED_BOOKING_NOT_EXISTS_SQL } = require('../services/refund-service');
 const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
 const { getRequestUser, isAdmin } = require('../utils/requestUser');
+const { sqlLimit } = require('../utils/sqlLimit');
 const { buildExpenseReceiptLineItems } = require('../services/expense-receipt-lines');
 const {
   calculatePartialPaymentInterest,
@@ -303,8 +304,7 @@ router.get('/expenses', verifyFinancialAccess, async (req, res) => {
       CASE WHEN me.expense_status = 'Pending' THEN 0 ELSE 1 END,
       me.date_of_expense DESC,
       me.created_at DESC
-      LIMIT ?`;
-    params.push(parseInt(limit, 10));
+      LIMIT ${sqlLimit(limit, 200, 500)}`;
     
     const [expenses] = await pool.execute(query, params);
 
@@ -337,7 +337,11 @@ router.get('/expenses', verifyFinancialAccess, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching expenses:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch expenses' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch expenses',
+      details: error.sqlMessage || error.message
+    });
   }
 });
 
@@ -850,14 +854,17 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
       params.push(end_date);
     }
 
-    query += ' ORDER BY date_of_income DESC LIMIT ?';
-    params.push(parseInt(limit));
+    query += ` ORDER BY date_of_income DESC LIMIT ${sqlLimit(limit, 100, 500)}`;
 
     const [income] = await pool.execute(query, params);
     res.json({ success: true, income, userRole, userBarangayId });
   } catch (error) {
     console.error('Error fetching income:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch income' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch income',
+      details: error.sqlMessage || error.message
+    });
   }
 });
 

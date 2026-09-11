@@ -41,6 +41,8 @@ const { ensureGcashPaymentSchema } = require('./schema/ensureGcashPaymentSchema'
 const { dropUnusedActivityLogs } = require('./schema/dropUnusedActivityLogs');
 const { dropUnusedLegacyTables } = require('./schema/dropUnusedLegacyTables');
 const { dropUnusedMachineryBookingColumns } = require('./schema/dropUnusedMachineryBookingColumns');
+const { ensureMachineryCoreTables } = require('./schema/ensureMachineryCoreTables');
+const { ensureReceiptTables } = require('./services/receipt-service');
 const { ensureFarmersEmailColumn, ensureFarmersGoogleIdColumn } = require('./utils/googleAuth');
 const pool = require('./db');
 const { ensureBarangayServicePlaces } = require('./schema/ensureBarangayServicePlaces');
@@ -101,6 +103,8 @@ if (require.main === module) {
       () => ensureFarmersGoogleIdColumn(pool),
       () => ensureBarangayServicePlaces(pool),
       () => ensureNotificationSchema(),
+      () => ensureReceiptTables(pool),
+      () => ensureMachineryCoreTables(pool),
       () => ensureOperatorAssignmentSchema(pool),
       () => ensurePendingExpenseSchema(pool),
       () => ensureDownPaymentSchema(pool),

@@ -9,6 +9,7 @@ const {
   ensureLaborReceiptForIncomeRow
 } = require('../services/operator-income-service');
 const { withDisplayStatus } = require('../services/machinery-status');
+const { sqlLimit } = require('../utils/sqlLimit');
 
 const INCOME_RECEIPT_JOIN = `
   LEFT JOIN payment_receipts pr
@@ -198,8 +199,7 @@ router.get('/', verifyOperatorAccess, async (req, res) => {
       params.push(booking_status);
     }
 
-    query += ' ORDER BY oi.transaction_date DESC, oi.created_at DESC LIMIT ?';
-    params.push(parseInt(limit, 10));
+    query += ` ORDER BY oi.transaction_date DESC, oi.created_at DESC LIMIT ${sqlLimit(limit, 100, 500)}`;
 
     const [income] = await pool.execute(query, params);
     const incomeWithReceipts = await attachLaborReceipts(income);

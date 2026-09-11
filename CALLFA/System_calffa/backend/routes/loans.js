@@ -18,6 +18,7 @@ const {
   normalizeDateString,
   daysBetween
 } = require('../utils/philippinesTime');
+const { sqlLimit } = require('../utils/sqlLimit');
 
 // Loan type limits
 const LOAN_LIMITS = {
@@ -428,8 +429,7 @@ router.get('/', async (req, res) => {
       }
     }
     
-    query += ' ORDER BY l.application_date DESC LIMIT ?';
-    params.push(parseInt(limit));
+    query += ` ORDER BY l.application_date DESC LIMIT ${sqlLimit(limit, 100, 500)}`;
     
     const [loans] = await pool.execute(query, params);
     
