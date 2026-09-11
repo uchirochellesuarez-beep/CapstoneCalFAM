@@ -52,6 +52,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
+import { ensureGoogleInitialized, setGoogleCredentialHandler } from '../utils/googleGsi'
 
 const props = defineProps({
   mode: {
@@ -80,14 +81,12 @@ const authStore = useAuthStore()
 const { t, te } = useI18n()
 const currentOrigin = typeof window !== 'undefined' ? window.location.origin : ''
 
-/** Module-level GIS init — call initialize only once per client id. */
-let gsiClientIdReady = null
-let gsiCredentialHandler = null
 let consoleHookInstalled = false
 let originalConsoleWarn = null
 let originalConsoleError = null
 let resizeObserver = null
-let resizeRaf = 0
+let resizeTimer = 0
+let lastButtonWidth = 0
 
 const MSG = {
   resetNotLinked:
@@ -188,8 +187,6 @@ const removeGsiConsoleHook = () => {
   originalConsoleError = null
 }
 
-const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
-
 const decodeJwtPayload = (credential) => {
   try {
     const payload = String(credential || '').split('.')[1]
@@ -210,28 +207,6 @@ const redirectAfterGoogleLogin = (user) => {
   window.location.href = '/dashboard'
 }
 
-const loadGoogleScript = () => new Promise((resolve, reject) => {
-  if (window.google?.accounts?.id) {
-    resolve(window.google)
-    return
-  }
-
-  const existingScript = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`)
-  if (existingScript) {
-    existingScript.addEventListener('load', () => resolve(window.google), { once: true })
-    existingScript.addEventListener('error', () => reject(new Error('Failed to load Google Sign-In library')), { once: true })
-    return
-  }
-
-  const script = document.createElement('script')
-  script.src = GOOGLE_SCRIPT_SRC
-  script.async = true
-  script.defer = true
-  script.onload = () => resolve(window.google)
-  script.onerror = () => reject(new Error('Failed to load Google Sign-In library'))
-  document.head.appendChild(script)
-})
-
 const parseJsonResponse = async (response, fallbackMessage) => {
   const raw = await response.text()
   if (!raw) {
@@ -248,40 +223,6 @@ const parseJsonResponse = async (response, fallbackMessage) => {
   }
 }
 
-const ensureGoogleInitialized = async () => {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-  if (!clientId) {
-    throw new Error('Google Client ID is not configured')
-  }
-
-  await loadGoogleScript()
-  gsiCredentialHandler = handleGoogleCredentialResponse
-
-  if (gsiClientIdReady !== clientId) {
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response) => {
-        if (typeof gsiCredentialHandler === 'function') {
-          gsiCredentialHandler(response)
-        }
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true,
-      ux_mode: 'popup',
-      use_fedcm_for_prompt: false,
-      use_fedcm_for_button: false,
-      context: 'signin',
-      itp_support: true
-    })
-
-    if (typeof window.google.accounts.id.disableAutoSelect === 'function') {
-      window.google.accounts.id.disableAutoSelect()
-    }
-
-    gsiClientIdReady = clientId
-  }
-}
-
 const hostWidth = () => {
   const el = gsiButtonHost.value
   if (!el) return 320
@@ -291,12 +232,16 @@ const hostWidth = () => {
   return Math.max(200, Math.min(400, w))
 }
 
-const renderGsiButton = async () => {
+const renderGsiButton = async (force = false) => {
   await nextTick()
   if (!gsiButtonHost.value || !window.google?.accounts?.id?.renderButton) return
 
-  gsiButtonHost.value.innerHTML = ''
   const width = hostWidth()
+  const alreadyRendered = gsiButtonHost.value.querySelector('iframe, div[role="button"]')
+  if (!force && alreadyRendered && Math.abs(width - lastButtonWidth) < 24) return
+
+  gsiButtonHost.value.innerHTML = ''
+  lastButtonWidth = width
   window.google.accounts.id.renderButton(gsiButtonHost.value, {
     theme: 'outline',
     size: 'large',
@@ -309,11 +254,11 @@ const renderGsiButton = async () => {
 }
 
 const scheduleRerender = () => {
-  if (resizeRaf) cancelAnimationFrame(resizeRaf)
-  resizeRaf = requestAnimationFrame(() => {
-    resizeRaf = 0
-    renderGsiButton()
-  })
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = window.setTimeout(() => {
+    resizeTimer = 0
+    renderGsiButton(false)
+  }, 300)
 }
 
 const attachResizeObserver = () => {
@@ -438,8 +383,9 @@ const handleGoogleCredentialResponse = async (response) => {
 const setupGoogleButton = async () => {
   try {
     errorMessage.value = ''
-    await ensureGoogleInitialized()
-    await renderGsiButton()
+    setGoogleCredentialHandler(handleGoogleCredentialResponse)
+    await ensureGoogleInitialized(import.meta.env.VITE_GOOGLE_CLIENT_ID)
+    await renderGsiButton(true)
     attachResizeObserver()
   } catch (error) {
     const message = String(error?.message || '')
@@ -453,28 +399,28 @@ const setupGoogleButton = async () => {
 }
 
 onMounted(() => {
-  gsiCredentialHandler = handleGoogleCredentialResponse
+  setGoogleCredentialHandler(handleGoogleCredentialResponse)
   installGsiConsoleHook()
-  setupGoogleButton()
+  window.setTimeout(() => {
+    setupGoogleButton()
+  }, 700)
   window.addEventListener('resize', scheduleRerender)
 })
 
 watch(
   () => props.mode,
   () => {
-    gsiCredentialHandler = handleGoogleCredentialResponse
+    setGoogleCredentialHandler(handleGoogleCredentialResponse)
     setupGoogleButton()
   }
 )
 
 onBeforeUnmount(() => {
-  if (gsiCredentialHandler === handleGoogleCredentialResponse) {
-    gsiCredentialHandler = null
-  }
+  setGoogleCredentialHandler(null)
   removeGsiConsoleHook()
   resizeObserver?.disconnect()
   resizeObserver = null
-  if (resizeRaf) cancelAnimationFrame(resizeRaf)
+  if (resizeTimer) clearTimeout(resizeTimer)
   window.removeEventListener('resize', scheduleRerender)
 })
 </script>
