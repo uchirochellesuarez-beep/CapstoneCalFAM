@@ -4,7 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 ARG VITE_API_URL=https://api.calfam.ormin.cloud
-ARG VITE_GOOGLE_CLIENT_ID=
+ARG VITE_GOOGLE_CLIENT_ID=1084774246434-l3s6g900rtjtthde0gnrhkhfqrg5t4jg.apps.googleusercontent.com
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
