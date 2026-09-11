@@ -63,9 +63,16 @@ export async function ensureGoogleInitialized(clientId) {
   gsiClientIdReady = clientId
 }
 
-export function promptGoogleSignIn() {
-  if (!window.google?.accounts?.id?.prompt) {
-    throw new Error('Google Sign-In is not ready')
-  }
-  window.google.accounts.id.prompt()
+export function renderGoogleButton(element, width = 320) {
+  if (!element || !window.google?.accounts?.id?.renderButton) return
+  element.innerHTML = ''
+  window.google.accounts.id.renderButton(element, {
+    theme: 'outline',
+    size: 'large',
+    shape: 'rectangular',
+    text: 'continue_with',
+    logo_alignment: 'left',
+    width: Math.max(200, Math.min(400, Math.floor(width))),
+    ux_mode: 'popup'
+  })
 }

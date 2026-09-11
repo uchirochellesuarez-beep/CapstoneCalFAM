@@ -910,6 +910,17 @@ const goToLogin = () => {
   flex-shrink: 0;
 }
 
+.login-page:not(.light-theme) .login-card :deep(.google-origin-hint),
+.login-page:not(.light-theme) .login-card :deep(.google-error-message) {
+  color: #9f1239 !important;
+  -webkit-text-fill-color: #9f1239 !important;
+}
+
+.login-page:not(.light-theme) .login-card :deep(.google-origin-hint strong) {
+  color: #9a3412 !important;
+  -webkit-text-fill-color: #9a3412 !important;
+}
+
 .login-card :deep(.google-signin-btn) {
   min-height: 2.7rem;
   padding: 0.7rem 1rem;
