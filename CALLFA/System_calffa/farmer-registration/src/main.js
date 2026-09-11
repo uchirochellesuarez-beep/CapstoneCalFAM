@@ -4,6 +4,9 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router'
 import { i18n } from './i18n'
+import { closeGoogleOAuthPopupIfNeeded } from './utils/googleGsi'
+import { useAuthStore } from './stores/authStore'
+import { detectSessionReplaced } from './utils/authSession'
 import './style.css'
 import './assets/backdrop-theme.css'
 import './styles/glass-unified-theme.css'
@@ -25,39 +28,31 @@ import './styles/members-summary-ui.css'
 import './styles/machinery-approval-ui.css'
 import './styles/machinery-booking-ui.css'
 
+if (!closeGoogleOAuthPopupIfNeeded()) {
+  const app = createApp(App)
+  const pinia = createPinia()
+  app.use(pinia)
+  app.use(router)
+  app.use(i18n)
 
+  const authStore = useAuthStore()
+  authStore.initSessionGuard()
 
-
-
-
-const app = createApp(App)
-const pinia = createPinia()
-app.use(pinia)
-app.use(router)
-app.use(i18n)
-
-// Single-account session: sync tabs + kick out replaced sessions
-import { useAuthStore } from './stores/authStore'
-import { detectSessionReplaced } from './utils/authSession'
-
-const authStore = useAuthStore()
-authStore.initSessionGuard()
-
-const originalFetch = window.fetch.bind(window)
-window.fetch = async (...args) => {
-  const response = await originalFetch(...args)
-  try {
-    // Ignore session-replaced handling while intentionally logging out
-    if (!authStore.loggingOut && authStore.token) {
-      const replaced = await detectSessionReplaced(response)
-      if (replaced) {
-        authStore.handleSessionReplaced(replaced.message)
+  const originalFetch = window.fetch.bind(window)
+  window.fetch = async (...args) => {
+    const response = await originalFetch(...args)
+    try {
+      if (!authStore.loggingOut && authStore.token) {
+        const replaced = await detectSessionReplaced(response)
+        if (replaced) {
+          authStore.handleSessionReplaced(replaced.message)
+        }
       }
+    } catch {
+      /* ignore */
     }
-  } catch {
-    /* ignore */
+    return response
   }
-  return response
-}
 
-app.mount('#app')
+  app.mount('#app')
+}
