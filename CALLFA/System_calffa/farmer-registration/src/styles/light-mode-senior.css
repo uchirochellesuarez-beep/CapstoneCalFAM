@@ -133,7 +133,9 @@ body.glass-light .sidebar.light-theme {
   box-shadow: 8px 0 24px rgba(22, 101, 52, 0.1);
 }
 
-body.glass-light .sidebar.light-theme .calffa-brand {
+body.glass-light .sidebar.light-theme .calffa-brand-line {
+  background: none;
+  -webkit-text-fill-color: #000000;
   color: #000000;
 }
 
@@ -2669,7 +2671,7 @@ body.glass-light :is(
   .card-title, .card-label, .stat-label, .stat-value,
   .filter-label, .form-label, .admin-filter-label, .inline-label,
   .empty-title, .empty-text, .empty-state, .empty-hint,
-  .nav-link, .section-header, .section-title, .calffa-brand, .calffa-tagline,
+  .nav-link, .section-header, .section-title, .calffa-brand, .calffa-brand-line, .calffa-tagline,
   .role-badge, .status-badge, .status-pill, .badge, .member-chip,
   .barangay-name-link, .inline-link, .view-all-link,
   .detail-item label, .form-hint, .muted, .name, .font-semibold,
@@ -2680,7 +2682,7 @@ body.glass-light :is(
   .payer-text, .payer-desc, .score-factors, .td-name,
   .notice-title, .notice-content, .hero-desc,
   .top-header .profile-name, .top-header .profile-id,
-  .top-header .profile-status, .top-header .theme-toggle-btn,
+  .top-header .profile-role, .top-header .mobile-profile-role, .top-header .profile-status, .top-header .theme-toggle-btn,
   .top-header .icon-btn
 ) {
   color: #000000 !important;

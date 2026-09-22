@@ -137,6 +137,8 @@ body.glass-light .top-header .lang-toggle--header .lang-btn.active {
 
 body.glass-light .top-header .profile-name,
 body.glass-light .top-header .profile-id,
+body.glass-light .top-header .profile-role,
+body.glass-light .top-header .mobile-profile-role,
 body.glass-light .top-header .profile-chevron,
 body.glass-light .top-header .theme-toggle-btn {
   color: #052e16 !important;

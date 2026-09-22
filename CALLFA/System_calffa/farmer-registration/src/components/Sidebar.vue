@@ -29,9 +29,11 @@
           />
         </div>
         <div class="calffa-text">
-          <div class="calffa-brand">{{ t('brand.name') }}</div>
-          <div class="calffa-tagline">{{ t('brand.tagline') }}</div>
-          <div class="calffa-divider"></div>
+          <div class="calffa-brand">
+            <span class="calffa-brand-line">{{ t('brand.fullNameLine1') }}</span>
+            <span class="calffa-brand-line">{{ t('brand.fullNameLine2') }}</span>
+            <span class="calffa-brand-line">{{ t('brand.fullNameLine3') }}</span>
+          </div>
         </div>
       </div>
       <!-- Toggle Button -->
@@ -417,7 +419,7 @@ const isItemActive = (item) => {
 }
 
 .sidebar-header {
-  padding: 1.35rem 1.15rem 1.25rem;
+  padding: 1.15rem 1.15rem 1.1rem;
   border-bottom: none;
   position: relative;
   background: transparent;
@@ -427,7 +429,7 @@ const isItemActive = (item) => {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
 }
 
@@ -672,15 +674,28 @@ const isItemActive = (item) => {
 }
 
 .calffa-brand {
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15px;
+  background: none;
+  -webkit-text-fill-color: unset;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.calffa-brand-line {
+  display: block;
+  width: 100%;
   background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 38%, #86efac 72%, #fde68a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1.15;
   filter: drop-shadow(0 1px 10px rgba(52, 211, 153, 0.2));
+  white-space: nowrap;
 }
 
 .calffa-tagline {
@@ -692,7 +707,7 @@ const isItemActive = (item) => {
   text-transform: uppercase;
 }
 
-.sidebar.farmer-theme .calffa-brand {
+.sidebar.farmer-theme .calffa-brand-line {
   background: linear-gradient(135deg, #fffbeb 0%, #fde68a 35%, #fcd34d 70%, #86efac 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1115,12 +1130,8 @@ const isItemActive = (item) => {
   }
 
   .calffa-brand {
-    font-size: 14px;
-    letter-spacing: 0.5px;
-  }
-
-  .calffa-tagline {
-    font-size: 8px;
+    font-size: 11px;
+    letter-spacing: 0.15px;
   }
 
   .nav-sections {
@@ -1218,11 +1229,7 @@ const isItemActive = (item) => {
   }
 
   .calffa-brand {
-    font-size: 16px;
-  }
-
-  .calffa-tagline {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .nav-sections {
@@ -1319,11 +1326,7 @@ const isItemActive = (item) => {
   }
 
   .calffa-brand {
-    font-size: 18px;
-  }
-
-  .calffa-tagline {
-    font-size: 10px;
+    font-size: 12.5px;
   }
 
   .nav-sections {
@@ -1434,11 +1437,7 @@ const isItemActive = (item) => {
   }
 
   .calffa-brand {
-    font-size: 14px;
-  }
-
-  .calffa-tagline {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .nav-sections {
@@ -1617,12 +1616,8 @@ const isItemActive = (item) => {
   }
 
   .calffa-brand {
-    font-size: 18px;
-    letter-spacing: 1px;
-  }
-
-  .calffa-tagline {
-    font-size: 10px;
+    font-size: 13px;
+    letter-spacing: 0.2px;
   }
 
   .logo-img-wrap,

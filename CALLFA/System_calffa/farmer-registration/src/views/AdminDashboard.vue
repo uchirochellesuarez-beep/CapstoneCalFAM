@@ -13,12 +13,11 @@
           <h1 class="dashboard-title">{{ $t('ui.dashboard') }}</h1>
           <p class="dashboard-subtitle">{{ isFarmer ? $t('ui.dashboardFarmerSub') : $t('ui.dashboardOpsSub') }}</p>
         </div>
-        <div class="header-time-card" :aria-label="`${$t('ui.liveTime')}, ${displayUserRole}`">
+        <div class="header-time-card" :aria-label="$t('ui.liveTime')">
           <div class="header-time-label">{{ $t('ui.liveTime') }}</div>
           <div class="header-time-value">{{ currentTime }}</div>
           <div class="header-time-day">{{ $t('ui.dayColon') }} {{ currentDay }}</div>
           <div class="header-time-date">{{ currentDate }}</div>
-          <div v-if="displayUserRole" class="header-time-role" :class="userRole">{{ displayUserRole }}</div>
         </div>
       </div>
 
@@ -298,24 +297,6 @@ const appliedDateTo = ref('')
 
 // Computed
 const userRole = computed(() => authStore.currentUser?.role || '')
-const ROLE_LABEL_KEYS = {
-  admin: 'ui.admin',
-  farmer: 'ui.farmer',
-  president: 'ui.president',
-  treasurer: 'ui.treasurer',
-  auditor: 'ui.auditor',
-  operator: 'ui.operator',
-  agriculturist: 'ui.agriculturist',
-  business_manager: 'ui.businessManager',
-  operation_manager: 'ui.operationManager'
-}
-
-const displayUserRole = computed(() => {
-  const role = userRole.value
-  if (!role) return ''
-  const key = ROLE_LABEL_KEYS[role]
-  return key ? t(key) : role
-})
 const isAdmin = computed(() => userRole.value === 'admin')
 const isFarmer = computed(() => userRole.value === 'farmer')
 

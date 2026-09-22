@@ -33,9 +33,16 @@
           </button>
         </div>
 
-        <!-- Compact profile button (mobile/tablet): same .icon-btn as its neighbors -->
-        <button class="icon-btn profile-icon-btn" @click="goToSettings" :title="t('header.editProfile')" :aria-label="t('header.editProfile')">
-          <img :src="userAvatar" class="profile-btn-avatar" :alt="t('header.userAvatar')" />
+        <!-- Compact profile (mobile/tablet): avatar with role under it -->
+        <button
+          type="button"
+          class="icon-btn mobile-profile"
+          @click="goToSettings"
+          :title="profileTitle"
+          :aria-label="profileTitle"
+        >
+          <img :src="userAvatar" class="mobile-profile-avatar" :alt="t('header.userAvatar')" />
+          <span v-if="shortUserRole" class="mobile-profile-role">{{ shortUserRole }}</span>
         </button>
 
         <!-- Full profile pill (desktop) -->
@@ -48,8 +55,8 @@
             <div class="profile-name">{{ userName }}</div>
             <div class="profile-meta">
               <div class="profile-id">{{ t('common.id') }}: {{ userId }}</div>
-              <span class="profile-status">{{ t('common.online') }}</span>
             </div>
+            <div v-if="displayUserRole" class="profile-role" :class="String(userRole || '').toLowerCase()">{{ displayUserRole }}</div>
           </div>
           <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -137,6 +144,48 @@ const unreadCount = ref(0)
 // Role check
 const userRole = computed(() => authStore.currentUser?.role)
 const isAdminRole = computed(() => ['admin', 'treasurer', 'president'].includes(userRole.value))
+
+const ROLE_LABEL_KEYS = {
+  admin: 'ui.admin',
+  farmer: 'ui.farmer',
+  president: 'ui.president',
+  treasurer: 'ui.treasurer',
+  auditor: 'ui.auditor',
+  operator: 'ui.operator',
+  agriculturist: 'ui.agriculturist',
+  business_manager: 'ui.businessManager',
+  operation_manager: 'ui.operationManager'
+}
+
+const displayUserRole = computed(() => {
+  const role = String(userRole.value || '').toLowerCase()
+  if (!role) return ''
+  const key = ROLE_LABEL_KEYS[role]
+  return key ? t(key) : role
+})
+
+const ROLE_SHORT = {
+  president: 'Pres',
+  treasurer: 'Treas',
+  auditor: 'Aud',
+  operator: 'Op',
+  farmer: 'Farm',
+  admin: 'Admin',
+  agriculturist: 'Agri',
+  business_manager: 'Bus',
+  operation_manager: 'Ops'
+}
+
+const shortUserRole = computed(() => {
+  const role = String(userRole.value || '').toLowerCase()
+  if (!role) return ''
+  return ROLE_SHORT[role] || displayUserRole.value.slice(0, 5)
+})
+
+const profileTitle = computed(() => {
+  const parts = [userName.value, displayUserRole.value].filter(Boolean)
+  return parts.length ? parts.join(' · ') : t('header.editProfile')
+})
 
 const userName = computed(() => authStore.currentUser?.full_name || '')
 const userId = computed(() => authStore.currentUser?.reference_number || '')
@@ -1027,6 +1076,10 @@ onMounted(() => {
   transform: translateY(0);
 }
 
+.icon-btn.mobile-profile {
+  display: none;
+}
+
 .theme-toggle-btn {
   color: #fbbf24;
 }
@@ -1078,26 +1131,26 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .notification-btn .notification-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
   }
 
   .notification-btn .notification-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -1125,7 +1178,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  /* Same 44px height as the icon buttons beside it */
   height: 44px;
   padding: 0 12px 0 4px;
   border-radius: 14px;
@@ -1138,7 +1190,6 @@ onMounted(() => {
   transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease, filter 0.28s ease;
   cursor: pointer;
   flex-shrink: 0;
-  min-height: 0;
 }
 
 .top-header.farmer-theme .user-profile {
@@ -1220,14 +1271,23 @@ onMounted(() => {
 .profile-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
+  justify-content: center;
 }
 
 .profile-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: #f0fdf4;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+}
+
+.profile-role {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #bbf7d0;
   letter-spacing: 0.2px;
 }
 
@@ -1238,13 +1298,13 @@ onMounted(() => {
 }
 
 .profile-id {
-  font-size: 12px;
+  font-size: 10px;
   color: #d6f1e2;
   background: rgba(10, 34, 24, 0.78);
   border: 1px solid rgba(132, 194, 159, 0.3);
   border-radius: 999px;
-  padding: 1px 8px;
-  line-height: 1.2;
+  padding: 0 7px;
+  line-height: 1.25;
 }
 
 .top-header.farmer-theme .profile-id {
@@ -1276,6 +1336,15 @@ onMounted(() => {
   color: #fff5e8;
 }
 
+.top-header.farmer-theme .profile-role {
+  color: #fde68a;
+}
+
+body.glass-light .top-header .profile-role,
+body.glass-light .top-header.farmer-theme .profile-role {
+  color: #14532d;
+}
+
 .top-header.farmer-theme .profile-chevron {
   color: #deb486;
 }
@@ -1304,26 +1373,97 @@ onMounted(() => {
 
 @media (max-width: 1024px) {
   .icon-btn.profile-icon-btn {
-    display: flex;
+    display: none;
   }
 
-  /* Hide the desktop pill in compact mode */
   .user-profile {
     display: none !important;
+  }
+
+  .icon-btn.mobile-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 44px;
+    max-height: 44px;
+    padding: 2px 1px 1px;
+    gap: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .mobile-profile-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+    border: 1px solid rgba(187, 247, 208, 0.55);
+  }
+
+  .mobile-profile-role {
+    display: block;
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.2px;
+    color: #bbf7d0;
+    text-align: center;
+    max-width: 40px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
 @media (max-width: 768px) {
-  .profile-btn-avatar {
-    width: 32px;
-    height: 32px;
+  .icon-btn.mobile-profile {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 44px;
+    max-height: 44px;
+    padding: 2px 1px 1px;
+  }
+
+  .mobile-profile-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .mobile-profile-role {
+    font-size: 7px;
+    max-width: 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .profile-btn-avatar {
-    width: 28px;
-    height: 28px;
+  .icon-btn.mobile-profile {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 44px;
+    max-height: 44px;
+    padding: 2px 1px 1px;
+  }
+
+  .mobile-profile-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .mobile-profile-role {
+    font-size: 7px;
+    font-weight: 800;
+    max-width: 40px;
   }
 }
 
