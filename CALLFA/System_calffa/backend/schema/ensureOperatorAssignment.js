@@ -83,19 +83,30 @@ async function ensureOperatorAssignmentSchema(pool) {
     console.log('✅ Created operator_income table');
   }
 
-  // Backfill inventory assigned_operator_id from active machinery_operators (one per machinery)
-  await pool.execute(`
-    UPDATE machinery_inventory mi
-    INNER JOIN (
-      SELECT machinery_id, farmer_id
-      FROM machinery_operators
-      WHERE status = 'Active'
-      GROUP BY machinery_id
-    ) mo ON mo.machinery_id = mi.id
-    SET mi.assigned_operator_id = mo.farmer_id,
-        mi.assignment_date = COALESCE(mi.assignment_date, CURDATE())
-    WHERE mi.assigned_operator_id IS NULL
-  `);
+  // Backfill inventory assigned_operator_id from active machinery_operators (one per machinery).
+  // Pick MIN(id) so the query is valid under MySQL ONLY_FULL_GROUP_BY (Hostinger default).
+  if (await tableExists(pool, 'machinery_operators')) {
+    try {
+      await pool.execute(`
+        UPDATE machinery_inventory mi
+        INNER JOIN (
+          SELECT mo.machinery_id, mo.farmer_id
+          FROM machinery_operators mo
+          INNER JOIN (
+            SELECT machinery_id, MIN(id) AS id
+            FROM machinery_operators
+            WHERE status = 'Active'
+            GROUP BY machinery_id
+          ) pick ON pick.id = mo.id
+        ) mo ON mo.machinery_id = mi.id
+        SET mi.assigned_operator_id = mo.farmer_id,
+            mi.assignment_date = COALESCE(mi.assignment_date, CURDATE())
+        WHERE mi.assigned_operator_id IS NULL
+      `)
+    } catch (err) {
+      console.warn('⚠️ Operator assignment backfill skipped:', err.message)
+    }
+  }
 }
 
 module.exports = { ensureOperatorAssignmentSchema };
