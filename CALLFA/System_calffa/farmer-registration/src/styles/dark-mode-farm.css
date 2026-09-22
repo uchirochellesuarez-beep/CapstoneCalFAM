@@ -2746,67 +2746,76 @@ body.glass-dark .page-container.machinery-page:not(.light-theme) .mf-date-input:
   cursor: pointer !important;
 }
 
-/* Logout confirmation modal — readable light card in dark mode */
+/* Logout confirmation modal — follow dark theme (do not force light card) */
 body.glass-dark .logout-modal {
-  background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%) !important;
-  border: 2px solid #86efac !important;
+  background: linear-gradient(145deg, rgba(18, 32, 26, 0.98), rgba(12, 24, 18, 0.96)) !important;
+  border: 1px solid rgba(134, 239, 172, 0.28) !important;
   box-shadow:
-    0 24px 48px rgba(4, 18, 12, 0.32),
-    0 8px 20px rgba(22, 101, 52, 0.14) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+    0 24px 48px rgba(0, 0, 0, 0.45),
+    0 8px 20px rgba(4, 18, 12, 0.35) !important;
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
 }
 
 body.glass-dark .logout-modal-header {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
-  border-bottom: 2px solid #bbf7d0 !important;
+  background: linear-gradient(135deg, rgba(22, 101, 52, 0.45), rgba(20, 83, 45, 0.35)) !important;
+  border-bottom: 1px solid rgba(134, 239, 172, 0.25) !important;
 }
 
 body.glass-dark .logout-modal-body {
-  background: #ffffff !important;
+  background: transparent !important;
 }
 
 body.glass-dark .logout-modal-footer {
-  background: #f8fafc !important;
-  border-top-color: #e2e8f0 !important;
+  background: rgba(8, 18, 14, 0.55) !important;
+  border-top-color: rgba(134, 239, 172, 0.2) !important;
 }
 
 body.glass-dark .logout-modal-title {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  color: #ecfdf5 !important;
+  -webkit-text-fill-color: #ecfdf5 !important;
   background: none !important;
 }
 
 body.glass-dark .logout-modal-message {
-  color: #052e16 !important;
-  -webkit-text-fill-color: #052e16 !important;
+  color: #d1fae5 !important;
+  -webkit-text-fill-color: #d1fae5 !important;
 }
 
 body.glass-dark .logout-modal-hint {
-  color: #166534 !important;
-  -webkit-text-fill-color: #166534 !important;
+  color: #a7f3d0 !important;
+  -webkit-text-fill-color: #a7f3d0 !important;
 }
 
 body.glass-dark .logout-modal-close {
-  background: #ffffff !important;
-  color: #052e16 !important;
-  border-color: #16a34a !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ecfdf5 !important;
+  border-color: rgba(134, 239, 172, 0.35) !important;
 }
 
 body.glass-dark .logout-btn-cancel {
-  background: var(--dark-btn-surface) !important;
-  color: var(--dark-btn-text) !important;
-  -webkit-text-fill-color: var(--dark-btn-text) !important;
-  border: 2px solid var(--dark-btn-border) !important;
-  box-shadow: 0 4px 12px rgba(4, 18, 12, 0.12) !important;
+  background: var(--dark-btn-surface, rgba(255, 255, 255, 0.08)) !important;
+  color: var(--dark-btn-text, #ecfdf5) !important;
+  -webkit-text-fill-color: var(--dark-btn-text, #ecfdf5) !important;
+  border: 2px solid var(--dark-btn-border, rgba(134, 239, 172, 0.35)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 
 body.glass-dark .logout-btn-confirm {
-  background: var(--dark-btn-danger-surface) !important;
-  color: var(--dark-btn-danger-text) !important;
-  -webkit-text-fill-color: var(--dark-btn-danger-text) !important;
-  border: 2px solid var(--dark-btn-danger-border) !important;
-  box-shadow: 0 4px 12px rgba(127, 29, 29, 0.14) !important;
+  background: var(--dark-btn-danger-surface, rgba(127, 29, 29, 0.55)) !important;
+  color: var(--dark-btn-danger-text, #fecaca) !important;
+  -webkit-text-fill-color: var(--dark-btn-danger-text, #fecaca) !important;
+  border: 2px solid var(--dark-btn-danger-border, rgba(248, 113, 113, 0.45)) !important;
+  box-shadow: 0 4px 12px rgba(127, 29, 29, 0.28) !important;
+}
+
+@media (max-width: 640px) {
+  body.glass-dark .logout-modal,
+  .logout-modal {
+    width: calc(100vw - 1.5rem) !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+  }
 }
 
 /* Farmer Income Hub — white text in dark mode */

@@ -96,6 +96,8 @@
                   <TypedNumberInput
                     v-model="formData.land_area"
                     :min="0.01"
+                    :max="LAND_AREA_MAX"
+                    :max-integer-digits="LAND_AREA_MAX_INTEGER_DIGITS"
                     :placeholder="t('signup.landAreaPlaceholder')"
                     @blur="validateLandArea"
                   />
@@ -287,6 +289,7 @@ import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -394,6 +397,8 @@ const validateLandArea = () => {
   const area = parseFloat(formData.land_area)
   if (formData.land_area && (Number.isNaN(area) || area <= 0)) {
     errors.land_area = t('googleReg.landAreaPositive')
+  } else if (Number.isFinite(area) && area > LAND_AREA_MAX) {
+    errors.land_area = t('signup.landAreaMaxError')
   } else {
     errors.land_area = ''
   }

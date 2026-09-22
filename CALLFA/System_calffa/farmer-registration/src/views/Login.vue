@@ -39,12 +39,7 @@
           <div v-if="successMessage" class="message success-message">
             {{ successMessage }}
           </div>
-          <div v-if="!isResetFlow && sessionNotice" class="message error-message">
-            {{ sessionNotice }}
-          </div>
-          <div v-if="errorMessage" class="message error-message">
-            {{ errorMessage }}
-          </div>
+          <!-- Validation / auth errors use toast (see Teleport below) -->
 
           <!-- ========= LOGIN ========= -->
           <template v-if="!isResetFlow">
@@ -343,6 +338,21 @@
         </div>
       </section>
     </main>
+
+    <Teleport to="body">
+      <Transition name="toast-fade">
+        <div
+          v-if="toastMessage"
+          class="auth-toast"
+          :class="[toastType, { 'light-theme': isLight }]"
+          role="alert"
+          aria-live="assertive"
+        >
+          <span class="auth-toast-text">{{ toastMessage }}</span>
+          <button type="button" class="auth-toast-close" @click="clearToast" :aria-label="t('common.close')">×</button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -378,6 +388,37 @@ const showConfirmPassword = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
 const sessionNotice = computed(() => authStore.sessionNotice)
+const toastMessage = ref('')
+const toastType = ref('error')
+let toastTimer = null
+
+const clearToast = () => {
+  toastMessage.value = ''
+  if (toastTimer) {
+    clearTimeout(toastTimer)
+    toastTimer = null
+  }
+}
+
+const showToast = (message, type = 'error') => {
+  if (!message) return
+  toastType.value = type
+  toastMessage.value = message
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(clearToast, type === 'error' ? 5500 : 4000)
+}
+
+watch(errorMessage, (value) => {
+  if (value) showToast(value, 'error')
+})
+
+watch(sessionNotice, (value) => {
+  if (value && !isResetFlow.value) showToast(value, 'error')
+})
+
+watch(successMessage, (value) => {
+  if (value) showToast(value, 'success')
+})
 
 const resetStep = ref('google') // google | password | done
 const resetToken = ref('')
@@ -2053,6 +2094,90 @@ const goToLogin = () => {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+</style>
+
+<style>
+/* Teleported toast — centered on screen (login + signup) */
+.auth-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: min(92vw, 420px);
+  width: max-content;
+  min-width: min(92vw, 280px);
+  padding: 0.95rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.96), rgba(69, 10, 10, 0.94));
+  color: #fff7f7;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.auth-toast.success {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: linear-gradient(145deg, rgba(21, 128, 61, 0.96), rgba(20, 83, 45, 0.94));
+  color: #f0fdf4;
+}
+
+.auth-toast.light-theme {
+  background: #fff1f2;
+  border-color: #fda4af;
+  color: #9f1239;
+}
+
+.auth-toast.light-theme.success {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.auth-toast-text {
+  flex: 1;
+  font-weight: 600;
+}
+
+.auth-toast-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+  padding: 0 0.15rem;
+}
+
+.auth-toast-close:hover {
+  opacity: 1;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px));
+}
+
+@media (max-width: 640px) {
+  .auth-toast {
+    top: 50%;
+    bottom: auto;
+    width: calc(100vw - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
   }
 }
 </style>

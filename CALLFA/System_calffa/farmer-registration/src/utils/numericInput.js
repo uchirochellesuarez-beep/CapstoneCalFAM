@@ -1,4 +1,4 @@
-export function sanitizeNumericInput(value, allowDecimal = true) {
+export function sanitizeNumericInput(value, allowDecimal = true, maxIntegerDigits = null) {
   let v = String(value ?? '')
   if (allowDecimal) {
     v = v.replace(/[^\d.]/g, '')
@@ -9,6 +9,18 @@ export function sanitizeNumericInput(value, allowDecimal = true) {
   } else {
     v = v.replace(/\D/g, '')
   }
+
+  if (maxIntegerDigits != null && Number(maxIntegerDigits) > 0) {
+    const maxDigits = Math.floor(Number(maxIntegerDigits))
+    if (allowDecimal) {
+      const parts = v.split('.')
+      parts[0] = parts[0].slice(0, maxDigits)
+      v = parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0]
+    } else {
+      v = v.slice(0, maxDigits)
+    }
+  }
+
   return v
 }
 
@@ -23,3 +35,8 @@ export function formatNumericForInput(value) {
   const n = Number(value)
   return Number.isFinite(n) ? String(value) : ''
 }
+
+/** Farm area (hectares): up to 3 digits before decimal, max 999.99 */
+export const LAND_AREA_MAX = 999.99
+export const LAND_AREA_MAX_INTEGER_DIGITS = 3
+

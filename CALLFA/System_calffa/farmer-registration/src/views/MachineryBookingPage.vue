@@ -547,7 +547,19 @@
                 <p v-if="bookingForm.booking_date" class="cal-selected-hint">
                   {{ $t('ui.selectedColon') }} <strong>{{ formatDate(bookingForm.booking_date) }}</strong>
                 </p>
-                <p v-else class="cal-selected-hint cal-selected-hint--muted">{{ $t('ui.pickCalendarDate') }}</p>
+                <p
+                  v-if="bookingForm.booking_date && selectedMachineryForBooking?.max_capacity"
+                  class="cal-availability-hint"
+                  :class="{ 'cal-availability-hint--low': selectedDateRemainingCapacity != null && selectedDateRemainingCapacity <= 0 }"
+                >
+                  <strong>Available:</strong>
+                  {{ formatCapacityAmount(selectedDateRemainingCapacity) }}
+                  {{ selectedMachineryForBooking.capacity_unit || 'hectares' }}
+                  <span class="cal-availability-meta">
+                    (max {{ selectedMachineryForBooking.max_capacity }} − booked {{ formatCapacityAmount(selectedDateBookedCapacity) }})
+                  </span>
+                </p>
+                <p v-if="!bookingForm.booking_date" class="cal-selected-hint cal-selected-hint--muted">{{ $t('ui.pickCalendarDate') }}</p>
               </div>
               <input
                 v-else
@@ -608,13 +620,18 @@
                 <TypedNumberInput
                   v-model="bookingForm.area_size"
                   :min="0.01"
-                  :max="parseCapacity(selectedMachineryForBooking?.max_capacity)"
                   :input-class="capacityError ? 'form-input input-error' : 'form-input'"
                   placeholder="0.00"
                   @input="validateAndCalculate"
                 />
                 <small v-if="selectedMachineryForBooking?.max_capacity" class="form-hint">
-                  Maximum: {{ selectedMachineryForBooking.max_capacity }} {{ selectedMachineryForBooking.capacity_unit }}
+                  <template v-if="bookingForm.booking_date">
+                    Available for {{ formatDate(bookingForm.booking_date) }}:
+                    <strong>{{ formatCapacityAmount(selectedDateRemainingCapacity) }} {{ selectedMachineryForBooking.capacity_unit }}</strong>
+                  </template>
+                  <template v-else>
+                    Maximum: {{ selectedMachineryForBooking.max_capacity }} {{ selectedMachineryForBooking.capacity_unit }} per day
+                  </template>
                 </small>
                 <small v-if="capacityError" class="error-message">{{ capacityError }}</small>
               </div>
@@ -663,7 +680,7 @@
             </div>
 
             <div class="modal-actions">
-              <button type="submit" class="btn-primary" :disabled="loading || !bookingForm.machinery_id || !!capacityError || (canCreateOnBehalf && !bookingForm.farmer_id)">
+              <button type="submit" class="btn-primary" :disabled="loading">
                 {{ loading ? 'Booking...' : (canCreateOnBehalf ? 'Create Approved Booking' : 'Confirm Booking') }}
               </button>
             </div>
@@ -1747,12 +1764,45 @@ export default {
     const maxBookableDateStr = computed(() => addDaysToYMD(minDate.value, BOOKING_CALENDAR_RANGE_DAYS))
 
     const fullCapacityDateMap = ref({})
+    const remainingCapacityByDate = ref({})
     const loadingUnavailableDates = ref(false)
     const bookingCalendarMonth = ref(new Date())
 
     const editFullCapacityMap = ref({})
+    const editRemainingCapacityByDate = ref({})
     const loadingEditUnavailableDates = ref(false)
     const editCalendarMonth = ref(new Date())
+
+    const formatCapacityAmount = (value) => {
+      const n = parseFloat(value)
+      if (!Number.isFinite(n)) return '0'
+      return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '')
+    }
+
+    const getRemainingForDate = (ymd, remainingMap, machine) => {
+      if (!machine?.max_capacity || !ymd) return null
+      const maxCap = parseFloat(machine.max_capacity)
+      if (!Number.isFinite(maxCap)) return null
+      if (remainingMap && Object.prototype.hasOwnProperty.call(remainingMap, ymd)) {
+        return Math.max(0, parseFloat(remainingMap[ymd]) || 0)
+      }
+      return maxCap
+    }
+
+    const selectedDateRemainingCapacity = computed(() =>
+      getRemainingForDate(
+        bookingForm.value.booking_date,
+        remainingCapacityByDate.value,
+        selectedMachineryForBooking.value
+      )
+    )
+
+    const selectedDateBookedCapacity = computed(() => {
+      const machine = selectedMachineryForBooking.value
+      const remaining = selectedDateRemainingCapacity.value
+      if (!machine?.max_capacity || remaining == null) return 0
+      return Math.max(0, parseFloat(machine.max_capacity) - remaining)
+    })
 
     const buildCalendarGrid = (year, month, minStr, maxStr, selected, fullMap) => {
       const first = new Date(year, month, 1)
@@ -1802,6 +1852,7 @@ export default {
       const machine = selectedMachineryForBooking.value
       if (!id || !machine?.max_capacity) {
         fullCapacityDateMap.value = {}
+        remainingCapacityByDate.value = {}
         return
       }
       loadingUnavailableDates.value = true
@@ -1813,16 +1864,31 @@ export default {
         )
         const data = await res.json().catch(() => ({}))
         const m = {}
+        const remaining = {}
         if (data.success && Array.isArray(data.unavailable_dates)) {
           for (const row of data.unavailable_dates) {
-            if (row.date) m[row.date] = true
+            if (row.date) {
+              m[row.date] = true
+              remaining[row.date] = 0
+            }
+          }
+        }
+        if (data.success && Array.isArray(data.partially_available_dates)) {
+          for (const row of data.partially_available_dates) {
+            if (!row.date) continue
+            const rem = parseFloat(row.remaining_capacity)
+            remaining[row.date] = Number.isFinite(rem)
+              ? Math.max(0, rem)
+              : Math.max(0, parseFloat(machine.max_capacity) - (parseFloat(row.total_booked) || 0))
           }
         }
         fullCapacityDateMap.value = m
+        remainingCapacityByDate.value = remaining
         const cur = bookingForm.value.booking_date
         if (cur && m[cur]) {
           bookingForm.value.booking_date = ''
         }
+        validateAndCalculate()
       } catch (e) {
         console.error('Failed to load unavailable dates:', e)
       } finally {
@@ -1836,6 +1902,7 @@ export default {
       const machine = machineryOptions.value.find((mm) => mm.id == id)
       if (!id || !machine?.max_capacity) {
         editFullCapacityMap.value = {}
+        editRemainingCapacityByDate.value = {}
         return
       }
       loadingEditUnavailableDates.value = true
@@ -1847,12 +1914,26 @@ export default {
         )
         const data = await res.json().catch(() => ({}))
         const map = {}
+        const remaining = {}
         if (data.success && Array.isArray(data.unavailable_dates)) {
           for (const row of data.unavailable_dates) {
-            if (row.date) map[row.date] = true
+            if (row.date) {
+              map[row.date] = true
+              remaining[row.date] = 0
+            }
+          }
+        }
+        if (data.success && Array.isArray(data.partially_available_dates)) {
+          for (const row of data.partially_available_dates) {
+            if (!row.date) continue
+            const rem = parseFloat(row.remaining_capacity)
+            remaining[row.date] = Number.isFinite(rem)
+              ? Math.max(0, rem)
+              : Math.max(0, parseFloat(machine.max_capacity) - (parseFloat(row.total_booked) || 0))
           }
         }
         editFullCapacityMap.value = map
+        editRemainingCapacityByDate.value = remaining
         const cur = bookingToEdit.value.booking_date
         if (cur && map[cur]) {
           bookingToEdit.value.booking_date = ''
@@ -1945,6 +2026,7 @@ export default {
     const selectBookingCalendarDate = (c) => {
       if (c.disabled) return
       bookingForm.value.booking_date = c.ymd
+      validateAndCalculate()
     }
 
     const selectEditCalendarDate = (c) => {
@@ -2210,10 +2292,19 @@ export default {
       capacityError.value = ''
       
       if (selectedMachineryForBooking.value && bookingForm.value.area_size > 0) {
-        // Check capacity limit
-        if (selectedMachineryForBooking.value.max_capacity && 
-            bookingForm.value.area_size > selectedMachineryForBooking.value.max_capacity) {
-          capacityError.value = `Maximum capacity is ${selectedMachineryForBooking.value.max_capacity} ${selectedMachineryForBooking.value.capacity_unit} per day`
+        const requested = parseFloat(bookingForm.value.area_size) || 0
+        const unit = selectedMachineryForBooking.value.capacity_unit || 'hectares'
+        const remaining = selectedDateRemainingCapacity.value
+        const maxCap = parseFloat(selectedMachineryForBooking.value.max_capacity)
+
+        if (selectedMachineryForBooking.value.max_capacity && requested > maxCap) {
+          capacityError.value = `Maximum capacity is ${formatCapacityAmount(maxCap)} ${unit} per day`
+          calculatedPrice.value = 0
+          return
+        }
+
+        if (remaining != null && requested > remaining + 0.001) {
+          capacityError.value = `Only ${formatCapacityAmount(remaining)} ${unit} available on ${formatDate(bookingForm.value.booking_date)}. Please book ${formatCapacityAmount(remaining)} ${unit} or less.`
           calculatedPrice.value = 0
           return
         }
@@ -2278,7 +2369,9 @@ export default {
         }
         
         // Check capacity one more time before submitting
+        validateAndCalculate()
         if (capacityError.value) {
+          machineryStore.error = capacityError.value
           return
         }
 
@@ -2586,6 +2679,43 @@ export default {
       machineryStore.clearError()
     }
 
+    let bookingErrorTimer = null
+    let bookingSuccessTimer = null
+    const clearBookingAlertTimers = () => {
+      if (bookingErrorTimer) {
+        clearTimeout(bookingErrorTimer)
+        bookingErrorTimer = null
+      }
+      if (bookingSuccessTimer) {
+        clearTimeout(bookingSuccessTimer)
+        bookingSuccessTimer = null
+      }
+    }
+
+    watch(error, (value) => {
+      if (bookingErrorTimer) {
+        clearTimeout(bookingErrorTimer)
+        bookingErrorTimer = null
+      }
+      if (!value) return
+      bookingErrorTimer = setTimeout(() => {
+        clearError()
+        bookingErrorTimer = null
+      }, 5500)
+    })
+
+    watch(successMessage, (value) => {
+      if (bookingSuccessTimer) {
+        clearTimeout(bookingSuccessTimer)
+        bookingSuccessTimer = null
+      }
+      if (!value) return
+      bookingSuccessTimer = setTimeout(() => {
+        successMessage.value = ''
+        bookingSuccessTimer = null
+      }, 4000)
+    })
+
     const getMachineryTypeClass = (type) => {
       const classes = {
         'Harvester': 'primary',
@@ -2719,7 +2849,7 @@ export default {
         loadData().catch((error) => {
           console.error('Error refreshing booking data:', error)
         })
-      }, 3000)
+      }, 15000) // Refresh every 15 seconds
 
       await applyBookingHighlightFromRoute()
 
@@ -2752,6 +2882,7 @@ export default {
         clearInterval(bookingsRefreshInterval)
         bookingsRefreshInterval = null
       }
+      clearBookingAlertTimers()
       document.body.classList.remove('app-modal-open')
       document.documentElement.classList.remove('app-modal-open')
       document.body.style.overflow = ''
@@ -2824,6 +2955,9 @@ export default {
       bookingCalendarCells,
       editCalendarCells,
       selectedEditMachinery,
+      selectedDateRemainingCapacity,
+      selectedDateBookedCapacity,
+      formatCapacityAmount,
       canShiftBookingMonth,
       shiftBookingMonth,
       canShiftEditMonth,
@@ -4140,6 +4274,40 @@ export default {
   font-style: italic;
 }
 
+.cal-availability-hint {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(22, 163, 74, 0.16);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #dcfce7;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.cal-availability-hint--low {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+.cal-availability-meta {
+  opacity: 0.85;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+@media (max-width: 640px) {
+  .cal-availability-hint {
+    font-size: 12.5px;
+  }
+
+  .cal-availability-meta {
+    display: block;
+    margin: 4px 0 0;
+  }
+}
+
 .form-label {
   display: block;
   font-weight: 600;
@@ -5132,6 +5300,18 @@ export default {
   color: #166534 !important;
 }
 
+:is(.machinery-booking-page, .machinery-booking-modal).light-theme .cal-availability-hint {
+  background: rgba(22, 163, 74, 0.1) !important;
+  border-color: rgba(22, 163, 74, 0.3) !important;
+  color: #14532d !important;
+}
+
+:is(.machinery-booking-page, .machinery-booking-modal).light-theme .cal-availability-hint--low {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border-color: rgba(220, 38, 38, 0.28) !important;
+  color: #991b1b !important;
+}
+
 :is(.machinery-booking-page, .machinery-booking-modal).light-theme .cal-nav-btn {
   background: #f0fdf4 !important;
   border-color: #86efac !important;
@@ -5646,6 +5826,80 @@ export default {
 </style>
 
 <style>
+/* Teleported booking alerts — centered on screen above modals */
+.booking-alert-stack {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 14000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  pointer-events: none !important;
+}
+
+.booking-alert-stack .alert {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  padding: 1rem 1.15rem !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  min-width: min(300px, calc(100vw - 2rem)) !important;
+  max-width: min(440px, calc(100vw - 2rem)) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4) !important;
+  z-index: 14001 !important;
+  pointer-events: auto !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+
+.booking-alert-stack .alert-error {
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.96), rgba(69, 10, 10, 0.94)) !important;
+  color: #fff7f7 !important;
+  border: 1px solid rgba(248, 113, 113, 0.45) !important;
+  border-left: 4px solid #f87171 !important;
+}
+
+.booking-alert-stack .alert-success {
+  background: linear-gradient(145deg, rgba(21, 128, 61, 0.96), rgba(20, 83, 45, 0.94)) !important;
+  color: #f0fdf4 !important;
+  border: 1px solid rgba(74, 222, 128, 0.45) !important;
+  border-left: 4px solid #4ade80 !important;
+}
+
+.booking-alert-stack.light-theme .alert-error {
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+  border-color: #fda4af !important;
+}
+
+.booking-alert-stack.light-theme .alert-success {
+  background: #f0fdf4 !important;
+  color: #14532d !important;
+  border-color: #86efac !important;
+}
+
+.booking-alert-stack .alert-close {
+  background: none !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  cursor: pointer !important;
+  color: inherit !important;
+  opacity: 0.85 !important;
+  line-height: 1 !important;
+  padding: 0 0.15rem !important;
+}
+
+.booking-alert-stack .alert-close:hover {
+  opacity: 1 !important;
+}
+
 /* Teleported booking modals — above header, centered, viewport-safe */
 .modal-overlay.app-modal-overlay.machinery-booking-modal {
   z-index: 11050 !important;

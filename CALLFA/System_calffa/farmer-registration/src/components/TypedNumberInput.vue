@@ -34,6 +34,11 @@ const props = defineProps({
     type: Number,
     default: undefined
   },
+  /** Limit digits before the decimal point (e.g. 3 → max 999.xx) */
+  maxIntegerDigits: {
+    type: Number,
+    default: undefined
+  },
   placeholder: {
     type: String,
     default: ''
@@ -52,7 +57,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'input'])
+const emit = defineEmits(['update:modelValue', 'input', 'blur'])
 
 const displayValue = ref('')
 
@@ -73,7 +78,7 @@ watch(
 )
 
 const onInput = (event) => {
-  const raw = sanitizeNumericInput(event.target.value, props.decimal)
+  const raw = sanitizeNumericInput(event.target.value, props.decimal, props.maxIntegerDigits)
   displayValue.value = raw
   event.target.value = raw
   const parsed = parseNumericInput(raw)
@@ -89,5 +94,6 @@ const onBlur = () => {
     displayValue.value = ''
   }
   emit('update:modelValue', parsed)
+  emit('blur', parsed)
 }
 </script>

@@ -1057,7 +1057,7 @@ watch(showDetailsModal, (isOpen) => {
       } catch (error) {
         console.error('Auto-refresh error:', error)
       }
-    }, 5000) // Refresh every 5 seconds
+    }, 15000) // Refresh every 15 seconds
   } else {
     // Stop auto-refresh
     if (autoRefreshInterval) {

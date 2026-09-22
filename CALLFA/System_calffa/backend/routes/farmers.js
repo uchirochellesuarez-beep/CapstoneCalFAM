@@ -80,6 +80,12 @@ router.post('/register', async (req, res) => {
         message: 'Land area (hectares farmed) is required and must be greater than 0.'
       });
     }
+    if (parsedLandArea > 999.99) {
+      return res.status(400).json({
+        success: false,
+        message: 'Land area must be at most 3 digits (maximum 999.99 hectares).'
+      });
+    }
 
     // Validate age (must be 18 years or older)
     const birthDate = new Date(date_of_birth);
@@ -534,8 +540,23 @@ router.put('/:id/profile', verifyToken, async (req, res) => {
       values.push(educational_status);
     }
     if (land_area !== undefined) {
+      const parsedLandArea = parseFloat(land_area);
+      if (land_area !== null && String(land_area).trim() !== '') {
+        if (!Number.isFinite(parsedLandArea) || parsedLandArea <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Land area (hectares farmed) must be greater than 0.'
+          });
+        }
+        if (parsedLandArea > 999.99) {
+          return res.status(400).json({
+            success: false,
+            message: 'Land area must be at most 3 digits (maximum 999.99 hectares).'
+          });
+        }
+      }
       updates.push('land_area = ?');
-      values.push(land_area);
+      values.push(Number.isFinite(parsedLandArea) ? parsedLandArea : land_area);
     }
     if (farm_location) {
       updates.push('farm_location = ?');

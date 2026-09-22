@@ -208,6 +208,12 @@ router.post('/google/register', async (req, res) => {
           message: 'Land area must be a positive number.'
         });
       }
+      if (parsedLandArea > 999.99) {
+        return res.status(400).json({
+          success: false,
+          message: 'Land area must be at most 3 digits (maximum 999.99 hectares).'
+        });
+      }
     }
 
 

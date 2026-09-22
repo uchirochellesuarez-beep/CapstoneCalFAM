@@ -33,12 +33,34 @@
         </div>
       </div>
       
+      <!-- Page-level machinery filter (applies to all tabs) -->
+      <div v-if="!isDuesOnlyView" class="filters-section tools-card page-machinery-filter">
+        <div class="filter-group page-machinery-filter-group">
+          <label class="filter-label page-machinery-filter-label" for="page-machinery-filter">{{ $t('ui.machineryEquipmentColon') }}</label>
+          <select
+            id="page-machinery-filter"
+            v-model="filters.machinery_id"
+            class="filter-input toolbar-select page-machinery-filter-select"
+          >
+            <option value="">{{ $t('ui.allMachinery') }}</option>
+            <option v-for="m in scopedMachinery" :key="m.id" :value="String(m.id)">
+              {{ m.machinery_name }} ({{ m.machinery_type }})
+            </option>
+          </select>
+        </div>
+        <p class="page-machinery-filter-hint">
+          <span class="page-machinery-filter-hint-full">Applies to expenses, income, A/R &amp; collections, profit, and reports.</span>
+          <span class="page-machinery-filter-hint-short">Applies to all tabs on this page.</span>
+        </p>
+      </div>
+
       <!-- Financial Summary Cards -->
       <div v-if="!isDuesOnlyView" class="summary-cards stats-grid">
         <div class="summary-card income-card stat-card">
           <div class="card-content stat-content">
             <span class="card-label stat-label">{{ $t('ui.totalIncome') }}</span>
             <span class="card-amount stat-value">₱{{ formatNumber(profitSummary.total_income) }}</span>
+            <span v-if="filters.machinery_id" class="card-filter-hint">{{ reportMachineryLabel }}</span>
           </div>
         </div>
         <div class="summary-card expense-card stat-card">
@@ -82,15 +104,6 @@
         </div>
 
         <div class="filters-section tools-card">
-          <div class="filter-group">
-            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
-            <select v-model="filters.machinery_id" class="filter-input toolbar-select">
-              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
-              <option v-for="m in machinery" :key="m.id" :value="m.id">
-                {{ m.machinery_name }} ({{ m.machinery_type }})
-              </option>
-            </select>
-          </div>
           <div class="filter-group">
             <label class="filter-label">Operator:</label>
             <select v-model="filters.operator_id" class="filter-input toolbar-select">
@@ -141,7 +154,12 @@
                     <td>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</td>
                     <td>{{ expense.service_location || '—' }}</td>
                     <td><span class="badge badge-pending">{{ $t('ui.pendingEntry') }}</span></td>
-                    <td v-if="canManage"><button type="button" @click="completePendingExpense(expense)" class="btn-primary btn-sm">{{ $t('common.recordExpensesPrint') }}</button></td>
+                    <td v-if="canManage">
+                      <div class="pending-expense-actions">
+                        <button type="button" @click="completePendingExpense(expense)" class="btn-primary btn-sm">{{ $t('common.recordExpensesPrint') }}</button>
+                        <button type="button" @click="removePendingExpense(expense)" class="btn-secondary-outline btn-sm">{{ $t('common.removeExpense') }}</button>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -159,8 +177,9 @@
                   <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.serviceDate') }}</span><span>{{ formatDate(expense.booking_date || expense.date_of_expense) }}</span></div>
                   <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.location') }}</span><span>{{ expense.service_location || '—' }}</span></div>
                 </div>
-                <div v-if="canManage" class="fin-mobile-card-actions">
+                <div v-if="canManage" class="fin-mobile-card-actions pending-expense-actions">
                   <button type="button" class="btn-primary btn-sm fin-mobile-action" @click="completePendingExpense(expense)">{{ $t('common.recordExpensesPrint') }}</button>
+                  <button type="button" class="btn-secondary-outline btn-sm fin-mobile-action" @click="removePendingExpense(expense)">{{ $t('common.removeExpense') }}</button>
                 </div>
               </article>
             </div>
@@ -1155,17 +1174,8 @@
           </div>
         </div>
 
-        <!-- Collections Filter -->
+        <!-- Collections Filter (section dates/actions only — machinery is page-level) -->
         <div class="filters-section tools-card">
-          <div class="filter-group">
-            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
-            <select v-model="filters.machinery_id" class="filter-input toolbar-select">
-              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
-              <option v-for="m in machinery" :key="m.id" :value="m.id">
-                {{ m.machinery_name }} ({{ m.machinery_type }})
-              </option>
-            </select>
-          </div>
           <div class="filter-actions">
             <button @click="loadARData" class="btn-secondary">{{ $t('common.filter') }}</button>
             <button @click="clearFilters" class="btn-secondary-outline">{{ $t('common.clear') }}</button>
@@ -1768,6 +1778,11 @@
       <div v-if="activeTab === 'profit'" class="tab-content">
         <div class="section-header">
           <h2>{{ $t('ui.profitComputationDist') }}</h2>
+          <p v-if="filters.machinery_id" class="section-hint">
+            Filtered by:
+            <strong>{{ reportMachineryLabel }}</strong>
+          </p>
+          <p v-else class="section-hint">Showing all machinery in scope.</p>
         </div>
 
         <div class="usage-leaders-card">
@@ -2089,19 +2104,6 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Machinery filter (after report option cards) -->
-        <div class="filters-section reports-machinery-filter-bar">
-          <div class="filter-group">
-            <label class="filter-label">{{ $t('ui.machineryEquipmentColon') }}</label>
-            <select v-model="filters.machinery_id" class="filter-input">
-              <option value="">{{ $t('ui.allMachineryEquipment') }}</option>
-              <option v-for="m in machinery" :key="m.id" :value="m.id">
-                {{ m.machinery_name }} ({{ m.machinery_type }})
-              </option>
-            </select>
           </div>
         </div>
         
@@ -3155,7 +3157,7 @@
                   <label>{{ $t('ui.machineryEquipmentReq') }}</label>
                   <select v-model="expenseForm.machinery_id" class="form-input" :disabled="completingPendingExpense">
                     <option value="">-- Select Machinery/Equipment --</option>
-                    <option v-for="m in machinery" :key="m.id" :value="m.id">
+                    <option v-for="m in scopedMachinery" :key="m.id" :value="m.id">
                       {{ m.machinery_name }} ({{ m.machinery_type }})
                     </option>
                   </select>
@@ -3613,6 +3615,31 @@ const focusRefundQueue = async () => {
 // Check if user is admin (sees only profit and reports tabs)
 const isAdmin = computed(() => userRole.value === 'admin');
 
+/** Machinery visible in filters/forms: barangay-scoped for officers; admin optional barangay filter. */
+const scopedMachinery = computed(() => {
+  const list = Array.isArray(machinery.value) ? machinery.value : [];
+  if (isAdmin.value) {
+    if (!selectedBarangayId.value) return list;
+    const bid = parseInt(selectedBarangayId.value, 10);
+    return list.filter((m) => parseInt(m.barangay_id, 10) === bid);
+  }
+  if (userBarangayId.value) {
+    const bid = parseInt(userBarangayId.value, 10);
+    return list.filter((m) => parseInt(m.barangay_id, 10) === bid);
+  }
+  return list;
+});
+
+const syncMachineryFilterSelection = () => {
+  if (!filters.value.machinery_id) return;
+  const stillVisible = scopedMachinery.value.some(
+    (m) => String(m.id) === String(filters.value.machinery_id)
+  );
+  if (!stillVisible) {
+    filters.value.machinery_id = '';
+  }
+};
+
 const { authHeaders, buildParams, financialGet, financialPost, financialPut, financialDelete } =
   useFinancialApi(authStore, selectedBarangayId, () => isAdmin.value);
 
@@ -3854,6 +3881,14 @@ watch(activeTab, (tab) => {
   if (tab === 'expenses') {
     loadExpenses();
   }
+  if (tab === 'profit') {
+    loadProfitSummary();
+    loadExpenseBreakdown();
+    loadBookingUsageStats();
+  }
+  if (tab === 'income') {
+    loadIncome();
+  }
 });
 
 // State
@@ -3945,8 +3980,10 @@ const farmerClientsMachineryLine = computed(() => {
 
 const reportMachineryLabel = computed(() => {
   if (filters.value.machinery_id) {
-    const m = machinery.value.find((item) => String(item.id) === String(filters.value.machinery_id));
+    const m = scopedMachinery.value.find((item) => String(item.id) === String(filters.value.machinery_id))
+      || machinery.value.find((item) => String(item.id) === String(filters.value.machinery_id));
     if (m) return `${m.machinery_name} (${m.machinery_type})`;
+    return `Machinery #${filters.value.machinery_id}`;
   }
   return farmerClientsMachineryLine.value;
 });
@@ -5401,7 +5438,7 @@ const loadExpenses = async () => {
 };
 
 const clearExpenseFilters = () => {
-  filters.value.machinery_id = '';
+  // Keep page-level machinery_id — clear section filters only
   filters.value.expense_status = '';
   filters.value.operator_id = '';
   filters.value.start_date = '';
@@ -5450,9 +5487,13 @@ const closeExpenseForm = () => {
 
 const loadMachinery = async () => {
   try {
-    // Load machinery filtered by barangay for non-admin users
     const token = authStore.token;
-    const response = await fetch(`${API_BASE_URL}/machinery/inventory`, {
+    const params = new URLSearchParams();
+    if (isAdmin.value && selectedBarangayId.value) {
+      params.set('barangay_id', String(selectedBarangayId.value));
+    }
+    const qs = params.toString();
+    const response = await fetch(`${API_BASE_URL}/machinery/inventory${qs ? `?${qs}` : ''}`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : ''
@@ -5462,6 +5503,7 @@ const loadMachinery = async () => {
     
     if (data.success) {
       machinery.value = data.inventory || [];
+      syncMachineryFilterSelection();
     }
   } catch (error) {
     console.error('Error loading machinery:', error);
@@ -5510,6 +5552,7 @@ const loadIncome = async () => {
   try {
     const params = buildParams({
       ...(filters.value.income_source && { income_source: filters.value.income_source }),
+      ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id }),
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
     });
@@ -5533,23 +5576,59 @@ const loadIncome = async () => {
   }
 };
 
+let profitSummaryRequestId = 0;
+
 const loadProfitSummary = async () => {
+  const requestId = ++profitSummaryRequestId;
   try {
-    const params = buildParams({
+    const mid = filters.value.machinery_id;
+    const extra = {
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date })
-    });
-    
+    };
+    if (mid !== undefined && mid !== null && String(mid).trim() !== '') {
+      extra.machinery_id = String(mid);
+    }
+    const params = buildParams(extra);
+
     const response = await fetch(`${API_BASE_URL}/machinery-financial/profit-summary?${params}`, {
       headers: authHeaders()
     });
     const data = await response.json();
-    
-    if (data.success) {
-      profitSummary.value = data.summary;
+
+    // Ignore stale responses (e.g. unfiltered load finishing after a filtered one)
+    if (requestId !== profitSummaryRequestId) return;
+
+    if (data.success && data.summary) {
+      profitSummary.value = {
+        total_income: Number(data.summary.total_income) || 0,
+        total_expenses: Number(data.summary.total_expenses) || 0,
+        net_profit: Number(data.summary.net_profit) || 0
+      };
+    } else {
+      console.error('Failed to load profit summary:', data.message, String(params));
     }
   } catch (error) {
+    if (requestId !== profitSummaryRequestId) return;
     console.error('Error loading profit summary:', error);
+  }
+};
+
+const onPageMachineryFilterChange = async () => {
+  // Profit cards first (await) so Total Income/Expenses/Net Profit update immediately
+  await loadProfitSummary();
+  loadExpenseBreakdown();
+  loadBookingUsageStats();
+  loadExpenses();
+  loadIncome();
+  loadARData();
+  loadCollections();
+  if (activeTab.value === 'reports' && lastReportRequest.value) {
+    refreshCurrentReport();
+  }
+  if (isPaymentVerifier.value) {
+    loadPendingBalanceSubmissions();
+    loadPendingDownPayments();
   }
 };
 
@@ -5557,7 +5636,8 @@ const loadExpenseBreakdown = async () => {
   try {
     const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
-      ...(filters.value.end_date && { end_date: filters.value.end_date })
+      ...(filters.value.end_date && { end_date: filters.value.end_date }),
+      ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id })
     });
     
     const response = await fetch(`${API_BASE_URL}/machinery-financial/expenses-breakdown?${params}`, {
@@ -5578,6 +5658,7 @@ const loadBookingUsageStats = async () => {
     const params = buildParams({
       ...(filters.value.start_date && { start_date: filters.value.start_date }),
       ...(filters.value.end_date && { end_date: filters.value.end_date }),
+      ...(filters.value.machinery_id && { machinery_id: filters.value.machinery_id }),
       limit: '10'
     });
 
@@ -5720,6 +5801,37 @@ const deleteExpense = async (id) => {
   } catch (error) {
     console.error('Error deleting expense:', error);
     showAlert('Failed to delete expense', 'error');
+  }
+};
+
+const removePendingExpense = async (expense) => {
+  if (!expense?.id) return;
+  const machine = expense.machinery_name || 'this booking';
+  if (
+    !confirm(
+      `Remove pending expense for ${machine}?\n\nUse this when there was no actual expense. It will leave the pending list and will not be counted in profit.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await financialPost(
+      `${API_BASE_URL}/machinery-financial/expenses/${expense.id}/dismiss`,
+      {}
+    );
+    const data = await response.json();
+    if (data.success) {
+      showAlert(data.message || 'Pending expense removed', 'success');
+      loadExpenses();
+      loadProfitSummary();
+      loadExpenseBreakdown();
+    } else {
+      showAlert(data.message || 'Failed to remove pending expense', 'error');
+    }
+  } catch (error) {
+    console.error('Error removing pending expense:', error);
+    showAlert('Failed to remove pending expense', 'error');
   }
 };
 
@@ -5995,16 +6107,18 @@ const resetCollectionForm = () => {
 };
 
 const clearFilters = () => {
-  filters.value.machinery_id = '';
+  // Keep page-level machinery_id — clear section date/source filters only
   filters.value.income_source = 'all';
   filters.value.start_date = '';
   filters.value.end_date = '';
   loadExpenses();
   loadIncome();
   loadCollections();
+  loadARData();
   loadMonthlyDues();
   loadProfitSummary();
   loadExpenseBreakdown();
+  loadBookingUsageStats();
 };
 
 const distributeProfit = () => {
@@ -6888,11 +7002,16 @@ const selectFarmer = (farmer) => {
   selectedFarmer.value = farmer;
   duesForm.value.farmer_id = farmer.id;
 };
-watch(selectedBarangayId, () => {
+watch(selectedBarangayId, async () => {
   if (isAdmin.value) {
+    await loadMachinery();
     loadProfitSummary();
     loadExpenseBreakdown();
     loadBookingUsageStats();
+    loadExpenses();
+    loadIncome();
+    loadARData();
+    loadCollections();
     loadManualIncome();
     if (activeTab.value === 'reports' && lastReportRequest.value) {
       refreshCurrentReport();
@@ -6904,22 +7023,13 @@ watch(selectedBarangayId, () => {
   }
 });
 
-const applyMachineryFilterRefresh = () => {
-  if (activeTab.value === 'reports' && lastReportRequest.value) {
-    refreshCurrentReport();
+watch(
+  () => filters.value.machinery_id,
+  (next, prev) => {
+    if (String(next ?? '') === String(prev ?? '')) return;
+    onPageMachineryFilterChange();
   }
-  if (activeTab.value === 'expenses') {
-    loadExpenses();
-  }
-  if (activeTab.value === 'ar') {
-    loadARData();
-    loadCollections();
-    if (isPaymentVerifier.value) loadPendingBalanceSubmissions();
-    if (isPaymentVerifier.value) loadPendingDownPayments();
-  }
-};
-
-watch(() => filters.value.machinery_id, applyMachineryFilterRefresh);
+);
 
 const getDefaultTabForRole = () => {
   if (isAdmin.value) return 'profit';
@@ -7627,6 +7737,21 @@ onBeforeUnmount(() => {
   border-top: 1px solid rgba(190, 235, 203, 0.12);
 }
 
+.pending-expense-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pending-expense-actions .btn-sm {
+  white-space: nowrap;
+}
+
+td .pending-expense-actions {
+  justify-content: flex-start;
+}
+
 .fin-mobile-action {
   flex: 1 1 auto;
   min-height: 40px;
@@ -7670,6 +7795,96 @@ onBeforeUnmount(() => {
 
 .tools-card.filters-section {
   border-radius: 14px;
+}
+
+.page-machinery-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.page-machinery-filter-group {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 360px;
+}
+
+.page-machinery-filter-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.page-machinery-filter-hint {
+  margin: 0;
+  flex: 1 1 220px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+.page-machinery-filter-hint-short {
+  display: none;
+}
+
+.card-filter-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.8;
+  line-height: 1.25;
+}
+
+@media (max-width: 640px) {
+  .page-machinery-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .page-machinery-filter .filter-group,
+  .page-machinery-filter .page-machinery-filter-group,
+  .page-machinery-filter .filter-input,
+  .page-machinery-filter .page-machinery-filter-select {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    flex: none;
+  }
+
+  .page-machinery-filter-label {
+    display: block !important;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .page-machinery-filter-select {
+    min-height: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 10px;
+  }
+
+  .page-machinery-filter-hint {
+    flex: none;
+    width: 100%;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    opacity: 0.75;
+  }
+
+  .page-machinery-filter-hint-full {
+    display: none;
+  }
+
+  .page-machinery-filter-hint-short {
+    display: inline;
+  }
 }
 
 .access-denied {
@@ -16191,11 +16406,54 @@ tr.selected {
     border-width: 1px !important;
   }
 
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filters-section.page-machinery-filter {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+
   html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-group {
     flex: 0 1 148px !important;
     min-width: 120px !important;
     max-width: 170px !important;
     gap: 3px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .filter-group,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .page-machinery-filter-group {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .page-machinery-filter-label {
+    display: block !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    margin: 0 0 2px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .page-machinery-filter-select,
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .filter-input {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    font-size: 0.9rem !important;
+    padding: 0.4rem 0.65rem !important;
+    border-radius: 10px !important;
+  }
+
+  html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .page-machinery-filter .page-machinery-filter-hint {
+    width: 100% !important;
+    flex: none !important;
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
   }
 
   html body .financial-container.machinery-financial-page.machinery-ui.glass-module-page .filter-actions {

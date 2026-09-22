@@ -548,12 +548,12 @@
 
                 <div class="edit-field">
                   <label class="edit-label">Hectares Farmed</label>
-                  <input
+                  <TypedNumberInput
                     v-model="editForm.land_area"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="edit-input edit-input-modal"
+                    :min="0.01"
+                    :max="LAND_AREA_MAX"
+                    :max-integer-digits="LAND_AREA_MAX_INTEGER_DIGITS"
+                    input-class="edit-input edit-input-modal"
                     :placeholder="$t('incomeForm.example15')"
                   />
                 </div>
@@ -685,6 +685,8 @@ import { formatMemberRole } from '../utils/roleLabels.js'
 import { useFarmerStore } from '../stores/farmerStore'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import TypedNumberInput from './TypedNumberInput.vue'
+import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
@@ -956,6 +958,18 @@ const saveEdit = async (farmer) => {
     return
   }
   editForm.value.phone_number = phoneNumber
+
+  const landHa = parseFloat(editForm.value.land_area)
+  if (editForm.value.land_area !== '' && editForm.value.land_area != null) {
+    if (!Number.isFinite(landHa) || landHa <= 0) {
+      alert('Farm area (hectares) must be a number greater than 0.')
+      return
+    }
+    if (landHa > LAND_AREA_MAX) {
+      alert('Farm area must be at most 3 digits (maximum 999.99 hectares).')
+      return
+    }
+  }
 
   if (!confirm(`Are you sure you want to update ${farmer.full_name}'s information?`)) {
     return

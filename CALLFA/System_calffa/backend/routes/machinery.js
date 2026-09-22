@@ -156,9 +156,11 @@ router.get('/inventory', async (req, res) => {
       params.push(machinery_type);
     }
 
-    // Management: presidents only see their barangay.
+    // Management inventory: barangay officers only see their barangay's machinery.
     // Booking catalog (catalog=1): all barangays so member/non-member pricing works.
-    if (user.role === 'president' && !isBookingCatalog) {
+    // Admin sees all (optional ?barangay_id= filter).
+    const barangayScopedInventoryRoles = ['president', 'treasurer', 'auditor'];
+    if (barangayScopedInventoryRoles.includes(user.role) && !isBookingCatalog) {
       if (!user.barangay_id) {
         return res.json({ success: true, inventory: [], cross_barangay_catalog: false });
       }
@@ -185,7 +187,7 @@ router.get('/inventory', async (req, res) => {
     res.json({
       success: true,
       inventory: withAvailability,
-      cross_barangay_catalog: isBookingCatalog || user.role !== 'president'
+      cross_barangay_catalog: isBookingCatalog || !barangayScopedInventoryRoles.includes(user.role)
     });
   } catch (error) {
     console.error('Error fetching machinery inventory:', error);
@@ -2411,11 +2413,31 @@ router.post('/bookings', verifyToken, async (req, res) => {
     const machineryBarangayId = machinery[0].barangay_id;
     
     // Check availability for the date
-    const isAvailable = await checkBookingAvailability(machinery_id, booking_date, area_size, null, false);
+    const isAvailable = await checkBookingAvailability(machinery_id, booking_date, area_size, null);
     if (!isAvailable) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Machinery is not available for the requested date and capacity' 
+      const blockingStatuses = calendarBlockingStatusesSql();
+      const [capRows] = await pool.execute(
+        'SELECT max_capacity, capacity_unit FROM machinery_inventory WHERE id = ?',
+        [machinery_id]
+      );
+      const [bookedRows] = await pool.execute(
+        `SELECT COALESCE(SUM(area_size), 0) AS total_booked
+         FROM machinery_bookings
+         WHERE machinery_id = ? AND booking_date = ? AND status IN (${blockingStatuses})`,
+        [machinery_id, booking_date]
+      );
+      const maxCap = parseFloat(capRows[0]?.max_capacity) || 0;
+      const booked = parseFloat(bookedRows[0]?.total_booked) || 0;
+      const remaining = Math.max(0, maxCap - booked);
+      const unit = capRows[0]?.capacity_unit || 'hectares';
+      return res.status(400).json({
+        success: false,
+        message: maxCap
+          ? `Only ${remaining} ${unit} available on ${booking_date} for this machinery (max ${maxCap} ${unit}/day). Please request ${remaining} ${unit} or less.`
+          : 'Machinery is not available for the requested date and capacity',
+        available: remaining,
+        max_capacity: maxCap,
+        capacity_unit: unit
       });
     }
     

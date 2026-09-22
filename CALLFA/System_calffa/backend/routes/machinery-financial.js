@@ -270,6 +270,9 @@ router.get('/expenses', verifyFinancialAccess, async (req, res) => {
     if (expense_status) {
       query += ' AND me.expense_status = ?';
       params.push(expense_status);
+    } else {
+      // Hide dismissed "no expense" rows from the main expense lists
+      query += ` AND me.expense_status <> 'Dismissed'`;
     }
 
     if (expense_source) {
@@ -604,6 +607,66 @@ router.delete('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
   }
 });
 
+// POST dismiss pending expense (no actual expense for this booking)
+router.post('/expenses/:id/dismiss', verifyTreasurerAccess, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.execute(
+      `SELECT me.id, me.expense_status, me.booking_id, mi.barangay_id
+       FROM machinery_expenses me
+       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+       WHERE me.id = ?`,
+      [id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Expense not found' });
+    }
+
+    const expense = rows[0];
+    if (expense.expense_status !== 'Pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Only pending expense entries can be removed this way.'
+      });
+    }
+
+    if (!isAdmin({ role: req.userRole }) && req.userBarangayId) {
+      if (parseInt(expense.barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only manage expenses for machinery in your barangay.'
+        });
+      }
+    }
+
+    await pool.execute(
+      `UPDATE machinery_expenses
+       SET expense_status = 'Dismissed',
+           total_amount = 0,
+           fuel_and_oil = 0,
+           labor_cost = 0,
+           per_diem = 0,
+           repair_and_maintenance = 0,
+           office_supply = 0,
+           communication_expense = 0,
+           utilities_expense = 0,
+           sundries = 0,
+           particulars = COALESCE(NULLIF(TRIM(particulars), ''), 'No expense recorded for this booking')
+       WHERE id = ? AND expense_status = 'Pending'`,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Pending expense removed. This booking will no longer appear in the pending list.'
+    });
+  } catch (error) {
+    console.error('Error dismissing pending expense:', error);
+    res.status(500).json({ success: false, message: 'Failed to remove pending expense' });
+  }
+});
+
 // ==================== INCOME ====================
 
 // GET machinery income (barangay-based)
@@ -842,13 +905,10 @@ router.get('/income', verifyFinancialAccess, async (req, res) => {
     if (machinery_id && machinery_id !== '') {
       if (income_source === 'dues') {
         // Ignore machinery filter when viewing dues-only records
-      } else if (income_source === 'all') {
-        // Keep dues visible while filtering machinery-related income
-        query += ' AND (income_type = \'Association Dues\' OR machinery_id = ?)';
-        params.push(parseInt(machinery_id));
       } else {
+        // Specific machinery view should not mix in association dues
         query += ' AND machinery_id = ?';
-        params.push(parseInt(machinery_id));
+        params.push(parseInt(machinery_id, 10));
       }
     }
 
@@ -1044,85 +1104,160 @@ router.delete('/manual-income/:id', verifyTreasurerAccess, async (req, res) => {
 
 // ==================== PROFIT CALCULATIONS ====================
 
-// GET profit summary (barangay-based)
+// GET profit summary (barangay-based; optional machinery_id)
 router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
   try {
-    const { start_date, end_date, barangay_id } = req.query;
+    const { start_date, end_date, barangay_id, machinery_id } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
-    
-    // Income query with barangay filter (includes machinery operations and association dues)
-    let incomeQuery = `
-      SELECT COALESCE(SUM(income_amount), 0) as total_income FROM (
+    const machineryIdNum =
+      machinery_id && machinery_id !== '' && !Number.isNaN(parseInt(machinery_id, 10))
+        ? parseInt(machinery_id, 10)
+        : null;
+
+    // Income sources aligned with GET /income so profit matches the Income tab
+    const incomeParts = [
+      `
+        SELECT
+          mbp.amount as income_amount,
+          mbp.payment_date as date_of_income,
+          COALESCE(f.barangay_id, mi.barangay_id) as barangay_id,
+          f.barangay_id as farmer_barangay_id,
+          mi.barangay_id as machinery_barangay_id,
+          mb.machinery_id as machinery_id
+        FROM machinery_booking_payments mbp
+        LEFT JOIN machinery_bookings mb ON mbp.booking_id = mb.id
+        LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE COALESCE(mbp.payment_type, '') <> 'refund'
+          AND mbp.amount > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+      `,
+      `
         SELECT
           COALESCE(mb.total_paid, 0) as income_amount,
           COALESCE(mb.last_payment_date, mb.payment_date, mb.updated_at) as date_of_income,
-          mi.barangay_id
+          COALESCE(f.barangay_id, mi.barangay_id) as barangay_id,
+          f.barangay_id as farmer_barangay_id,
+          mi.barangay_id as machinery_barangay_id,
+          mb.machinery_id as machinery_id
         FROM machinery_bookings mb
         LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
         WHERE COALESCE(mb.total_paid, 0) > 0
           AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
-        UNION ALL
-        SELECT md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id
+          AND NOT EXISTS (
+            SELECT 1 FROM machinery_booking_payments mbp3 WHERE mbp3.booking_id = mb.id
+          )
+      `,
+      `
+        SELECT
+          minc.income_amount,
+          minc.date_of_income,
+          mi.barangay_id,
+          f.barangay_id as farmer_barangay_id,
+          mi.barangay_id as machinery_barangay_id,
+          minc.machinery_id
+        FROM machinery_income minc
+        LEFT JOIN machinery_inventory mi ON minc.machinery_id = mi.id
+        LEFT JOIN machinery_bookings mb ON minc.booking_id = mb.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE NOT EXISTS (
+          SELECT 1 FROM machinery_booking_payments mbp2 WHERE mbp2.booking_id = minc.booking_id
+        )
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+      `
+    ];
+
+    // Association dues + manual income are barangay-level (no machinery) — omit when filtering by machine
+    if (!machineryIdNum) {
+      incomeParts.push(`
+        SELECT
+          md.amount as income_amount,
+          md.collection_date as date_of_income,
+          md.barangay_id,
+          md.barangay_id as farmer_barangay_id,
+          md.barangay_id as machinery_barangay_id,
+          NULL as machinery_id
         FROM monthly_dues md
-        UNION ALL
-        SELECT mmi.income_amount, mmi.date_of_income, mmi.barangay_id
+      `);
+      incomeParts.push(`
+        SELECT
+          mmi.income_amount,
+          mmi.date_of_income,
+          mmi.barangay_id,
+          mmi.barangay_id as farmer_barangay_id,
+          mmi.barangay_id as machinery_barangay_id,
+          NULL as machinery_id
         FROM machinery_manual_income mmi
+      `);
+    }
+
+    let incomeQuery = `
+      SELECT COALESCE(SUM(income_amount), 0) as total_income FROM (
+        ${incomeParts.join(' UNION ALL ')}
       ) combined_income
       WHERE 1=1
     `;
-    
-    // Expense query with barangay filter
+    const incomeParams = [];
+
     let expenseQuery = `
       SELECT COALESCE(SUM(me.total_amount), 0) as total_expenses 
       FROM machinery_expenses me
       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
       WHERE me.expense_status = 'Recorded'
     `;
-    
-    const incomeParams = [];
     const expenseParams = [];
-    
+
+    if (machineryIdNum) {
+      incomeQuery += ' AND machinery_id = ?';
+      incomeParams.push(machineryIdNum);
+      expenseQuery += ' AND me.machinery_id = ?';
+      expenseParams.push(machineryIdNum);
+    }
+
     // Filter by barangay: admin can filter by selected barangay, others see their own barangay
     if (userRole === 'admin' && barangay_id) {
-      incomeQuery += ' AND barangay_id = ?';
+      const bid = parseInt(barangay_id, 10);
+      incomeQuery += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
+      incomeParams.push(bid, bid, bid);
       expenseQuery += ' AND mi.barangay_id = ?';
-      incomeParams.push(barangay_id);
-      expenseParams.push(barangay_id);
+      expenseParams.push(bid);
     } else if (userRole !== 'admin' && userBarangayId) {
-      incomeQuery += ' AND barangay_id = ?';
+      incomeQuery += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
+      incomeParams.push(userBarangayId, userBarangayId, userBarangayId);
       expenseQuery += ' AND mi.barangay_id = ?';
-      incomeParams.push(userBarangayId);
       expenseParams.push(userBarangayId);
     }
-    
+
     if (start_date) {
       incomeQuery += ' AND date_of_income >= ?';
       expenseQuery += ' AND me.date_of_expense >= ?';
       incomeParams.push(start_date);
       expenseParams.push(start_date);
     }
-    
+
     if (end_date) {
       incomeQuery += ' AND date_of_income <= ?';
       expenseQuery += ' AND me.date_of_expense <= ?';
       incomeParams.push(end_date);
       expenseParams.push(end_date);
     }
-    
+
     const [incomeResult] = await pool.execute(incomeQuery, incomeParams);
     const [expenseResult] = await pool.execute(expenseQuery, expenseParams);
-    
+
     const totalIncome = incomeResult[0].total_income || 0;
     const totalExpenses = expenseResult[0].total_expenses || 0;
     const netProfit = totalIncome - totalExpenses;
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       summary: {
         total_income: parseFloat(totalIncome),
         total_expenses: parseFloat(totalExpenses),
-        net_profit: parseFloat(netProfit)
+        net_profit: parseFloat(netProfit),
+        machinery_id: machineryIdNum
       },
       userRole,
       userBarangayId
@@ -1136,7 +1271,7 @@ router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
 // GET expense breakdown by category (barangay-based)
 router.get('/expenses-breakdown', verifyFinancialAccess, async (req, res) => {
   try {
-    const { start_date, end_date, barangay_id } = req.query;
+    const { start_date, end_date, barangay_id, machinery_id } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
     
@@ -1165,6 +1300,11 @@ router.get('/expenses-breakdown', verifyFinancialAccess, async (req, res) => {
       query += ' AND mi.barangay_id = ?';
       params.push(userBarangayId);
     }
+
+    if (machinery_id && machinery_id !== '') {
+      query += ' AND me.machinery_id = ?';
+      params.push(parseInt(machinery_id, 10));
+    }
     
     if (start_date) {
       query += ' AND me.date_of_expense >= ?';
@@ -1190,7 +1330,7 @@ router.get('/expenses-breakdown', verifyFinancialAccess, async (req, res) => {
  */
 router.get('/booking-usage-stats', verifyFinancialAccess, async (req, res) => {
   try {
-    const { start_date, end_date, barangay_id } = req.query;
+    const { start_date, end_date, barangay_id, machinery_id } = req.query;
     const userRole = req.userRole;
     const userBarangayId = req.userBarangayId;
 
@@ -1221,6 +1361,11 @@ router.get('/booking-usage-stats', verifyFinancialAccess, async (req, res) => {
     } else if (userRole !== 'admin' && userBarangayId) {
       query += ' AND mi.barangay_id = ?';
       params.push(userBarangayId);
+    }
+
+    if (machinery_id && machinery_id !== '') {
+      query += ' AND mb.machinery_id = ?';
+      params.push(parseInt(machinery_id, 10));
     }
 
     if (start_date) {

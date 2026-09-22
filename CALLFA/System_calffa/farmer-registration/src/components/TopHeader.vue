@@ -665,7 +665,7 @@ onMounted(() => {
   loadNotifications()
   
   // Refresh notifications every 3 seconds
-  const notifInterval = setInterval(loadNotifications, 3000)
+  const notifInterval = setInterval(loadNotifications, 15000)
   
   document.addEventListener('click', handleClickOutside)
   

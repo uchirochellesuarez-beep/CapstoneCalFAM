@@ -32,10 +32,21 @@ async function ensurePendingExpenseSchema(pool) {
   if (!(await columnExists(pool, 'machinery_expenses', 'expense_status'))) {
     await pool.execute(
       `ALTER TABLE machinery_expenses
-       ADD COLUMN expense_status ENUM('Pending', 'Recorded') NOT NULL DEFAULT 'Recorded'
-       COMMENT 'Pending = awaiting treasurer entry; Recorded = finalized' AFTER sundries`
+       ADD COLUMN expense_status ENUM('Pending', 'Recorded', 'Dismissed') NOT NULL DEFAULT 'Recorded'
+       COMMENT 'Pending = awaiting treasurer entry; Recorded = finalized; Dismissed = no expense for booking' AFTER sundries`
     );
     console.log('✅ Added machinery_expenses.expense_status');
+  } else {
+    // Allow treasurers to clear pending rows when a booking had no actual expense
+    try {
+      await pool.execute(
+        `ALTER TABLE machinery_expenses
+         MODIFY COLUMN expense_status ENUM('Pending', 'Recorded', 'Dismissed') NOT NULL DEFAULT 'Recorded'
+         COMMENT 'Pending = awaiting treasurer entry; Recorded = finalized; Dismissed = no expense for booking'`
+      );
+    } catch (err) {
+      console.warn('⚠️ Could not extend expense_status enum with Dismissed:', err.message);
+    }
   }
 
   if (!(await columnExists(pool, 'machinery_expenses', 'expense_source'))) {
