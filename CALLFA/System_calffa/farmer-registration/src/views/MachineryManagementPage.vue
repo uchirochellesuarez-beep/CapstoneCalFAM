@@ -987,7 +987,7 @@
                       accept="image/*"
                       class="file-input-hidden"
                     />
-                    <button type="button" @click.prevent="$refs.machineryPictureInput.click()" class="btn-upload-picture">
+                    <button type="button" :disabled="formBusy" @click.prevent="$refs.machineryPictureInput.click()" class="btn-upload-picture">
                       {{ $t('ui.uploadPicture') }}
                     </button>
                   </div>
@@ -996,9 +996,9 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" @click="closeModals">{{ $t('common.cancel') }}</button>
-            <button type="submit" form="machinery-form" class="btn-submit" :disabled="loading">
-              {{ loading ? $t('common.saving') : (showEditMachineryModal ? $t('ui.update') : $t('common.add')) }}
+            <button type="button" class="btn-secondary" :disabled="formBusy" @click="closeModals">{{ $t('common.cancel') }}</button>
+            <button type="submit" form="machinery-form" class="btn-submit" :disabled="formBusy">
+              {{ formBusy ? $t('common.saving') : (showEditMachineryModal ? $t('ui.update') : $t('common.add')) }}
             </button>
           </div>
         </div>
@@ -1168,7 +1168,8 @@ import { useAuthStore } from '../stores/authStore'
 import { useDownPaymentStore } from '../stores/downPaymentStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { machineryStatusLabel } from '../utils/machineryStatus'
-import { mediaUrl, apiUrl } from '../utils/apiBase'
+import { mediaUrl } from '../utils/apiBase'
+import { compressImageFile } from '../utils/compressImage'
 
 export default {
   name: 'MachineryManagementPage',
@@ -1340,6 +1341,16 @@ export default {
     })
     const bookings = computed(() => machineryStore.bookings)
     const loading = computed(() => machineryStore.loading)
+    const savingMachinery = ref(false)
+    const formBusy = computed(() => loading.value || savingMachinery.value)
+    let picturePreviewUrl = ''
+
+    const revokePicturePreview = () => {
+      if (picturePreviewUrl) {
+        URL.revokeObjectURL(picturePreviewUrl)
+        picturePreviewUrl = ''
+      }
+    }
     const error = computed(() => machineryStore.error)
     const selectedBooking = computed(() => machineryStore.selectedBooking)
     const distinctMachineryTypes = computed(() => machineryStore.distinctMachineryTypes)
@@ -1497,7 +1508,8 @@ export default {
         }
         
         console.log('Submitting machinery data:', data)
-        const result = await machineryStore.addMachinery(data)
+        savingMachinery.value = true
+        const result = await machineryStore.addMachinery(data, { skipRefresh: true })
         
         // Upload picture if one was selected
         if (result && (result.id || result.machinery_id) && currentPictureFile.value) {
@@ -1513,6 +1525,8 @@ export default {
       } catch (error) {
         console.error('Error adding machinery:', error)
         // Error is already set in store, no need to catch it here
+      } finally {
+        savingMachinery.value = false
       }
     }
 
@@ -1627,7 +1641,8 @@ export default {
         }
         
         console.log('Updating machinery data:', data)
-        await machineryStore.updateMachinery(machineryForm.value.id, data)
+        savingMachinery.value = true
+        await machineryStore.updateMachinery(machineryForm.value.id, data, { skipRefresh: true })
         
         // Upload picture if one was selected
         if (currentPictureFile.value && machineryForm.value.id) {
@@ -1642,6 +1657,8 @@ export default {
       } catch (error) {
         console.error('Error updating machinery:', error)
         // Error is already set in store
+      } finally {
+        savingMachinery.value = false
       }
     }
 
@@ -1747,6 +1764,7 @@ export default {
     }
 
     const resetForm = () => {
+      revokePicturePreview()
       machineryForm.value = {
         machinery_name: '', machinery_type: '', description: '',
         member_price: '', non_member_price: '', interest_rate: '', price_per_unit: '', unit_type: '', max_capacity: '',
@@ -1766,7 +1784,7 @@ export default {
         
         console.log('📸 Picture selected:', file.name, file.type, file.size, 'bytes');
         
-        // Validate file size (10MB max)
+        // Validate file size (10MB max before compress)
         if (file.size > 10 * 1024 * 1024) {
           validationError.value = 'File size must be less than 10MB'
           setTimeout(() => validationError.value = '', 5000)
@@ -1781,22 +1799,12 @@ export default {
           return
         }
 
-        // Create preview
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          console.log('🖼️ Preview created, size:', e.target.result.length, 'bytes');
-          machineryForm.value.machinery_picture = e.target.result
-        }
-        reader.onerror = (e) => {
-          console.error('❌ Error reading file:', e);
-          validationError.value = 'Error reading image file'
-          setTimeout(() => validationError.value = '', 5000)
-        }
-        reader.readAsDataURL(file)
-        
-        // Store file for later upload
-        currentPictureFile.value = file
-        console.log('✓ File ready for upload');
+        const compressed = await compressImageFile(file)
+        currentPictureFile.value = compressed
+        revokePicturePreview()
+        picturePreviewUrl = URL.createObjectURL(compressed)
+        machineryForm.value.machinery_picture = picturePreviewUrl
+        console.log('✓ File ready for upload', compressed.size, 'bytes');
       } catch (error) {
         console.error('Error handling picture change:', error)
         validationError.value = '⚠️ Error reading image file'
@@ -1806,6 +1814,7 @@ export default {
 
     const removeMachineryPicture = () => {
       console.log('🗑️ Removing machinery picture...');
+      revokePicturePreview()
       machineryForm.value.machinery_picture = '';
       currentPictureFile.value = null;
       if (machineryPictureInput.value) {
@@ -1841,7 +1850,7 @@ export default {
           throw new Error('No authentication token found');
         }
         
-        const uploadUrl = apiUrl(`/api/machinery/inventory/${machineryId}/picture`);
+        const uploadUrl = `/api/machinery/inventory/${machineryId}/picture`;
         console.log('📤 Uploading to:', uploadUrl);
         const response = await fetch(uploadUrl, {
           method: 'POST',
@@ -1862,7 +1871,6 @@ export default {
         console.log('✅ Upload successful:', uploadResult);
         
         currentPictureFile.value = null;
-        showSuccessToast('Picture uploaded successfully!')
         return true;
       } catch (error) {
         console.error('❌ Error uploading picture:', error);
@@ -1964,7 +1972,7 @@ export default {
       openAssignOperatorModal, closeAssignOperatorModal, saveOperatorAssignment,
       successMessage, validationError, filters, adminFilters, machineryForm, inventory, bookings,
       prerequisiteMachineOptions,
-      loading, error, selectedBooking, distinctMachineryTypes,
+      loading, formBusy, error, selectedBooking, distinctMachineryTypes,
       totalMachinery, availableMachinery, barangays, isAdminRole, isAdminOnly,
       pendingBookingsCount, totalRevenue, applyFilters, applyAdminFilters,
       filteredInventory, handleBarangayChange, isPresidentRole, userBarangayId,

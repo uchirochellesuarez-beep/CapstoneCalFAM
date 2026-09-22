@@ -120,7 +120,7 @@ export const useMachineryStore = defineStore('machinery', {
       }
     },
 
-    async addMachinery(machineryData) {
+    async addMachinery(machineryData, options = {}) {
       this.loading = true
       this.error = null
       
@@ -156,7 +156,7 @@ export const useMachineryStore = defineStore('machinery', {
           throw new Error(data.message || 'Failed to add machinery')
         }
         
-        await this.fetchInventory() // Refresh inventory
+        if (!options.skipRefresh) await this.fetchInventory()
         return data
       } catch (error) {
         this.error = error.message
@@ -167,7 +167,7 @@ export const useMachineryStore = defineStore('machinery', {
       }
     },
 
-    async updateMachinery(id, machineryData) {
+    async updateMachinery(id, machineryData, options = {}) {
       this.loading = true
       this.error = null
       
@@ -196,7 +196,7 @@ export const useMachineryStore = defineStore('machinery', {
         }
         
         const data = await response.json()
-        await this.fetchInventory() // Refresh inventory
+        if (!options.skipRefresh) await this.fetchInventory()
         return data
       } catch (error) {
         this.error = error.message
