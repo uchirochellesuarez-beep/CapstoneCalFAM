@@ -5424,7 +5424,7 @@ const completePendingExpense = (expense) => {
   expenseForm.value = {
     machinery_id: expense.machinery_id,
     booking_id: expense.booking_id,
-    date_of_expense: expense.date_of_expense || new Date().toISOString().split('T')[0],
+    date_of_expense: normalizeDateString(expense.date_of_expense) || getManilaTodayString(),
     particulars: expense.particulars || '',
     payment_method: 'Cash',
     fuel_and_oil: 0,
@@ -5695,6 +5695,8 @@ const editExpense = (expense) => {
   pendingExpenseContext.value = null;
   editingExpense.value = expense;
   const normalized = normalizeNumericFields({ ...expense });
+  normalized.date_of_expense =
+    normalizeDateString(expense.date_of_expense) || getManilaTodayString();
   expenseForm.value = normalized;
   showExpenseForm.value = true;
 };
@@ -6700,13 +6702,7 @@ const loadManualIncome = async () => {
   }
 };
 
-const toLocalDateInput = (value) => {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+const toLocalDateInput = (value) => normalizeDateString(value) || '';
 
 const openEditManualIncome = (entry) => {
   editingManualIncomeId.value = entry.id;

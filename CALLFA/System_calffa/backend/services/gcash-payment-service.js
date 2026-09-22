@@ -178,7 +178,7 @@ async function applyMachineryCollection(pool, {
 
   const initialRemainingBalance = totalPrice - currentTotalPaid;
   const isPartialPayment = collectionAmt < (initialRemainingBalance - 0.01);
-  const finalPaymentType = isPartialPayment ? 'partial' : 'full';
+  const finalPaymentType = isPartialPayment ? 'partial' : 'final_payment';
 
   let interestAmt = 0;
   if (isPartialPayment && existingInterest <= 0) {

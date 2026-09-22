@@ -37,6 +37,8 @@ const { ensureActiveSessionSchema } = require('./schema/ensureActiveSessionSchem
 const { ensureMachineryStatusSchema } = require('./schema/ensureMachineryStatusSchema');
 const { ensureMachineryPrerequisiteSchema } = require('./schema/ensureMachineryPrerequisiteSchema');
 const { ensureMachineryInterestRateSchema } = require('./schema/ensureMachineryInterestRateSchema');
+const { ensureInterestTrackingSchema } = require('./schema/ensureInterestTrackingSchema');
+const { ensureMachineryHostingSchema } = require('./schema/ensureMachineryHostingSchema');
 const { ensureGcashPaymentSchema } = require('./schema/ensureGcashPaymentSchema');
 const { dropUnusedActivityLogs } = require('./schema/dropUnusedActivityLogs');
 const { dropUnusedLegacyTables } = require('./schema/dropUnusedLegacyTables');
@@ -118,19 +120,28 @@ if (require.main === module) {
       () => ensureActiveSessionSchema(pool),
       () => ensureMachineryStatusSchema(pool),
       () => ensureMachineryPrerequisiteSchema(pool),
+      () => ensureMachineryHostingSchema(pool),
       () => ensureMachineryInterestRateSchema(pool),
+      () => ensureInterestTrackingSchema(pool),
       () => ensureGcashPaymentSchema(pool),
       () => dropUnusedActivityLogs(pool),
       () => dropUnusedLegacyTables(pool),
       () => dropUnusedMachineryBookingColumns(pool)
     ];
 
+    let schemaFailures = 0;
     for (const step of schemaSteps) {
       try {
         await step();
       } catch (err) {
-        console.warn('⚠️ Startup schema step failed:', err.message);
+        schemaFailures += 1;
+        console.error('⚠️ Startup schema step failed:', err.message);
       }
+    }
+    if (schemaFailures > 0) {
+      console.error(
+        `⚠️ ${schemaFailures} startup schema step(s) failed — production APIs may return 500 until columns/tables exist.`
+      );
     }
 
     console.log('✅ Barangay service places schema ready (table + booking link if needed).');
@@ -146,6 +157,8 @@ if (require.main === module) {
     console.log('✅ Active session schema ready (one login per account).');
     console.log('✅ Machinery inventory status ready (Available / Unavailable).');
     console.log('✅ Machinery prerequisite links ready (requires_machinery_id).');
+    console.log('✅ Machinery hosting columns ready (machine_used, pricing, notes).');
+    console.log('✅ Machinery interest tracking columns ready (bookings + payments).');
     console.log('✅ GCash QR inventory and payment verification schema ready.');
 
     if (shouldRunStartupExpenseSampleSeed()) {

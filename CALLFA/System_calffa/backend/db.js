@@ -26,7 +26,9 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 4000,
-  enableKeepAlive: true
+  enableKeepAlive: true,
+  // Return DATE/DATETIME as strings so <input type="date"> gets yyyy-MM-dd, not ISO Zulu.
+  dateStrings: true
 });
 
 async function pingDatabase(attempt = 1) {

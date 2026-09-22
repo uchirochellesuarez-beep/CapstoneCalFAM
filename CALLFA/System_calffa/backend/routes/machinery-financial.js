@@ -13,6 +13,7 @@ const {
   calculatePartialPaymentInterest,
   formatPartialInterestRuleLabel
 } = require('../services/machinery-interest-service');
+const { normalizeDateString } = require('../utils/philippinesTime');
 
 const EXPENSE_SELECT_BASE = `
   SELECT 
@@ -39,10 +40,6 @@ const EXPENSE_SELECT_BASE = `
   LEFT JOIN farmers op ON me.operator_id = op.id
   LEFT JOIN machinery_bookings mb ON me.booking_id = mb.id
   LEFT JOIN farmers f ON mb.farmer_id = f.id
-  LEFT JOIN payment_receipts pr
-    ON pr.module = 'machinery_expense'
-    AND pr.reference_type = 'machinery_expense'
-    AND pr.reference_id = me.id
 `;
 
 const RECORDED_EXPENSE_FILTER = ` AND me.expense_status = 'Recorded'`;
@@ -361,7 +358,11 @@ router.get('/expenses/:id', verifyFinancialAccess, async (req, res) => {
     res.json({ success: true, expense: expense[0] });
   } catch (error) {
     console.error('Error fetching expense:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch expense' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch expense',
+      detail: error.sqlMessage || error.message
+    });
   }
 });
 
@@ -385,8 +386,10 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       payment_method = 'Cash',
       user_id
     } = req.body;
+
+    const expenseDate = normalizeDateString(date_of_expense);
     
-    if (!machinery_id || !date_of_expense || !particulars || !total_amount) {
+    if (!machinery_id || !expenseDate || !particulars || !total_amount) {
       return res.status(400).json({ 
         success: false, 
         message: 'Missing required fields' 
@@ -414,7 +417,7 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
         machineryBarangayId,
         booking_id || null,
         null,
-        date_of_expense,
+        expenseDate,
         particulars,
         total_amount,
         fuel_and_oil,
@@ -432,7 +435,7 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
     if (booking_id && parseFloat(labor_cost) > 0) {
       await finalizeExpenseAndIncome(result.insertId, {
         laborCost: labor_cost,
-        transactionDate: date_of_expense,
+        transactionDate: expenseDate,
         bookingId: booking_id,
         recordedBy: user_id
       });
@@ -455,7 +458,11 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating expense:', error);
-    res.status(500).json({ success: false, message: 'Failed to create expense' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create expense',
+      detail: error.sqlMessage || error.message
+    });
   }
 });
 
@@ -480,6 +487,11 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
       payment_method = 'Cash',
       user_id
     } = req.body;
+
+    const expenseDate = normalizeDateString(date_of_expense);
+    if (!expenseDate) {
+      return res.status(400).json({ success: false, message: 'Valid date_of_expense is required (yyyy-MM-dd)' });
+    }
 
     const [existingRows] = await pool.execute(
       'SELECT id, expense_status, expense_source, booking_id, operator_id, machinery_id FROM machinery_expenses WHERE id = ?',
@@ -507,7 +519,7 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
            record_created_by = COALESCE(record_created_by, ?)
        WHERE id = ?`,
       [
-        date_of_expense,
+        expenseDate,
         particulars,
         isCompletingPending ? null : (reference_number ? reference_number.trim() : null),
         total_amount,
@@ -539,7 +551,7 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
     if (shouldGenerateIncome) {
       await finalizeExpenseAndIncome(id, {
         laborCost: labor_cost,
-        transactionDate: date_of_expense,
+        transactionDate: expenseDate,
         bookingId: linkedBookingId,
         recordedBy: user_id
       });
@@ -564,7 +576,11 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating expense:', error);
-    res.status(500).json({ success: false, message: 'Failed to update expense' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update expense',
+      detail: error.sqlMessage || error.message
+    });
   }
 });
 
@@ -1386,7 +1402,11 @@ router.get('/collections', verifyFinancialAccess, async (req, res) => {
     res.json({ success: true, collections, userRole, userBarangayId });
   } catch (error) {
     console.error('Error fetching collections:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch collections' });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch collections',
+      detail: error.sqlMessage || error.message
+    });
   }
 });
 
@@ -1435,7 +1455,7 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
     // Determine payment type from amount vs remaining balance (server-authoritative).
     const initialRemainingBalance = totalPrice - currentTotalPaid;
     const isPartialPayment = collectionAmt < (initialRemainingBalance - 0.01);
-    const finalPaymentType = isPartialPayment ? 'partial' : 'full';
+    const finalPaymentType = isPartialPayment ? 'partial' : 'final_payment';
 
     // Apply one-time interest when payment is partial, no prior interest, and machinery rate > 0.
     let interestAmt = 0;
@@ -1951,7 +1971,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
         mi.machinery_name,
         mi.machinery_type,
         CONCAT('Payment for Booking #', mbp.booking_id, 
-          CASE WHEN mbp.payment_type = 'full' THEN ' (Full Payment)' ELSE ' (Partial Payment)' END) as description,
+          CASE WHEN mbp.payment_type IN ('full', 'final_payment') THEN ' (Full Payment)' ELSE ' (Partial Payment)' END) as description,
         mbp.receipt_number,
         NULL as fuel_and_oil,
         NULL as labor_cost,

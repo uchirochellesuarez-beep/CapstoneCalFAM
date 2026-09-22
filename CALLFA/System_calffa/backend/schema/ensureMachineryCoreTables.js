@@ -129,7 +129,10 @@ async function ensureMachineryCoreTables(pool) {
     { name: 'remaining_balance', sql: 'DECIMAL(10,2) DEFAULT 0.00' },
     { name: 'receipt_number', sql: 'VARCHAR(100) NULL' },
     { name: 'payment_date', sql: 'DATE NULL' },
-    { name: 'last_payment_date', sql: 'DATE NULL' }
+    { name: 'last_payment_date', sql: 'DATE NULL' },
+    { name: 'service_location', sql: 'VARCHAR(255) NULL' },
+    { name: 'area_size', sql: 'DECIMAL(10,2) NULL' },
+    { name: 'area_unit', sql: "VARCHAR(50) NULL DEFAULT 'hectares'" }
   ];
 
   for (const col of bookingColumns) {

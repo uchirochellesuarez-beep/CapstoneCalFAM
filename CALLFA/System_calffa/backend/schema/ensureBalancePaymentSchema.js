@@ -68,11 +68,11 @@ async function ensureBalancePaymentSchema(pool) {
   );
   if (ptCol.length > 0) {
     const typeDef = ptCol[0].Type || '';
-    const needed = ["'partial'", "'balance_payment'"];
+    const needed = ["'partial'", "'balance_payment'", "'full'"];
     if (needed.some((v) => !typeDef.includes(v))) {
       await pool.query(
         `ALTER TABLE machinery_booking_payments
-         MODIFY COLUMN payment_type ENUM('down_payment','partial','balance_payment','final_payment','refund')
+         MODIFY COLUMN payment_type ENUM('down_payment','partial','balance_payment','final_payment','full','refund')
          DEFAULT 'final_payment'`
       );
       console.log('✅ Extended machinery_booking_payments.payment_type enum');
