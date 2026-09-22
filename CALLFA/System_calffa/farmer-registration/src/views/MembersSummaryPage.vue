@@ -332,6 +332,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { getManilaTodayString } from '../utils/philippineTime'
+import { mediaUrl } from '../utils/apiBase'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -384,12 +385,7 @@ const copyRefNumber = async () => {
 // Handles both external Google URLs and local uploaded pictures
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
-  // Check if it's already a full URL (Google profile pictures start with https://)
-  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
-  }
-  // Relative path works via Vite proxy (localhost + phone on same Wi-Fi)
-  return `${profilePicture}`
+  return mediaUrl(profilePicture)
 }
 
 const isAllowed = computed(() => {

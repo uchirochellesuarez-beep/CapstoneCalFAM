@@ -95,6 +95,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { mediaUrl } from '../utils/apiBase'
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -155,12 +156,7 @@ const formatRelativeDate = (date) => {
   return formatDateShort(date)
 }
 
-const resolveImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
-  const normalized = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
-  return `${props.apiOrigin}${normalized}`
-}
+const resolveImageUrl = (imagePath) => mediaUrl(imagePath)
 
 const formatAuthorRole = (role) => {
   const value = String(role || '').toLowerCase()
@@ -178,10 +174,7 @@ const formatAuthorRole = (role) => {
 const authorAvatar = computed(() => {
   const name = props.item?.author_name || 'User'
   const profile = props.item?.author_profile
-  if (profile) {
-    if (profile.startsWith('http://') || profile.startsWith('https://')) return profile
-    return resolveImageUrl(profile)
-  }
+  if (profile) return resolveImageUrl(profile)
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=166534&color=fff&size=128`
 })
 

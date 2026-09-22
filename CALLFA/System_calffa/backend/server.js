@@ -66,8 +66,12 @@ app.use(bodyParser.json());
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || '*';
 app.use(cors({ origin: FRONTEND_ORIGIN }));
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files from uploads directory (allow <img> from the frontend host).
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN === '*' ? '*' : FRONTEND_ORIGIN);
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Use farmer routes
 app.use('/api/farmers', farmerRoutes);

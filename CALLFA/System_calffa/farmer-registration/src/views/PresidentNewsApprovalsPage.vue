@@ -174,8 +174,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
-
-const API_ORIGIN = ''
+import { mediaUrl } from '../utils/apiBase'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -391,14 +390,7 @@ const goBack = () => {
   router.push('/news')
 }
 
-const resolveImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath
-  }
-  const normalized = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
-  return `${API_ORIGIN}${normalized}`
-}
+const resolveImageUrl = (imagePath) => mediaUrl(imagePath)
 
 const formatDate = (date) => {
   if (!date) return ''

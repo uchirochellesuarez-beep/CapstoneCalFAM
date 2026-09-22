@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Uploaded files live on the API host. SPA hosting often proxies /api but not /uploads.
+RewriteRule ^uploads/(.*)$ https://api.calfam.ormin.cloud/uploads/$1 [R=302,L]

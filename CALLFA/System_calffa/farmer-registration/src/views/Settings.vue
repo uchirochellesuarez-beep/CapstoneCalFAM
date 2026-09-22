@@ -183,6 +183,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { mediaUrl } from '../utils/apiBase'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 
 const router = useRouter()
@@ -277,13 +278,7 @@ const profilePictureUrl = computed(() => {
     return URL.createObjectURL(profilePictureFile.value)
   }
   if (authStore.currentUser?.profile_picture) {
-    const pictureUrl = authStore.currentUser.profile_picture
-    // Check if it's already a full URL (Google profile pictures are https://)
-    if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-      return pictureUrl
-    }
-    // Relative path works via Vite proxy (localhost + phone on same Wi‑Fi)
-    return `${pictureUrl}`
+    return mediaUrl(authStore.currentUser.profile_picture)
   }
   return null
 })

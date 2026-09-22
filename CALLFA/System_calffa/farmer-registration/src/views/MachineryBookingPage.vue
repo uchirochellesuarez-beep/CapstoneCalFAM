@@ -1315,6 +1315,7 @@ import GcashQrPayPanel from '../components/GcashQrPayPanel.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { canCreateBookingOnBehalf } from '../utils/roleAccess'
 import { historyRowKey, pickFocusedHistoryRow, clearNotificationDeepLink, consumeNotificationDeepLink, scrollFocusedHistoryRowWhenReady, scrollElementWhenReady } from '../utils/paymentHistoryFocus'
+import { mediaUrl } from '../utils/apiBase'
 
 export default {
   name: 'MachineryBookingPage',
@@ -1575,22 +1576,7 @@ export default {
     }
 
     // Helper function to construct proper image URLs
-    const getImageUrl = (imagePath) => {
-      if (!imagePath) return ''
-      
-      // If it's a data URL (from file input), return as-is
-      if (imagePath.startsWith('data:')) {
-        return imagePath
-      }
-      
-      // If it's a server path, construct full backend URL
-      if (imagePath.startsWith('/uploads/')) {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || ''
-        return `${apiBaseUrl}${imagePath}`
-      }
-      
-      return imagePath
-    }
+    const getImageUrl = (imagePath) => mediaUrl(imagePath)
 
     // Computed
     const distinctMachineryTypes = computed(() => machineryStore.distinctMachineryTypes)

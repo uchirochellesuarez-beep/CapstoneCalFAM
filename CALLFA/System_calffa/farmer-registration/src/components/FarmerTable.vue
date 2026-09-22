@@ -687,6 +687,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import TypedNumberInput from './TypedNumberInput.vue'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
+import { mediaUrl } from '../utils/apiBase'
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
@@ -761,14 +762,7 @@ const uploading = ref(false)
 // Handles both external Google URLs and local uploaded pictures
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
-  // Check if it's already a full URL (Google profile pictures start with https://)
-  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
-  }
-  // For local uploads (starts with /uploads/), return as-is
-  // The /uploads path is proxied to the backend via Vite in development
-  // and served directly by the backend in production
-  return profilePicture
+  return mediaUrl(profilePicture)
 }
 
 // Use farmers from props if provided, otherwise use internalFarmers

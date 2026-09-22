@@ -102,6 +102,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
+import { mediaUrl } from '../utils/apiBase'
 import { useGcashPaymentStore, fetchGcashSubmissionById } from '../stores/gcashPaymentStore'
 import ThemeToggle from './ThemeToggle.vue'
 import LanguageToggle from './LanguageToggle.vue'
@@ -153,15 +154,7 @@ const userInitials = computed(() => {
 const userAvatar = computed(() => {
   // Use actual profile picture if available, otherwise generate initials avatar
   if (authStore.currentUser?.profile_picture) {
-    const profilePicture = authStore.currentUser.profile_picture
-    // Check if it's already a full URL (Google profile pictures start with https://)
-    if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-      return profilePicture
-    }
-    // For local uploads (starts with /uploads/), return as-is
-    // The /uploads path is proxied to the backend via Vite in development
-    // and served directly by the backend in production
-    return profilePicture
+    return mediaUrl(authStore.currentUser.profile_picture)
   }
   // Fallback to generated initials avatar if no profile picture
   const label = userName.value || 'User'

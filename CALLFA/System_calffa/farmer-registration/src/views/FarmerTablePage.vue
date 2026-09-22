@@ -259,6 +259,7 @@ import PendingFarmersTab from '../components/PendingFarmersTab.vue'
 import { formatMemberRole } from '../utils/roleLabels.js'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { mediaUrl } from '../utils/apiBase'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -276,10 +277,7 @@ const error = ref(null)
 // Handles both external Google URLs and local uploaded pictures
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
-  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
-  }
-  return profilePicture
+  return mediaUrl(profilePicture)
 }
 
 const formatMemberDate = (dateString) => {

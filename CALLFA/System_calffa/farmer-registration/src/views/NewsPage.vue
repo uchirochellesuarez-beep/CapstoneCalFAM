@@ -388,8 +388,9 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import NewsPostCard from '../components/NewsPostCard.vue'
+import { getApiOrigin, mediaUrl } from '../utils/apiBase'
 
-const API_ORIGIN = ''
+const API_ORIGIN = getApiOrigin()
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -788,10 +789,7 @@ const detailAuthorAvatar = computed(() => {
   if (!item) return ''
   const name = item.author_name || 'User'
   const profile = item.author_profile
-  if (profile) {
-    if (String(profile).startsWith('http://') || String(profile).startsWith('https://')) return profile
-    return resolveImageUrl(profile)
-  }
+  if (profile) return resolveImageUrl(profile)
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=166534&color=fff&size=128`
 })
 
@@ -917,14 +915,7 @@ const goToPendingApprovals = () => {
   router.push('/president-news-approvals')
 }
 
-const resolveImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath
-  }
-  const normalized = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
-  return `${API_ORIGIN}${normalized}`
-}
+const resolveImageUrl = (imagePath) => mediaUrl(imagePath)
 
 onMounted(() => {
   fetchNews()

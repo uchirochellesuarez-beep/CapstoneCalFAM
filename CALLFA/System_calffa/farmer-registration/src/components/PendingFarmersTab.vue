@@ -280,6 +280,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import { mediaUrl } from '../utils/apiBase'
 
 const emit = defineEmits(['approve', 'reject', 'delete', 'refresh', 'update-role', 'update-membership-status'])
 const authStore = useAuthStore()
@@ -313,10 +314,7 @@ const formatDate = (dateString) => {
 
 const getProfilePictureUrl = (profilePicture) => {
   if (!profilePicture) return null
-  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-    return profilePicture
-  }
-  return profilePicture
+  return mediaUrl(profilePicture)
 }
 
 const approveMember = async (memberId) => {

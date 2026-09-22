@@ -1168,6 +1168,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useDownPaymentStore } from '../stores/downPaymentStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { machineryStatusLabel } from '../utils/machineryStatus'
+import { mediaUrl, apiUrl } from '../utils/apiBase'
 
 export default {
   name: 'MachineryManagementPage',
@@ -1231,24 +1232,7 @@ export default {
     const machineryPictureInput = ref(null)
 
     // Helper function to construct correct image URL
-    const getImageUrl = (imagePath) => {
-      if (!imagePath) return ''
-      
-      // If it's a data URL (from file input), return as-is
-      if (imagePath.startsWith('data:')) {
-        return imagePath
-      }
-      
-      // If it's a server path, construct full backend URL
-      if (imagePath.startsWith('/uploads/')) {
-        // In development, construct the backend URL
-        const apiBaseUrl = import.meta.env.VITE_API_URL || ''
-        return `${apiBaseUrl}${imagePath}`
-      }
-      
-      // Otherwise return as-is
-      return imagePath
-    }
+    const getImageUrl = (imagePath) => mediaUrl(imagePath)
 
     const invQ = ref('')
     const invTypeF = ref('')
@@ -1857,8 +1841,7 @@ export default {
           throw new Error('No authentication token found');
         }
         
-        const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-        const uploadUrl = `${apiBaseUrl}/api/machinery/inventory/${machineryId}/picture`;
+        const uploadUrl = apiUrl(`/api/machinery/inventory/${machineryId}/picture`);
         console.log('📤 Uploading to:', uploadUrl);
         const response = await fetch(uploadUrl, {
           method: 'POST',

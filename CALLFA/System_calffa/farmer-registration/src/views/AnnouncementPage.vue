@@ -426,8 +426,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
-
-const API_ORIGIN = ''
+import { mediaUrl } from '../utils/apiBase'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -810,24 +809,12 @@ const deleteAnnouncement = async (id) => {
   }
 }
 
-const resolveImageUrl = (imagePath) => {
-  if (!imagePath) return ''
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
-  const normalized = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
-  return `${API_ORIGIN}${normalized}`
-}
+const resolveImageUrl = (imagePath) => mediaUrl(imagePath)
 
 const resolveAuthorAvatar = (item) => {
   const name = item?.author_name || 'User'
   const profile = item?.author_profile
-
-  if (profile) {
-    if (profile.startsWith('http://') || profile.startsWith('https://')) {
-      return profile
-    }
-    return resolveImageUrl(profile)
-  }
-
+  if (profile) return resolveImageUrl(profile)
   return (
     'https://ui-avatars.com/api/?name=' +
     encodeURIComponent(name) +
