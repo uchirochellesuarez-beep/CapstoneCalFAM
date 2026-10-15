@@ -8,8 +8,7 @@ const {
   verifyFarmerBarangayAccess
 } = require('../middleware/auth');
 const { generateReceiptNumber, recordPaymentReceipt } = require('../services/receipt-service');
-
-const SHARE_CONTRIBUTION_AMOUNT = 100;
+const { getCollectionFees, setCollectionFees } = require('../services/collection-fee-service');
 const ASSISTANCE_PER_SACK_PHP = 50;
 
 /**
@@ -72,11 +71,15 @@ const requireBarangayForOfficer = (req, res, next) => {
 
 const getTargetBarangayId = (req) => {
   if (req.user?.role === 'admin') {
-    const q = req.query.barangay_id;
+    const q = req.query.barangay_id || req.body?.barangay_id;
     return q ? parseInt(q) : null;
   }
   return req.user?.barangay_id ? parseInt(req.user.barangay_id) : null;
 };
+
+function feeBarangayId(req) {
+  return getTargetBarangayId(req);
+}
 
 // GET /api/share-capital/overview
 // Treasurer/President: list members in their barangay + totals
@@ -171,13 +174,14 @@ router.get(
         total_balance: totalBalance,
       });
 
+      const fees = await getCollectionFees(barangayId);
       res.json({
         success: true,
         barangay_id: barangayId,
         rules: {
-          amount_per_6_months: SHARE_CONTRIBUTION_AMOUNT,
+          amount_per_6_months: fees.share_capital_amount,
           contributions_per_year: 2,
-          amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2,
+          amount_per_year: Math.round(fees.share_capital_amount * 2 * 100) / 100,
           assistance_seed_fertilizer_plan_per_sack: ASSISTANCE_PER_SACK_PHP,
           assistance_plan_note_ph:
             'Kapag naipamahagi na ang binhi/pataba (Distributed), ang Treasurer/President ay puwedeng magtala ng bayad (puwedeng bahagya) sa Seed & Fertilizer Plan; bawat bayad ay may petsa at halaga sa Share Capital ng magsasaka.',
@@ -401,13 +405,14 @@ router.get('/me', verifyToken, async (req, res) => {
     }
 
     const assistance_outstanding = await fetchAssistanceOutstandingForFarmer(parseInt(String(farmerId), 10));
+    const fees = await getCollectionFees(req.user?.barangay_id);
 
     res.json({
       success: true,
       rules: {
-        amount_per_6_months: SHARE_CONTRIBUTION_AMOUNT,
+        amount_per_6_months: fees.share_capital_amount,
         contributions_per_year: 2,
-        amount_per_year: SHARE_CONTRIBUTION_AMOUNT * 2,
+        amount_per_year: Math.round(fees.share_capital_amount * 2 * 100) / 100,
         assistance_seed_fertilizer_plan_per_sack: ASSISTANCE_PER_SACK_PHP,
         assistance_plan_note_ph:
           'Ang binhi/pataba (kapag naipamahagi na) ay may kabuuang ₱50 kada sako. Maaaring bayaran nang paunti-unti; makikita ang bawat bayad (petsa at halaga) sa talaan ng iyong mga bayad.',
@@ -433,8 +438,63 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
+// GET /api/share-capital/fee-settings
+// Current share-capital and association-dues amounts for the barangay.
+router.get(
+  '/fee-settings',
+  verifyToken,
+  requireBarangayForOfficer,
+  authorizeRoles(['admin', 'treasurer', 'president']),
+  async (req, res) => {
+    try {
+      const barangayId = feeBarangayId(req);
+      if (!barangayId) {
+        return res.status(400).json({ success: false, message: 'barangay_id is required' });
+      }
+      const fees = await getCollectionFees(barangayId);
+      res.json({ success: true, ...fees });
+    } catch (error) {
+      console.error('Error reading collection fees:', error.message);
+      res.status(500).json({ success: false, message: 'Failed to load fee settings' });
+    }
+  }
+);
+
+// PUT /api/share-capital/fee-settings
+// Treasurer (and admin): set how much members pay for share capital and/or dues.
+router.put(
+  '/fee-settings',
+  verifyToken,
+  requireBarangayForOfficer,
+  authorizeRoles(['admin', 'treasurer']),
+  async (req, res) => {
+    try {
+      const barangayId = feeBarangayId(req);
+      if (!barangayId) {
+        return res.status(400).json({ success: false, message: 'barangay_id is required' });
+      }
+      const payload = {};
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, 'share_capital_amount')) {
+        payload.share_capital_amount = req.body.share_capital_amount;
+      }
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, 'association_dues_amount')) {
+        payload.association_dues_amount = req.body.association_dues_amount;
+      }
+      if (!Object.keys(payload).length) {
+        return res.status(400).json({ success: false, message: 'No amount to save' });
+      }
+      const fees = await setCollectionFees(barangayId, payload);
+      res.json({ success: true, message: 'Amount saved', ...fees });
+    } catch (error) {
+      const status = error.status || 500;
+      if (status >= 500) console.error('Error saving collection fees:', error.message);
+      res.status(status).json({ success: false, message: error.message || 'Failed to save amount' });
+    }
+  }
+);
+
 // POST /api/share-capital/contributions
-// Treasurer/President: record a ₱100 six-month share contribution for a member in their barangay
+// Treasurer/President: record one six-month share at the barangay's configured amount
 router.post(
   '/contributions',
   verifyToken,
@@ -443,21 +503,18 @@ router.post(
   verifyFarmerBarangayAccess('farmerId'),
   async (req, res) => {
     try {
-      const { farmer_id, contribution_date, amount, payment_method } = req.body;
+      const { farmer_id, contribution_date, payment_method } = req.body;
 
       if (!farmer_id || !contribution_date) {
         return res.status(400).json({ success: false, message: 'Missing required fields: farmer_id, contribution_date' });
       }
 
-      const amt = amount === undefined || amount === null ? SHARE_CONTRIBUTION_AMOUNT : parseFloat(amount);
-      if (Number.isNaN(amt) || amt !== SHARE_CONTRIBUTION_AMOUNT) {
-        return res.status(400).json({
-          success: false,
-          message: `Share contribution amount is fixed at ₱${SHARE_CONTRIBUTION_AMOUNT}.`
-        });
-      }
-
       const barangayId = req.farmerBarangayId;
+      if (!barangayId) {
+        return res.status(400).json({ success: false, message: 'barangay_id is required' });
+      }
+      const fees = await getCollectionFees(barangayId);
+      const amt = fees.share_capital_amount;
 
       // Do not allow contributions for inactive/exited or non-member records
       const [[farmerRow]] = await pool.execute(
@@ -627,23 +684,12 @@ router.put(
         params.push(contribution_date);
       }
 
-      if (amount !== undefined) {
-        if (kind === 'assistance_sacks') {
-          return res.status(400).json({
-            success: false,
-            message:
-              'Ang halaga ng binhi/pataba (sako × ₱50) ay hindi maaaring baguhin dito; ito ay mula sa assistance distribution.',
-          });
-        }
-        const amt = parseFloat(amount);
-        if (Number.isNaN(amt) || amt !== SHARE_CONTRIBUTION_AMOUNT) {
-          return res.status(400).json({
-            success: false,
-            message: `Share contribution amount is fixed at ₱${SHARE_CONTRIBUTION_AMOUNT}.`
-          });
-        }
-        updates.push('amount = ?');
-        params.push(amt);
+      if (amount !== undefined && kind === 'assistance_sacks') {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Ang halaga ng binhi/pataba (sako × ₱50) ay hindi maaaring baguhin dito; ito ay mula sa assistance distribution.',
+        });
       }
 
       if (status) {
@@ -679,6 +725,57 @@ router.put(
         });
       }
       res.status(500).json({ success: false, message: 'Failed to update share contribution', error: error.message });
+    }
+  }
+);
+
+// DELETE /api/share-capital/contributions/:id
+// Treasurer/Admin: remove an earlier membership share record and its receipt.
+router.delete(
+  '/contributions/:id',
+  verifyToken,
+  requireBarangayForOfficer,
+  authorizeRoles(['admin', 'treasurer']),
+  async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+      const { id } = req.params;
+      const [rows] = await connection.execute(
+        `SELECT id, barangay_id, contribution_kind
+         FROM share_capital_contributions WHERE id = ?`,
+        [id]
+      );
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Contribution record not found' });
+      }
+      const record = rows[0];
+      if (req.user?.role !== 'admin' && parseInt(req.user?.barangay_id) !== parseInt(record.barangay_id)) {
+        return res.status(403).json({ success: false, message: 'You can only delete records in your barangay.' });
+      }
+      if (String(record.contribution_kind || 'membership') !== 'membership') {
+        return res.status(400).json({
+          success: false,
+          message: 'Only recorded share capital payments can be deleted here.'
+        });
+      }
+
+      await connection.beginTransaction();
+      await connection.execute(
+        `DELETE FROM payment_receipts
+         WHERE module = 'share_capital'
+           AND reference_type = 'share_capital_contribution'
+           AND reference_id = ?`,
+        [id]
+      );
+      await connection.execute('DELETE FROM share_capital_contributions WHERE id = ?', [id]);
+      await connection.commit();
+      res.json({ success: true, message: 'Share capital record deleted' });
+    } catch (error) {
+      try { await connection.rollback(); } catch { /* ignore */ }
+      console.error('Error deleting share capital contribution:', error.message);
+      res.status(500).json({ success: false, message: 'Failed to delete share capital record' });
+    } finally {
+      connection.release();
     }
   }
 );

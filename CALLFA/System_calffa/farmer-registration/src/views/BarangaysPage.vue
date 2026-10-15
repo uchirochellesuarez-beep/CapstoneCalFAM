@@ -83,7 +83,7 @@
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="6" class="loading-cell">{{ $t('ui.loadingBarangays') }}</td>
+            <td colspan="6" class="loading-cell"><ContentSkeleton variant="table" :label="$t('ui.loadingBarangays')" /></td>
           </tr>
           <tr v-else-if="filteredBarangays.length === 0">
             <td colspan="6" class="empty-cell">{{ $t('ui.noBarangaysFound') }}</td>
@@ -141,7 +141,7 @@
       </div>
 
       <div class="barangays-mobile-list" aria-label="Barangay list">
-        <div v-if="loading" class="barangay-mobile-empty">{{ $t('ui.loadingBarangays') }}</div>
+        <div v-if="loading" class="barangay-mobile-empty"><ContentSkeleton variant="list" :label="$t('ui.loadingBarangays')" /></div>
         <div v-else-if="filteredBarangays.length === 0" class="barangay-mobile-empty">{{ $t('ui.noBarangaysFound') }}</div>
         <article
           v-for="barangay in filteredBarangays"
@@ -347,10 +347,11 @@
               v-if="selectedBarangay && activeTab === 'places'"
             >
               <div v-if="placesLoading || placeSaving" class="places-loading-overlay" role="status" aria-live="polite">
-                <span class="places-loading-spinner" aria-hidden="true"></span>
-                <span class="places-loading-text">
-                  {{ placeSaving ? (editingPlaceId ? 'Updating place...' : 'Adding place...') : 'Loading places...' }}
-                </span>
+                <ContentSkeleton
+                  variant="list"
+                  :rows="3"
+                  :label="placeSaving ? (editingPlaceId ? 'Updating place' : 'Adding place') : 'Loading places'"
+                />
               </div>
 
               <div class="places-header">

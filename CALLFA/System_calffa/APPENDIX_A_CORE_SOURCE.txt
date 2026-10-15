@@ -1,0 +1,1310 @@
+APPENDIX A. CORE SOURCE CODE — CalFFA (four objectives)
+
+==== 1. Booking workflow ====
+File: backend/services/booking-workflow.js
+const { parseDownPaymentPercent } = require('./down-payment-settings-service');
+const CALENDAR_BLOCKING_STATUSES = [ 'Booking Confirmed', 'Assigned to Operator', 'In Use', 'Awaiting Final Payment', 'Completed', 'Approved' ];
+const PRE_RESERVATION_STATUSES = [ 'Pending', 'Unapproved', 'Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected', 'Down Payment Verified' ];
+const OPERATOR_WORK_STATUSES = [ 'Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use' ];
+const DOWN_PAYMENT_WORKFLOW_STATUSES = [ 'Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected', 'Down Payment Verified' ];
+const LEGACY_DOWN_PAYMENT_STATUSES = DOWN_PAYMENT_WORKFLOW_STATUSES;
+const BOOKING_STATUS_ENUM_VALUES = [ 'Pending', 'Unapproved', 'Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected', 'Down Payment Verified', 'Booking Confirmed', 'Assigned to Operator', 'Awaiting Final Payment', 'Approved', 'Rejected', 'Expired', 'Completed', 'Cancelled', 'In Use', 'Incomplete' ];
+const EXPIRABLE_DOWN_PAYMENT_STATUSES = [ 'Pending', 'Unapproved', 'Awaiting Down Payment', 'Payment Rejected' ];
+function formatDownPaymentPercentLabel(percent) {
+  const pct = parseDownPaymentPercent(percent);
+  if (pct == null) return null;
+  return Number.isInteger(pct) ? String(pct) : String(pct);
+}
+function calculateDownPayment(totalPrice, percent) {
+  const total = parseFloat(totalPrice) || 0;
+  const pct = parseDownPaymentPercent(percent);
+  if (pct == null) { return { downPayment: 0, remainingBalance: total, total, percent: null }; }
+  const down = Math.round(total * (pct / 100) * 100) / 100;
+  const remaining = Math.round((total - down) * 100) / 100;
+  return { downPayment: down, remainingBalance: remaining, total, percent: pct };
+}
+function calendarBlockingStatusesSql() {
+  return CALENDAR_BLOCKING_STATUSES.map((s) => `'${s}'`).join(', ');
+}
+const MACHINERY_BOOKING_ROLES = [ 'farmer', 'treasurer', 'president', 'auditor', 'operator', 'operation_manager', 'business_manager' ];
+function canUserBookMachinery(role) {
+  const normalized = String(role || '').toLowerCase();
+  return MACHINERY_BOOKING_ROLES.includes(normalized) && normalized !== 'agriculturist';
+}
+function canCreateBookingOnBehalf(role) {
+  const normalized = String(role || '').toLowerCase();
+  return ['operation_manager', 'business_manager', 'admin'].includes(normalized);
+}
+function operatorWorkStatusesSql() {
+  return OPERATOR_WORK_STATUSES.map((s) => `'${s}'`).join(', ');
+}
+function isCrossBarangayBooking(userBarangayId, machineryBarangayId) {
+  if (!userBarangayId || !machineryBarangayId) return false;
+  return parseInt(userBarangayId, 10) !== parseInt(machineryBarangayId, 10);
+}
+function shouldUseNonMemberRate(membershipStatus, userBarangayId, machineryBarangayId) {
+  return (
+    String(membershipStatus || 'member').toLowerCase() === 'non-member' ||
+    isCrossBarangayBooking(userBarangayId, machineryBarangayId)
+  );
+}
+function getPaymentVerifierRole(bookerRole) {
+  return String(bookerRole || '').toLowerCase() === 'treasurer' ? 'president' : 'treasurer';
+}
+
+==== 1. Price, capacity, insert booking ====
+File: backend/routes/machinery.js
+const calculateBookingPrice = (machinery, areaSize, areaUnit, membershipStatus = 'member', userBarangayId = null) => {
+  const useNonMemberRate = shouldUseNonMemberRate( membershipStatus, userBarangayId, machinery.barangay_id );
+  let pricePerUnit;
+  if (useNonMemberRate && machinery.non_member_price) { pricePerUnit = parseFloat(machinery.non_member_price); } else if (!useNonMemberRate && machinery.member_price) { pricePerUnit = parseFloat(machinery.member_price); } else if (useNonMemberRate) { pricePerUnit = parseFloat(machinery.price_per_unit) * 1.25; } else {
+    pricePerUnit = parseFloat(machinery.price_per_unit);
+  }
+  const size = parseFloat(areaSize);
+  if (machinery.capacity_unit && areaUnit !== machinery.capacity_unit) {
+    throw new Error(`This machinery must be booked in ${machinery.capacity_unit}, not ${areaUnit}`);
+  }
+  if (machinery.max_capacity) {
+    const maxCap = parseFloat(machinery.max_capacity);
+    if (size > maxCap) {
+      throw new Error(`Maximum capacity for ${machinery.machinery_type} is ${maxCap} ${machinery.capacity_unit} per day`);
+    }
+  }
+  if (machinery.unit_type === 'per load') {
+    return pricePerUnit;
+  } else {
+    return pricePerUnit * size;
+  }
+};
+const checkBookingAvailability = async (machineryId, bookingDate, areaSize, excludeBookingId = null) => {
+  const blockingStatuses = calendarBlockingStatusesSql();
+  let query = `SELECT SUM(area_size) as total_booked
+     FROM machinery_bookings
+     WHERE machinery_id = ?
+     AND booking_date = ?
+     AND status IN (${blockingStatuses})`;
+  const params = [machineryId, bookingDate];
+  if (excludeBookingId) { query += ' AND id != ?'; params.push(excludeBookingId); }
+  const [bookings] = await pool.execute(query, params);
+  const [machinery] = await pool.execute(
+    'SELECT max_capacity FROM machinery_inventory WHERE id = ?',
+    [machineryId]
+  );
+  if (machinery.length === 0) { throw new Error('Machinery not found'); }
+  const maxCapacity = machinery[0].max_capacity;
+  if (!maxCapacity) { return true; // No capacity limit }
+  const totalBooked = parseFloat(bookings[0].total_booked || 0);
+  const requestedSize = parseFloat(areaSize);
+  const maxCap = parseFloat(maxCapacity);
+  if (totalBooked + requestedSize > maxCap) { return false; }
+  return true;
+};
+const formatDateToString = (val) => {
+  if (!val) return null;
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return String(val).split('T')[0];
+};
+async function notifyApprovedBooking({ farmerId, bookingId, operatorId, machineryName, bookingDate }) {
+  await createBookingStatusNotification({ farmerId, bookingId, status: 'Approved', machineryName, bookingDate });
+  if (operatorId) {
+    await createOperatorBookingAssignedNotification({ operatorId, bookingId, machineryName, bookingDate });
+  }
+}
+async function insertMachineryBooking({ farmerId, machineryId, barangayId, bookingDate, serviceLocation, areaSize, areaUnit, totalPrice, notes, status, placeId = null, approvedBy = null, assignedOperatorId = null }) {
+  const columns = [ 'farmer_id', 'machinery_id', 'barangay_id', 'booking_date', 'service_location', 'area_size', 'area_unit', 'total_price', 'remaining_balance', 'notes', 'status' ];
+  const values = [ farmerId, machineryId, barangayId, bookingDate, serviceLocation, areaSize, areaUnit, totalPrice, totalPrice, notes, status ];
+  const placeholders = columns.map(() => '?');
+  if (placeId != null) { columns.push('barangay_place_id'); values.push(placeId); placeholders.push('?'); }
+  if (approvedBy) { columns.push('approved_by', 'approved_date'); values.push(approvedBy); placeholders.push('?', 'NOW()'); }
+  if (assignedOperatorId) { columns.push('assigned_operator_id'); values.push(assignedOperatorId); placeholders.push('?'); }
+  const sql = `INSERT INTO machinery_bookings (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`;
+  try {
+    const [result] = await pool.execute(sql, values);
+    return result;
+  } catch (insErr) {
+    if (insErr.code !== 'ER_BAD_FIELD_ERROR') throw insErr;
+    const [result] = await pool.execute(
+      `INSERT INTO machinery_bookings
+       (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size,
+        area_unit, total_price, remaining_balance, notes, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [farmerId, machineryId, barangayId, bookingDate, serviceLocation, areaSize, areaUnit, totalPrice, totalPrice, notes, status]
+    );
+    if (approvedBy || assignedOperatorId) {
+      try {
+        await pool.execute(
+          `UPDATE machinery_bookings
+           SET approved_by = COALESCE(?, approved_by),
+               approved_date = COALESCE(NOW(), approved_date),
+               assigned_operator_id = COALESCE(?, assigned_operator_id)
+           WHERE id = ?`,
+          [approvedBy, assignedOperatorId, result.insertId]
+        );
+      } catch {
+      }
+    }
+    return result;
+  }
+}
+
+==== 1. Create booking POST /bookings ====
+File: backend/routes/machinery.js
+router.post('/bookings', verifyToken, async (req, res) => {
+  try {
+    const {
+      farmer_id, machinery_id, booking_date, service_location, area_size, area_unit, notes, barangay_place_id
+    } = req.body;
+    if (!farmer_id || !machinery_id || !booking_date || !area_size || !area_unit) {
+      return res.status(400).json({ success: false, message: 'Missing required fields: farmer_id, machinery_id, booking_date, area_size, area_unit' });
+    }
+    if (!canUserBookMachinery(req.user.role) && !canCreateBookingOnBehalf(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Your role is not permitted to create machinery bookings.' });
+    }
+    const createdByManager = canCreateBookingOnBehalf(req.user.role);
+    if (
+      !createdByManager &&
+      parseInt(farmer_id, 10) !== parseInt(req.user.id, 10)
+    ) {
+      return res.status(403).json({ success: false, message: 'You can only create bookings for yourself.' });
+    }
+    if (createdByManager && parseInt(farmer_id, 10) === parseInt(req.user.id, 10)) {
+      return res.status(400).json({ success: false, message: 'Choose the farmer who requested this booking. It will be saved to their account, not yours.' });
+    }
+    const todayStr = formatLocalDate(new Date());
+    if (booking_date < todayStr) { return res.status(400).json({ success: false, message: 'Cannot create a booking for a date that has already passed' }); }
+    const [farmer] = await pool.execute(
+      'SELECT barangay_id, membership_status, role, full_name FROM farmers WHERE id = ?',
+      [farmer_id]
+    );
+    if (farmer.length === 0) { return res.status(404).json({ success: false, message: 'Farmer not found' }); }
+    const userBarangayId = farmer[0].barangay_id;
+    const membershipStatus = farmer[0].membership_status || 'member';
+    if (!canAccessBarangay(req.user, userBarangayId) && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'You can only create bookings for users in your assigned barangay.' });
+    }
+    let resolvedServiceLocation = typeof service_location === 'string' ? service_location.trim() : '';
+    let resolvedPlaceId = null;
+    if (barangay_place_id != null && barangay_place_id !== '') {
+      const pid = parseInt(barangay_place_id, 10);
+      if (Number.isNaN(pid)) {
+        return res.status(400).json({ success: false, message: 'Invalid barangay_place_id' });
+      }
+      try {
+        const [plc] = await pool.execute(
+          `SELECT id, name, description FROM barangay_service_places
+           WHERE id = ? AND barangay_id = ? AND is_active = 1`,
+          [pid, userBarangayId]
+        );
+        if (plc.length === 0) { return res.status(400).json({ success: false, message: 'Invalid or inactive service place for your barangay' }); }
+        resolvedPlaceId = plc[0].id;
+        const desc = plc[0].description ? ` — ${plc[0].description}` : '';
+        resolvedServiceLocation = `${plc[0].name}${desc}`;
+        if (typeof service_location === 'string' && service_location.trim()) {
+          resolvedServiceLocation = `${resolvedServiceLocation} (${service_location.trim()})`;
+        }
+      } catch (placeErr) {
+        if (placeErr.code === 'ER_BAD_FIELD_ERROR' || placeErr.code === 'ER_NO_SUCH_TABLE') { return res.status(503).json({ success: false, message: 'Service places are not available on this server (database migration required).' }); }
+        throw placeErr;
+      }
+    }
+    if (!resolvedServiceLocation) { return res.status(400).json({ success: false, message: 'Provide a service location or select a predefined place' }); }
+    const [unpaidBookings] = await pool.execute(
+      `SELECT
+        SUM(mb.total_price - COALESCE(mb.total_paid, 0)) as total_outstanding
+      FROM machinery_bookings mb
+      WHERE mb.farmer_id = ?
+        AND mb.status = 'Completed'
+        AND (mb.payment_status = 'Unpaid' OR mb.payment_status = 'Partial')
+        AND (mb.total_price - COALESCE(mb.total_paid, 0)) > 0`,
+      [farmer_id]
+    );
+    const totalOutstanding = parseFloat(unpaidBookings[0]?.total_outstanding || 0);
+    if (totalOutstanding > 0) { return res.status(403).json({ success: false, message: `You have an outstanding balance of ₱${totalOutstanding.toFixed(2)} from previous bookings. Please settle your balance before booking new machinery.`, outstanding_balance: totalOutstanding }); }
+    const [machinery] = await pool.execute(
+      'SELECT * FROM machinery_inventory WHERE id = ? AND status = "Available"',
+      [machinery_id]
+    );
+    if (machinery.length === 0) { return res.status(404).json({ success: false, message: 'Machinery not available for booking' }); }
+    const prerequisite = await checkMachineryPrerequisite(pool, farmer_id, machinery[0]);
+    if (!prerequisite.ok) { return res.status(403).json({ success: false, message: prerequisite.message, requires_machinery_id: prerequisite.requires_machinery_id, requires_machinery_name: prerequisite.requires_machinery_name }); }
+    const machineryBarangayId = machinery[0].barangay_id;
+    const isAvailable = await checkBookingAvailability(machinery_id, booking_date, area_size, null);
+    if (!isAvailable) {
+      const blockingStatuses = calendarBlockingStatusesSql();
+      const [capRows] = await pool.execute(
+        'SELECT max_capacity, capacity_unit FROM machinery_inventory WHERE id = ?',
+        [machinery_id]
+      );
+      const [bookedRows] = await pool.execute(
+        `SELECT COALESCE(SUM(area_size), 0) AS total_booked
+         FROM machinery_bookings
+         WHERE machinery_id = ? AND booking_date = ? AND status IN (${blockingStatuses})`,
+        [machinery_id, booking_date]
+      );
+      const maxCap = parseFloat(capRows[0]?.max_capacity) || 0;
+      const booked = parseFloat(bookedRows[0]?.total_booked) || 0;
+      const remaining = Math.max(0, maxCap - booked);
+      const unit = capRows[0]?.capacity_unit || 'hectares';
+      return res.status(400).json({ success: false, message: maxCap ? `Only ${remaining} ${unit} available on ${booking_date} for this machinery (max ${maxCap} ${unit}/day). Please request ${remaining} ${unit} or less.` : 'Machinery is not available for the requested date and capacity', available: remaining, max_capacity: maxCap, capacity_unit: unit });
+    }
+    let totalPrice;
+    try {
+      totalPrice = calculateBookingPrice(
+        machinery[0],
+        area_size, area_unit, membershipStatus, userBarangayId
+      );
+    } catch (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    const assignedOperatorId = machinery[0].assigned_operator_id || null;
+    const autoApprove = createdByManager;
+    if (autoApprove && !assignedOperatorId) { return res.status(400).json({ success: false, message: 'Assign an operator to this machinery in Inventory before creating an approved booking.' }); }
+    const dpSettings = await getDownPaymentSettings(machineryBarangayId);
+    let bookingStatus = autoApprove ? 'Approved' : 'Pending';
+    let downPaymentAmount = null;
+    let downPaymentPercent = null;
+    if (autoApprove && dpSettings.enabled) {
+      const calc = calculateDownPayment(totalPrice, dpSettings.percent);
+      if (!calc.downPayment) { return res.status(400).json({ success: false, message: 'Down payment is ON for this barangay, but no percentage is set. The President must enter a down payment percentage first.' }); }
+      bookingStatus = 'Awaiting Down Payment';
+      downPaymentAmount = calc.downPayment;
+      downPaymentPercent = calc.percent;
+    }
+    const result = await insertMachineryBooking({ farmerId: farmer_id, machineryId: machinery_id, barangayId: machineryBarangayId, bookingDate: booking_date, serviceLocation: resolvedServiceLocation, areaSize: area_size, areaUnit: area_unit, totalPrice, notes, status: bookingStatus, placeId: resolvedPlaceId, approvedBy: autoApprove ? req.user.id : null, assignedOperatorId: autoApprove && bookingStatus === 'Approved' ? assignedOperatorId : null });
+
+==== 1. Approve PUT /bookings/:id/approve ====
+File: backend/routes/machinery.js
+router.put('/bookings/:id/approve', ...secureBookingRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved_by } = req.body;
+    await syncExpiredMachineryBookings({ bookingId: id });
+    if (!approved_by) { return res.status(400).json({ success: false, message: 'approved_by is required' }); }
+    const [manager] = await pool.execute(
+      'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [approved_by]
+    );
+    if (manager.length === 0 || !["operation_manager", "business_manager", "admin"].includes(manager[0].role)) {
+      return res.status(403).json({ success: false, message: 'Only Business Managers, Operation Managers, or Admin can approve bookings' });
+    }
+    const [booking] = await pool.execute(
+      `SELECT mb.*, mi.machinery_name, f.full_name AS farmer_name, f.role AS booker_role,
+              COALESCE(mb.assigned_operator_id, mi.assigned_operator_id) AS resolved_operator_id
+       FROM machinery_bookings mb
+       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
+       WHERE mb.id = ?`,
+      [id]
+    );
+    if (booking.length === 0) { return res.status(404).json({ success: false, message: 'Booking not found' }); }
+    if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) { return res.status(403).json({ success: false, message: 'You can only approve bookings from your assigned barangay.' }); }
+    if (booking[0].status !== 'Pending') { return res.status(400).json({ success: false, message: 'Only pending bookings can be approved' }); }
+    const assignedOperatorId = booking[0].resolved_operator_id || null;
+    if (!assignedOperatorId) { return res.status(400).json({ success: false, message: 'Assign an operator to this machinery in Inventory before approving the booking.' }); }
+    const isAvailable = await checkBookingAvailability(
+      booking[0].machinery_id,
+      booking[0].booking_date,
+      booking[0].area_size,
+      id
+    );
+    if (!isAvailable) { return res.status(400).json({ success: false, message: 'Machinery capacity exceeded for this date' }); }
+    const dpSettings = await getDownPaymentSettings(booking[0].barangay_id);
+    if (dpSettings.enabled) {
+      const calc = calculateDownPayment(booking[0].total_price, dpSettings.percent);
+      if (!calc.downPayment) { return res.status(400).json({ success: false, message: 'Down payment is ON for this barangay, but no percentage is set. The President must enter a down payment percentage first.' }); }
+      const [dpResult] = await pool.execute(
+        `UPDATE machinery_bookings
+         SET status = 'Awaiting Down Payment',
+             approved_by = ?,
+             approved_date = NOW(),
+             down_payment_amount = ?,
+             down_payment_percent = ?,
+             remaining_balance = COALESCE(NULLIF(remaining_balance, 0), total_price)
+         WHERE id = ?`,
+        [approved_by, calc.downPayment, calc.percent, id]
+      );
+      if (dpResult.affectedRows > 0) {
+        await createBookingStatusNotification({
+          farmerId: booking[0].farmer_id,
+          bookingId: booking[0].id,
+          status: 'Awaiting Down Payment',
+          machineryName: booking[0].machinery_name,
+          bookingDate: booking[0].booking_date,
+          downPaymentAmount: calc.downPayment,
+          downPaymentPercent: calc.percent,
+          remainingBalance: calc.remainingBalance
+        });
+        await notifyBarangayDownPaymentDue({
+          barangayId: booking[0].barangay_id,
+          bookingId: booking[0].id,
+          farmerName: booking[0].farmer_name,
+          bookerRole: booking[0].booker_role,
+          machineryName: booking[0].machinery_name,
+          amountDue: calc.downPayment,
+          percent: calc.percent,
+          bookingDate: booking[0].booking_date
+        });
+      }
+      const pctLabel = formatDownPaymentPercentLabel(calc.percent);
+      return res.json({ success: true, message: `Booking approved. The farmer must pay a ${pctLabel}% down payment (₱${calc.downPayment.toLocaleString('en-PH', { minimumFractionDigits: 2 })}) to reserve the slot.`, booking_id: id, status: 'Awaiting Down Payment', down_payment_amount: calc.downPayment, down_payment_percent: calc.percent, remaining_balance: booking[0].total_price, barangay_verified: true });
+    }
+    const [result] = await pool.execute(
+      `UPDATE machinery_bookings
+       SET status = 'Approved',
+           approved_by = ?,
+           approved_date = NOW(),
+           assigned_operator_id = ?,
+           remaining_balance = COALESCE(NULLIF(remaining_balance, 0), total_price)
+       WHERE id = ?`,
+      [approved_by, assignedOperatorId, id]
+    );
+    if (result.affectedRows > 0) {
+      await notifyApprovedBooking({
+        farmerId: booking[0].farmer_id,
+        bookingId: booking[0].id,
+        operatorId: assignedOperatorId,
+        machineryName: booking[0].machinery_name,
+        bookingDate: booking[0].booking_date
+      });
+    }
+    res.json({ success: true, message: 'Booking approved and assigned to the operator. The farmer will pay the treasurer after the service.', booking_id: id, status: 'Approved', assigned_operator_id: assignedOperatorId, remaining_balance: booking[0].total_price, barangay_verified: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to approve booking' });
+  }
+});
+
+==== 1. Reject PUT /bookings/:id/reject ====
+File: backend/routes/machinery.js
+router.put('/bookings/:id/reject', ...secureBookingRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved_by, rejection_reason } = req.body;
+    await syncExpiredMachineryBookings({ bookingId: id });
+    if (!approved_by || !rejection_reason) { return res.status(400).json({ success: false, message: 'approved_by and rejection_reason are required' }); }
+    const [manager] = await pool.execute(
+      'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [approved_by]
+    );
+    if (manager.length === 0 || !["operation_manager", "business_manager", "admin"].includes(manager[0].role)) {
+      return res.status(403).json({ success: false, message: 'Only Business Managers, Operation Managers, or Admin can reject bookings' });
+    }
+    const [booking] = await pool.execute(
+      `SELECT mb.*, mi.machinery_name, f.full_name AS farmer_name, f.role AS booker_role
+       FROM machinery_bookings mb
+       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       LEFT JOIN farmers f ON mb.farmer_id = f.id
+       WHERE mb.id = ?`,
+      [id]
+    );
+    if (booking.length === 0) { return res.status(404).json({ success: false, message: 'Booking not found' }); }
+    if (manager[0].role !== 'admin' && manager[0].barangay_id !== booking[0].barangay_id) { return res.status(403).json({ success: false, message: 'You can only reject bookings from your assigned barangay.' }); }
+    const rejectableStatuses = [ 'Pending', 'Awaiting Down Payment', 'Awaiting Payment Verification', 'Payment Rejected', 'Down Payment Verified' ];
+    if (!rejectableStatuses.includes(booking[0].status)) {
+      return res.status(400).json({ success: false, message: `Only bookings awaiting manager action can be rejected (current: ${booking[0].status})` });
+    }
+    const hadVerifiedDownPayment =
+      Boolean(booking[0].down_payment_verified_at) ||
+      (parseFloat(booking[0].down_payment_amount) > 0 &&
+        parseFloat(booking[0].total_paid) > 0 &&
+        booking[0].status === 'Down Payment Verified');
+    const [result] = await pool.execute(
+      `UPDATE machinery_bookings
+       SET status = 'Rejected', approved_by = ?, rejection_reason = ?, approved_date = NOW()
+       WHERE id = ?`,
+      [approved_by, rejection_reason, id]
+    );
+
+==== 1. Deploy PUT /bookings/:id/deploy ====
+File: backend/routes/machinery.js
+router.put('/bookings/:id/deploy', ...secureBookingRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { operator_id, operational_notes = null } = req.body;
+    if (!operator_id) { return res.status(400).json({ success: false, message: 'operator_id is required' }); }
+    const [operator] = await pool.execute(
+      'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [operator_id]
+    );
+    if (operator.length === 0) { return res.status(404).json({ success: false, message: 'Operator not found' }); }
+    if (operator[0].role !== 'operator') { return res.status(403).json({ success: false, message: 'Only operators can deploy equipment' }); }
+    const [booking] = await pool.execute(
+      'SELECT * FROM machinery_bookings WHERE id = ?',
+      [id]
+    );
+    if (booking.length === 0) { return res.status(404).json({ success: false, message: 'Booking not found' }); }
+    if (operator[0].barangay_id !== booking[0].barangay_id) { return res.status(403).json({ success: false, message: 'Operator can only deploy equipment for bookings in their assigned barangay.' }); }
+    if (booking[0].status !== 'Approved') { return res.status(400).json({ success: false, message: `Equipment can only be deployed from Approved status. Current status: ${booking[0].status}` }); }
+    const [result] = await pool.execute(
+      `UPDATE machinery_bookings
+       SET status = 'In Use',
+           machine_used = 1,
+           operational_notes = ?
+       WHERE id = ?`,
+      [operational_notes, id]
+    );
+    if (result.affectedRows === 0) { return res.status(400).json({ success: false, message: 'Booking not found or cannot be updated' }); }
+    res.json({ success: true, message: `Equipment deployed to operator ${operator[0].full_name}`, status: 'In Use', barangay_verified: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to deploy equipment' });
+  }
+});
+
+==== 1. Complete PUT /bookings/:id/complete ====
+File: backend/routes/machinery.js
+router.put('/bookings/:id/complete', ...secureBookingRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status_action = 'completed', operator_id, operational_notes = null } = req.body;
+    if (!['completed', 'incomplete'].includes(status_action)) {
+      return res.status(400).json({ success: false, message: 'Invalid status action. Must be "completed" or "incomplete"' });
+    }
+    if (!operator_id) { return res.status(400).json({ success: false, message: 'operator_id is required' }); }
+    const [operator] = await pool.execute(
+      'SELECT role, barangay_id, full_name FROM farmers WHERE id = ?',
+      [operator_id]
+    );
+    if (operator.length === 0 || operator[0].role !== 'operator') { return res.status(403).json({ success: false, message: 'Only operators can mark bookings as completed or incomplete' }); }
+    const [booking] = await pool.execute(
+      `SELECT mb.*, mi.assigned_operator_id, mi.machinery_name, mi.barangay_id, f.full_name AS farmer_name
+       FROM machinery_bookings mb
+       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+       JOIN farmers f ON mb.farmer_id = f.id
+       WHERE mb.id = ?`,
+      [id]
+    );
+    if (booking.length === 0) { return res.status(404).json({ success: false, message: 'Booking not found' }); }
+    if (operator[0].barangay_id !== booking[0].barangay_id) { return res.status(403).json({ success: false, message: 'Operator can only complete bookings from their assigned barangay.' }); }
+    if (booking[0].assigned_operator_id && booking[0].assigned_operator_id !== parseInt(operator_id, 10)) {
+      return res.status(403).json({ success: false, message: 'You are not the assigned operator for this machinery booking.' });
+    }
+    if (!['Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use'].includes(booking[0].status)) {
+      return res.status(400).json({ success: false, message: `Only approved or assigned bookings can be marked completed or incomplete. Current: ${booking[0].status}` });
+    }
+    let newStatus = booking[0].status;
+    if (status_action === 'completed') { newStatus = 'Completed'; } else if (status_action === 'incomplete') { newStatus = 'Incomplete'; }
+    let result;
+    let completedRemaining = 0;
+    if (status_action === 'completed') {
+      completedRemaining = parseFloat(booking[0].remaining_balance) || 0;
+      [result] = await pool.execute(
+        `UPDATE machinery_bookings
+         SET status = 'Completed',
+             machine_used = 1,
+             completed_by = ?,
+             completed_date = NOW(),
+             operational_notes = COALESCE(?, operational_notes)
+         WHERE id = ?`,
+        [operator_id, operational_notes, id]
+      );
+      if (completedRemaining > 0) {
+        await pool.execute(
+          `UPDATE machinery_bookings
+           SET receivable_amount = ?, receivable_created_at = NOW()
+           WHERE id = ? AND receivable_amount IS NULL`,
+          [completedRemaining, id]
+        );
+        const [treasurers] = await pool.execute(
+          `SELECT id FROM farmers WHERE role = 'treasurer' AND barangay_id = ? AND status = 'approved'`,
+          [booking[0].barangay_id]
+        );
+        for (const t of treasurers) {
+          await createTreasurerCollectibleCreatedNotification({
+            treasurerId: t.id,
+            bookingId: id,
+            farmerName: booking[0].farmer_name,
+            machineryName: booking[0].machinery_name,
+            receivableAmount: completedRemaining,
+            bookingDate: booking[0].booking_date
+          });
+        }
+      }
+      await createPendingExpenseForBooking(id);
+    } else {
+      [result] = await pool.execute(
+        `UPDATE machinery_bookings
+         SET status = 'Incomplete',
+             machine_used = 0,
+             completed_by = NULL,
+             completed_date = NULL,
+             receivable_amount = NULL,
+             receivable_created_at = NULL,
+             operational_notes = COALESCE(?, operational_notes)
+         WHERE id = ?`,
+        [operational_notes, id]
+      );
+    }
+    if (result.affectedRows === 0) { return res.status(400).json({ success: false, message: 'Booking not found or cannot be updated' }); }
+    const messageMap = {
+      completed: completedRemaining > 0
+        ? 'Rental marked complete. Outstanding balance added to Accounts Receivable. Pending expense entry created for treasurer.'
+        : 'Rental marked complete. Pending expense entry created for treasurer.',
+      incomplete: 'Booking marked as incomplete. The farmer will not be charged unless the service is resumed and completed.'
+    };
+    res.json({ success: true, message: messageMap[status_action], status: newStatus });
+
+==== 1. Frontend store create/approve ====
+File: farmer-registration/src/stores/machineryStore.js
+    async createBooking(bookingData, { skipRefresh = false } = {}) {
+      this.loading = true
+      this.error = null
+      try {
+      if ((existing?.cnt || 0) > 0) {
+        return res.status(400).json({ success: false, message: 'A share capital contribution already exists for this 6-month period.' });
+      }
+      const [result] = await pool.execute(
+        `
+        INSERT INTO share_capital_contributions
+          (farmer_id, barangay_id, contribution_date, amount, status, contribution_kind, created_by)
+        VALUES
+          (?, ?, ?, ?, 'confirmed', 'membership', ?)
+        `,
+        [farmer_id, barangayId, contribution_date, amt, req.user?.id || null]
+      );
+      const [[farmerInfo]] = await pool.execute(
+        'SELECT full_name FROM farmers WHERE id = ?',
+        [farmer_id]
+      );
+      const receiptNum = await generateReceiptNumber(pool);
+      const normalizedMethod = ['gcash', 'g-cash'].includes(String(payment_method || '').toLowerCase())
+        ? 'GCash'
+        : 'Cash';
+      await recordPaymentReceipt(pool, {
+        receiptNumber: receiptNum,
+        module: 'share_capital',
+        referenceId: result.insertId,
+        referenceType: 'share_capital_contribution',
+        clientName: farmerInfo?.full_name,
+        amountPaid: amt,
+        remainingBalance: 0,
+        paymentMethod: normalizedMethod,
+        paymentDate: contribution_date,
+
+==== 2. Operational expense POST /expenses ====
+File: backend/routes/machinery-financial.js
+router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
+  try {
+    const {
+      machinery_id,
+      booking_id = null,
+      date_of_expense, particulars, total_amount
+      fuel_and_oil = 0,
+      labor_cost = 0,
+      per_diem = 0,
+      repair_and_maintenance = 0,
+      office_supply = 0,
+      communication_expense = 0,
+      utilities_expense = 0,
+      sundries = 0,
+      payment_method = 'Cash',
+      user_id
+    } = req.body;
+    const expenseDate = normalizeDateString(date_of_expense);
+    if (!machinery_id || !expenseDate || !particulars || !total_amount) { return res.status(400).json({ success: false, message: 'Missing required fields' }); }
+    if (parseFloat(total_amount) <= 0) {
+      return res.status(400).json({ success: false, message: 'Total amount must be greater than 0' });
+    }
+    const machineryBarangayId = await assertMachineryInUserBarangay(req, res, machinery_id);
+    if (!machineryBarangayId) return;
+    const [result] = await pool.execute(
+      `INSERT INTO machinery_expenses
+       (machinery_id, barangay_id, booking_id, operator_id, date_of_expense, particulars, reference_number, total_amount,
+        fuel_and_oil, labor_cost, per_diem, repair_and_maintenance, office_supply,
+        communication_expense, utilities_expense, sundries, record_created_by, expense_status, expense_source)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Recorded', 'manual')`,
+      [ machinery_id, machineryBarangayId, booking_id || null, null, expenseDate, particulars, total_amount, fuel_and_oil, labor_cost, per_diem, repair_and_maintenance, office_supply, communication_expense, utilities_expense, sundries, user_id ]
+    );
+    if (booking_id && parseFloat(labor_cost) > 0) {
+      await finalizeExpenseAndIncome(result.insertId, { laborCost: labor_cost, transactionDate: expenseDate, bookingId: booking_id, recordedBy: user_id });
+    }
+    const expenseRow = await fetchExpenseRow(pool, result.insertId);
+    let receiptNum = null;
+    if (expenseRow) {
+      receiptNum = await issueExpenseReceipt(pool, expenseRow, { paymentMethod: payment_method, recordedBy: user_id });
+    }
+    res.json({ success: true, message: 'Expense recorded successfully', expense_id: result.insertId, receipt_number: receiptNum });
+
+==== 2. Manual income POST /income ====
+File: backend/routes/machinery-financial.js
+router.post('/income', verifyTreasurerAccess, async (req, res) => {
+  try {
+    const {
+      source_name, date_of_income, income_amount, remarks, barangay_id
+    } = req.body;
+    const sourceName = String(source_name || '').trim();
+    const amount = Number(income_amount);
+    const effectiveBarangayId = req.userRole === 'admin'
+      ? parseInt(barangay_id, 10)
+      : parseInt(req.userBarangayId, 10);
+    if (!sourceName || !date_of_income || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Source, date, and a valid amount are required.' });
+    }
+    if (!effectiveBarangayId) { return res.status(400).json({ success: false, message: 'A barangay is required for this income record.' }); }
+    const [result] = await pool.execute(
+      `INSERT INTO machinery_manual_income
+       (barangay_id, source_name, date_of_income, income_amount, remarks, record_created_by)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        effectiveBarangayId, sourceName, date_of_income, amount
+        String(remarks || '').trim() || null,
+        req.user.id
+      ]
+    );
+    res.status(201).json({ success: true, message: 'Manual income recorded successfully', income_id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to record income' });
+  }
+});
+
+==== 2. Profit summary GET /profit-summary ====
+File: backend/routes/machinery-financial.js
+router.get('/profit-summary', verifyFinancialAccess, async (req, res) => {
+  try {
+    const { start_date, end_date, barangay_id, machinery_id } = req.query;
+    const userRole = req.userRole;
+    const userBarangayId = req.userBarangayId;
+    const machineryIdNum =
+      machinery_id && machinery_id !== '' && !Number.isNaN(parseInt(machinery_id, 10))
+        ? parseInt(machinery_id, 10)
+        : null;
+    const incomeParts = [
+      `
+        SELECT
+          mbp.amount as income_amount,
+          mbp.payment_date as date_of_income,
+          COALESCE(f.barangay_id, mi.barangay_id) as barangay_id,
+          f.barangay_id as farmer_barangay_id, mi.barangay_id as machinery_barangay_id, mb.machinery_id as machinery_id
+        FROM machinery_booking_payments mbp
+        LEFT JOIN machinery_bookings mb ON mbp.booking_id = mb.id
+        LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE COALESCE(mbp.payment_type, '') <> 'refund'
+          AND mbp.amount > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+      `,
+      `
+        SELECT
+          COALESCE(mb.total_paid, 0) as income_amount,
+          COALESCE(mb.last_payment_date, mb.payment_date, mb.updated_at) as date_of_income,
+          COALESCE(f.barangay_id, mi.barangay_id) as barangay_id,
+          f.barangay_id as farmer_barangay_id, mi.barangay_id as machinery_barangay_id, mb.machinery_id as machinery_id
+        FROM machinery_bookings mb
+        LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE COALESCE(mb.total_paid, 0) > 0
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+          AND NOT EXISTS (
+            SELECT 1 FROM machinery_booking_payments mbp3 WHERE mbp3.booking_id = mb.id
+          )
+      `,
+      `
+        SELECT
+          minc.income_amount, minc.date_of_income, mi.barangay_id, f.barangay_id as farmer_barangay_id, mi.barangay_id as machinery_barangay_id, minc.machinery_id
+        FROM machinery_income minc
+        LEFT JOIN machinery_inventory mi ON minc.machinery_id = mi.id
+        LEFT JOIN machinery_bookings mb ON minc.booking_id = mb.id
+        LEFT JOIN farmers f ON mb.farmer_id = f.id
+        WHERE NOT EXISTS (
+          SELECT 1 FROM machinery_booking_payments mbp2 WHERE mbp2.booking_id = minc.booking_id
+        )
+          AND ${REFUNDED_BOOKING_NOT_EXISTS_SQL}
+      `
+    ];
+    if (!machineryIdNum) {
+      incomeParts.push(`
+        SELECT
+          md.amount as income_amount, md.collection_date as date_of_income, md.barangay_id, md.barangay_id as farmer_barangay_id, md.barangay_id as machinery_barangay_id, NULL as machinery_id
+        FROM monthly_dues md
+      `);
+      incomeParts.push(`
+        SELECT
+          mmi.income_amount, mmi.date_of_income, mmi.barangay_id, mmi.barangay_id as farmer_barangay_id, mmi.barangay_id as machinery_barangay_id, NULL as machinery_id
+        FROM machinery_manual_income mmi
+      `);
+    }
+    let incomeQuery = `
+      SELECT COALESCE(SUM(income_amount), 0) as total_income FROM (
+        ${incomeParts.join(' UNION ALL ')}
+      ) combined_income
+      WHERE 1=1
+    `;
+    const incomeParams = [];
+    let expenseQuery = `
+      SELECT COALESCE(SUM(me.total_amount), 0) as total_expenses
+      FROM machinery_expenses me
+      LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+      WHERE me.expense_status = 'Recorded'
+    `;
+    const expenseParams = [];
+    if (machineryIdNum) {
+      incomeQuery += ' AND machinery_id = ?';
+      incomeParams.push(machineryIdNum);
+      expenseQuery += ' AND me.machinery_id = ?';
+      expenseParams.push(machineryIdNum);
+    }
+    if (userRole === 'admin' && barangay_id) {
+      const bid = parseInt(barangay_id, 10);
+      incomeQuery += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
+      incomeParams.push(bid, bid, bid);
+      expenseQuery += ' AND mi.barangay_id = ?';
+      expenseParams.push(bid);
+    } else if (userRole !== 'admin' && userBarangayId) {
+      incomeQuery += ' AND (barangay_id = ? OR farmer_barangay_id = ? OR machinery_barangay_id = ?)';
+      incomeParams.push(userBarangayId, userBarangayId, userBarangayId);
+      expenseQuery += ' AND mi.barangay_id = ?';
+      expenseParams.push(userBarangayId);
+    }
+    if (start_date) {
+      incomeQuery += ' AND date_of_income >= ?';
+      expenseQuery += ' AND me.date_of_expense >= ?';
+      incomeParams.push(start_date);
+      expenseParams.push(start_date);
+    }
+    if (end_date) {
+      incomeQuery += ' AND date_of_income <= ?';
+      expenseQuery += ' AND me.date_of_expense <= ?';
+      incomeParams.push(end_date);
+      expenseParams.push(end_date);
+    }
+    const [incomeResult] = await pool.execute(incomeQuery, incomeParams);
+    const [expenseResult] = await pool.execute(expenseQuery, expenseParams);
+    const totalIncome = incomeResult[0].total_income || 0;
+    const totalExpenses = expenseResult[0].total_expenses || 0;
+    const netProfit = totalIncome - totalExpenses;
+    res.json({ success: true, summary: { total_income: parseFloat(totalIncome), total_expenses: parseFloat(totalExpenses), net_profit: parseFloat(netProfit), machinery_id: machineryIdNum }, userRole, userBarangayId });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to calculate profit' });
+  }
+});
+
+==== 2. Association dues POST /monthly-dues ====
+File: backend/routes/machinery-financial.js
+router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
+  try {
+    const {
+      farmer_id, collection_date, payment_method, remarks, user_id
+    } = req.body;
+    const userBarangayId = req.userBarangayId;
+    const userRole = req.userRole;
+    if (!farmer_id || !collection_date) { return res.status(400).json({ success: false, message: 'Farmer ID and collection date are required' }); }
+    const [farmer] = await pool.execute(
+      `SELECT barangay_id, full_name, role, membership_status
+       FROM farmers
+       WHERE id = ?
+         AND role IN ('farmer', 'president', 'treasurer', 'auditor', 'operation_manager', 'business_manager', 'operator')
+         AND status = ?`,
+      [farmer_id, 'approved']
+    );
+    if (farmer.length === 0 || farmer[0].barangay_id !== userBarangayId) { return res.status(403).json({ success: false, message: 'Farmer not found in your barangay or not eligible for dues collection' }); }
+    if (String(farmer[0].membership_status || 'member').toLowerCase() !== 'member') {
+      return res.status(403).json({ success: false, message: 'Only members can be charged association dues.' });
+    }
+    const collectionDate = new Date(collection_date);
+    const periodStartMonth = Math.floor(collectionDate.getMonth() / 6) * 6;
+    const periodStart = new Date(collectionDate.getFullYear(), periodStartMonth, 1);
+    const periodEnd = new Date(collectionDate.getFullYear(), periodStartMonth + 6, 0);
+    const [existingDues] = await pool.execute(
+      'SELECT id FROM monthly_dues WHERE farmer_id = ? AND period_start = ? AND period_end = ?',
+      [farmer_id, periodStart.toISOString().split('T')[0], periodEnd.toISOString().split('T')[0]]
+    );
+    if (existingDues.length > 0) { return res.status(400).json({ success: false, message: 'Association dues already recorded for this 6-month period' }); }
+    const [result] = await pool.execute(
+      `INSERT INTO monthly_dues
+       (farmer_id, barangay_id, collection_date, amount, collected_by, collector_role, period_start, period_end, payment_method, remarks)
+       VALUES (?, ?, ?, 120.00, ?, ?, ?, ?, ?, ?)`,
+      [
+        farmer_id, userBarangayId, collection_date, user_id, userRole
+        periodStart.toISOString().split('T')[0],
+        periodEnd.toISOString().split('T')[0],
+        payment_method || 'Cash',
+        remarks || ''
+      ]
+    );
+
+==== 3. Save farmer income POST / ====
+File: backend/routes/farmer-income.js
+router.post('/', async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const { farmer_id } = req.body;
+    const userBarangayId = getUserBarangayFromToken(req);
+    const farmerBarangay = await getFarmerBarangay(farmer_id);
+    if (userBarangayId && farmerBarangay !== userBarangayId) { return res.status(403).json({ error: 'Access denied. Cannot record income for other barangays.' }); }
+    const {
+      area_hectares, planting_method, irrigation_type, fertilizers, pesticides, land_preparation_cost, planting_cost, spraying_cost, harvester_cost, drying_cost, hauling_cost, tarasko_cost, fuel_cost, other_expenses, sacks_harvested, kg_per_sack, price_per_kg, total_fertilizer_cost, total_pesticide_cost, total_labor_cost, gross_income, total_expenses, net_income
+    } = req.body;
+    if (!farmer_id || !area_hectares || !planting_method || !irrigation_type) { return res.status(400).json({ error: 'Kulang ang mga kinakailangang impormasyon.' }); }
+    const [result] = await conn.execute(
+      `INSERT INTO farmer_income_records (
+        farmer_id, area_hectares, planting_method, irrigation_type,
+        land_preparation_cost, planting_cost, spraying_cost, harvester_cost,
+        drying_cost, hauling_cost, tarasko_cost, fuel_cost, other_expenses,
+        sacks_harvested, kg_per_sack, price_per_kg,
+        total_fertilizer_cost, total_pesticide_cost, total_labor_cost,
+        gross_income, total_expenses, net_income, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        farmer_id, area_hectares, planting_method, irrigation_type,
+        land_preparation_cost || 0, planting_cost || 0, spraying_cost || 0, harvester_cost || 0,
+        drying_cost || 0, hauling_cost || 0, tarasko_cost || 0, fuel_cost || 0, other_expenses || 0,
+        sacks_harvested || 0, kg_per_sack || 0, price_per_kg || 0,
+        total_fertilizer_cost || 0, total_pesticide_cost || 0, total_labor_cost || 0,
+        gross_income || 0, total_expenses || 0, net_income || 0, 'Pending'
+      ]
+    );
+    const recordId = result.insertId;
+    if (fertilizers && fertilizers.length > 0) {
+      for (const f of fertilizers) {
+        if (f.type) {
+          await conn.execute(
+            `INSERT INTO farmer_income_fertilizers (record_id, fertilizer_type, sacks, price_per_sack, line_total)
+             VALUES (?, ?, ?, ?, ?)`,
+            [recordId, f.type, f.sacks || 0, f.price_per_sack || 0, (f.sacks || 0) * (f.price_per_sack || 0)]
+          );
+        }
+      }
+    }
+    if (pesticides && pesticides.length > 0) {
+      for (const p of pesticides) {
+        if (p.type) {
+          await conn.execute(
+            `INSERT INTO farmer_income_pesticides (record_id, pesticide_type, quantity, price_per_unit, line_total)
+             VALUES (?, ?, ?, ?, ?)`,
+            [recordId, p.type, p.quantity || 0, p.price_per_unit || 0, (p.quantity || 0) * (p.price_per_unit || 0)]
+          );
+        }
+      }
+    }
+    await conn.commit();
+    try {
+      const [farmerRows] = await pool.execute(
+        'SELECT full_name, barangay_id FROM farmers WHERE id = ?',
+        [farmer_id]
+      );
+      const farmer = farmerRows[0];
+      if (farmer) {
+        await notifyPresidentsOfIncomeSubmission({ recordId, barangayId: farmer.barangay_id, farmerName: farmer.full_name });
+      }
+    } catch (notifyError) {
+    }
+    res.status(201).json({ message: 'Matagumpay na naitala ang kita!', id: recordId });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ error: 'May problema sa pag-save ng talaan. ' + err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+==== 3. Verify PUT /:id/verify ====
+File: backend/routes/farmer-income.js
+router.put('/:id/verify', async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const { id } = req.params;
+    const { is_verified, rejection_reason } = req.body;
+    const userBarangayId = getUserBarangayFromToken(req);
+    const [records] = await conn.execute(
+      `SELECT r.*, f.barangay_id, f.full_name as farmer_name FROM farmer_income_records r
+       JOIN farmers f ON r.farmer_id = f.id
+       WHERE r.id = ?`,
+      [id]
+    );
+    if (records.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Hindi makita ang talaan.' });
+    }
+    const record = records[0];
+    if (userBarangayId && record.barangay_id !== userBarangayId) {
+      await conn.rollback();
+      return res.status(403).json({ error: 'Access denied. Cannot verify income records for other barangays.' });
+    }
+    const oldStatus = record.status;
+    const newStatus = is_verified ? 'Eligible' : 'Rejected';
+    if (!is_verified && !String(rejection_reason || '').trim()) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Kailangan ang dahilan ng pagtanggi.' });
+    }
+    await conn.execute(
+      `UPDATE farmer_income_records SET status = ? WHERE id = ?`,
+      [newStatus, id]
+    );
+    await conn.execute(
+      `INSERT INTO income_status_audit_log (income_record_id, farmer_id, old_status, new_status, changed_by, reason_notes)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, record.farmer_id, oldStatus, newStatus, getUserIdFromToken(req), rejection_reason || null]
+    );
+    await conn.commit();
+    if (is_verified) {
+      try {
+        await notifyAgriculturistsOfEligibleIncome({ recordId: id, barangayId: record.barangay_id, farmerName: record.farmer_name });
+      } catch (notifyError) {
+      }
+    } else {
+      try {
+        await deleteNotificationsForReference('farmer_income_record', id, 'president_income_submitted');
+        await createIncomeRejectedNotification({ farmerId: record.farmer_id, recordId: id, reason: rejection_reason });
+      } catch (notifyError) {
+      }
+    }
+    res.json({ message: is_verified ? 'Ipinagkumpitansa ang talaan bilang Eligible!' : 'Tinanggihan ang talaan. Maaaring i-update at isumite muli ng magsasaka.', old_status: oldStatus, new_status: newStatus });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ error: 'May problema sa pagsusuri ng talaan.' });
+
+==== 4. Forecast GET /expense-forecast/:farmerId ====
+File: backend/routes/farmer-income.js
+router.get('/expense-forecast/:farmerId', async (req, res) => {
+  try {
+    const { farmerId } = req.params;
+    const uid = Number(farmerId);
+    if (!Number.isFinite(uid)) {
+      return res.status(400).json({ ok: false, error: 'Hindi wastong farmer ID.' });
+    }
+    const userBarangayId = getUserBarangayFromToken(req);
+    const farmerBarangay = await getFarmerBarangay(uid);
+    if (userBarangayId && farmerBarangay !== userBarangayId) { return res.status(403).json({ ok: false, error: 'Access denied. Cannot forecast for other barangays.' }); }
+    const decodedFc = decodeIncomeJwt(req);
+    if (
+      decodedFc &&
+      String(decodedFc.role) === 'farmer' &&
+      Number(decodedFc.id) !== uid
+    ) {
+      return res.status(403).json({ ok: false, error: 'Access denied.' });
+    }
+    const [records] = await pool.execute(
+      `SELECT * FROM farmer_income_records WHERE farmer_id = ? AND status = 'Eligible'`,
+      [uid]
+    );
+    const result = await forecastFutureTotalExpenses(uid, records);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: 'Hindi matagumpay ang paghula.' });
+  }
+});
+
+==== 4. Frontend fetchExpenseForecast ====
+File: farmer-registration/src/views/FarmerIncomePage.vue
+const fetchExpenseForecast = async () => {
+  if (!targetFarmerId.value) return
+  forecastLoading.value = true
+  forecastResult.value = null
+  try {
+    const res = await fetch(`/api/farmer-income/expense-forecast/${targetFarmerId.value}`, {
+      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    forecastResult.value = data
+    if (!res.ok) { throw new Error(t('incomeForm.forecastFailed')) }
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    forecastLoading.value = false
+  }
+}
+
+==== 4. OLS + ML orchestrator ====
+File: backend/services/expenseForecastService.js
+function avg(arr) {
+  return arr.reduce((s, x) => s + x, 0) / arr.length;
+}
+function fitLinearTrend(t, y) {
+  const n = y.length;
+  if (n < 3) return null;
+  const meanT = avg(t);
+  const meanY = avg(y);
+  let cov = 0;
+  let varT = 0;
+  for (let i = 0; i < n; i += 1) {
+    const dt = t[i] - meanT;
+    const dy = y[i] - meanY;
+    cov += dt * dy;
+    varT += dt * dt;
+  }
+  if (varT < 1e-12) return null;
+  const b1 = cov / varT;
+  const b0 = meanY - b1 * meanT;
+  const yhat = t.map((ti) => b0 + b1 * ti);
+  const ssRes = y.reduce((s, yi, i) => s + (yi - yhat[i]) ** 2, 0);
+  const ssTot = y.reduce((s, yi) => s + (yi - meanY) ** 2, 0);
+  const r_squared = ssTot <= 1e-9 ? 0 : Math.max(0, 1 - ssRes / ssTot);
+  const sigma = Math.sqrt(Math.max(ssRes / Math.max(n - 2, 1), 0));
+  return { b0, b1, yhat, r_squared, sigma };
+}
+function isEligibleSavedIncomeRecord(row) {
+  return String(row?.status || '').trim() === 'Eligible';
+}
+function seriesFromDatabaseRecords(rows) {
+  const sorted = [...(rows || [])]
+    .filter(isEligibleSavedIncomeRecord)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  return sorted.map((r) => ({ source: 'db', id: r.id, farmer_id: r.farmer_id, period_index: null, label: '', created_at: r.created_at, total_expenses: parseFloat(r.total_expenses) || 0 }));
+}
+function buildOlsResponse(series, augmented) {
+  const t = series.map((_, i) => i);
+  const y = series.map((s) => s.total_expenses);
+  const fit = fitLinearTrend(t, y);
+  if (!fit) {
+    return {
+      ok: false,
+      error:
+        'Hindi kayang i-fit ang linear trend (hal. pare-parehong gastos bawat tala — dagdagan ng iba pang tala gamit tunay na datos).',
+      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+      history: series,
+      augmented_with_samples: augmented,
+    };
+  }
+  const tNext = t.length;
+  const point = fit.b0 + fit.b1 * tNext;
+  const ciHalf = 1.96 * fit.sigma;
+  const predicted = Math.max(0, Math.round(point / 10) * 10);
+  const stepNext = series.length + 1;
+  return {
+    ok: true,
+    ml_engine: 'node_ols_fallback',
+    model: 'ordinary_least_squares_linear_regression',
+    method_description_ph:
+      'Node.js OLS: univariate linear trend sa indeks ng panahon (fallback kapag walang Python ML o hindi available ang serbisyo).',
+    disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+    forecast_quality_hint_ph: enrichQualityHint( series.length, fit.r_squared, 'node_ols_fallback' ),
+    history: series,
+    forecast_next: {
+      step_index: stepNext,
+      label: `Susunod na tinataya (hakbang ${stepNext})`,
+      predicted_total_expenses: predicted,
+      ci95_low: Math.max(0, Math.round((point - ciHalf) / 10) * 10),
+      ci95_high: Math.max(0, Math.round((point + ciHalf) / 10) * 10),
+      r_squared: Math.round(fit.r_squared * 1000) / 1000,
+      residual_rmse: Math.round(fit.sigma * 100) / 100,
+    },
+    augmented_with_samples: augmented,
+    training_n: series.length,
+  };
+}
+function buildPythonResponse(series, augmented, py) {
+  const stepNext = series.length + 1;
+  const r2 = Number(py.r_squared) || 0;
+  return {
+    ok: true,
+    ml_engine: 'python_sklearn',
+    model: py.model_name,
+    method_description_ph: py.method_description_ph,
+    disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+    forecast_quality_hint_ph: enrichQualityHint(series.length, r2, 'python_sklearn'),
+    history: series,
+    forecast_next: {
+      step_index: stepNext,
+      label: `Susunod na tinataya (hakbang ${stepNext})`,
+      predicted_total_expenses: Number(py.predicted_total_expenses),
+      ci95_low: Number(py.ci95_low),
+      ci95_high: Number(py.ci95_high),
+      r_squared: r2,
+      residual_rmse: Number(py.residual_rmse),
+    },
+    augmented_with_samples: augmented,
+    training_n: series.length,
+    ml_trees_ci: Boolean(py.trees_ci_used),
+  };
+}
+async function forecastFutureTotalExpenses(farmerId, dbRows) {
+  const { series, augmented, user_upload_count: userUploadCount } = buildTrainingSeries( farmerId, dbRows );
+  if (series.length === 0) {
+    return {
+      ok: false,
+      error:
+        'Wala pang naka-save na gastos. Magtala muna sa Farm Income form, tapos i-run ulit ang forecast.',
+      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+      history: series,
+      augmented_with_samples: augmented,
+      user_upload_count: userUploadCount,
+    };
+  }
+  if (series.length < MIN_TRAIN_ROWS) { return { ...buildSparseResponse(series, augmented), user_upload_count: userUploadCount }; }
+  const y = series.map((s) => s.total_expenses);
+  const py = await fetchExpenseForecastFromMlService(y);
+  if (py && py.ok) { return { ...buildPythonResponse(series, augmented, py), user_upload_count: userUploadCount }; }
+  return { ...buildOlsResponse(series, augmented), user_upload_count: userUploadCount };
+}
+
+==== 4. Python ML client ====
+File: backend/services/mlExpenseClient.js
+const axios = require('axios');
+async function fetchExpenseForecastFromMlService(totalExpensesSeries) {
+  const base = (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
+  if (!base) return null;
+  const timeout =
+    parseInt(String(process.env.ML_API_TIMEOUT_MS || '15000'), 10) || 15000;
+  const url = `${base}/forecast/expenses`;
+  try {
+    const { data, status } = await axios.post(
+      url,
+      { total_expenses: totalExpensesSeries },
+      {
+        timeout,
+        headers: { 'Content-Type': 'application/json' },
+        validateStatus: () => true,
+      }
+    );
+    if (
+      status >= 200 &&
+      status < 300 &&
+      data &&
+      data.ok === true &&
+      Number.isFinite(Number(data.predicted_total_expenses))
+    ) {
+      return data;
+    }
+    if (data && data.ok === false && data.error) {
+    }
+  } catch (err) {
+  }
+  return null;
+}
+module.exports = { fetchExpenseForecastFromMlService };
+
+==== 4. FastAPI endpoint ====
+File: ml-service/main.py
+"""CALFFA expense forecasting ML API (scikit-learn). Run: uvicorn main:app --host 127.0.0.1 --port 5001"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from forecaster import forecast_next_total_expenses
+app = FastAPI(title="CALFFA ML Service", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+class ExpenseForecastRequest(BaseModel):
+    total_expenses: list[float] = Field(..., min_length=1, description="Cronological total_expenses series")
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "calffa-ml"}
+@app.post("/forecast/expenses")
+def post_forecast_expenses(body: ExpenseForecastRequest):
+    return forecast_next_total_expenses(body.total_expenses)
+
+==== 4. scikit-learn Ridge / RandomForest ====
+File: ml-service/forecaster.py
+"""
+Next-step total_expense forecast from a 1D series.
+Uses lag + rolling features; picks Ridge / RandomForest by sample size.
+"""
+from __future__ import annotations
+import numpy as np
+from sklearn.linear_model import Ridge
+from sklearn.ensemble import RandomForestRegressor
+def _round_php(x: float) -> float:
+    return max(0.0, round(x / 10.0) * 10.0)
+def _soft_clamp_to_history(y: np.ndarray, pred: float) -> float:
+    """Magsara ng extrapolation layo sa obserbado (pero payak lamang para sa agraryong lakihan ng PHP)."""
+    y_min = float(np.min(y))
+    y_max = float(np.max(y))
+    span = float(y_max - y_min) + 1e-3
+    lo = y_min - span * 0.08
+    hi = y_max + span * 0.52
+    return float(np.clip(pred, max(0.0, lo), hi))
+def _blend_with_naive_delta(y: np.ndarray, raw: float, weight_naive: float = 0.42) -> float:
+    """Halo ng huling delta (ARIMA-0 klaseng basa) tungo sa modelo para sa makatotohanang hakbang."""
+    if len(y) < 2:
+        return float(raw)
+    delta = float(y[-1]) - float(y[-2])
+    naive = float(y[-1]) + delta
+    w = float(np.clip(weight_naive, 0.0, 1.0))
+    return float((1.0 - w) * raw + w * naive)
+def _build_supervised(y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Each row predicts y[k] from features at step k (k >= 1)."""
+    n = len(y)
+    X_list: list[list[float]] = []
+    Y_list: list[float] = []
+    for k in range(1, n):
+        prev1 = float(y[k - 1])
+        prev2 = float(y[k - 2]) if k >= 2 else prev1
+        roll = float(np.mean(y[max(0, k - 3) : k]))
+        X_list.append([float(k), prev1, prev2, roll])
+        Y_list.append(float(y[k]))
+    return np.asarray(X_list, dtype=np.float64), np.asarray(Y_list, dtype=np.float64)
+def _metrics(Y: np.ndarray, yhat: np.ndarray) -> tuple[float, float]:
+    ss_res = float(np.sum((Y - yhat) ** 2))
+    ss_tot = float(np.sum((Y - np.mean(Y)) ** 2))
+    r2 = float(1.0 - ss_res / ss_tot) if ss_tot > 1e-9 else 0.0
+    rmse = float(np.sqrt(max(ss_res / max(len(Y) - 1, 1), 0.0)))
+    return r2, rmse
+def forecast_next_total_expenses(y_in: list[float]) -> dict:
+    """
+    Returns dict ok/model_name/predicted/ci/r2/rmse/method_description_ph
+    Requires len(y_in) >= 3.
+    """
+    y = np.asarray(y_in, dtype=np.float64)
+    n = int(y.size)
+    if n < 3:
+        return {"ok": False, "error": "Kailangan ng hindi bababa sa 3 punto."}
+    if np.any(~np.isfinite(y)):
+        return {"ok": False, "error": "May hindi numero sa serye ng gastos."}
+    X, Y = _build_supervised(y)
+    if X.shape[0] < 1:
+        return {"ok": False, "error": "Kulang ang supervised rows."}
+    k_next = float(n)
+    prev1 = float(y[-1])
+    prev2 = float(y[-2]) if n >= 2 else prev1
+    roll_next = float(np.mean(y[max(0, n - 3) : n]))
+    x_next = np.array([[k_next, prev1, prev2, roll_next]], dtype=np.float64)
+    n_rows = X.shape[0]
+    # Model selection by panel length (still conservative for small farmers)
+    if n_rows < 5:
+        # Malakas na L2: iwas sa perfect-fit extrapolation error sa kakaunting row
+        model = Ridge(alpha=650.0)
+        model.fit(X, Y)
+        yhat_train = model.predict(X)
+        raw = float(model.predict(x_next)[0])
+        point = _soft_clamp_to_history(y, _blend_with_naive_delta(y, raw, 0.72))
+        model_name = "ridge_regression_lags_small"
+        method_ph = (
+            "Python scikit-learn: Ridge (matinding regularisasyon) + lag/rolling mean - angkop sa maikling serye."
+        )
+    elif n_rows < 12:
+        model = Ridge(alpha=12.0)
+        model.fit(X, Y)
+        yhat_train = model.predict(X)
+        raw = float(model.predict(x_next)[0])
+        point = _soft_clamp_to_history(y, _blend_with_naive_delta(y, raw, 0.35))
+        model_name = "ridge_regression_lags"
+        method_ph = (
+            "Python scikit-learn: Ridge regression (regularized linear) para sa lag/rolling na feature."
+        )
+    else:
+        model = RandomForestRegressor( n_estimators=120, max_depth=6, min_samples_leaf=max(1, n_rows // 12), random_state=42, n_jobs=-1 )
+        model.fit(X, Y)
+        yhat_train = model.predict(X)
+        preds_trees = np.array([t.predict(x_next)[0] for t in model.estimators_], dtype=np.float64)
+        y_min = float(np.min(y))
+        y_max = float(np.max(y))
+        span = float(y_max - y_min) + 1e-3
+        bound_lo = y_min - span * 0.08
+        bound_hi = y_max + span * 0.52
+        point = _soft_clamp_to_history(
+            y, _blend_with_naive_delta(y, float(np.mean(preds_trees)), 0.22)
+        )
+        q_low = float(np.clip(np.percentile(preds_trees, 2.5), bound_lo, bound_hi))
+        q_high = float(np.clip(np.percentile(preds_trees, 97.5), bound_lo, bound_hi))
+        if q_low > q_high:
+            q_low, q_high = q_high, q_low
+        model_name = "random_forest_regressor_lags"
+        method_ph = ( "Python scikit-learn: RandomForestRegressor sa lag + rolling ng kabuuang gastos - ", "kayang habulin ang nonlinear na kilos kapag mas mahabang historia." )
+        r2, rmse = _metrics(Y, yhat_train)
+        pred_round = _round_php(point)
+        return { "ok": True, "model_name": model_name, "method_description_ph": method_ph, "predicted_total_expenses": pred_round, "ci95_low": _round_php(max(0.0, q_low)), "ci95_high": _round_php(max(0.0, q_high)), "r_squared": round(r2, 3), "residual_rmse": round(rmse, 2), "trees_ci_used": True }
+    r2, rmse = _metrics(Y, yhat_train)
+    residual_std = float(np.sqrt(max(np.sum((Y - yhat_train) ** 2) / max(len(Y) - 4, 1), 0.0)))
+    ci_half = 1.96 * residual_std
+    point = max(0.0, _soft_clamp_to_history(y, point))
+    pred_round = _round_php(point)
+    return { "ok": True, "model_name": model_name, "method_description_ph": method_ph, "predicted_total_expenses": pred_round, "ci95_low": _round_php(max(0.0, point - ci_half)), "ci95_high": _round_php(max(0.0, point + ci_half)), "r_squared": round(r2, 3), "residual_rmse": round(rmse, 2), "trees_ci_used": False }

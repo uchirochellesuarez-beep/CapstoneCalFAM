@@ -1,0 +1,157 @@
+.sk-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.loading-state:has(.sk-wrap),
+.state-center:has(.sk-wrap),
+.state-panel:has(.sk-wrap),
+.inv2-empty:has(.sk-wrap),
+.fin-mobile-empty:has(.sk-wrap),
+.loading-container:has(.sk-wrap),
+.barangay-mobile-empty:has(.sk-wrap),
+.empty-state:has(.sk-wrap),
+.gcash-pay-empty:has(.sk-wrap),
+.report-loading:has(.sk-wrap),
+.machinery-usage-state:has(.sk-wrap),
+.places-loading-overlay:has(.sk-wrap) {
+  align-items: stretch;
+  width: 100%;
+  text-align: left;
+}
+
+.sk-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sk-bone {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.22) 0%,
+    rgba(241, 245, 249, 0.85) 45%,
+    rgba(148, 163, 184, 0.22) 100%
+  );
+  background-size: 220% 100%;
+  animation: sk-shimmer 1.25s ease-in-out infinite;
+}
+
+.page-container:not(.light-theme) .sk-bone,
+.farmer-income-hub-page:not(.light-theme) .sk-bone,
+.machinery-photo .sk-bone {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.18) 46%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 220% 100%;
+}
+
+.sk-bone--line { height: 0.75rem; width: 100%; }
+.sk-bone--line-short { height: 0.7rem; width: 42%; }
+.sk-bone--title { height: 1rem; width: 55%; }
+.sk-bone--value { height: 1.35rem; width: 38%; }
+.sk-bone--label { height: 0.65rem; width: 46%; }
+.sk-bone--avatar { width: 2.6rem; height: 2.6rem; border-radius: 999px; flex-shrink: 0; }
+.sk-bone--thumb { width: 100%; height: 8.5rem; border-radius: 12px; }
+.sk-bone--chart { width: 100%; height: 11rem; border-radius: 12px; }
+.sk-bone--btn { width: 7.5rem; height: 2.2rem; border-radius: 10px; }
+.sk-bone--field { width: 100%; height: 2.4rem; border-radius: 10px; }
+
+.sk-card,
+.sk-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.page-container:not(.light-theme) .sk-card,
+.page-container:not(.light-theme) .sk-row,
+.farmer-income-hub-page:not(.light-theme) .sk-card,
+.farmer-income-hub-page:not(.light-theme) .sk-row {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(190, 235, 203, 0.14);
+}
+
+.sk-stats,
+.sk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.sk-list-row,
+.sk-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sk-list-copy,
+.sk-profile-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sk-pills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.sk-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.sk-table-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr 0.7fr;
+  gap: 0.55rem;
+}
+
+.sk-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@keyframes sk-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-bone {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sk-bone--thumb { height: 7rem; }
+  .sk-bone--chart { height: 8.5rem; }
+  .sk-table-row { grid-template-columns: 1.2fr 0.8fr 0.6fr; }
+  .sk-table-row .sk-bone:last-child { display: none; }
+}

@@ -15,8 +15,7 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>{{ $t('ui.loadingPendingMembers') }}</p>
+      <ContentSkeleton variant="profile" :rows="3" :label="$t('ui.loadingPendingMembers')" />
     </div>
 
     <!-- Error State -->
@@ -36,11 +35,12 @@
       <article v-for="member in farmers" :key="'m-' + member.id" class="members-mobile-card">
         <div class="mmc-head">
           <div class="member-avatar-wrap">
-            <img
+            <AppImage
               v-if="member.profile_picture"
               :src="getProfilePictureUrl(member.profile_picture)"
               :alt="$t('ui.profile')"
-              class="member-avatar"
+              img-class="member-avatar"
+              shape="circle"
             />
             <div v-else class="member-avatar member-avatar-fallback">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -166,11 +166,12 @@
             <tr v-for="member in farmers" :key="member.id" class="members-data-row">
               <td class="members-cell-center">
                 <div class="member-avatar-wrap">
-                  <img
+                  <AppImage
                     v-if="member.profile_picture"
                     :src="getProfilePictureUrl(member.profile_picture)"
                     :alt="$t('ui.profile')"
-                    class="member-avatar"
+                    img-class="member-avatar"
+                    shape="circle"
                   />
                   <div v-else class="member-avatar member-avatar-fallback">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" class="text-gray-400">

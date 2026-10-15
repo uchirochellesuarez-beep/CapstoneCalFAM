@@ -1,23 +1,15 @@
 <template>
   <div class="landing-page" :class="{ 'light-theme': isLight }">
     <div class="page-backdrop" aria-hidden="true">
-      <img
-        :src="dashboardSrc"
-        alt=""
-        class="bg-dashboard"
-      />
-      <img
-        :src="farmerPhoto"
-        alt=""
-        class="bg-farmer"
-      />
+      <AppImage :src="dashboardSrc" alt="" img-class="bg-dashboard" layout="frame" />
+      <AppImage :src="farmerPhoto" alt="" img-class="bg-farmer" layout="frame" />
       <div class="bg-overlay"></div>
     </div>
 
     <header class="landing-nav">
       <div class="nav-inner">
         <a href="#hero" class="nav-brand" @click.prevent="scrollTo('hero')">
-          <img :src="calffaLogo" :alt="t('brand.name')" class="nav-logo" />
+          <AppImage :src="calffaLogo" :alt="t('brand.name')" img-class="nav-logo" shape="circle" />
           <span class="nav-brand-text">
             <span class="nav-brand-name">{{ t('brand.name') }}</span>
             <span class="nav-brand-tagline">{{ t('brand.tagline') }}</span>
@@ -126,7 +118,7 @@
     <footer class="landing-footer">
       <div class="footer-inner">
         <div class="footer-brand">
-          <img :src="calffaLogo" alt="" class="footer-logo" />
+          <AppImage :src="calffaLogo" alt="" img-class="footer-logo" shape="circle" />
           <div>
             <p class="footer-name">{{ t('brand.name') }}</p>
             <p class="footer-org">{{ t('brand.fullName') }}</p>

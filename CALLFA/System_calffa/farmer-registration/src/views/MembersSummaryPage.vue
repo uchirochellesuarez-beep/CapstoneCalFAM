@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div
     class="members-summary-page min-h-screen p-4 lg:p-6"
     :class="{ 'light-theme': isLight, 'is-agriculturist': isAgriculturist }"
@@ -96,11 +96,12 @@
           <!-- Identity Row: avatar + name + badges -->
           <div class="hero-identity">
             <div class="hero-avatar-wrap">
-              <img
+              <AppImage
                 v-if="getProfilePictureUrl(selectedFarmer.profile_picture)"
                 :src="getProfilePictureUrl(selectedFarmer.profile_picture)"
                 :alt="$t('ui.profile')"
-                class="hero-avatar"
+                img-class="hero-avatar"
+                shape="circle"
               />
               <div v-else class="hero-avatar hero-avatar-fallback">
                 <svg class="avatar-fallback-icon avatar-fallback-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

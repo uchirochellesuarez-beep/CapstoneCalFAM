@@ -59,12 +59,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">{{ t('signup.birthDate') }}</label>
-                  <input
+                  <BirthDateSelect
                     v-model="formData.date_of_birth"
-                    type="date"
-                    :max="getMaxDateOfBirth()"
                     required
-                    class="form-input"
+                    select-class="form-input"
+                    :max="getMaxDateOfBirth()"
                   />
                 </div>
               </div>
@@ -288,6 +287,7 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
+import BirthDateSelect from '../components/BirthDateSelect.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'

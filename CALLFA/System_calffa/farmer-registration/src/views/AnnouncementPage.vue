@@ -53,8 +53,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="state-panel">
-      <div class="state-spinner" aria-hidden="true"></div>
-      <p>{{ $t('ui.loadingAnnouncements') }}</p>
+      <ContentSkeleton variant="news" :label="$t('ui.loadingAnnouncements')" />
     </div>
 
     <!-- Empty -->
@@ -93,11 +92,12 @@
 
         <header class="notice-card-header">
           <div class="notice-author">
-            <img
+            <AppImage
               :src="resolveAuthorAvatar(item)"
               :alt="item.author_name || 'Author'"
-              class="author-avatar"
-              loading="lazy"
+              img-class="author-avatar"
+              shape="circle"
+              lazy
             />
             <div class="author-info">
               <span class="author-name">{{ item.author_name || 'Officer' }}</span>
@@ -154,11 +154,11 @@
             </div>
 
             <figure v-if="item.image" class="notice-figure" @click.stop>
-              <img
+              <AppImage
                 :src="resolveImageUrl(item.image)"
                 :alt="item.title"
-                class="notice-image"
-                loading="lazy"
+                img-class="notice-image"
+                lazy
                 @click="openImagePreview(resolveImageUrl(item.image), item.title)"
               />
             </figure>
@@ -199,10 +199,11 @@
           >
             <div class="announcement-detail-head">
               <div class="announcement-detail-author">
-                <img
+                <AppImage
                   :src="resolveAuthorAvatar(selectedAnnouncement)"
                   :alt="selectedAnnouncement.author_name || 'Author'"
-                  class="announcement-detail-avatar"
+                  img-class="announcement-detail-avatar"
+                  shape="circle"
                 />
                 <div class="announcement-detail-author-meta">
                   <span class="announcement-detail-author-name">
@@ -218,11 +219,13 @@
             </div>
             <div class="modal-body announcement-detail-body">
               <h2 id="announcement-detail-title" class="announcement-detail-title">{{ selectedAnnouncement.title }}</h2>
-              <img
+              <AppImage
                 v-if="selectedAnnouncement.image"
                 :src="resolveImageUrl(selectedAnnouncement.image)"
                 :alt="selectedAnnouncement.title"
-                class="announcement-detail-image"
+                img-class="announcement-detail-image"
+                layout="block"
+                reserve
                 @click="openImagePreview(resolveImageUrl(selectedAnnouncement.image), selectedAnnouncement.title)"
               />
               <p class="announcement-detail-content">{{ selectedAnnouncement.content }}</p>
@@ -296,7 +299,7 @@
                 >
                   <input ref="createFileInput" type="file" accept="image/*" class="upload-input" @change="onImageSelected" />
                   <div v-if="createPreviewUrl" class="upload-preview">
-                    <img :src="createPreviewUrl" alt="Preview" />
+                    <AppImage :src="createPreviewUrl" alt="Preview" layout="block" reserve />
                     <button type="button" class="upload-clear" @click.stop="clearCreateImage">{{ $t('common.remove') }}</button>
                   </div>
                   <div v-else class="upload-placeholder">
@@ -351,11 +354,11 @@
                 >
                   <input ref="editFileInput" type="file" accept="image/*" class="upload-input" @change="onEditImageSelected" />
                   <div v-if="editPreviewUrl" class="upload-preview">
-                    <img :src="editPreviewUrl" alt="Preview" />
+                    <AppImage :src="editPreviewUrl" alt="Preview" layout="block" reserve />
                     <button type="button" class="upload-clear" @click.stop="clearEditImage">{{ $t('common.removeNewImage') }}</button>
                   </div>
                   <div v-else-if="editingAnnouncement?.image" class="upload-preview">
-                    <img :src="resolveImageUrl(editingAnnouncement.image)" alt="Current" />
+                    <AppImage :src="resolveImageUrl(editingAnnouncement.image)" alt="Current" layout="block" reserve />
                     <span class="upload-keep">Current image — click to replace</span>
                   </div>
                   <div v-else class="upload-placeholder">
@@ -411,7 +414,7 @@
         >
           <div class="preview-frame" role="dialog" aria-modal="true" aria-label="Announcement image preview" @click.stop>
             <button class="preview-close" type="button" :aria-label="$t('common.close')" @click="closeImagePreview">&times;</button>
-            <img :src="previewImageSrc" :alt="previewImageAlt" class="preview-img" />
+            <AppImage :src="previewImageSrc" :alt="previewImageAlt" img-class="preview-img" layout="block" reserve />
             <p v-if="previewImageAlt" class="preview-caption">{{ previewImageAlt }}</p>
           </div>
         </div>

@@ -34,16 +34,18 @@
         </div>
 
         <!-- Compact profile (mobile/tablet): avatar with role under it -->
-        <button
-          type="button"
-          class="icon-btn mobile-profile"
-          @click="goToSettings"
-          :title="profileTitle"
-          :aria-label="profileTitle"
-        >
-          <img :src="userAvatar" class="mobile-profile-avatar" :alt="t('header.userAvatar')" />
+        <div class="mobile-profile-wrap">
+          <button
+            type="button"
+            class="icon-btn mobile-profile"
+            @click="goToSettings"
+            :title="profileTitle"
+            :aria-label="profileTitle"
+          >
+            <img :src="userAvatar" class="mobile-profile-avatar" :alt="t('header.userAvatar')" />
+          </button>
           <span v-if="shortUserRole" class="mobile-profile-role">{{ shortUserRole }}</span>
-        </button>
+        </div>
 
         <!-- Full profile pill (desktop) -->
         <div class="user-profile" @click="goToSettings" :title="t('header.editProfile')">
@@ -1076,6 +1078,7 @@ onMounted(() => {
   transform: translateY(0);
 }
 
+.mobile-profile-wrap,
 .icon-btn.mobile-profile {
   display: none;
 }
@@ -1380,9 +1383,18 @@ body.glass-light .top-header.farmer-theme .profile-role {
     display: none !important;
   }
 
+  .mobile-profile-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
   .icon-btn.mobile-profile {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 44px;
@@ -1391,38 +1403,57 @@ body.glass-light .top-header.farmer-theme .profile-role {
     min-height: 44px;
     max-width: 44px;
     max-height: 44px;
-    padding: 2px 1px 1px;
-    gap: 0;
+    padding: 0;
+    border-radius: 14px;
+    border-width: 1px;
     overflow: hidden;
     box-sizing: border-box;
   }
 
+  .icon-btn.mobile-profile:hover,
+  .icon-btn.mobile-profile:active {
+    transform: none;
+  }
+
   .mobile-profile-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 13px;
     object-fit: cover;
+    object-position: center;
     display: block;
     flex-shrink: 0;
-    border: 1px solid rgba(187, 247, 208, 0.55);
+    border: 0;
   }
 
   .mobile-profile-role {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    z-index: 1;
     display: block;
-    font-size: 7px;
+    max-width: 42px;
+    padding: 1px 4px;
+    border-radius: 999px;
+    background: #14532d;
+    color: #f0fdf4 !important;
+    -webkit-text-fill-color: #f0fdf4 !important;
+    font-size: 8px;
     font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.2px;
-    color: #bbf7d0;
+    line-height: 1.2;
+    letter-spacing: 0;
     text-align: center;
-    max-width: 40px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
   }
 }
 
 @media (max-width: 768px) {
+  .mobile-profile-wrap,
   .icon-btn.mobile-profile {
     width: 44px;
     height: 44px;
@@ -1430,21 +1461,11 @@ body.glass-light .top-header.farmer-theme .profile-role {
     min-height: 44px;
     max-width: 44px;
     max-height: 44px;
-    padding: 2px 1px 1px;
-  }
-
-  .mobile-profile-avatar {
-    width: 26px;
-    height: 26px;
-  }
-
-  .mobile-profile-role {
-    font-size: 7px;
-    max-width: 40px;
   }
 }
 
 @media (max-width: 480px) {
+  .mobile-profile-wrap,
   .icon-btn.mobile-profile {
     width: 44px;
     height: 44px;
@@ -1452,18 +1473,6 @@ body.glass-light .top-header.farmer-theme .profile-role {
     min-height: 44px;
     max-width: 44px;
     max-height: 44px;
-    padding: 2px 1px 1px;
-  }
-
-  .mobile-profile-avatar {
-    width: 26px;
-    height: 26px;
-  }
-
-  .mobile-profile-role {
-    font-size: 7px;
-    font-weight: 800;
-    max-width: 40px;
   }
 }
 

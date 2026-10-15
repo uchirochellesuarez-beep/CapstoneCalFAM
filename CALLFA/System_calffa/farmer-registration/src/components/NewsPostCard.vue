@@ -12,11 +12,12 @@
 
     <header class="notice-card-header">
       <div class="notice-author">
-        <img
+        <AppImage
           :src="authorAvatar"
           :alt="item.author_name || 'Author'"
-          class="author-avatar"
-          loading="lazy"
+          img-class="author-avatar"
+          shape="circle"
+          lazy
         />
         <div class="author-info">
           <span class="author-name">{{ item.author_name || item.author_role || 'Member' }}</span>
@@ -73,11 +74,11 @@
           </div>
         </div>
         <figure v-if="item.image" class="notice-figure" @click.stop>
-          <img
+          <AppImage
             :src="imageUrl"
             :alt="item.title"
-            class="notice-image"
-            loading="lazy"
+            img-class="notice-image"
+            lazy
             @click="$emit('preview-image', imageUrl, item.title)"
           />
         </figure>

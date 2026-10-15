@@ -12,6 +12,7 @@ const {
   rejectSubmission,
   listPendingSubmissions,
   listBarangayHistory,
+  deleteHistorySubmission,
   listMineForTransaction,
   lookupLatestSubmission,
   getSubmissionById
@@ -268,6 +269,22 @@ router.post('/:id/confirm', async (req, res) => {
     res.json({
       success: true,
       message: 'Payment verified. Official receipt generated.',
+      ...result
+    });
+  } catch (error) {
+    sendServiceError(res, error);
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await deleteHistorySubmission(require('../db'), {
+      user: req.user,
+      submissionId: req.params.id
+    });
+    res.json({
+      success: true,
+      message: 'GCash payment deleted, including the connected income and farmer payment record.',
       ...result
     });
   } catch (error) {

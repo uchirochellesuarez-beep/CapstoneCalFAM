@@ -1,5 +1,7 @@
 <template>
+  <div v-if="authStore.loggingOut" class="logout-cover" aria-hidden="true"></div>
   <div
+    v-else
     class="authenticated-layout"
     :class="{ 'sidebar-collapsed': sidebarCollapsed }"
   >
@@ -26,11 +28,13 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { useAuthStore } from '../stores/authStore'
 import { useLoanModuleStore } from '../stores/loanModuleStore'
 import { useDownPaymentStore } from '../stores/downPaymentStore'
 import TopHeader from '../components/TopHeader.vue'
 import Sidebar from '../components/Sidebar.vue'
 
+const authStore = useAuthStore()
 const { backdropThemeClass } = useBackdropTheme()
 const loanModuleStore = useLoanModuleStore()
 const downPaymentStore = useDownPaymentStore()
@@ -83,6 +87,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.logout-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: #06140e;
+}
+
+:global(body.backdrop-theme-light) .logout-cover {
+  background: #f3f6f3;
+}
+
 .authenticated-layout {
   --app-sidebar-width: 260px;
   --app-header-height: 70px;

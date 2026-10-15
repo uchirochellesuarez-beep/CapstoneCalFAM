@@ -79,7 +79,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from "../stores/authStore";
-import { canBookMachinery, canApplyOfficerLoan, canViewDuesPaymentsLedger } from "../utils/roleAccess";
+import { canBookMachinery, canApplyOfficerLoan, canViewDuesPaymentsLedger, canUsePersonalFarmAnalytics } from "../utils/roleAccess";
 import { useBackdropTheme } from "../composables/useBackdropTheme";
 import DashboardIcon from "./icons/DashboardIcon.vue";
 import MoneyIcon from "./icons/MoneyIcon.vue";
@@ -233,7 +233,7 @@ const navItems = computed(() => {
 
   add(
     { key: 'nav.farmIncome', route: '/farmer-income', icon: FarmIcon },
-    role === 'farmer' || ['president', 'treasurer', 'auditor'].includes(role)
+    canUsePersonalFarmAnalytics(role)
   );
 
   add(
@@ -1521,10 +1521,10 @@ const isItemActive = (item) => {
     visibility: visible;
   }
 
-  /* Tablet: comfortable drawer width with backdrop beside it */
+  /* Drawer covers the page so the screen is not split beside a thin column */
   .sidebar,
   .sidebar.collapsed {
-    width: min(340px, 88vw);
+    width: 100%;
   }
 
   /* The desktop collapse toggle makes no sense in drawer mode */

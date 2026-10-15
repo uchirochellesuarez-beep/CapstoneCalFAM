@@ -38,7 +38,7 @@ const { initTheme, watchSystemTheme, syncThemeForUser } = useBackdropTheme()
 const isAuthenticated = computed(() => !!authStore.currentUser)
 const guestChromeRoutes = ['/landing', '/login', '/signup', '/google-registration']
 const showGuestHeader = computed(
-  () => !isAuthenticated.value && !guestChromeRoutes.includes(route.path)
+  () => !authStore.loggingOut && !isAuthenticated.value && !guestChromeRoutes.includes(route.path)
 )
 
 onMounted(() => {

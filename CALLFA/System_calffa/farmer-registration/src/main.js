@@ -7,7 +7,10 @@ import { i18n } from './i18n'
 import { closeGoogleOAuthPopupIfNeeded } from './utils/googleGsi'
 import { useAuthStore } from './stores/authStore'
 import { detectSessionReplaced } from './utils/authSession'
+import AppImage from './components/AppImage.vue'
+import ContentSkeleton from './components/ContentSkeleton.vue'
 import './style.css'
+import './styles/skeleton.css'
 import './assets/backdrop-theme.css'
 import './styles/glass-unified-theme.css'
 import './styles/page-hero-header.css'
@@ -34,6 +37,8 @@ if (!closeGoogleOAuthPopupIfNeeded()) {
   app.use(pinia)
   app.use(router)
   app.use(i18n)
+  app.component('AppImage', AppImage)
+  app.component('ContentSkeleton', ContentSkeleton)
 
   const authStore = useAuthStore()
   authStore.initSessionGuard()

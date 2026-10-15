@@ -88,7 +88,7 @@
               </thead>
               <tbody>
                 <tr v-if="loading">
-                  <td colspan="8" class="table-empty">{{ $t('ui.loading') }}</td>
+                  <td colspan="8" class="table-empty"><ContentSkeleton variant="table" :label="$t('ui.loading')" /></td>
                 </tr>
                 <tr v-else-if="rows.length === 0">
                   <td colspan="8" class="table-empty">{{ $t('ui.noDistributionYet') }}</td>
@@ -143,7 +143,7 @@
           </div>
 
           <div class="fin-mobile-list">
-            <div v-if="loading" class="fin-mobile-empty">{{ $t('ui.loading') }}</div>
+            <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :label="$t('ui.loading')" /></div>
             <div v-else-if="rows.length === 0" class="fin-mobile-empty">
               {{ $t('ui.noDistributionYet') }}
             </div>

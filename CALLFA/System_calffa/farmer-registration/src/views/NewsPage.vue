@@ -50,8 +50,7 @@
     </section>
 
     <div v-if="loading" class="state-panel">
-      <div class="state-spinner" aria-hidden="true"></div>
-      <p>{{ $t('ui.loadingNews') }}</p>
+      <ContentSkeleton variant="news" :label="$t('ui.loadingNews')" />
     </div>
 
     <template v-else>
@@ -170,10 +169,11 @@
           >
             <div class="news-detail-head">
               <div class="news-detail-author">
-                <img
+                <AppImage
                   :src="detailAuthorAvatar"
                   :alt="selectedNews.author_name || 'Author'"
-                  class="news-detail-avatar"
+                  img-class="news-detail-avatar"
+                  shape="circle"
                 />
                 <div class="news-detail-author-meta">
                   <span class="news-detail-author-name">{{ selectedNews.author_name || selectedNews.author_role || 'Member' }}</span>
@@ -187,11 +187,13 @@
             </div>
             <div class="modal-body news-detail-body">
               <h2 id="news-detail-title" class="news-detail-title">{{ selectedNews.title }}</h2>
-              <img
+              <AppImage
                 v-if="selectedNews.image"
                 :src="resolveImageUrl(selectedNews.image)"
                 :alt="selectedNews.title"
-                class="news-detail-image"
+                img-class="news-detail-image"
+                layout="block"
+                reserve
                 @click="openImagePreview(resolveImageUrl(selectedNews.image), selectedNews.title)"
               />
               <p class="news-detail-content">{{ selectedNews.content }}</p>
@@ -260,7 +262,7 @@
                 >
                   <input ref="createFileInput" type="file" accept="image/*" class="upload-input" @change="onImageSelected" />
                   <div v-if="createPreviewUrl" class="upload-preview">
-                    <img :src="createPreviewUrl" alt="Preview" />
+                    <AppImage :src="createPreviewUrl" alt="Preview" layout="block" reserve />
                     <button type="button" class="upload-clear" @click.stop="clearCreateImage">{{ $t('common.remove') }}</button>
                   </div>
                   <div v-else class="upload-placeholder">
@@ -314,11 +316,11 @@
                 >
                   <input ref="editFileInput" type="file" accept="image/*" class="upload-input" @change="onEditImageSelected" />
                   <div v-if="editPreviewUrl" class="upload-preview">
-                    <img :src="editPreviewUrl" alt="Preview" />
+                    <AppImage :src="editPreviewUrl" alt="Preview" layout="block" reserve />
                     <button type="button" class="upload-clear" @click.stop="clearEditImage">{{ $t('common.removeNewImage') }}</button>
                   </div>
                   <div v-else-if="editingNews?.image" class="upload-preview">
-                    <img :src="resolveImageUrl(editingNews.image)" alt="Current" />
+                    <AppImage :src="resolveImageUrl(editingNews.image)" alt="Current" layout="block" reserve />
                     <span class="upload-keep">Current image — click to replace</span>
                   </div>
                   <div v-else class="upload-placeholder">
@@ -372,7 +374,7 @@
         >
           <div class="preview-frame" role="dialog" aria-modal="true" aria-label="News image preview" @click.stop>
             <button class="preview-close" type="button" :aria-label="$t('common.close')" @click="closeImagePreview">&times;</button>
-            <img :src="previewImageSrc" :alt="previewImageAlt" class="preview-img" />
+            <AppImage :src="previewImageSrc" :alt="previewImageAlt" img-class="preview-img" layout="block" reserve />
             <p v-if="previewImageAlt" class="preview-caption">{{ previewImageAlt }}</p>
           </div>
         </div>

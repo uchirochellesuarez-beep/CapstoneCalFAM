@@ -169,7 +169,7 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="5" class="loading-cell">{{ $t('ui.loadingFinancialData') }}</td>
+              <td colspan="5" class="loading-cell"><ContentSkeleton variant="table" :label="$t('ui.loadingFinancialData')" /></td>
             </tr>
             <template v-else>
               <tr v-for="row in moduleSummaryRows" :key="row.key">
@@ -191,7 +191,7 @@
         </table>
         </div>
         <div class="fin-mobile-list no-print">
-          <div v-if="loading" class="fin-mobile-empty">{{ $t('ui.loadingFinancialData') }}</div>
+          <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="dashboard" :label="$t('ui.loadingFinancialData')" /></div>
           <template v-else>
             <div
               v-for="row in moduleSummaryRows"
@@ -263,7 +263,7 @@
             </thead>
             <tbody>
               <tr v-if="transactionsLoading">
-                <td :colspan="isAdmin ? 9 : 8" class="loading-cell">{{ $t('ui.loadingTransactions') }}</td>
+                <td :colspan="isAdmin ? 9 : 8" class="loading-cell"><ContentSkeleton variant="table" :label="$t('ui.loadingTransactions')" /></td>
               </tr>
               <tr v-else-if="filteredTransactions.length === 0">
                 <td :colspan="isAdmin ? 9 : 8" class="loading-cell">{{ $t('ui.noTransactionsFilter') }}</td>
@@ -297,7 +297,7 @@
           </table>
         </div>
         <div class="fin-mobile-list no-print">
-          <div v-if="transactionsLoading" class="fin-mobile-empty">{{ $t('ui.loadingTransactions') }}</div>
+          <div v-if="transactionsLoading" class="fin-mobile-empty"><ContentSkeleton variant="list" :label="$t('ui.loadingTransactions')" /></div>
           <div v-else-if="filteredTransactions.length === 0" class="fin-mobile-empty">{{ $t('ui.noTransactionsFilter') }}</div>
           <template v-else>
             <div

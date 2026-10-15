@@ -984,6 +984,300 @@ async function getSubmissionById(pool, { user, submissionId }) {
   return row;
 }
 
+function httpError(message, statusCode) {
+  const err = new Error(message);
+  err.statusCode = statusCode;
+  return err;
+}
+
+async function execOrSkip(connection, sql, params) {
+  try {
+    return await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146) return [[]];
+    throw error;
+  }
+}
+
+async function findMachineryPayment(connection, submission) {
+  const bookingId = parseInt(submission.reference_id, 10);
+  if (!bookingId) return null;
+  if (submission.payment_record_id) {
+    const [rows] = await execOrSkip(
+      connection,
+      'SELECT * FROM machinery_booking_payments WHERE id = ? AND booking_id = ? LIMIT 1',
+      [submission.payment_record_id, bookingId]
+    );
+    if (rows[0]) return rows[0];
+  }
+  if (submission.receipt_number) {
+    const [rows] = await execOrSkip(
+      connection,
+      `SELECT * FROM machinery_booking_payments
+       WHERE booking_id = ? AND receipt_number = ?
+       ORDER BY id DESC LIMIT 1`,
+      [bookingId, submission.receipt_number]
+    );
+    if (rows[0]) return rows[0];
+  }
+  const amount = parseFloat(submission.amount_paid);
+  if (Number.isFinite(amount) && amount > 0) {
+    const [rows] = await execOrSkip(
+      connection,
+      `SELECT * FROM machinery_booking_payments
+       WHERE booking_id = ? AND payment_method = 'GCash' AND ABS(amount - ?) < 0.02
+       ORDER BY id DESC LIMIT 1`,
+      [bookingId, amount]
+    );
+    if (rows[0]) return rows[0];
+  }
+  return null;
+}
+
+async function reverseMachineryGcashPayment(connection, submission) {
+  const bookingId = parseInt(submission.reference_id, 10);
+  if (!bookingId) return;
+
+  const payment = await findMachineryPayment(connection, submission);
+  const receiptNumber = payment?.receipt_number || submission.receipt_number || null;
+  if (receiptNumber) {
+    await execOrSkip(connection, 'DELETE FROM payment_receipts WHERE receipt_number = ?', [receiptNumber]);
+  }
+
+  if (!payment) return;
+
+  await connection.execute('DELETE FROM machinery_booking_payments WHERE id = ?', [payment.id]);
+
+  const [remaining] = await connection.execute(
+    `SELECT id, amount, payment_type, payment_date, receipt_number, interest_applied
+     FROM machinery_booking_payments
+     WHERE booking_id = ?
+     ORDER BY payment_date ASC, id ASC`,
+    [bookingId]
+  );
+  const [bookingRows] = await connection.execute(
+    'SELECT * FROM machinery_bookings WHERE id = ?',
+    [bookingId]
+  );
+  const booking = bookingRows[0];
+  if (!booking) return;
+
+  let totalPrice = parseFloat(booking.total_price) || 0;
+  const removedInterest = parseFloat(payment.interest_amount) || 0;
+  const removedInterestApplied = Number(payment.interest_applied) === 1 && removedInterest > 0;
+  if (removedInterestApplied && !remaining.some((row) => Number(row.interest_applied) === 1)) {
+    totalPrice = Math.max(0, Math.round((totalPrice - removedInterest) * 100) / 100);
+    await connection.execute(
+      'UPDATE machinery_bookings SET total_price = ?, pending_interest = 0, interest_applied_date = NULL WHERE id = ?',
+      [totalPrice, bookingId]
+    );
+  }
+
+  const totalPaid = remaining.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const roundedPaid = Math.round(totalPaid * 100) / 100;
+  const remainingBalance = Math.max(0, Math.round((totalPrice - roundedPaid) * 100) / 100);
+  let paymentStatus = 'Unpaid';
+  if (roundedPaid > 0 && roundedPaid + 0.01 >= totalPrice && totalPrice > 0) paymentStatus = 'Paid';
+  else if (roundedPaid > 0) paymentStatus = 'Partial';
+
+  const latest = remaining[remaining.length - 1] || null;
+  const hasDownPayment = remaining.some((row) => row.payment_type === 'down_payment');
+  const removedDownPayment = payment.payment_type === 'down_payment';
+  let status = booking.status;
+  if (
+    removedDownPayment &&
+    !hasDownPayment &&
+    ['Down Payment Verified', 'Awaiting Payment Verification', 'Payment Rejected'].includes(status)
+  ) {
+    status = 'Awaiting Down Payment';
+  }
+
+  const clearDownPayment = removedDownPayment && !hasDownPayment
+    ? `, down_payment_verified_by = NULL, down_payment_verified_at = NULL,
+         down_payment_proof = NULL, down_payment_submitted_at = NULL,
+         down_payment_rejection_reason = NULL`
+    : '';
+
+  await connection.execute(
+    `UPDATE machinery_bookings
+     SET total_paid = ?, remaining_balance = ?, payment_status = ?,
+         payment_date = ?, last_payment_date = ?, receipt_number = ?, status = ?
+         ${clearDownPayment}
+     WHERE id = ?`,
+    [
+      roundedPaid,
+      remainingBalance,
+      paymentStatus,
+      latest?.payment_date || null,
+      latest?.payment_date || null,
+      latest?.receipt_number || null,
+      status,
+      bookingId
+    ]
+  );
+
+  await connection.execute('DELETE FROM machinery_income WHERE booking_id = ?', [bookingId]);
+  if (roundedPaid > 0) {
+    await connection.execute(
+      `INSERT INTO machinery_income
+       (booking_id, machinery_id, income_amount, date_of_income, record_created_by, remarks)
+       SELECT ?, machinery_id, ?, ?, ?, ?
+       FROM machinery_bookings WHERE id = ?`,
+      [
+        bookingId,
+        roundedPaid,
+        latest?.payment_date || formatLocalDate(new Date()),
+        submission.verified_by || booking.farmer_id || null,
+        'Adjusted after GCash payment was removed',
+        bookingId
+      ]
+    );
+  }
+}
+
+async function reverseLoanGcashPayment(connection, submission) {
+  const loanId = parseInt(submission.reference_id, 10);
+  if (!loanId) return;
+
+  let payment = null;
+  if (submission.payment_record_id) {
+    const [rows] = await execOrSkip(
+      connection,
+      'SELECT * FROM loan_payments WHERE id = ? AND loan_id = ? LIMIT 1',
+      [submission.payment_record_id, loanId]
+    );
+    payment = rows[0] || null;
+  }
+  if (!payment && submission.receipt_number) {
+    const [rows] = await execOrSkip(
+      connection,
+      'SELECT * FROM loan_payments WHERE loan_id = ? AND reference_number = ? ORDER BY id DESC LIMIT 1',
+      [loanId, submission.receipt_number]
+    );
+    payment = rows[0] || null;
+  }
+
+  const receiptNumber = payment?.reference_number || submission.receipt_number || null;
+  if (receiptNumber) {
+    await execOrSkip(connection, 'DELETE FROM payment_receipts WHERE receipt_number = ?', [receiptNumber]);
+  }
+  if (!payment) return;
+
+  await connection.execute('DELETE FROM loan_payments WHERE id = ?', [payment.id]);
+
+  const [loanRows] = await connection.execute('SELECT * FROM loans WHERE id = ?', [loanId]);
+  const loan = loanRows[0];
+  if (!loan) return;
+
+  const amount = parseFloat(payment.amount) || 0;
+  const totalPaid = Math.max(0, Math.round(((parseFloat(loan.total_paid) || 0) - amount) * 100) / 100);
+  const remaining = Math.max(0, Math.round(((parseFloat(loan.remaining_balance) || 0) + amount) * 100) / 100);
+  const [latestRows] = await connection.execute(
+    'SELECT payment_date FROM loan_payments WHERE loan_id = ? ORDER BY payment_date DESC, id DESC LIMIT 1',
+    [loanId]
+  );
+
+  let status = loan.status;
+  if (remaining > 0.01 && status === 'paid') {
+    const due = loan.due_date ? String(loan.due_date).slice(0, 10) : '';
+    const today = formatLocalDate(new Date());
+    status = due && due < today ? 'overdue' : 'active';
+  }
+
+  await connection.execute(
+    `UPDATE loans
+     SET total_paid = ?, remaining_balance = ?, status = ?, paid_date = ?, last_payment_date = ?
+     WHERE id = ?`,
+    [
+      totalPaid,
+      remaining,
+      status,
+      status === 'paid' ? loan.paid_date : null,
+      latestRows[0]?.payment_date || null,
+      loanId
+    ]
+  );
+}
+
+async function clearRejectedMachineryProof(connection, submission) {
+  const bookingId = parseInt(submission.reference_id, 10);
+  if (!bookingId) return;
+  const [rows] = await execOrSkip(
+    connection,
+    'SELECT id, status FROM machinery_bookings WHERE id = ?',
+    [bookingId]
+  );
+  if (!rows[0] || rows[0].status !== 'Payment Rejected') return;
+  await connection.execute(
+    `UPDATE machinery_bookings
+     SET status = 'Awaiting Down Payment',
+         down_payment_rejection_reason = NULL,
+         down_payment_proof = CASE WHEN down_payment_proof = ? THEN NULL ELSE down_payment_proof END
+     WHERE id = ?`,
+    [submission.proof_path || '', bookingId]
+  );
+}
+
+async function deleteHistorySubmission(pool, { user, submissionId }) {
+  if (user.role !== 'treasurer') {
+    throw httpError('Only the treasurer can delete GCash payment records.', 403);
+  }
+  const id = parseInt(submissionId, 10);
+  if (!id) throw httpError('GCash payment record not found.', 404);
+
+  const [rows] = await pool.execute(
+    'SELECT * FROM gcash_payment_submissions WHERE id = ?',
+    [id]
+  );
+  const submission = rows[0];
+  if (!submission) throw httpError('GCash payment record not found.', 404);
+  if (parseInt(user.barangay_id, 10) !== parseInt(submission.barangay_id, 10)) {
+    throw httpError('You can only delete GCash payments from your barangay.', 403);
+  }
+  if (!['verified', 'rejected'].includes(submission.status)) {
+    throw httpError('This GCash payment is still awaiting verification.', 400);
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    if (submission.status === 'verified') {
+      if (submission.transaction_type === 'loan') {
+        await reverseLoanGcashPayment(connection, submission);
+      } else {
+        await reverseMachineryGcashPayment(connection, submission);
+      }
+    } else if (submission.transaction_type === 'machinery') {
+      await clearRejectedMachineryProof(connection, submission);
+    }
+
+    await execOrSkip(
+      connection,
+      `DELETE FROM due_date_notifications
+       WHERE reference_id = ?
+         AND (
+           reference_type = 'gcash_payment_submission'
+           OR notification_type IN (
+             'gcash_payment_verified',
+             'gcash_payment_rejected',
+             'treasurer_gcash_payment_submitted'
+           )
+         )`,
+      [id]
+    );
+    await connection.execute('DELETE FROM gcash_payment_submissions WHERE id = ?', [id]);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  unlinkQuiet(submission.proof_path);
+  return { id };
+}
+
 async function listMineForTransaction(pool, farmerId, transactionType, referenceId) {
   const [rows] = await pool.execute(
     `SELECT id, transaction_type, reference_id, reference_number, proof_path, payment_date,
@@ -1006,6 +1300,7 @@ module.exports = {
   rejectSubmission,
   listPendingSubmissions,
   listBarangayHistory,
+  deleteHistorySubmission,
   listMineForTransaction,
   lookupLatestSubmission,
   getSubmissionById,

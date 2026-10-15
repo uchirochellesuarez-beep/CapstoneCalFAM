@@ -176,8 +176,7 @@
         </div>
         <div class="inv2-body">
           <div v-if="loading" class="inv2-empty">
-            <div class="loading-spinner"></div>
-            <div>{{ $t('ui.loadingMachinery') }}</div>
+            <ContentSkeleton variant="cards" :label="$t('ui.loadingMachinery')" />
           </div>
 
           <template v-if="!loading && invView === 'table'">
@@ -316,7 +315,15 @@
             </div>
             <div v-else v-for="m in invPaged" :key="'c' + m.id" class="inv2-card">
               <div class="inv2-card-img">
-                <img v-if="getImageUrl(m.machinery_picture)" :src="getImageUrl(m.machinery_picture)" :alt="m.machinery_name" @error="handleImageError" />
+                <MachineryPhoto
+                  v-if="getImageUrl(m.machinery_picture)"
+                  :src="getImageUrl(m.machinery_picture)"
+                  :alt="m.machinery_name"
+                >
+                  <div class="inv2-card-img-fallback">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                  </div>
+                </MachineryPhoto>
                 <div v-else class="inv2-card-img-fallback">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                 </div>
@@ -447,8 +454,7 @@
         </div>
         <div class="inv2-body">
           <div v-if="loading" class="inv2-empty">
-            <div class="loading-spinner"></div>
-            <div>{{ $t('ui.loadingMachinery') }}</div>
+            <ContentSkeleton variant="cards" :label="$t('ui.loadingMachinery')" />
           </div>
 
           <template v-if="!loading && invView === 'table'">
@@ -591,7 +597,15 @@
             </div>
             <div v-else v-for="m in invPaged" :key="'pc' + m.id" class="inv2-card">
               <div class="inv2-card-img">
-                <img v-if="getImageUrl(m.machinery_picture)" :src="getImageUrl(m.machinery_picture)" :alt="m.machinery_name" @error="handleImageError" />
+                <MachineryPhoto
+                  v-if="getImageUrl(m.machinery_picture)"
+                  :src="getImageUrl(m.machinery_picture)"
+                  :alt="m.machinery_name"
+                >
+                  <div class="inv2-card-img-fallback">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                  </div>
+                </MachineryPhoto>
                 <div v-else class="inv2-card-img-fallback">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                 </div>
@@ -711,8 +725,7 @@
           <tbody>
             <tr v-if="loading">
               <td colspan="8" class="loading-cell">
-                <div class="loading-spinner"></div>
-                <span>{{ $t('ui.loadingBookings') }}</span>
+                <ContentSkeleton variant="table" :label="$t('ui.loadingBookings')" />
               </td>
             </tr>
             <tr v-else-if="bookings.length === 0">
@@ -759,8 +772,7 @@
 
         <div class="inv2-mobile-list bookings-mobile-list">
           <div v-if="loading" class="inv2-empty">
-            <div class="loading-spinner"></div>
-            <div>{{ $t('ui.loadingBookings') }}</div>
+            <ContentSkeleton variant="list" :label="$t('ui.loadingBookings')" />
           </div>
           <div v-else-if="bookings.length === 0" class="inv2-empty">
             <div>{{ $t('ui.noBookings') }}</div>
@@ -863,6 +875,7 @@
                 <div class="form-group">
                   <label class="form-label">{{ $t('ui.machineryNameReq') }}</label>
                   <input v-model="machineryForm.machinery_name" type="text" class="form-input" required />
+                  <p class="form-hint">Each machine in this barangay needs its own name. A duplicate name is not allowed.</p>
                 </div>
                 <div class="form-group">
                   <label class="form-label">{{ $t('ui.machineryTypeReq') }}</label>
@@ -1170,9 +1183,11 @@ import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { machineryStatusLabel } from '../utils/machineryStatus'
 import { mediaUrl } from '../utils/apiBase'
 import { compressImageFile } from '../utils/compressImage'
+import MachineryPhoto from '../components/MachineryPhoto.vue'
 
 export default {
   name: 'MachineryManagementPage',
+  components: { MachineryPhoto },
   setup() {
     const machineryStore = useMachineryStore()
     const authStore = useAuthStore()
@@ -1458,6 +1473,18 @@ export default {
       machineryStore.fetchBookings(filters.value)
     }
 
+    const machineryNameKey = (name) => String(name || '').replace(/\s+/g, ' ').trim().toLowerCase()
+
+    const duplicateMachineryName = (name, barangayId, excludeId = null) => {
+      const key = machineryNameKey(name)
+      if (!key) return false
+      return inventory.value.some((machine) => {
+        if (excludeId != null && Number(machine.id) === Number(excludeId)) return false
+        if (String(machine.barangay_id) !== String(barangayId)) return false
+        return machineryNameKey(machine.machinery_name) === key
+      })
+    }
+
     const addMachinery = async () => {
       try {
         // For presidents, automatically use their barangay
@@ -1475,6 +1502,13 @@ export default {
             ? parseInt(machineryForm.value.barangay_id) 
             : machineryForm.value.barangay_id
         }
+
+        const machineryName = String(machineryForm.value.machinery_name || '').replace(/\s+/g, ' ').trim()
+        if (duplicateMachineryName(machineryName, barangayId)) {
+          validationError.value = 'This machinery name is already used in this barangay. Each machine needs its own name.'
+          setTimeout(() => { validationError.value = '' }, 5000)
+          return
+        }
         
         const memberPrice = parsePriceValue(machineryForm.value.member_price)
         const nonMemberPrice = parsePriceValue(machineryForm.value.non_member_price)
@@ -1485,7 +1519,7 @@ export default {
         }
         
         const data = {
-          machinery_name: machineryForm.value.machinery_name.trim(),
+          machinery_name: machineryName,
           machinery_type: machineryForm.value.machinery_type.trim(),
           description: machineryForm.value.description ? machineryForm.value.description.trim() : null,
           price_per_unit: memberPrice,  // For backward compatibility
@@ -1609,6 +1643,12 @@ export default {
         }
 
         validationError.value = ''
+        const machineryName = String(machineryForm.value.machinery_name || '').replace(/\s+/g, ' ').trim()
+        if (duplicateMachineryName(machineryName, barangayId, machineryForm.value.id)) {
+          validationError.value = 'This machinery name is already used in this barangay. Each machine needs its own name.'
+          setTimeout(() => { validationError.value = '' }, 5000)
+          return
+        }
         
         const memberPrice = parsePriceValue(machineryForm.value.member_price)
         const nonMemberPrice = parsePriceValue(machineryForm.value.non_member_price)
@@ -1619,7 +1659,7 @@ export default {
         }
         
         const data = {
-          machinery_name: machineryForm.value.machinery_name.trim(),
+          machinery_name: machineryName,
           machinery_type: machineryForm.value.machinery_type.trim(),
           description: machineryForm.value.description ? machineryForm.value.description.trim() : null,
           price_per_unit: memberPrice,  // For backward compatibility
@@ -3384,6 +3424,7 @@ export default {
 }
 .inv2-card-status-badge {
   position: absolute;
+  z-index: 2;
   top: 8px;
   right: 8px;
   font-size: 10px !important;

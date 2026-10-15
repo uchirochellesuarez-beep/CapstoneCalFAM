@@ -97,7 +97,7 @@
                   </thead>
                   <tbody>
                     <tr v-if="loading">
-                      <td colspan="6" class="table-empty">{{ $t('common.loading') }}</td>
+                      <td colspan="6" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                     </tr>
                     <tr v-else-if="meContributions.length === 0">
                       <td colspan="6" class="table-empty">{{ $t('ui.noShareCapitalPayments') }}</td>
@@ -132,7 +132,7 @@
               </div>
 
               <div class="fin-mobile-list ledger-mobile-list">
-                <div v-if="loading" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+                <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
                 <div v-else-if="meContributions.length === 0" class="fin-mobile-empty">{{ $t('ui.noShareCapitalPayments') }}</div>
                 <article
                   v-else
@@ -203,7 +203,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="loading">
-                    <td colspan="5" class="table-empty">{{ $t('common.loading') }}</td>
+                    <td colspan="5" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                   </tr>
                   <tr v-else-if="meWithdrawals.length === 0">
                     <td colspan="5" class="table-empty">{{ $t('ui.noWithdrawals') }}</td>
@@ -235,7 +235,7 @@
             </div>
 
             <div class="fin-mobile-list ledger-mobile-list">
-              <div v-if="loading" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+              <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
               <div v-else-if="meWithdrawals.length === 0" class="fin-mobile-empty">{{ $t('ui.noWithdrawals') }}</div>
               <article
                 v-else
@@ -306,7 +306,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="loading">
-                    <td colspan="5" class="table-empty">{{ $t('common.loading') }}</td>
+                    <td colspan="5" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                   </tr>
                   <tr v-else-if="meAssociationDues.length === 0">
                     <td colspan="5" class="table-empty">{{ $t('ui.noAssociationDues') }}</td>
@@ -327,7 +327,7 @@
             </div>
 
             <div class="fin-mobile-list ledger-mobile-list">
-              <div v-if="loading" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+              <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
               <div v-else-if="meAssociationDues.length === 0" class="fin-mobile-empty">{{ $t('ui.noAssociationDues') }}</div>
               <article
                 v-else
@@ -384,6 +384,24 @@
         </div>
 
         <template v-else>
+        <div v-if="canEdit" class="fee-setting-card">
+          <label class="inline-label" for="share-fee-amount">{{ $t('ui.shareFeeLabel') }}</label>
+          <div class="fee-setting-row">
+            <input
+              id="share-fee-amount"
+              class="input"
+              type="number"
+              min="0.01"
+              step="0.01"
+              inputmode="decimal"
+              v-model="feeDraft"
+            />
+            <button type="button" class="btn btn-small" @click="saveShareFee" :disabled="feeSaving || loading">
+              {{ feeSaving ? $t('common.saving') : $t('ui.saveAmount') }}
+            </button>
+          </div>
+          <p class="fee-setting-hint">{{ $t('ui.shareFeeHint') }}</p>
+        </div>
         <div class="stats-group stats-group--overview">
           <div class="stats-grid stats-grid--overview">
             <div class="stat-card">
@@ -449,7 +467,7 @@
                   </thead>
                   <tbody>
                     <tr v-if="loading">
-                      <td colspan="5" class="table-empty">{{ $t('common.loading') }}</td>
+                      <td colspan="5" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                     </tr>
                     <tr v-else-if="farmers.length === 0">
                       <td colspan="5" class="table-empty">{{ $t('ui.noMembersBarangay') }}</td>
@@ -481,7 +499,7 @@
               </div>
 
               <div class="fin-mobile-list">
-                <div v-if="loading" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+                <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
                 <div v-else-if="farmers.length === 0" class="fin-mobile-empty">{{ $t('ui.noMembersBarangay') }}</div>
                 <div v-else-if="filteredFarmers.length === 0" class="fin-mobile-empty">{{ $t('ui.noMembersMatch') }}</div>
                 <article
@@ -550,7 +568,7 @@
                 </div>
                 <div class="sc-member-total">
                   <span class="sc-member-total-label">{{ $t('ui.totalShareCapital') }}</span>
-                  <span class="sc-member-total-value">₱{{ formatMoney(selectedTotals.share_capital_collected) }}</span>
+                  <span class="sc-member-total-value">₱{{ formatMoney(displayedShareTotal) }}</span>
                 </div>
               </div>
 
@@ -570,7 +588,7 @@
                   </div>
                   <div class="payment-field payment-field--amount">
                     <label class="inline-label">{{ $t('ui.sixMonthShare') }}</label>
-                    <input class="input" type="number" :value="100" disabled />
+                    <input class="input" type="number" :value="shareCapitalAmount" disabled />
                   </div>
                   <button type="button" class="btn btn-primary-action payment-form-submit" @click="recordContribution" :disabled="loading">{{ $t('common.recordPrintReceipt') }}</button>
                 </div>
@@ -602,7 +620,7 @@
                     </thead>
                     <tbody>
                       <tr v-if="loadingFarmer">
-                        <td :colspan="canEdit ? 7 : 6" class="table-empty">{{ $t('common.loading') }}</td>
+                        <td :colspan="canEdit ? 7 : 6" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                       </tr>
                       <tr v-else-if="membershipContributions.length === 0">
                         <td :colspan="canEdit ? 7 : 6" class="table-empty">{{ $t('ui.noShareCapitalContrib') }}</td>
@@ -645,6 +663,7 @@
                           </template>
                           <template v-else>
                             <button v-if="canEditContribution(c)" class="btn btn-small" @click="startEdit(c)">{{ $t('common.edit') }}</button>
+                            <button v-if="canEditContribution(c)" type="button" class="btn btn-small btn-delete" @click.stop="askDeleteContribution(c)">{{ $t('common.delete') }}</button>
                             <span v-else class="muted">{{ $t('common.auto') }}</span>
                           </template>
                         </td>
@@ -654,7 +673,7 @@
                 </div>
 
                 <div class="contribution-history-mobile">
-                  <div v-if="loadingFarmer" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+                  <div v-if="loadingFarmer" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
                   <div v-else-if="membershipContributions.length === 0" class="fin-mobile-empty">
                     {{ $t('ui.noShareCapitalContrib') }}
                   </div>
@@ -718,7 +737,13 @@
                           class="btn btn-small fin-mobile-action"
                           @click="startEdit(c)"
                         >{{ $t('common.edit') }}</button>
-                        <span v-else class="muted">{{ $t('common.auto') }}</span>
+                        <button
+                          v-if="editingId !== c.id && canEditContribution(c)"
+                          type="button"
+                          class="btn btn-small btn-delete fin-mobile-action"
+                          @click.stop="askDeleteContribution(c)"
+                        >{{ $t('common.delete') }}</button>
+                        <span v-else-if="!canEditContribution(c)" class="muted">{{ $t('common.auto') }}</span>
                       </template>
                     </div>
                   </article>
@@ -749,6 +774,28 @@
               :kind="receiptKind"
               @close="closeReceiptModal"
             />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="deleteTarget"
+          class="app-modal-overlay sc-alert-overlay"
+          :class="{ 'light-theme': isLight }"
+          @click.self="onDeleteBackdrop"
+        >
+          <div class="modal-content sc-alert-modal" role="alertdialog" aria-modal="true">
+            <h3 class="sc-alert-title">{{ $t('ui.deleteShareTitle') }}</h3>
+            <p class="sc-alert-message">{{ deleteConfirmText }}</p>
+            <div class="sc-confirm-actions">
+              <button type="button" class="btn btn-muted" @click="closeDeleteModal" :disabled="!!deletingId">{{ $t('common.cancel') }}</button>
+              <button type="button" class="btn btn-delete" @click="confirmDeleteContribution" :disabled="!!deletingId">
+                {{ deletingId ? $t('ui.deleting') : $t('common.delete') }}
+              </button>
+            </div>
           </div>
         </div>
       </Transition>
@@ -814,6 +861,21 @@ const isLedgerView = computed(() => {
   return true
 })
 const canEdit = computed(() => isTreasurer.value || isAdmin.value)
+const shareCapitalAmount = ref(100)
+const feeDraft = ref('100')
+const feeSaving = ref(false)
+const deleteTarget = ref(null)
+const deletingId = ref(null)
+let deleteOpenedAt = 0
+
+const deleteConfirmText = computed(() => {
+  const row = deleteTarget.value
+  if (!row) return ''
+  return t('ui.deleteShareConfirm', {
+    date: formatDate(row.contribution_date),
+    amount: formatMoney(row.amount)
+  })
+})
 
 const barangays = ref([])
 const selectedBarangayId = ref('')
@@ -885,6 +947,12 @@ const membershipContributions = computed(() =>
   selectedContributions.value.filter(
     (c) => String(c.contribution_kind || 'membership') === 'membership'
   )
+)
+
+const displayedShareTotal = computed(() =>
+  membershipContributions.value
+    .filter((c) => String(c.status || '') === 'confirmed')
+    .reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0)
 )
 
 const meContributions = ref([])
@@ -1046,6 +1114,61 @@ function onBarangayChange() {
   selectedContributions.value = []
   searchQuery.value = ''
   loadOverview()
+  loadFeeSettings()
+}
+
+function activeBarangayId() {
+  if (isAdmin.value) return selectedBarangayId.value || ''
+  return authStore.currentUser?.barangay_id || ''
+}
+
+async function loadFeeSettings() {
+  const barangayId = activeBarangayId()
+  if (!barangayId || !canEdit.value) return
+  try {
+    const params = new URLSearchParams()
+    if (isAdmin.value) params.set('barangay_id', String(barangayId))
+    const res = await apiFetch(`/api/share-capital/fee-settings?${params}`)
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) return
+    const amount = Number(data.share_capital_amount)
+    if (Number.isFinite(amount) && amount > 0) {
+      shareCapitalAmount.value = amount
+      feeDraft.value = String(amount)
+    }
+  } catch {
+    /* keep the last known amount */
+  }
+}
+
+async function saveShareFee() {
+  const amount = Number(feeDraft.value)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showAlert(t('ui.feeInvalid'), 'error')
+    return
+  }
+  feeSaving.value = true
+  try {
+    const res = await apiFetch('/api/share-capital/fee-settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        share_capital_amount: amount,
+        ...(isAdmin.value ? { barangay_id: activeBarangayId() } : {})
+      })
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.feeSaveFailed'))
+    }
+    shareCapitalAmount.value = Number(data.share_capital_amount)
+    feeDraft.value = String(shareCapitalAmount.value)
+    showAlert(t('ui.feeSaved'), 'success')
+  } catch (e) {
+    showAlert(e.message, 'error')
+  } finally {
+    feeSaving.value = false
+  }
 }
 
 async function loadOverview() {
@@ -1087,6 +1210,12 @@ async function loadOverview() {
   }
 }
 
+function clearMemberShareView() {
+  selectedContributions.value = []
+  selectedTotals.value = { share_capital_collected: 0 }
+  editingId.value = null
+}
+
 async function loadFarmerDetails(farmerId) {
   loadingFarmer.value = true
   try {
@@ -1095,7 +1224,8 @@ async function loadFarmerDetails(farmerId) {
     if (!res.ok || !data?.success) {
       throw new Error(data?.message || 'Failed to load farmer records')
     }
-    selectedTotals.value = data.totals || selectedTotals.value
+    if (selectedFarmer.value && String(selectedFarmer.value.id) !== String(farmerId)) return
+    selectedTotals.value = data.totals || { share_capital_collected: 0 }
     selectedContributions.value = data.contributions || []
   } catch (e) {
     showAlert(e.message, 'error')
@@ -1106,7 +1236,7 @@ async function loadFarmerDetails(farmerId) {
 
 async function selectFarmer(f) {
   selectedFarmer.value = f
-  editingId.value = null
+  clearMemberShareView()
   await loadFarmerDetails(f.id)
 }
 
@@ -1125,7 +1255,6 @@ async function recordContribution() {
       body: JSON.stringify({
         farmer_id: selectedFarmer.value.id,
         contribution_date: newContributionDate.value,
-        amount: 100,
         payment_method: newContributionMethod.value
       })
     })
@@ -1169,6 +1298,45 @@ function cancelEdit() {
   editStatus.value = 'confirmed'
 }
 
+function askDeleteContribution(row) {
+  deleteTarget.value = row
+  deleteOpenedAt = Date.now()
+}
+
+function closeDeleteModal() {
+  if (deletingId.value) return
+  deleteTarget.value = null
+}
+
+function onDeleteBackdrop() {
+  if (Date.now() - deleteOpenedAt < 500) return
+  closeDeleteModal()
+}
+
+async function confirmDeleteContribution() {
+  const row = deleteTarget.value
+  if (!row?.id || deletingId.value) return
+  deletingId.value = row.id
+  try {
+    const res = await apiFetch(`/api/share-capital/contributions/${row.id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteShareFailed'))
+    }
+    deleteTarget.value = null
+    if (editingId.value === row.id) cancelEdit()
+    if (selectedFarmer.value) {
+      await loadFarmerDetails(selectedFarmer.value.id)
+      await loadOverview()
+    }
+    showAlert(t('ui.deleteShareSuccess'), 'success')
+  } catch (e) {
+    showAlert(e.message, 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
+
 async function saveEdit(id) {
   if (!editDate.value) {
     showAlert('Please select a date', 'error')
@@ -1182,7 +1350,6 @@ async function saveEdit(id) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contribution_date: editDate.value,
-        amount: 100,
         status: editStatus.value
       })
     })
@@ -1244,7 +1411,7 @@ function updateIsMobile(e) {
 }
 
 const showFarmerModal = computed(() => isMobile.value && !!selectedFarmer.value)
-const anyShareCapitalModalOpen = computed(() => showFarmerModal.value || alert.value.show || showReceiptModal.value)
+const anyShareCapitalModalOpen = computed(() => showFarmerModal.value || alert.value.show || showReceiptModal.value || !!deleteTarget.value)
 
 function closeFarmerModal() {
   cancelEdit()
@@ -1297,6 +1464,7 @@ async function loadPageData() {
       await loadBarangays()
     } else {
       await loadOverview()
+      await loadFeeSettings()
     }
   }
 }
@@ -2110,6 +2278,56 @@ async function loadPageData() {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-main);
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-delete {
+  background: #991b1b;
+  color: #fff;
+  border: 1px solid #7f1d1d;
+}
+
+.fee-setting-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-bottom: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fee-setting-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fee-setting-row .input {
+  width: 8.5rem;
+}
+
+.fee-setting-hint,
+.sc-alert-title {
+  margin: 0;
+}
+
+.fee-setting-hint {
+  flex: 1 1 12rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.sc-alert-title {
+  font-size: 1.05rem;
+}
+
+.sc-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
 }
 
 .btn-muted:hover:not(:disabled) {

@@ -11,7 +11,7 @@
           <button type="button" class="proof-preview-close" :aria-label="$t('common.close')" @click="$emit('close')">×</button>
         </div>
         <div class="proof-preview-body">
-          <img :src="src" :alt="$t('ui.proof')" class="proof-preview-image" />
+          <AppImage :src="src" :alt="$t('ui.proof')" img-class="proof-preview-image" layout="block" reserve />
         </div>
       </div>
     </div>

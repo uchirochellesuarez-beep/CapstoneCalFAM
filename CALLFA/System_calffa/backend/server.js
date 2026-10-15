@@ -44,6 +44,9 @@ const { dropUnusedActivityLogs } = require('./schema/dropUnusedActivityLogs');
 const { dropUnusedLegacyTables } = require('./schema/dropUnusedLegacyTables');
 const { dropUnusedMachineryBookingColumns } = require('./schema/dropUnusedMachineryBookingColumns');
 const { ensureMachineryCoreTables } = require('./schema/ensureMachineryCoreTables');
+const { ensureHistoricalImportSchema } = require('./schema/ensureHistoricalImportSchema');
+const { ensureUniqueMachineryNameSchema } = require('./schema/ensureUniqueMachineryNameSchema');
+const { ensureCollectionFeeSchema } = require('./schema/ensureCollectionFeeSchema');
 const { ensureReceiptTables } = require('./services/receipt-service');
 const { ensureFarmersEmailColumn, ensureFarmersGoogleIdColumn } = require('./utils/googleAuth');
 const pool = require('./db');
@@ -87,6 +90,7 @@ app.use('/api/loans', loansRoutes);
 app.use('/api/loan-payments', loanPaymentsRoutes);
 app.use('/api/ml-assessments', mlAssessmentsRoutes);
 // Machinery routes
+app.use('/api/machinery/historical-import', require('./routes/historical-import'));
 app.use('/api/machinery', machineryRoutes);
 app.use('/api/machinery-financial', machineryFinancialRoutes);
 app.use('/api/receipts', require('./routes/receipts'));
@@ -128,6 +132,9 @@ if (require.main === module) {
       () => ensureMachineryInterestRateSchema(pool),
       () => ensureInterestTrackingSchema(pool),
       () => ensureGcashPaymentSchema(pool),
+      () => ensureHistoricalImportSchema(pool),
+      () => ensureUniqueMachineryNameSchema(pool),
+      () => ensureCollectionFeeSchema(pool),
       () => dropUnusedActivityLogs(pool),
       () => dropUnusedLegacyTables(pool),
       () => dropUnusedMachineryBookingColumns(pool)

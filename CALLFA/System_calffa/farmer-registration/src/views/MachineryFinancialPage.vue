@@ -224,6 +224,14 @@
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
+                      <button type="button" @click="deleteExpense(expense.id)" class="table-action-btn table-action-delete" :title="$t('common.delete')" :aria-label="$t('common.delete')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -251,6 +259,7 @@
                     @click="viewReceipt(expense.reference_number)"
                   >{{ $t('common.viewReceipt') }}</button>
                   <button type="button" class="fin-mobile-action-text fin-action-edit" @click="editExpense(expense)">{{ $t('common.edit') }}</button>
+                  <button type="button" class="fin-mobile-action-text fin-action-delete" @click="deleteExpense(expense.id)">{{ $t('common.delete') }}</button>
                 </div>
               </article>
             </div>
@@ -604,6 +613,25 @@
           </div>
         </div>
 
+        <div v-if="canConfigureDues && duesFeeReady" class="fee-setting-card">
+          <label class="inline-label" for="dues-fee-amount">{{ $t('ui.duesFeeLabel') }}</label>
+          <div class="fee-setting-row">
+            <input
+              id="dues-fee-amount"
+              class="input"
+              type="number"
+              min="0.01"
+              step="0.01"
+              inputmode="decimal"
+              v-model="duesFeeDraft"
+            />
+            <button type="button" class="btn btn-small" @click="saveDuesFee" :disabled="duesFeeSaving">
+              {{ duesFeeSaving ? $t('common.saving') : $t('ui.saveAmount') }}
+            </button>
+          </div>
+          <p class="fee-setting-hint">{{ $t('ui.duesFeeHint') }}</p>
+        </div>
+
         <!-- Two Column Layout -->
         <div class="grid-2">
           <!-- Left Column: Farmers List -->
@@ -741,7 +769,7 @@
               <div class="stats-grid compact">
                 <div class="stat-card">
                   <div class="stat-label">{{ $t('ui.duesAmount') }}</div>
-                  <div class="stat-value">₱120</div>
+                  <div class="stat-value">₱{{ formatNumber(associationDuesAmount) }}</div>
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">{{ $t('ui.currentCycle') }}</div>
@@ -762,7 +790,7 @@
                   </div>
                   <div class="form-field">
                     <label class="inline-label">{{ $t('ui.amount') }}</label>
-                    <input class="input" type="number" :value="120" disabled />
+                    <input class="input" type="number" :value="associationDuesAmount" disabled />
                   </div>
                   <div class="form-field">
                     <label class="inline-label">{{ $t('ui.paymentMethod') }}</label>
@@ -1706,7 +1734,7 @@
                       </span>
                     </td>
                     <td>{{ gcashHistoryNote(row) }}</td>
-                    <td class="actions-cell">
+                    <td class="actions-cell members-action-row">
                       <button
                         v-if="row.proof_path"
                         type="button"
@@ -1715,7 +1743,21 @@
                       >
                         {{ $t('common.viewProof') }}
                       </button>
-                      <span v-else>—</span>
+                      <button
+                        v-if="canManage"
+                        type="button"
+                        class="table-action-btn table-action-delete"
+                        :title="$t('common.delete')"
+                        :aria-label="$t('common.delete')"
+                        @click="openGcashDelete(row)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -1759,13 +1801,22 @@
                     <span>{{ gcashHistoryNote(row) }}</span>
                   </div>
                 </div>
-                <div v-if="row.proof_path" class="fin-mobile-card-actions">
+                <div v-if="row.proof_path || canManage" class="fin-mobile-card-actions">
                   <button
+                    v-if="row.proof_path"
                     type="button"
                     class="btn-secondary btn-sm fin-mobile-action"
                     @click="openProofPreview(paymentProofUrl(row.proof_path))"
                   >
                     {{ $t('common.viewProof') }}
+                  </button>
+                  <button
+                    v-if="canManage"
+                    type="button"
+                    class="fin-mobile-action-text fin-action-delete"
+                    @click="openGcashDelete(row)"
+                  >
+                    {{ $t('common.delete') }}
                   </button>
                 </div>
               </article>
@@ -2109,8 +2160,7 @@
         
         <!-- Loading State (initial generate only) -->
         <div v-if="reportLoading && !reportData" class="report-loading">
-          <div class="loading-spinner"></div>
-          <p>{{ $t('ui.generatingReport') }}</p>
+          <ContentSkeleton variant="dashboard" :label="$t('ui.generatingReport')" />
         </div>
         
         <!-- Report Display -->
@@ -2121,8 +2171,7 @@
           id="printable-report"
         >
           <div v-if="reportLoading" class="report-refresh-overlay" aria-live="polite">
-            <div class="loading-spinner"></div>
-            <p>{{ $t('ui.updatingReport') }}</p>
+            <ContentSkeleton variant="chart" :rows="1" :label="$t('ui.updatingReport')" />
           </div>
           <!-- Report Header (CFA = Barangay scope; period from filter/API; no contact/address) -->
           <div class="report-header">
@@ -3156,7 +3205,7 @@
                 <div class="form-group">
                   <label>{{ $t('ui.machineryEquipmentReq') }}</label>
                   <select v-model="expenseForm.machinery_id" class="form-input" :disabled="completingPendingExpense">
-                    <option value="">-- Select Machinery/Equipment --</option>
+                    <option value="">Select machinery</option>
                     <option v-for="m in scopedMachinery" :key="m.id" :value="m.id">
                       {{ m.machinery_name }} ({{ m.machinery_type }})
                     </option>
@@ -3232,15 +3281,21 @@
       </Transition>
     </Teleport>
 
-    <!-- INCOME FORM MODAL -->
-    <div v-if="showIncomeForm" class="modal-overlay" @click.self="showIncomeForm = false">
-      <div class="modal-content">
+    <!-- INCOME FORM MODAL (above the site header) -->
+    <Teleport to="body">
+    <div
+      v-if="showIncomeForm"
+      class="modal-overlay app-modal-overlay mf-income-overlay"
+      :class="{ 'light-theme': isLight }"
+      @click.self="showIncomeForm = false"
+    >
+      <div class="modal-content mf-income-modal" @click.stop>
         <div class="modal-header">
           <h2>{{ editingManualIncomeId ? 'Edit Other Barangay Income' : 'Record Other Barangay Income' }}</h2>
-          <button @click="showIncomeForm = false" class="btn-close">×</button>
+          <button type="button" @click="showIncomeForm = false" class="btn-close" :aria-label="$t('common.close')">×</button>
         </div>
         <div class="modal-body">
-          <p class="modal-summary">
+          <p class="income-source-hint">
             Record income from donations, rentals, fundraising, sales, or another source outside machinery bookings and association dues.
           </p>
 
@@ -3283,6 +3338,38 @@
         </div>
       </div>
     </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="gcashDeleteRow"
+        class="modal-overlay app-modal-overlay mf-gcash-delete-overlay"
+        :class="{ 'light-theme': isLight }"
+        @click.self="closeGcashDelete"
+      >
+        <div class="modal-content mf-gcash-delete-modal" role="alertdialog" aria-labelledby="gcash-delete-title" @click.stop>
+          <div class="modal-header">
+            <h2 id="gcash-delete-title">Delete GCash record?</h2>
+            <button type="button" class="btn-close" :aria-label="$t('common.close')" :disabled="gcashDeleteBusy" @click="closeGcashDelete">×</button>
+          </div>
+          <div class="modal-body">
+            <p class="gcash-delete-copy">
+              Delete the GCash payment for <strong>{{ gcashDeleteRow.farmer_name }}</strong>
+              <template v-if="gcashDeleteRow.status === 'verified'">
+                (₱{{ formatNumber(gcashDeleteRow.amount_paid) }})
+              </template>.
+              Income, the farmer's booking or loan payment, the receipt, and the other records connected to this payment will also be removed.
+            </p>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" :disabled="gcashDeleteBusy" @click="closeGcashDelete">{{ $t('common.cancel') }}</button>
+              <button type="button" class="btn-gcash-delete" :disabled="gcashDeleteBusy" @click="deleteGcashHistory(gcashDeleteRow)">
+                {{ gcashDeleteBusy ? $t('common.processing') : $t('common.delete') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- COLLECTION FORM MODAL (teleported above header; scroll-locked) -->
     <Teleport to="body">
@@ -3398,7 +3485,7 @@
           <div v-if="selectedFarmer" class="form-group highlight-box">
             <label>{{ $t('ui.duesAmount') }}:</label>
             <div class="amount-display">
-              <span class="amount-large">₱120.00</span>
+              <span class="amount-large">₱{{ formatNumber(associationDuesAmount) }}</span>
               <small>(Monthly dues for 6-month period)</small>
             </div>
           </div>
@@ -3678,6 +3765,11 @@ const reportBarangayNameForReport = computed(() => {
 
 // Check if user can manage (only treasurer)
 const canManage = computed(() => isTreasurer.value);
+const canConfigureDues = computed(() => isTreasurer.value || isAdmin.value);
+const associationDuesAmount = ref(120);
+const duesFeeDraft = ref('120');
+const duesFeeSaving = ref(false);
+const duesFeeReady = computed(() => !isAdmin.value || !!selectedBarangayId.value);
 
 // President and Treasurer can manage association dues transactions
 const canCollectDues = computed(() => ['president', 'treasurer'].includes(userRole.value));
@@ -4715,6 +4807,42 @@ const gcashHistoryNote = (row) => {
   if (!row) return '';
   if (row.status === 'rejected') return row.rejection_reason || '';
   return row.receipt_number || row.remarks || '';
+};
+
+const gcashDeleteRow = ref(null);
+const gcashDeleteBusy = ref(false);
+
+const openGcashDelete = (row) => {
+  if (!row?.id || !canManage.value || gcashDeleteBusy.value) return;
+  gcashDeleteRow.value = row;
+};
+
+const closeGcashDelete = () => {
+  if (gcashDeleteBusy.value) return;
+  gcashDeleteRow.value = null;
+};
+
+const deleteGcashHistory = async (row) => {
+  if (!row?.id || !canManage.value || gcashDeleteBusy.value) return;
+  gcashDeleteBusy.value = true;
+  try {
+    const response = await financialDelete(`${API_BASE_URL}/gcash-payments/${row.id}`);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false) {
+      showAlert(data.message || 'Failed to delete GCash payment', 'error');
+      return;
+    }
+    gcashDeleteRow.value = null;
+    showAlert('GCash payment deleted', 'success');
+    await loadGcashHistory();
+    loadIncome();
+    loadCollections();
+    loadProfitSummary();
+  } catch (error) {
+    showAlert(error.message || 'Failed to delete GCash payment', 'error');
+  } finally {
+    gcashDeleteBusy.value = false;
+  }
 };
 
 const loadGcashHistory = async () => {
@@ -6858,6 +6986,62 @@ const showAlert = (message, type = 'success') => {
 };
 
 // Monthly Dues Methods
+const duesBarangayId = () => {
+  if (isAdmin.value) return selectedBarangayId.value || '';
+  return userBarangayId.value || '';
+};
+
+const loadDuesFee = async () => {
+  const barangayId = duesBarangayId();
+  if (!barangayId) return;
+  try {
+    const params = new URLSearchParams();
+    if (isAdmin.value) params.set('barangay_id', String(barangayId));
+    const response = await fetch(`/api/share-capital/fee-settings?${params}`, {
+      headers: authHeaders()
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) return;
+    const amount = Number(data.association_dues_amount);
+    if (Number.isFinite(amount) && amount > 0) {
+      associationDuesAmount.value = amount;
+      duesFeeDraft.value = String(amount);
+    }
+  } catch {
+    /* keep the last known amount */
+  }
+};
+
+const saveDuesFee = async () => {
+  const amount = Number(duesFeeDraft.value);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showAlert(t('ui.feeInvalid'), 'error');
+    return;
+  }
+  duesFeeSaving.value = true;
+  try {
+    const response = await fetch('/api/share-capital/fee-settings', {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        association_dues_amount: amount,
+        ...(isAdmin.value ? { barangay_id: duesBarangayId() } : {})
+      })
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.feeSaveFailed'));
+    }
+    associationDuesAmount.value = Number(data.association_dues_amount);
+    duesFeeDraft.value = String(associationDuesAmount.value);
+    showAlert(t('ui.feeSaved'), 'success');
+  } catch (error) {
+    showAlert(error.message, 'error');
+  } finally {
+    duesFeeSaving.value = false;
+  }
+};
+
 const loadMonthlyDues = async () => {
   try {
     const params = buildParams({
@@ -6872,6 +7056,7 @@ const loadMonthlyDues = async () => {
 
     if (data.success) {
       monthlyDues.value = data.dues;
+      await loadDuesFee();
     }
   } catch (error) {
     console.error('Error loading monthly dues:', error);
@@ -6970,7 +7155,7 @@ const collectMonthlyDues = async () => {
       duesForm.value.collection_date = new Date().toISOString().split('T')[0];
       duesForm.value.payment_method = 'Cash';
 
-      showAlert(`Association dues recorded: ₱${formatNumber(120)} from ${farmerName}`, 'success');
+      showAlert(`Association dues recorded: ₱${formatNumber(data.amount || associationDuesAmount.value)} from ${farmerName}`, 'success');
 
       if (receiptNum) {
         await showReceiptAfterVerify(receiptNum);
@@ -7004,6 +7189,7 @@ const selectFarmer = (farmer) => {
 };
 watch(selectedBarangayId, async () => {
   if (isAdmin.value) {
+    loadDuesFee();
     await loadMachinery();
     loadProfitSummary();
     loadExpenseBreakdown();
@@ -7077,11 +7263,13 @@ function updateIsMobile(e) {
 const showFarmerModal = computed(() => isMobile.value && !!selectedFarmer.value && activeTab.value === 'dues');
 const anyAppModalOpen = computed(() =>
   showExpenseForm.value ||
+  showIncomeForm.value ||
   showCollectionForm.value ||
   showFarmerModal.value ||
   showDuesForm.value ||
   showGcashConfirmModal.value ||
   showGcashRejectModal.value ||
+  !!gcashDeleteRow.value ||
   showVerifyDpModal.value ||
   showRecordDpModal.value ||
   showRejectDpModal.value ||
@@ -9447,8 +9635,13 @@ html body .financial-container.light-theme .dp-queue-btn:active .dp-queue-badge,
 
 .expense-meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem 0.65rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.65rem 0.75rem;
+  width: 100%;
+}
+
+.expense-meta-grid > .form-group:first-child {
+  grid-column: 1 / -1;
 }
 
 .auto-receipt-inline {
@@ -14054,6 +14247,35 @@ tr.selected {
   margin: 0.75rem 0 0.85rem;
 }
 
+.fee-setting-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fee-setting-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fee-setting-row .input {
+  width: 8.5rem;
+}
+
+.fee-setting-hint {
+  flex: 1 1 12rem;
+  margin: 0;
+  color: rgba(220, 238, 211, 0.78);
+  font-size: 0.82rem;
+}
+
 .dues-form-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -15807,13 +16029,21 @@ tr.selected {
   z-index: 11060 !important;
   align-items: center !important;
   justify-content: center !important;
+  padding: max(1rem, env(safe-area-inset-top, 0px))
+    max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px))
+    max(1rem, env(safe-area-inset-left, 0px)) !important;
+  overflow-y: auto !important;
 }
 
 .mf-expense-overlay .mf-expense-modal.modal-content {
-  width: min(42rem, calc(100vw - 1.5rem)) !important;
-  max-width: min(42rem, calc(100vw - 1.5rem)) !important;
-  max-height: min(88dvh, calc(100dvh - 1.5rem)) !important;
+  width: min(34rem, 100%) !important;
+  max-width: min(34rem, 100%) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(88dvh, calc(100dvh - 2rem)) !important;
   margin: auto !important;
+  border-radius: 16px !important;
   background: #14261c;
   border: 1px solid rgba(74, 222, 128, 0.28);
   color: #ecfdf5;
@@ -15850,13 +16080,22 @@ tr.selected {
   color: #d1fae5;
 }
 
-.mf-expense-overlay .mf-expense-modal .form-input {
-  min-height: 36px;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.85rem;
+.mf-expense-overlay .mf-expense-modal .form-input,
+.mf-expense-overlay .mf-expense-modal select.form-input,
+.mf-expense-overlay .mf-expense-modal input[type='date'].form-input {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  margin: 0;
+  padding: 0 0.75rem;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  line-height: 1.2;
   background: rgba(8, 20, 14, 0.88);
   color: #ecfdf5;
   border-color: rgba(74, 222, 128, 0.28);
+  color-scheme: dark;
 }
 
 .mf-expense-overlay .mf-expense-modal .form-input:disabled {
@@ -15954,62 +16193,273 @@ tr.selected {
 }
 
 @media (max-width: 720px) {
-  .expense-meta-grid {
-    grid-template-columns: 1fr;
+  .modal-overlay.app-modal-overlay.mf-expense-overlay {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: max(0.85rem, env(safe-area-inset-top, 0px))
+      max(0.85rem, env(safe-area-inset-right, 0px))
+      max(0.85rem, env(safe-area-inset-bottom, 0px))
+      max(0.85rem, env(safe-area-inset-left, 0px)) !important;
   }
 
   .mf-expense-overlay .mf-expense-modal.modal-content {
-    width: min(100%, calc(100vw - 1rem)) !important;
-    max-width: min(100%, calc(100vw - 1rem)) !important;
-    max-height: min(92dvh, calc(100dvh - 1rem)) !important;
+    width: min(34rem, 100%) !important;
+    max-width: min(34rem, 100%) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: min(88dvh, calc(100dvh - 1.7rem)) !important;
+    margin: auto !important;
+    border-radius: 16px !important;
   }
 
-  .mf-expense-overlay .mf-expense-modal .modal-header {
-    padding: 0.55rem 0.7rem;
-  }
-
-  .mf-expense-overlay .mf-expense-modal .modal-header h2 {
-    font-size: 0.92rem;
-    line-height: 1.25;
-  }
-
-  .mf-expense-overlay .mf-expense-modal .modal-body {
-    padding: 0.55rem 0.7rem 0.7rem;
-  }
-
+  .expense-meta-grid,
   .expense-items-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem 0.45rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .transaction-context-panel {
-    padding: 0.5rem 0.55rem;
-    margin-bottom: 0.5rem;
+  .expense-meta-grid > .form-group:first-child,
+  .expense-total-group {
+    grid-column: 1 / -1;
+  }
+}
+
+.mf-gcash-delete-overlay.app-modal-overlay {
+  z-index: 12040 !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mf-gcash-delete-overlay .mf-gcash-delete-modal.modal-content {
+  width: min(26rem, 100%) !important;
+  max-width: min(26rem, 100%) !important;
+  height: auto !important;
+  max-height: min(88dvh, calc(100dvh - 2rem)) !important;
+  margin: auto !important;
+  border-radius: 16px !important;
+  background: #14261c;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #ecfdf5;
+}
+
+.mf-gcash-delete-overlay .mf-gcash-delete-modal .modal-header h2,
+.mf-gcash-delete-overlay .mf-gcash-delete-modal .btn-close {
+  color: #ecfdf5;
+}
+
+.mf-gcash-delete-overlay .gcash-delete-copy {
+  margin: 0;
+  color: #d1fae5;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.mf-gcash-delete-overlay .gcash-delete-copy strong {
+  color: #ffffff;
+}
+
+.mf-gcash-delete-overlay .modal-actions {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  background: #14261c;
+}
+
+.mf-gcash-delete-overlay .btn-secondary {
+  color: #ecfdf5;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+}
+
+.mf-gcash-delete-overlay .btn-gcash-delete {
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 12px;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mf-gcash-delete-overlay .btn-gcash-delete:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.mf-gcash-delete-overlay.light-theme .mf-gcash-delete-modal.modal-content,
+.mf-gcash-delete-overlay.light-theme .modal-actions {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #fecaca;
+}
+
+.mf-gcash-delete-overlay.light-theme .mf-gcash-delete-modal .modal-header h2,
+.mf-gcash-delete-overlay.light-theme .mf-gcash-delete-modal .btn-close,
+.mf-gcash-delete-overlay.light-theme .gcash-delete-copy,
+.mf-gcash-delete-overlay.light-theme .gcash-delete-copy strong {
+  color: #052e16;
+}
+
+.mf-gcash-delete-overlay.light-theme .btn-secondary {
+  color: #14532d;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.mf-income-overlay.app-modal-overlay {
+  z-index: 11060 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(1rem, env(safe-area-inset-top, 0px))
+    max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px))
+    max(1rem, env(safe-area-inset-left, 0px)) !important;
+  overflow-y: auto !important;
+  --glass-panel: #14261c;
+  --text-main: #ecfdf5;
+  --text-soft: #bbf7d0;
+}
+
+.mf-income-overlay .mf-income-modal.modal-content {
+  width: min(32rem, 100%) !important;
+  max-width: min(32rem, 100%) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(88dvh, calc(100dvh - 2rem)) !important;
+  margin: auto !important;
+  border-radius: 16px !important;
+  background: #14261c;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #ecfdf5;
+}
+
+.mf-income-overlay .mf-income-modal .modal-header {
+  background: rgba(0, 0, 0, 0.22);
+  border-bottom: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.mf-income-overlay .mf-income-modal .modal-header h2,
+.mf-income-overlay .mf-income-modal .btn-close {
+  color: #ecfdf5;
+}
+
+.mf-income-overlay .income-source-hint {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  background: rgba(8, 20, 14, 0.9);
+  border: 1px solid rgba(74, 222, 128, 0.38);
+  border-radius: 12px;
+  color: #d1fae5;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mf-income-overlay .mf-income-modal .form-group label {
+  color: #d1fae5;
+}
+
+.mf-income-overlay .mf-income-modal .form-input,
+.mf-income-overlay .mf-income-modal textarea.form-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(8, 20, 14, 0.88);
+  color: #ecfdf5;
+  border-color: rgba(74, 222, 128, 0.28);
+  color-scheme: dark;
+}
+
+.mf-income-overlay .mf-income-modal textarea.form-input {
+  min-height: 88px;
+  height: auto;
+  max-height: none;
+  padding: 0.7rem 0.75rem;
+  resize: vertical;
+}
+
+.mf-income-overlay .mf-income-modal .form-input::placeholder {
+  color: rgba(209, 250, 229, 0.62);
+}
+
+.mf-income-overlay .mf-income-modal .btn-secondary {
+  color: #ecfdf5;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.mf-income-overlay .modal-body .modal-actions {
+  background: #14261c;
+  border-top-color: rgba(74, 222, 128, 0.18);
+}
+
+.mf-income-overlay.light-theme {
+  --glass-panel: #ffffff;
+  --text-main: #052e16;
+  --text-soft: #166534;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal.modal-content,
+.mf-income-overlay.light-theme .modal-body .modal-actions {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal .modal-header {
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal .modal-header h2,
+.mf-income-overlay.light-theme .mf-income-modal .btn-close,
+.mf-income-overlay.light-theme .mf-income-modal .form-group label {
+  color: #052e16;
+}
+
+.mf-income-overlay.light-theme .income-source-hint {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal .form-input,
+.mf-income-overlay.light-theme .mf-income-modal textarea.form-input {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #86efac;
+  color-scheme: light;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal .form-input::placeholder {
+  color: #3f6b4e;
+}
+
+.mf-income-overlay.light-theme .mf-income-modal .btn-secondary {
+  color: #14532d;
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+@media (max-width: 720px) {
+  .modal-overlay.app-modal-overlay.mf-income-overlay {
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  .context-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.3rem 0.45rem;
+  .mf-income-overlay .mf-income-modal.modal-content {
+    width: min(32rem, 100%) !important;
+    max-width: min(32rem, 100%) !important;
+    height: auto !important;
+    max-height: min(88dvh, calc(100dvh - 1.7rem)) !important;
+    margin: auto !important;
+    border-radius: 16px !important;
   }
 
-  .context-hint {
-    display: none;
+  .mf-income-overlay .mf-income-modal .modal-actions {
+    flex-wrap: wrap;
   }
 
-  .mf-expense-overlay .mf-expense-modal .form-input {
-    min-height: 34px;
-    padding: 0.32rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .mf-expense-overlay .mf-expense-modal .form-group label {
-    font-size: 0.62rem;
-    margin-bottom: 0.18rem;
-  }
-
-  .auto-receipt-inline {
-    margin-bottom: 0.4rem;
-    font-size: 0.68rem;
+  .mf-income-overlay .mf-income-modal .modal-actions > button {
+    flex: 1 1 8rem;
   }
 }
 

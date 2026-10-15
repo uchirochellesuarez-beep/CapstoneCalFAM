@@ -33,7 +33,7 @@
           type="button"
           class="tab-btn tab-btn--wide"
           :class="{ active: activeTab === 'foundation' }"
-          @click="activeTab = 'foundation'; loadBarangayFarmersForFoundation()"
+          @click="activeTab = 'foundation'"
         >
           <span class="tab-btn-label">{{ $t('common.forecastFoundation') }}</span>
         </button>
@@ -64,38 +64,72 @@
       <PresidentFarmerIncomePage v-if="isPresident && activeTab === 'verify'" @records-changed="fetchStats" />
 
       <!-- Eligible Records Tab -->
-      <OfficerFarmerIncomePage v-if="(isPresident || isOfficer) && activeTab === 'eligible'" />
+      <OfficerFarmerIncomePage
+        v-if="(isPresident || isOfficer) && activeTab === 'eligible'"
+        :allow-delete="isPresident"
+        @records-changed="fetchStats"
+      />
 
-      <!-- President: upload historical expense totals for a farmer (forecast foundation) -->
-      <div v-if="isPresident && activeTab === 'foundation'" class="foundation-hub-panel">
-        <p class="hub-foundation-intro">
-          Pumili ng magsasaka sa inyong barangay upang mag-upload ng <strong>{{ $t('ui.oldTotalExpense') }}</strong>
-          (JSON o CSV). Ang datos ay ginagamit bilang pundasyon ng <em>hula ng gastos</em> sa kanilang
-          Talaan ng Kita → tab na <strong>{{ $t('ui.forecastExpense') }}</strong>.
-        </p>
-        <div v-if="!currentUser?.barangay_id" class="alert-warn">{{ $t('ui.noBarangayId') }}</div>
-        <template v-else>
-          <div class="farmer-pick-row">
-            <label for="foundation-farmer-select">{{ $t('ui.farmer') }}</label>
-            <select
-              id="foundation-farmer-select"
-              v-model.number="foundationFarmerId"
-              class="foundation-farmer-select"
-            >
-              <option :value="0">{{ $t('ui.choose') }}</option>
-              <option v-for="f in barangayFarmersList" :key="f.id" :value="f.id">
-                {{ f.full_name }}
-              </option>
-            </select>
+      <!-- Forecast Foundation: view-only predictions for every farmer, including the president -->
+      <div v-if="isPresident && activeTab === 'foundation'" class="foundation-hub-panel income-hub-subpage">
+        <p class="hub-foundation-intro">{{ $t('ui.forecastIntro') }}</p>
+        <div v-if="!forecastsLoading && barangayForecasts.length > 0" class="filter-bar">
+          <div class="ih-tools-card sc-tools-card">
+            <div class="tools-card-top">
+              <div class="search-bar">
+                <span class="search-icon-wrap" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  v-model="forecastSearch"
+                  :placeholder="$t('ui.searchFarmerName')"
+                  class="toolbar-input search-input-main"
+                />
+              </div>
+            </div>
           </div>
-          <ExpenseFoundationUpload
-            v-if="foundationFarmerId > 0"
-            :key="foundationFarmerId"
-            :farmer-id="foundationFarmerId"
-            :hide-id-note="true"
-            :is-light="isLight"
-          />
-        </template>
+          <p class="results-count">
+            <span class="results-count-num">{{ filteredForecasts.length }}</span>
+            {{ filteredForecasts.length === 1 ? $t('ui.recordOne') : $t('ui.recordsMany') }}
+          </p>
+        </div>
+        <ContentSkeleton v-if="forecastsLoading" variant="cards" :rows="3" :label="$t('ui.forecastLoading')" />
+        <p v-else-if="forecastsError" class="hub-foundation-intro">{{ forecastsError }}</p>
+        <div v-else-if="barangayForecasts.length === 0" class="hub-foundation-intro">{{ $t('ui.forecastNoFarmers') }}</div>
+        <div v-else-if="filteredForecasts.length === 0" class="hub-foundation-intro">{{ $t('ui.forecastNoMatch') }}</div>
+        <div v-else class="forecast-view-list">
+          <article
+            v-for="item in filteredForecasts"
+            :key="item.farmer_id"
+            class="forecast-view-card"
+          >
+            <div class="forecast-view-head">
+              <h3>{{ item.full_name }}</h3>
+              <span v-if="item.is_self" class="forecast-self-badge">{{ $t('ui.you') }}</span>
+            </div>
+            <p v-if="item.reference_number" class="forecast-view-ref">{{ item.reference_number }}</p>
+            <template v-if="item.forecast?.ok">
+              <p class="forecast-view-amount">
+                ₱{{ formatForecastPeso(item.forecast.forecast_next?.predicted_total_expenses) }}
+              </p>
+              <p class="forecast-view-meta">
+                {{ $t('ui.forecastRange', {
+                  low: formatForecastPeso(item.forecast.forecast_next?.ci95_low),
+                  high: formatForecastPeso(item.forecast.forecast_next?.ci95_high)
+                }) }}
+              </p>
+              <p class="forecast-view-meta">
+                {{ $t('ui.forecastDataUsed', { n: item.forecast.training_n || 0 }) }}
+              </p>
+            </template>
+            <p v-else class="forecast-view-meta">
+              {{ translateForecastError(item.forecast?.error) }}
+            </p>
+          </article>
+        </div>
       </div>
 
       <!-- Distribution Tab (Agriculturist only) -->
@@ -104,22 +138,23 @@
 
     <!-- No access message -->
     <div v-if="!isPresident && !isOfficer && !isAgriculturist" class="empty-state">
-      <p class="empty-title">No access</p>
-      <p class="empty-text">No access to Farmer Income Records for your role.</p>
+      <p class="empty-title">{{ $t('ui.noHubAccessTitle') }}</p>
+      <p class="empty-text">{{ $t('ui.noHubAccessText') }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import PresidentFarmerIncomePage from './PresidentFarmerIncomePage.vue'
 import OfficerFarmerIncomePage from './OfficerFarmerIncomePage.vue'
 import AgriculturistIncomeReviewPage from './AgriculturistIncomeReviewPage.vue'
-import ExpenseFoundationUpload from '../components/ExpenseFoundationUpload.vue'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const route = useRoute()
 const { isDark } = useBackdropTheme()
@@ -133,16 +168,61 @@ const isAgriculturist = computed(() => currentUser.value?.role === 'agriculturis
 const activeTab = ref('verify') // President starts with verify, others with eligible
 const pendingCount = ref(null)
 const eligibleCount = ref(null)
-const barangayFarmersList = ref([])
-const foundationFarmerId = ref(0)
+const barangayForecasts = ref([])
+const forecastsLoading = ref(false)
+const forecastsError = ref('')
+const forecastSearch = ref('')
 
+const filteredForecasts = computed(() => {
+  const q = forecastSearch.value.trim().toLowerCase()
+  if (!q) return barangayForecasts.value
+  return barangayForecasts.value.filter((item) => {
+    const name = String(item.full_name || '').toLowerCase()
+    const refNo = String(item.reference_number || '').toLowerCase()
+    return name.includes(q) || refNo.includes(q)
+  })
+})
+
+const translateForecastError = (error) => {
+  const err = String(error || '')
+  if (!err) return t('ui.forecastInsufficient')
+  if (/Wala pang naka-save/i.test(err)) return t('incomeForm.noRecordsForForecast')
+  if (/Kulang/i.test(err)) return t('incomeForm.notEnoughRecords')
+  if (/Hindi kayang i-fit/i.test(err)) return t('incomeForm.forecastFitFailed')
+  if (/Hindi makuha ang forecast/i.test(err)) return t('incomeForm.forecastFailed')
+  return t('incomeForm.forecastFailed')
+}
+
+const formatForecastPeso = (value) => {
+  const amount = Number(value)
+  if (!Number.isFinite(amount)) return '0.00'
+  return amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const loadBarangayForecasts = async () => {
+  if (!isPresident.value || !currentUser.value?.barangay_id) return
+  forecastsLoading.value = true
+  forecastsError.value = ''
+  try {
+    const res = await fetch(`/api/farmer-income/barangay-forecasts/${currentUser.value.barangay_id}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || t('incomeForm.forecastFailed'))
+    barangayForecasts.value = Array.isArray(data.forecasts) ? data.forecasts : []
+  } catch (err) {
+    forecastsError.value = translateForecastError(err.message)
+    barangayForecasts.value = []
+  } finally {
+    forecastsLoading.value = false
+  }
+}
 const syncActiveTabFromRoute = () => {
   const requestedTab = String(route.query.tab || '').trim()
   if (!requestedTab) return
 
   if (isPresident.value && ['verify', 'eligible', 'foundation'].includes(requestedTab)) {
     activeTab.value = requestedTab
-    if (requestedTab === 'foundation') loadBarangayFarmersForFoundation()
     return
   }
 
@@ -168,27 +248,16 @@ onMounted(() => {
   
   // Fetch stats for badges
   fetchStats()
+  if (activeTab.value === 'foundation') loadBarangayForecasts()
 })
 
 watch(() => [route.query.tab, route.query.highlight, route.query.nav], () => {
   syncActiveTabFromRoute()
 })
 
-const loadBarangayFarmersForFoundation = async () => {
-  if (!currentUser.value?.barangay_id || !authStore.token) return
-  try {
-    const res = await fetch(
-      `/api/farmer-income/barangay-farmers/${currentUser.value.barangay_id}`,
-      { headers: { Authorization: `Bearer ${authStore.token}` } }
-    )
-    const data = await res.json()
-    if (res.ok && Array.isArray(data.farmers)) {
-      barangayFarmersList.value = data.farmers
-    }
-  } catch (err) {
-    console.error('loadBarangayFarmersForFoundation:', err)
-  }
-}
+watch(activeTab, (tab) => {
+  if (tab === 'foundation') loadBarangayForecasts()
+})
 
 // Fetch statistics
 const fetchStats = async () => {
@@ -434,6 +503,63 @@ const fetchStats = async () => {
   color: rgba(209, 250, 229, 0.88);
 }
 
+.foundation-hub-panel .results-count {
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(209, 250, 229, 0.88);
+}
+
+.forecast-view-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.forecast-view-card {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(8, 28, 18, 0.45);
+  border: 1px solid rgba(126, 184, 145, 0.22);
+}
+
+.forecast-view-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.forecast-view-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #ecfdf5;
+}
+
+.forecast-self-badge {
+  flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #166534;
+  color: #f0fdf4;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.forecast-view-ref,
+.forecast-view-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(209, 250, 229, 0.78);
+}
+
+.forecast-view-amount {
+  margin: 0.55rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #86efac;
+}
+
 .farmer-pick-row {
   display: flex;
   flex-direction: column;
@@ -542,8 +668,27 @@ const fetchStats = async () => {
   border-color: #bbf7d0;
 }
 
-.farmer-income-hub-page.light-theme .hub-foundation-intro {
+.farmer-income-hub-page.light-theme .hub-foundation-intro,
+.farmer-income-hub-page.light-theme .foundation-hub-panel .results-count {
   color: #3f6b52;
+}
+
+.farmer-income-hub-page.light-theme .forecast-view-card {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.farmer-income-hub-page.light-theme .forecast-view-head h3 {
+  color: #14532d;
+}
+
+.farmer-income-hub-page.light-theme .forecast-view-ref,
+.farmer-income-hub-page.light-theme .forecast-view-meta {
+  color: #3f6b52;
+}
+
+.farmer-income-hub-page.light-theme .forecast-view-amount {
+  color: #15803d;
 }
 
 .farmer-income-hub-page.light-theme .farmer-pick-row label {

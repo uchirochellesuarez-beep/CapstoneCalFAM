@@ -14,8 +14,7 @@
       </div>
 
       <div v-if="loading" class="loading-state">
-        <div class="loading-spinner"></div>
-        <div>{{ $t('ui.loadingDashboard') }}</div>
+        <ContentSkeleton variant="dashboard" :label="$t('ui.loadingDashboard')" />
       </div>
 
       <template v-else>

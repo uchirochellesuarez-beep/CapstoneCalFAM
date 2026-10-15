@@ -42,8 +42,7 @@
     <template v-if="activeTab === 'eligible'">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('ui.loadingRecords') }}</p>
+        <ContentSkeleton variant="list" :label="$t('ui.loadingRecords')" />
       </div>
 
       <!-- Empty State -->
@@ -132,8 +131,7 @@
     <template v-if="activeTab === 'assistance'">
       <!-- Loading State -->
       <div v-if="loadingDistributions" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('ui.loadingDistributions') }}</p>
+        <ContentSkeleton variant="list" :label="$t('ui.loadingDistributions')" />
       </div>
 
       <!-- Empty State -->

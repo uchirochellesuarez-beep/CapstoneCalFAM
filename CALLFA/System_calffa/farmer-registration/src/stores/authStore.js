@@ -31,18 +31,18 @@ export const useAuthStore = defineStore('auth', {
         onRemoteLogout: (data) => {
           if (this.loggingOut) return
           if (!this.token && !this.currentUser) return
+          this.loggingOut = true
           this.clearLocalAuth()
           this.sessionNotice =
             data?.reason === 'session_replaced' || data?.type === 'session_replaced'
               ? i18n.global.t('auth.sessionReplaced')
               : null
-          import('../router').then(({ router }) => {
-            if (router.currentRoute.value.path !== '/login') {
-              router.push('/login')
-            }
-          }).catch(() => {})
+          this.goToLoginScreen().finally(() => {
+            this.loggingOut = false
+          })
         },
         onRemoteLogin: () => {
+          // Never paint another account over this tab while it is leaving.
           if (this.loggingOut) return
           // Another tab logged in — adopt shared localStorage session only if both exist
           try {
@@ -97,15 +97,25 @@ export const useAuthStore = defineStore('auth', {
      */
     handleSessionReplaced(message) {
       if (this.loggingOut || (!this.token && !this.currentUser)) return
+      this.loggingOut = true
       this.clearLocalAuth()
       this.sessionNotice =
         message || i18n.global.t('auth.sessionReplaced')
       broadcastAuthEvent('session_replaced', { reason: 'session_replaced' })
-      import('../router').then(({ router }) => {
+      this.goToLoginScreen().finally(() => {
+        this.loggingOut = false
+      })
+    },
+
+    async goToLoginScreen() {
+      try {
+        const { router } = await import('../router')
         if (router.currentRoute.value.path !== '/login') {
-          router.push('/login')
+          await router.replace('/login')
         }
-      }).catch(() => {})
+      } catch {
+        /* still cleared locally */
+      }
     },
 
     async login(referenceNumber, password) {
@@ -193,9 +203,11 @@ export const useAuthStore = defineStore('auth', {
       if (this.loggingOut) return
       this.loggingOut = true
       const token = this.token
-      // Clear local auth first so UI never flashes a placeholder "test" user
+      // Hide the signed-in screen before the role disappears, so another
+      // account's cached cards cannot flash on the way to the login page.
       this.clearLocalAuth()
       broadcastAuthEvent('logout')
+      await this.goToLoginScreen()
       try {
         if (token) {
           await fetch(`${API_BASE_URL}/logout`, {

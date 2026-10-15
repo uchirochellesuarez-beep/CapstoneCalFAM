@@ -17,7 +17,9 @@
     </div>
 
     <div class="card news-data-card">
-      <div v-if="loading" class="empty-state">{{ $t('ui.loadingPendingNews') }}</div>
+      <div v-if="loading" class="empty-state">
+        <ContentSkeleton variant="news" :label="$t('ui.loadingPendingNews')" />
+      </div>
       <div v-else-if="pendingNews.length === 0" class="empty-state">{{ $t('ui.noPendingNews') }}</div>
 
       <div v-else class="news-card-list">
@@ -40,11 +42,12 @@
               <span>{{ truncateText(item.content) }}</span>
             </div>
           </div>
-          <img
+          <AppImage
             v-if="item.image"
             :src="resolveImageUrl(item.image)"
             :alt="item.title"
-            class="news-card-thumb"
+            img-class="news-card-thumb"
+            layout="block"
           />
           <div class="news-card-actions">
             <button type="button" class="news-action-text news-action-view" @click="openViewModal(item)">
@@ -81,11 +84,13 @@
               <button type="button" class="close-btn" :aria-label="$t('common.close')" @click="closeModals">&times;</button>
             </div>
             <div class="modal-body">
-              <img
+              <AppImage
                 v-if="selectedNews.image"
                 :src="resolveImageUrl(selectedNews.image)"
                 :alt="selectedNews.title"
-                class="modal-news-image"
+                img-class="modal-news-image"
+                layout="block"
+                reserve
               />
               <p class="modal-news-content">{{ selectedNews.content }}</p>
             </div>

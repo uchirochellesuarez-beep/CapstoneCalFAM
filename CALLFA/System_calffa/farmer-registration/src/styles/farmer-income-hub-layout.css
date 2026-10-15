@@ -372,6 +372,23 @@
   margin-top: 0.4rem !important;
 }
 
+.farmer-income-hub-page .income-hub-subpage .record-delete-row {
+  display: block;
+  width: 100%;
+  margin-top: 0.45rem;
+}
+
+.farmer-income-hub-page .income-hub-subpage .delete-btn {
+  display: flex !important;
+  width: 100%;
+  min-height: 36px !important;
+  background: #7f1d1d !important;
+  color: #fff !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 8px !important;
+  font-weight: 700;
+}
+
 .farmer-income-hub-page .income-hub-subpage .btn-approve,
 .farmer-income-hub-page .income-hub-subpage .btn-reject {
   padding: 0.38rem 0.55rem !important;

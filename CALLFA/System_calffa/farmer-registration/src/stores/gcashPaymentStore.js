@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import { useAuthStore } from './authStore'
 
 const API = '/api/gcash-payments'
@@ -125,6 +125,17 @@ export const useGcashPaymentStore = defineStore('gcashPayment', {
         headers: authHeaders(true),
         body: JSON.stringify({ reason })
       }))
+    },
+
+    async deleteHistory(id) {
+      return readJson(await fetch(`${API}/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      }))
     }
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useGcashPaymentStore, import.meta.hot))
+}

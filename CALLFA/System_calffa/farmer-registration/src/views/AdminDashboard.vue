@@ -26,7 +26,7 @@
         <!-- Total Farmers - Green -->
         <div class="stat-card stat-green">
           <div class="stat-icon-wrap stat-icon-green">
-            <img src="https://cdn-icons-png.flaticon.com/512/7417/7417717.png" :alt="$t('ui.farmer')" class="stat-icon-img" />
+            <AppImage src="https://cdn-icons-png.flaticon.com/512/7417/7417717.png" :alt="$t('ui.farmer')" img-class="stat-icon-img" />
           </div>
           <div class="stat-body">
             <div class="stat-label">{{ isFarmer ? $t('ui.membersInBarangay') : $t('ui.totalFarmers') }}</div>
@@ -193,7 +193,7 @@
           </div>
 
           <div v-if="mostUsedLoading" class="machinery-usage-state">
-            {{ $t('dashboard.loadingMachineryStats') }}
+            <ContentSkeleton variant="chart" :label="$t('dashboard.loadingMachineryStats')" />
           </div>
           <div v-else-if="mostUsedError" class="machinery-usage-state machinery-usage-state--error">
             {{ mostUsedError }}

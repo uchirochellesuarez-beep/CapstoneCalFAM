@@ -392,8 +392,7 @@
     <!-- HISTORY TAB -->
     <div v-if="activeTab === 'history'" class="history-wrapper">
       <div v-if="loadingRecords" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('ui.loadingRecords') }}</p>
+        <ContentSkeleton variant="list" :label="$t('ui.loadingRecords')" />
       </div>
       <div v-else-if="records.length === 0" class="empty-state">
         <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
@@ -461,8 +460,7 @@
     <!-- ASSISTANCE TAB -->
     <div v-if="activeTab === 'assistance'" class="assistance-wrapper">
       <div v-if="loadingAssistance" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('incomeForm.loadingAssistance') }}</p>
+        <ContentSkeleton variant="list" :label="$t('incomeForm.loadingAssistance')" />
       </div>
       <div v-else-if="completedAssistance.length === 0" class="empty-state">
         <div class="empty-icon empty-icon-block" aria-hidden="true"></div>
@@ -523,16 +521,11 @@
       <div class="form-section">
         <h2 class="section-title">{{ $t('incomeForm.predictedExpenses') }}</h2>
 
+        <p class="form-hint">Predictions use only the income and expenses saved on this account.</p>
         <div class="form-row">
           <div class="form-group">
             <label>{{ $t('incomeForm.targetFarmerId') }}</label>
-            <input v-if="!isPresident" type="text" :value="targetFarmerId || '-'" disabled />
-            <select v-else v-model="selectedForecastFarmerId" @change="loadPredictiveData">
-              <option value="">{{ $t('ui.chooseFarmer') }}</option>
-              <option v-for="f in barangayFarmers" :key="f.id" :value="String(f.id)">
-                #{{ f.id }} - {{ f.full_name }}
-              </option>
-            </select>
+            <input type="text" :value="targetFarmerId || '-'" disabled />
           </div>
           <div class="form-group">
             <label>{{ $t('incomeForm.foundationData') }}</label>
@@ -550,6 +543,7 @@
             <span v-else>{{ $t('common.runForecast') }}</span>
           </button>
         </div>
+        <ContentSkeleton v-if="forecastLoading" variant="chart" :label="$t('common.forecasting')" />
 
         <div class="foundation-summary" v-if="foundationSummary">
           <p><strong>{{ $t('incomeForm.foundationFarmerId') }}</strong> {{ foundationSummary.farmer_id }}</p>
@@ -870,13 +864,9 @@ const foundationUploading = ref(false)
 const forecastResult = ref(null)
 const foundationSummary = ref(null)
 const foundationFile = ref(null)
-const barangayFarmers = ref([])
-const selectedForecastFarmerId = ref('')
-const isPresident = computed(() => String(currentUser.value?.role || '') === 'president')
-const targetFarmerId = computed(() => {
-  if (isPresident.value) return selectedForecastFarmerId.value || ''
-  return currentUser.value?.id != null ? String(currentUser.value.id) : ''
-})
+const targetFarmerId = computed(() => (
+  currentUser.value?.id != null ? String(currentUser.value.id) : ''
+))
 const canUploadFoundation = computed(() => !!foundationFile.value && !!targetFarmerId.value)
 const forecastHistory = computed(() => {
   const rows = forecastResult.value?.history
@@ -1156,7 +1146,9 @@ const fetchRecords = async () => {
   if (!currentUser.value?.id) return
   loadingRecords.value = true
   try {
-    const res = await fetch(`/api/farmer-income/${currentUser.value.id}`)
+    const res = await fetch(`/api/farmer-income/${currentUser.value.id}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
     const data = await res.json()
     if (!res.ok) throw new Error(t('incomeForm.fetchRecordsError'))
     records.value = data
@@ -1185,23 +1177,6 @@ const fetchCompletedAssistance = async () => {
     errorMessage.value = err.message
   } finally {
     loadingAssistance.value = false
-  }
-}
-
-const fetchBarangayFarmers = async () => {
-  if (!isPresident.value || !currentUser.value?.barangay_id) return
-  try {
-    const res = await fetch(`/api/farmer-income/barangay-farmers/${currentUser.value.barangay_id}`, {
-      headers: { 'Authorization': `Bearer ${authStore.token}` }
-    })
-    const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.fetchFarmersError'))
-    barangayFarmers.value = data.farmers || []
-    if (!selectedForecastFarmerId.value && barangayFarmers.value.length > 0) {
-      selectedForecastFarmerId.value = String(barangayFarmers.value[0].id)
-    }
-  } catch (err) {
-    errorMessage.value = err.message
   }
 }
 
@@ -1270,9 +1245,6 @@ const uploadFoundationFile = async () => {
 }
 
 const loadPredictiveData = async () => {
-  if (isPresident.value && barangayFarmers.value.length === 0) {
-    await fetchBarangayFarmers()
-  }
   await fetchFoundationSummary()
   await fetchExpenseForecast()
 }
@@ -1417,7 +1389,6 @@ const getTimeSinceReceived = (dateStr) => {
 
 onMounted(() => {
   syncActiveTabFromRoute()
-  if (isPresident.value) fetchBarangayFarmers()
 })
 
 watch(() => route.query.tab, () => {

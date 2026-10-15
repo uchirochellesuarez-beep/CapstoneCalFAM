@@ -32,6 +32,87 @@
         </div>
       </div>
 
+      <section v-if="canImportHistory" class="history-import-card">
+        <div class="history-import-head">
+          <div>
+            <h2>Import historical bookings</h2>
+            <p>
+              Use the farmer reference number already saved on the farmer account. That is how the system finds the farmer.
+              The machinery name must match exactly one machine in your barangay. Two machines cannot share a name.
+              The total to pay is taken from that machine's price and the area. It is not typed in the file.
+              One row is one booking. Completed means the service is done. Pending means the balance is still to be collected.
+              The same farmer, machine, and date already in the system is skipped.
+            </p>
+          </div>
+          <button type="button" class="btn-primary" @click="downloadHistoryTemplate">Download Excel template</button>
+        </div>
+        <label class="history-import-file">
+          <span>Upload Excel file (.xlsx)</span>
+          <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" @change="onHistoryFile" />
+        </label>
+        <p v-if="historyImportError" class="history-import-error">{{ historyImportError }}</p>
+        <div v-if="historyPreview" class="history-import-summary">
+          <span>Total {{ historyPreview.summary.total }}</span>
+          <span>Ready {{ historyPreview.summary.ready }}</span>
+          <span>Invalid {{ historyPreview.summary.invalid }}</span>
+          <span>Already imported {{ historyPreview.summary.duplicate }}</span>
+        </div>
+        <div v-if="historyPreview && historyPreview.errors.length" class="history-import-errors">
+          <p v-for="(issue, index) in historyPreview.errors" :key="index">
+            Row {{ issue.row }}, {{ issue.column }}: {{ issue.message }}
+          </p>
+        </div>
+        <div v-if="historyPreview && historyPreview.rows.length" class="history-import-table-wrap">
+          <table class="history-import-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Result</th>
+                <th>Reference</th>
+                <th>Farmer</th>
+                <th>Machinery</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Area</th>
+                <th>Amount to pay</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in historyPreview.rows" :key="row.row">
+                <td>{{ row.row }}</td>
+                <td>{{ row.outcome }}</td>
+                <td>{{ row.reference_number || '—' }}</td>
+                <td>{{ row.farmer_name || '—' }}</td>
+                <td>{{ row.machinery_name || '—' }}</td>
+                <td>{{ row.booking_date || '—' }}</td>
+                <td>{{ row.service_location || '—' }}</td>
+                <td>{{ row.area_size == null ? '—' : row.area_size }}</td>
+                <td>{{ row.total_price == null ? '—' : `₱${formatNumber(row.total_price)}` }}</td>
+                <td>{{ row.booking_status || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-if="historyPreview.previewLimited" class="history-import-note">Showing the first 80 rows. Validation covers the whole file.</p>
+        </div>
+        <div v-if="historyPreview" class="history-import-actions">
+          <button type="button" class="btn btn-secondary" @click="clearHistoryImport">Clear</button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="!historyPreview.canCommit || historyImportBusy"
+            @click="confirmHistoryImport"
+          >
+            {{ historyImportBusy ? 'Importing…' : 'Confirm import' }}
+          </button>
+        </div>
+        <p v-if="historyImportResult" class="history-import-success">
+          Imported {{ historyImportResult.imported }}.
+          Skipped {{ historyImportResult.skipped }} already in the system.
+          Rejected {{ historyImportResult.rejected }}.
+        </p>
+      </section>
+
       <div class="stats-group stats-group--machinery-approval">
         <div class="stats-grid stats-grid--machinery-approval machinery-stats-grid">
         <div v-if="canApproveBookings" class="stat-card pending" @click="quickFilter('Pending')">
@@ -227,7 +308,9 @@
               </thead>
               <tbody>
                 <tr v-if="loading">
-                  <td :colspan="tableColspan" class="loading-cell">{{ $t('ui.loadingBookings') }}</td>
+                  <td :colspan="tableColspan" class="loading-cell">
+                    <ContentSkeleton variant="table" :label="$t('ui.loadingBookings')" />
+                  </td>
                 </tr>
                 <tr v-else-if="bookings.length === 0">
                   <td :colspan="tableColspan" class="empty-cell">{{ $t('ui.noBookings') }}</td>
@@ -265,6 +348,7 @@
                   </td>
                   <td class="td-status">
                     <span :class="['mach-loan-status', bookingStatusSlug(booking.status)]">{{ booking.status }}</span>
+                    <small v-if="booking.is_historical_import" class="historical-flag">Historical</small>
                   </td>
                   <td class="td-actions">
                     <div class="action-buttons">
@@ -314,6 +398,15 @@
                       >
                         {{ $t('common.issue') }}
                       </button>
+                      <button
+                        v-if="canDeleteBookings"
+                        type="button"
+                        class="btn btn-reject"
+                        :title="$t('common.delete')"
+                        @click="deleteBookingConfirm(booking)"
+                      >
+                        {{ $t('common.delete') }}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -321,7 +414,9 @@
             </table>
 
             <div class="inv2-mobile-list ma-mobile-list">
-              <div v-if="loading" class="inv2-empty">{{ $t('ui.loadingBookings') }}</div>
+              <div v-if="loading" class="inv2-empty">
+                <ContentSkeleton variant="list" :label="$t('ui.loadingBookings')" />
+              </div>
               <div v-else-if="bookings.length === 0" class="inv2-empty">{{ $t('ui.noBookings') }}</div>
               <article
                 v-else
@@ -416,6 +511,14 @@
                     @click="incompleteBookingConfirm(booking)"
                   >
                     {{ $t('common.issue') }}
+                  </button>
+                  <button
+                    v-if="canDeleteBookings"
+                    type="button"
+                    class="btn btn-reject"
+                    @click="deleteBookingConfirm(booking)"
+                  >
+                    {{ $t('common.delete') }}
                   </button>
                 </div>
               </article>
@@ -537,6 +640,11 @@
             </div>
           </div>
 
+          <div class="modal-actions" v-if="canDeleteBookings && selectedBooking">
+            <button type="button" class="btn-danger" @click="deleteBookingConfirm(selectedBooking)">
+              {{ $t('common.delete') }}
+            </button>
+          </div>
           <div class="modal-actions" v-if="selectedBooking.status === 'Pending' && canApproveBookings">
             <button type="button" @click="approveBookingConfirm(selectedBooking)" class="btn-success">
               {{ $t('common.approve') }}
@@ -903,6 +1011,107 @@ export default {
       return userRole === 'operator'
     })
 
+    const canDeleteBookings = computed(() => authStore.currentUser?.role === 'operation_manager')
+    const canImportHistory = computed(() => authStore.currentUser?.role === 'operation_manager')
+    const historyFile = ref(null)
+    const historyPreview = ref(null)
+    const historyImportError = ref('')
+    const historyImportResult = ref(null)
+    const historyImportBusy = ref(false)
+
+    const historyAuthHeaders = () => {
+      const token = authStore.token || localStorage.getItem('token')
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+
+    const downloadHistoryTemplate = async () => {
+      historyImportError.value = ''
+      try {
+        const response = await fetch('/api/machinery/historical-import/template', {
+          headers: historyAuthHeaders()
+        })
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}))
+          throw new Error(data.message || 'Could not download the template.')
+        }
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'historical-machinery-bookings.xlsx'
+        link.click()
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        historyImportError.value = error.message || 'Could not download the template.'
+      }
+    }
+
+    const onHistoryFile = async (event) => {
+      const file = event.target.files && event.target.files[0]
+      historyImportResult.value = null
+      historyPreview.value = null
+      historyImportError.value = ''
+      historyFile.value = file || null
+      if (!file) return
+      historyImportBusy.value = true
+      try {
+        const body = new FormData()
+        body.append('file', file)
+        const response = await fetch('/api/machinery/historical-import/preview', {
+          method: 'POST',
+          headers: historyAuthHeaders(),
+          body
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || 'Could not read the Excel file.')
+        }
+        historyPreview.value = data
+      } catch (error) {
+        historyImportError.value = error.message || 'Could not read the Excel file.'
+      } finally {
+        historyImportBusy.value = false
+      }
+    }
+
+    const clearHistoryImport = () => {
+      historyFile.value = null
+      historyPreview.value = null
+      historyImportError.value = ''
+      historyImportResult.value = null
+    }
+
+    const confirmHistoryImport = async () => {
+      if (!historyFile.value || !historyPreview.value?.canCommit || historyImportBusy.value) return
+      const ready = historyPreview.value.summary?.ready || 0
+      if (!window.confirm(`Import ${ready} historical booking${ready === 1 ? '' : 's'}? Existing bookings will not be changed.`)) {
+        return
+      }
+      historyImportBusy.value = true
+      historyImportError.value = ''
+      try {
+        const body = new FormData()
+        body.append('file', historyFile.value)
+        const response = await fetch('/api/machinery/historical-import/commit', {
+          method: 'POST',
+          headers: historyAuthHeaders(),
+          body
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || 'Import failed.')
+        }
+        historyImportResult.value = data
+        historyPreview.value = null
+        historyFile.value = null
+        await loadData()
+      } catch (error) {
+        historyImportError.value = error.message || 'Import failed.'
+      } finally {
+        historyImportBusy.value = false
+      }
+    }
+
     const tableColspan = computed(() => (canApproveBookings.value ? 9 : 8))
 
     const bookingStatusSlug = (status) => {
@@ -997,6 +1206,24 @@ export default {
         filters.value.status = status
       }
       loadData()
+    }
+
+    const deleteBookingConfirm = async (booking) => {
+      if (!canDeleteBookings.value || !booking?.id) return
+      const machine = booking.machinery_name || 'this machinery'
+      const farmer = booking.farmer_name || 'the farmer'
+      const confirmed = window.confirm(
+        `Delete this ${booking.status || ''} booking for ${farmer} (${machine})?\n\nIt will also be removed from the farmer's bookings. Any payment income and records connected to this booking will be deleted.`
+      )
+      if (!confirmed) return
+      try {
+        await machineryStore.deleteBooking(booking.id)
+        if (selectedBooking.value?.id === booking.id) showViewModal.value = false
+        successMessage.value = 'Booking deleted, including income and connected records.'
+        await loadData()
+      } catch (error) {
+        alert(error.message || 'Failed to delete booking')
+      }
     }
 
     const viewBooking = async (booking) => {
@@ -1371,6 +1598,16 @@ export default {
       totalBookingsCount,
       canApproveBookings,
       canCompleteBookings,
+      canDeleteBookings,
+      canImportHistory,
+      historyPreview,
+      historyImportError,
+      historyImportResult,
+      historyImportBusy,
+      downloadHistoryTemplate,
+      onHistoryFile,
+      clearHistoryImport,
+      confirmHistoryImport,
       isApprover,
       bookingDownPaymentPreview,
       approveModalMessage,
@@ -1383,6 +1620,7 @@ export default {
       clearFilters,
       quickFilter,
       viewBooking,
+      deleteBookingConfirm,
       approveBookingConfirm,
       approveBooking,
       confirmBookingConfirm,
@@ -1470,6 +1708,150 @@ export default {
   margin: 0 0 0.75rem;
   font-size: 1.35rem;
   font-weight: 800;
+}
+
+.history-import-card {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  background: rgba(20, 38, 28, 0.92);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #ecfdf5;
+}
+
+.history-import-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.history-import-head h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.history-import-head p,
+.history-import-note {
+  margin: 0;
+  color: #d1fae5;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.history-import-file {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.history-import-file input {
+  font-weight: 500;
+}
+
+.history-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.history-import-summary span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(8, 20, 14, 0.7);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  font-size: 0.8rem;
+}
+
+.history-import-errors {
+  margin-top: 0.75rem;
+  max-height: 180px;
+  overflow: auto;
+  color: #fecaca;
+  font-size: 0.82rem;
+}
+
+.history-import-errors p {
+  margin: 0.15rem 0;
+}
+
+.history-import-error {
+  color: #fecaca;
+  margin: 0.6rem 0 0;
+}
+
+.history-import-success {
+  margin: 0.75rem 0 0;
+  color: #86efac;
+  font-weight: 700;
+}
+
+.history-import-table-wrap {
+  margin-top: 0.75rem;
+  overflow-x: auto;
+}
+
+.history-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.history-import-table th,
+.history-import-table td {
+  padding: 0.4rem 0.45rem;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.18);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.history-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.historical-flag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.16);
+  color: #bbf7d0;
+  font-size: 0.68rem;
+}
+
+.light-theme .history-import-card {
+  background: #ffffff;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.light-theme .history-import-head p,
+.light-theme .history-import-note {
+  color: #14532d;
+}
+
+.light-theme .history-import-summary span {
+  background: #f0fdf4;
+  color: #052e16;
+}
+
+@media (max-width: 720px) {
+  .history-import-head {
+    flex-direction: column;
+  }
+
+  .history-import-head .btn-primary,
+  .history-import-actions .btn-primary,
+  .history-import-actions .btn {
+    width: 100%;
+  }
 }
 
 .glass-header {

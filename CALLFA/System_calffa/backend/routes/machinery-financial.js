@@ -4,6 +4,7 @@ const router = express.Router();
 const pool = require('../db');
 const { generateOperatorIncomeForBooking } = require('../services/operator-income-service');
 const { generateReceiptNumber, recordPaymentReceipt, ensureReceiptTables } = require('../services/receipt-service');
+const { getCollectionFees } = require('../services/collection-fee-service');
 const { REFUNDED_BOOKING_NOT_EXISTS_SQL } = require('../services/refund-service');
 const { createPendingExpenseForBooking } = require('../services/pending-expense-service');
 const { getRequestUser, isAdmin } = require('../utils/requestUser');
@@ -587,23 +588,67 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
   }
 });
 
-// DELETE expense (treasurer only)
+// DELETE expense (treasurer only) — recorded booking expenses and manual entries
 router.delete('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
+  let connection;
   try {
     const { id } = req.params;
-    const [result] = await pool.execute(
+    connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      `SELECT me.id, me.booking_id, mi.barangay_id
+       FROM machinery_expenses me
+       LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+       WHERE me.id = ?`,
+      [id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Expense not found' });
+    }
+
+    const expense = rows[0];
+    if (!isAdmin({ role: req.userRole }) && req.userBarangayId) {
+      if (parseInt(expense.barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only delete expenses for machinery in your barangay.'
+        });
+      }
+    }
+
+    await connection.beginTransaction();
+    if (expense.booking_id) {
+      await connection.execute(
+        `UPDATE operator_income
+         SET income_status = 'Cancelled', labor_cost_amount = 0
+         WHERE expense_id = ? OR booking_id = ?`,
+        [id, expense.booking_id]
+      );
+    } else {
+      await connection.execute(
+        `UPDATE operator_income
+         SET income_status = 'Cancelled', labor_cost_amount = 0
+         WHERE expense_id = ?`,
+        [id]
+      );
+    }
+    const [result] = await connection.execute(
       'DELETE FROM machinery_expenses WHERE id = ?',
       [id]
     );
-    
+    await connection.commit();
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Expense not found' });
     }
-    
+
     res.json({ success: true, message: 'Expense deleted successfully' });
   } catch (error) {
+    try { await connection.rollback(); } catch (_) { /* already closed */ }
     console.error('Error deleting expense:', error);
     res.status(500).json({ success: false, message: 'Failed to delete expense' });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
@@ -2581,15 +2626,19 @@ router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
       });
     }
 
+    const fees = await getCollectionFees(userBarangayId);
+    const duesAmount = fees.association_dues_amount;
+
     // Insert dues record
     const [result] = await pool.execute(
       `INSERT INTO monthly_dues
        (farmer_id, barangay_id, collection_date, amount, collected_by, collector_role, period_start, period_end, payment_method, remarks)
-       VALUES (?, ?, ?, 120.00, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         farmer_id,
         userBarangayId,
         collection_date,
+        duesAmount,
         user_id,
         userRole,
         periodStart.toISOString().split('T')[0],
@@ -2606,7 +2655,7 @@ router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
       referenceId: result.insertId,
       referenceType: 'monthly_dues',
       clientName: farmer[0].full_name,
-      amountPaid: 120,
+      amountPaid: duesAmount,
       remainingBalance: 0,
       paymentMethod: payment_method || 'Cash',
       paymentDate: collection_date,
@@ -2621,7 +2670,7 @@ router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
       dues_id: result.insertId,
       receipt_number: receiptNum,
       farmer_name: farmer[0].full_name,
-      amount: 120.00,
+      amount: duesAmount,
       period: `${periodStart.toISOString().split('T')[0]} to ${periodEnd.toISOString().split('T')[0]}`
     });
   } catch (error) {

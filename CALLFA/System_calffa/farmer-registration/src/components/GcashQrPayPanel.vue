@@ -5,7 +5,7 @@
       <p v-if="showIntroHint" class="gcash-pay-hint">{{ $t('ui.gcashFarmerHint') }}</p>
     </header>
 
-    <div v-if="loading" class="gcash-pay-empty">{{ $t('common.loading') }}</div>
+    <div v-if="loading" class="gcash-pay-empty"><ContentSkeleton variant="cards" :rows="1" :label="$t('common.loading')" /></div>
 
     <template v-else>
       <div v-if="pendingSubmission" class="gcash-status-box pending">
@@ -17,10 +17,11 @@
           class="gcash-proof-thumb"
           @click="$emit('preview-proof', proofUrl(pendingSubmission.proof_path))"
         >
-          <img
+          <AppImage
             :src="proofUrl(pendingSubmission.proof_path)"
             :alt="$t('ui.proof')"
-            class="gcash-proof-thumb-img"
+            img-class="gcash-proof-thumb-img"
+            layout="block"
           />
           <span>{{ $t('ui.gcashTapToEnlarge') }}</span>
         </button>
@@ -52,7 +53,7 @@
       <div v-else-if="showPayForm" class="gcash-pay-body">
         <div class="gcash-qr-col">
           <div class="gcash-qr-frame">
-            <img :src="proofUrl(qr.image_path)" :alt="$t('ui.gcashQrCode')" class="gcash-qr-image" />
+            <AppImage :src="proofUrl(qr.image_path)" :alt="$t('ui.gcashQrCode')" img-class="gcash-qr-image" layout="block" reserve />
           </div>
         </div>
         <div class="gcash-upload-col">
@@ -76,7 +77,7 @@
             class="gcash-proof-thumb"
             @click="$emit('preview-proof', previewUrl)"
           >
-            <img :src="previewUrl" :alt="$t('ui.gcashSelectedPreview')" class="gcash-proof-thumb-img" />
+            <AppImage :src="previewUrl" :alt="$t('ui.gcashSelectedPreview')" img-class="gcash-proof-thumb-img" layout="block" />
             <span>{{ $t('ui.gcashTapToEnlarge') }}</span>
           </button>
           <p v-if="fileError" class="gcash-file-error">{{ fileError }}</p>

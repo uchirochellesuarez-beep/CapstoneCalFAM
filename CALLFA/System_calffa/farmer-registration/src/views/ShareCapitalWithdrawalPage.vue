@@ -123,7 +123,7 @@
                   </thead>
                   <tbody>
                     <tr v-if="loading">
-                      <td colspan="7" class="table-empty">{{ $t('common.loading') }}</td>
+                      <td colspan="7" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                     </tr>
                     <tr v-else-if="members.length === 0">
                       <td colspan="7" class="table-empty">{{ $t('ui.noMembersWithPayments') }}</td>
@@ -155,7 +155,7 @@
               </div>
 
               <div class="fin-mobile-list">
-                <div v-if="loading" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+                <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
                 <div v-else-if="members.length === 0" class="fin-mobile-empty">
                   {{ $t('ui.noMembersWithPayments') }}
                 </div>
@@ -325,7 +325,7 @@
                             </thead>
                             <tbody>
                               <tr v-if="loadingMember">
-                                <td colspan="5" class="table-empty">{{ $t('common.loading') }}</td>
+                                <td colspan="5" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                               </tr>
                               <tr v-else-if="memberWithdrawals.length === 0">
                                 <td colspan="5" class="table-empty">{{ $t('ui.noWithdrawals') }}</td>
@@ -353,7 +353,7 @@
                         </div>
 
                         <div class="withdrawal-history-mobile">
-                          <div v-if="loadingMember" class="fin-mobile-empty">{{ $t('common.loading') }}</div>
+                          <div v-if="loadingMember" class="fin-mobile-empty"><ContentSkeleton variant="list" :rows="3" :label="$t('common.loading')" /></div>
                           <div v-else-if="memberWithdrawals.length === 0" class="fin-mobile-empty">
                             {{ $t('ui.noWithdrawals') }}
                           </div>

@@ -29,6 +29,14 @@ const uploadFoundationMem = multer({
   limits: { fileSize: MAX_FOUNDATION_FILE_BYTES },
 });
 
+const PERSONAL_FARM_ANALYTICS_ROLES = new Set([
+  'farmer',
+  'president',
+  'treasurer',
+  'operation_manager',
+  'operator',
+]);
+
 function decodeIncomeJwt(req) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return null;
@@ -40,41 +48,34 @@ function decodeIncomeJwt(req) {
   }
 }
 
-async function assertExpenseFoundationAccess(req, farmerId) {
+function personalFarmActor(req) {
   const decoded = decodeIncomeJwt(req);
-  if (!decoded) {
-    return { ok: false, status: 401, error: 'Hindi authorized. Mag-login muna.' };
+  if (!decoded || decoded.id == null) {
+    return { ok: false, status: 401, error: 'Unauthorized. Please log in.' };
   }
+  const role = String(decoded.role || '').toLowerCase();
+  if (!PERSONAL_FARM_ANALYTICS_ROLES.has(role)) {
+    return { ok: false, status: 403, error: 'You cannot use individual farm income analytics.' };
+  }
+  const id = Number(decoded.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    return { ok: false, status: 401, error: 'Unauthorized. Please log in.' };
+  }
+  return { ok: true, decoded, role, id };
+}
+
+function assertOwnFarmerId(req, farmerId) {
+  const actor = personalFarmActor(req);
+  if (!actor.ok) return actor;
   const uid = Number(farmerId);
-  if (!Number.isFinite(uid) || uid <= 0) {
-    return { ok: false, status: 400, error: 'Hindi wastong farmer ID.' };
+  if (!Number.isFinite(uid) || uid !== actor.id) {
+    return { ok: false, status: 403, error: 'You can only access your own farm records.' };
   }
-  const role = String(decoded.role || '');
-  if (role === 'farmer') {
-    if (Number(decoded.id) !== uid) {
-      return {
-        ok: false,
-        status: 403,
-        error: 'Maaari lamang i-upload ang pundasyon para sa sariling account.',
-      };
-    }
-    return { ok: true, decoded };
-  }
-  if (role === 'president') {
-    const userBarangayId =
-      decoded.barangay_id != null ? Number(decoded.barangay_id) : null;
-    const farmerBarangay = await getFarmerBarangay(uid);
-    if (userBarangayId != null && farmerBarangay !== userBarangayId) {
-      return { ok: false, status: 403, error: 'Access denied. Iba ang barangay.' };
-    }
-    return { ok: true, decoded };
-  }
-  return {
-    ok: false,
-    status: 403,
-    error:
-      'Tanging magsasaka o Barangay President lamang ang maaaring mag-manage ng pundasyong datos ng gastos.',
-  };
+  return actor;
+}
+
+async function assertExpenseFoundationAccess(req, farmerId) {
+  return assertOwnFarmerId(req, farmerId);
 }
 
 /**
@@ -457,16 +458,12 @@ router.post('/', async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    const { farmer_id } = req.body;
-    const userBarangayId = getUserBarangayFromToken(req);
-    
-    // Check if farmer belongs to user's barangay
-    const farmerBarangay = await getFarmerBarangay(farmer_id);
-    if (userBarangayId && farmerBarangay !== userBarangayId) {
-      return res.status(403).json({ 
-        error: 'Access denied. Cannot record income for other barangays.' 
-      });
+    const actor = personalFarmActor(req);
+    if (!actor.ok) {
+      await conn.rollback();
+      return res.status(actor.status).json({ error: actor.error });
     }
+    const farmer_id = actor.id;
 
     const {
       area_hectares,
@@ -631,32 +628,11 @@ router.get('/by-barangay/:barangayId', async (req, res) => {
 // GET /api/farmer-income/expense-forecast/:farmerId — Python sklearn (kapag ML_API_URL) / Node OLS fallback
 router.get('/expense-forecast/:farmerId', async (req, res) => {
   try {
-    const { farmerId } = req.params;
-    const uid = Number(farmerId);
-    if (!Number.isFinite(uid)) {
-      return res.status(400).json({ ok: false, error: 'Hindi wastong farmer ID.' });
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
     }
-
-    const userBarangayId = getUserBarangayFromToken(req);
-    const farmerBarangay = await getFarmerBarangay(uid);
-    if (userBarangayId && farmerBarangay !== userBarangayId) {
-      return res.status(403).json({
-        ok: false,
-        error: 'Access denied. Cannot forecast for other barangays.',
-      });
-    }
-
-    const decodedFc = decodeIncomeJwt(req);
-    if (
-      decodedFc &&
-      String(decodedFc.role) === 'farmer' &&
-      Number(decodedFc.id) !== uid
-    ) {
-      return res.status(403).json({
-        ok: false,
-        error: 'Access denied.',
-      });
-    }
+    const uid = gate.id;
 
     const [records] = await pool.execute(
       `SELECT * FROM farmer_income_records WHERE farmer_id = ? AND status = 'Eligible'`,
@@ -699,6 +675,65 @@ router.get('/barangay-farmers/:barangayId', async (req, res) => {
   } catch (err) {
     console.error('barangay-farmers:', err);
     res.status(500).json({ ok: false, error: 'Hindi makuha ang listahan.' });
+  }
+});
+
+// GET /api/farmer-income/barangay-forecasts/:barangayId — read-only predictions for the president
+router.get('/barangay-forecasts/:barangayId', async (req, res) => {
+  try {
+    const decoded = decodeIncomeJwt(req);
+    if (!decoded) {
+      return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    }
+    if (String(decoded.role || '').toLowerCase() !== 'president') {
+      return res.status(403).json({ ok: false, error: 'Access denied.' });
+    }
+    const bid = Number(req.params.barangayId);
+    if (!Number.isFinite(bid) || Number(decoded.barangay_id) !== bid) {
+      return res.status(403).json({ ok: false, error: 'Access denied.' });
+    }
+
+    const [people] = await pool.execute(
+      `SELECT id, full_name, reference_number, role
+       FROM farmers
+       WHERE barangay_id = ?
+         AND status = 'approved'
+         AND (role = 'farmer' OR id = ?)
+       ORDER BY full_name ASC`,
+      [bid, decoded.id]
+    );
+
+    const forecasts = [];
+    for (const person of people) {
+      const [records] = await pool.execute(
+        `SELECT * FROM farmer_income_records WHERE farmer_id = ? AND status = 'Eligible'`,
+        [person.id]
+      );
+      let forecast;
+      try {
+        forecast = await forecastFutureTotalExpenses(person.id, records);
+      } catch (forecastErr) {
+        console.error('barangay forecast:', forecastErr);
+        forecast = { ok: false, error: 'Hindi makuha ang forecast.' };
+      }
+      forecasts.push({
+        farmer_id: person.id,
+        full_name: person.full_name,
+        reference_number: person.reference_number,
+        is_self: Number(person.id) === Number(decoded.id),
+        forecast,
+      });
+    }
+
+    forecasts.sort((a, b) => {
+      if (a.is_self !== b.is_self) return a.is_self ? -1 : 1;
+      return String(a.full_name || '').localeCompare(String(b.full_name || ''));
+    });
+
+    res.json({ ok: true, forecasts });
+  } catch (err) {
+    console.error('barangay-forecasts:', err);
+    res.status(500).json({ ok: false, error: 'Hindi makuha ang mga forecast.' });
   }
 });
 
@@ -771,16 +806,11 @@ router.delete('/expense-history-foundation/:farmerId', async (req, res) => {
 // GET /api/farmer-income/:farmerId - Get all income records for a farmer
 router.get('/:farmerId', async (req, res) => {
   try {
-    const { farmerId } = req.params;
-    const userBarangayId = getUserBarangayFromToken(req);
-    
-    // Check if farmer belongs to user's barangay
-    const farmerBarangay = await getFarmerBarangay(farmerId);
-    if (userBarangayId && farmerBarangay !== userBarangayId) {
-      return res.status(403).json({ 
-        error: 'Access denied. Cannot view income records for other barangays.' 
-      });
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ error: gate.error });
     }
+    const farmerId = gate.id;
 
     const [records] = await pool.execute(
       `SELECT * FROM farmer_income_records WHERE farmer_id = ? ORDER BY created_at DESC`,
@@ -828,12 +858,9 @@ router.get('/record/:id', async (req, res) => {
     }
 
     const record = records[0];
-    
-    // Check if user can access this record's barangay
-    if (userBarangayId && record.barangay_id !== userBarangayId) {
-      return res.status(403).json({
-        error: 'Access denied. Cannot view income records for other barangays.'
-      });
+    const gate = assertOwnFarmerId(req, record.farmer_id);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ error: gate.error });
     }
 
     const [fertilizers] = await pool.execute(
@@ -861,11 +888,10 @@ router.delete('/:id', async (req, res) => {
   try {
     await conn.beginTransaction();
     const { id } = req.params;
-    const userBarangayId = getUserBarangayFromToken(req);
 
     // Get the record with farmer barangay info
     const [records] = await conn.execute(
-      `SELECT r.id, f.barangay_id FROM farmer_income_records r
+      `SELECT r.id, r.farmer_id, f.barangay_id FROM farmer_income_records r
        JOIN farmers f ON r.farmer_id = f.id
        WHERE r.id = ?`,
       [id]
@@ -876,15 +902,88 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Hindi makita ang talaan.' });
     }
 
-    // Check if user can delete this record
-    if (userBarangayId && records[0].barangay_id !== userBarangayId) {
+    const decoded = decodeIncomeJwt(req);
+    if (!decoded) {
       await conn.rollback();
-      return res.status(403).json({
-        error: 'Access denied. Cannot delete income records for other barangays.'
-      });
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const isOwner = Number(decoded.id) === Number(records[0].farmer_id);
+    const isPresidentOfBarangay = String(decoded.role || '').toLowerCase() === 'president'
+      && Number(decoded.barangay_id) === Number(records[0].barangay_id);
+    if (!isOwner && !isPresidentOfBarangay) {
+      await conn.rollback();
+      return res.status(403).json({ error: 'You can only delete your own income record.' });
     }
 
-    // Delete child records first
+    const [distributions] = await conn.execute(
+      'SELECT id FROM income_assistance_distributions WHERE income_record_id = ?',
+      [id]
+    ).catch((err) => {
+      if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return [[]];
+      throw err;
+    });
+    const distributionIds = distributions.map((row) => row.id).filter((value) => Number(value) > 0);
+    if (distributionIds.length > 0) {
+      const placeholders = distributionIds.map(() => '?').join(',');
+      const [contributions] = await conn.execute(
+        `SELECT id FROM share_capital_contributions WHERE source_distribution_id IN (${placeholders})`,
+        distributionIds
+      ).catch((err) => {
+        if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return [[]];
+        throw err;
+      });
+      const contributionIds = contributions.map((row) => row.id).filter((value) => Number(value) > 0);
+      if (contributionIds.length > 0) {
+        const contributionPlaceholders = contributionIds.map(() => '?').join(',');
+        await conn.execute(
+          `DELETE FROM payment_receipts
+           WHERE module = 'share_capital' AND reference_id IN (${contributionPlaceholders})`,
+          contributionIds
+        ).catch((err) => {
+          if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return;
+          throw err;
+        });
+      }
+      await conn.execute(
+        `DELETE FROM share_capital_contributions WHERE source_distribution_id IN (${placeholders})`,
+        distributionIds
+      ).catch((err) => {
+        if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return;
+        throw err;
+      });
+      await conn.execute(
+        `DELETE FROM payment_receipts
+         WHERE reference_type = 'income_assistance_distribution'
+           AND reference_id IN (${placeholders})`,
+        distributionIds
+      ).catch((err) => {
+        if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return;
+        throw err;
+      });
+      await conn.execute(
+        `DELETE FROM due_date_notifications
+         WHERE reference_type = 'income_assistance_distribution'
+           AND reference_id IN (${placeholders})`,
+        distributionIds
+      );
+      await conn.execute(
+        'DELETE FROM income_assistance_distributions WHERE income_record_id = ?',
+        [id]
+      );
+    }
+
+    await conn.execute(
+      'DELETE FROM income_status_audit_log WHERE income_record_id = ?',
+      [id]
+    ).catch((err) => {
+      if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return;
+      throw err;
+    });
+    await conn.execute(
+      `DELETE FROM due_date_notifications
+       WHERE reference_type = 'farmer_income_record' AND reference_id = ?`,
+      [id]
+    );
     await conn.execute('DELETE FROM farmer_income_fertilizers WHERE record_id = ?', [id]);
     await conn.execute('DELETE FROM farmer_income_pesticides WHERE record_id = ?', [id]);
     await conn.execute('DELETE FROM farmer_income_records WHERE id = ?', [id]);
@@ -946,17 +1045,14 @@ router.put('/:id', async (req, res) => {
       await conn.rollback();
       return res.status(404).json({ error: 'Hindi makita ang talaan.' });
     }
-    if (existing[0].farmer_id !== farmer_id) {
+    const gate = assertOwnFarmerId(req, existing[0].farmer_id);
+    if (!gate.ok) {
       await conn.rollback();
-      return res.status(403).json({ error: 'Hindi mo maaaring i-edit ang talaang ito.' });
+      return res.status(gate.status).json({ error: gate.error });
     }
-
-    // Check if user can update this record's barangay
-    if (userBarangayId && existing[0].barangay_id !== userBarangayId) {
+    if (farmer_id != null && Number(farmer_id) !== gate.id) {
       await conn.rollback();
-      return res.status(403).json({
-        error: 'Access denied. Cannot update income records for other barangays.'
-      });
+      return res.status(403).json({ error: 'You cannot assign this record to another farmer.' });
     }
 
     // Update main record

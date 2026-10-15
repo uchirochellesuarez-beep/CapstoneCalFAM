@@ -7,7 +7,7 @@ import GoogleRegistration from '../views/GoogleRegistration.vue'
 import FarmerTablePage from '../views/FarmerTablePage.vue'
 import MembersSummaryPage from '../views/MembersSummaryPage.vue'
 import { useAuthStore } from '../stores/authStore'
-import { canBookMachinery, canApplyOfficerLoan } from '../utils/roleAccess'
+import { canBookMachinery, canApplyOfficerLoan, canUsePersonalFarmAnalytics } from '../utils/roleAccess'
 
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 
@@ -45,7 +45,7 @@ const routes = [
       { path: 'officer-loans', component: () => import('../views/OfficerLoansPage.vue'), meta: { requiresOfficerLoan: true } },
       
       // Farmer Income Routes
-      { path: 'farmer-income', component: () => import('../views/FarmerIncomePage.vue'), meta: { requiresFarmer: true } },
+      { path: 'farmer-income', component: () => import('../views/FarmerIncomePage.vue'), meta: { requiresPersonalFarmAnalytics: true } },
       { path: 'farmer-income-hub', component: () => import('../views/FarmerIncomeHubPage.vue'), meta: { requiresFarmingAccess: true } },
       { path: 'president-income-verify', component: () => import('../views/PresidentFarmerIncomePage.vue'), meta: { requiresPresident: true } },
       { path: 'officer-farmer-income', component: () => import('../views/OfficerFarmerIncomePage.vue'), meta: { requiresOfficer: true } },
@@ -92,6 +92,18 @@ export const router = createRouter({
 // Navigation guard
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+
+  // Logout already cleared the account. Stay on the login screen and do not
+  // bounce through the dashboard if another tab writes a session mid-exit.
+  if (authStore.loggingOut) {
+    if (to.path === '/login' || to.meta.requiresGuest) {
+      next()
+      return
+    }
+    next('/login')
+    return
+  }
+
   const isLoggedIn = authStore.isLoggedIn()
   const userRole = authStore.currentUser?.role
 
@@ -197,6 +209,14 @@ router.beforeEach((to, from, next) => {
   const requiresPresident = to.meta.requiresPresident || (to.matched.some(record => record.meta.requiresPresident))
   if (requiresPresident && userRole !== 'president') {
     alert('Access denied. President privileges required.')
+    next('/dashboard')
+    return
+  }
+
+  const requiresPersonalFarmAnalytics = to.meta.requiresPersonalFarmAnalytics
+    || to.matched.some((record) => record.meta.requiresPersonalFarmAnalytics)
+  if (requiresPersonalFarmAnalytics && !canUsePersonalFarmAnalytics(userRole)) {
+    alert('Access denied. This page is only for your own farm income and predictions.')
     next('/dashboard')
     return
   }

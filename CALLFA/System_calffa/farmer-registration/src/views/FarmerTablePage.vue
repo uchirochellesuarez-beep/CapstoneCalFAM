@@ -108,8 +108,7 @@
         <div class="registered-members-card">
           <h2 class="registered-members-title">{{ $t('common.rejectedAccounts') }}</h2>
           <div v-if="loading" class="state-center">
-            <div class="spinner"></div>
-            <p class="state-text">{{ $t('common.loading') }}</p>
+            <ContentSkeleton variant="table" :label="$t('common.loading')" />
           </div>
           <div v-else-if="rejectedFarmers.length === 0" class="state-center">
             <p class="state-text">{{ $t('ui.noRejectedAccounts') }}</p>
@@ -119,11 +118,12 @@
             <article v-for="farmer in rejectedFarmers" :key="'rm-' + farmer.id" class="members-mobile-card">
               <div class="mmc-head">
                 <div class="member-avatar-wrap">
-                  <img
+                  <AppImage
                     v-if="farmer.profile_picture"
                     :src="getProfilePictureUrl(farmer.profile_picture)"
                     :alt="$t('ui.profile')"
-                    class="member-avatar"
+                    img-class="member-avatar"
+                    shape="circle"
                   />
                   <div v-else class="member-avatar member-avatar-fallback">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -186,11 +186,12 @@
                   <tr v-for="farmer in rejectedFarmers" :key="farmer.id" class="members-data-row">
                     <td class="members-cell-center">
                       <div class="member-avatar-wrap">
-                        <img
+                        <AppImage
                           v-if="farmer.profile_picture"
                           :src="getProfilePictureUrl(farmer.profile_picture)"
                           :alt="$t('ui.profile')"
-                          class="member-avatar"
+                          img-class="member-avatar"
+                          shape="circle"
                         />
                         <div v-else class="member-avatar member-avatar-fallback">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">

@@ -30,7 +30,7 @@
             <path d="M9 12h6M9 16h6" />
           </svg>
         </span>
-        Mga Talaan
+        {{ $t('ui.records') }}
       </button>
     </div>
 
@@ -74,14 +74,13 @@
         </div>
         <p v-if="filteredRecords.length > 0" class="results-count">
           <span class="results-count-num">{{ filteredRecords.length }}</span>
-          {{ filteredRecords.length === 1 ? 'talaan' : 'mga talaan' }}
+          {{ filteredRecords.length === 1 ? $t('ui.recordOne') : $t('ui.recordsMany') }}
         </p>
       </div>
 
       <!-- Loading -->
       <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('ui.loadingRecords') }}</p>
+        <ContentSkeleton variant="list" :label="$t('ui.loadingRecords')" />
       </div>
 
       <!-- Empty State -->
@@ -144,7 +143,7 @@
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </span>
-                Tingnan
+                {{ $t('common.view') }}
               </button>
             </div>
           </div>
@@ -157,7 +156,7 @@
                 </svg>
               </span>
               <span class="detail-label">{{ $t('ui.areaColon') }}</span>
-              <span>{{ record.area_hectares }} ektarya</span>
+              <span>{{ $t('ui.hectaresValue', { n: record.area_hectares }) }}</span>
             </div>
           </div>
           <div class="record-financials">
@@ -199,9 +198,51 @@
               <span class="fin-stat-value">₱{{ parseFloat(record.net_income || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
             </div>
           </div>
+          <div v-if="canDeleteRecords" class="record-delete-row">
+            <button
+              class="delete-btn"
+              type="button"
+              :disabled="deletingRecordId === record.id"
+              @click.stop="askDelete(record)"
+            >
+              {{ deletingRecordId === record.id ? $t('ui.deleting') : $t('common.delete') }}
+            </button>
+          </div>
         </div>
       </div>
     </template>
+
+    <Teleport to="body">
+      <Transition name="app-modal">
+        <div
+          v-if="showDeleteModal"
+          class="modal-overlay app-modal-overlay farmer-income-hub-modal"
+          :class="{ 'light-theme': isLight }"
+          @click.self="onDeleteBackdrop"
+        >
+          <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="eligible-delete-title">
+            <div class="modal-header">
+              <h2 id="eligible-delete-title">{{ $t('ui.deleteRecordTitle') }}</h2>
+              <button type="button" class="modal-close" @click="closeDeleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-text">{{ $t('ui.deleteIncomeConfirm', { name: deletingTarget?.farmer_name || $t('ui.farmerFallback') }) }}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-cancel" @click="closeDeleteModal" :disabled="deletingRecordId !== null">{{ $t('common.cancel') }}</button>
+              <button
+                type="button"
+                class="btn-confirm-reject"
+                @click="confirmDelete"
+                :disabled="deletingRecordId !== null"
+              >
+                {{ deletingRecordId !== null ? $t('ui.deleting') : $t('common.delete') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- VIEW DETAIL MODAL - RECORD -->
     <Teleport to="body">
@@ -262,12 +303,12 @@
                   <span class="cell-value">{{ formatDate(selectedRecord.created_at) }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Lawak (Ektarya)</span>
+                  <span class="cell-label">{{ $t('incomeForm.areaHectares') }}</span>
                   <span class="cell-value">{{ selectedRecord.area_hectares }}</span>
                 </div>
                 <div class="detail-cell">
                   <span class="cell-label">{{ $t('incomeForm.plantingMethod') }}</span>
-                  <span class="cell-value">{{ selectedRecord.planting_method === 'sabog' ? 'Sabog' : 'Talok' }}</span>
+                  <span class="cell-value">{{ selectedRecord.planting_method === 'sabog' ? $t('incomeForm.sabog') : $t('incomeForm.talok') }}</span>
                 </div>
                 <div class="detail-cell">
                   <span class="cell-label">{{ $t('ui.irrigation') }}</span>
@@ -443,39 +484,39 @@
                   <span>₱{{ parseFloat(selectedRecord.land_preparation_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bunot / Talok / Hasik</span>
+                  <span>{{ $t('incomeForm.plantingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.planting_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Pagspray / Pagsabog ng Abono</span>
+                  <span>{{ $t('incomeForm.sprayingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.spraying_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Harvester</span>
+                  <span>{{ $t('incomeForm.harvesterCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.harvester_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Pagbibilad</span>
+                  <span>{{ $t('incomeForm.dryingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.drying_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Bayad sa Paghakot</span>
+                  <span>{{ $t('incomeForm.haulingCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.hauling_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Tarasko</span>
+                  <span>{{ $t('incomeForm.taraskoCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.tarasko_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Krudo</span>
+                  <span>{{ $t('incomeForm.fuelCostShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.fuel_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row">
-                  <span>Iba Pang Gastos</span>
+                  <span>{{ $t('incomeForm.otherExpensesShort') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.other_expenses || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="expense-row total-row">
-                  <span>Kabuuang Labor:</span>
+                  <span>{{ $t('incomeForm.totalLabor') }}</span>
                   <span>₱{{ parseFloat(selectedRecord.total_labor_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
               </div>
@@ -504,11 +545,11 @@
                   <span class="cell-value">{{ selectedRecord.kg_per_sack }} kg</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Presyo Kada Kilo</span>
+                  <span class="cell-label">{{ $t('incomeForm.pricePerKg') }}</span>
                   <span class="cell-value">₱{{ parseFloat(selectedRecord.price_per_kg || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}</span>
                 </div>
                 <div class="detail-cell">
-                  <span class="cell-label">Kabuuang Ani</span>
+                  <span class="cell-label">{{ $t('incomeForm.totalHarvestKg') }}</span>
                   <span class="cell-value">{{ (parseFloat(selectedRecord.sacks_harvested || 0) * parseFloat(selectedRecord.kg_per_sack || 0)).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }} kg</span>
                 </div>
               </div>
@@ -554,6 +595,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
@@ -566,8 +608,18 @@ const isLight = computed(() => !isDark.value)
 const route = useRoute()
 const router = useRouter()
 
+const { t, locale } = useI18n()
+const props = defineProps({
+  allowDelete: { type: Boolean, default: false }
+})
+const emit = defineEmits(['records-changed'])
+
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
+const canDeleteRecords = computed(() => {
+  if (props.allowDelete) return true
+  return String(currentUser.value?.role || '').toLowerCase() === 'president'
+})
 
 // Refs
 const activeTab = ref('records')
@@ -579,8 +631,12 @@ const searchQuery = ref('')
 const showDetailModal = ref(false)
 const selectedRecord = ref(null)
 const highlightedRecordId = ref(null)
+const deletingRecordId = ref(null)
+const showDeleteModal = ref(false)
+const deletingTarget = ref(null)
+const deleteModalOpenedAt = ref(0)
 
-useIncomeHubMobile(() => showDetailModal.value)
+useIncomeHubMobile(() => showDetailModal.value || showDeleteModal.value)
 
 // Filter
 const filteredRecords = computed(() => {
@@ -607,7 +663,7 @@ const fetchRecords = async () => {
       }
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Hindi makuha ang mga talaan.')
+    if (!res.ok) throw new Error(data.error || t('ui.fetchIncomeFailed'))
     records.value = data
   } catch (err) {
     errorMessage.value = err.message
@@ -617,6 +673,52 @@ const fetchRecords = async () => {
 }
 
 
+
+const askDelete = (record) => {
+  deletingTarget.value = record
+  deleteModalOpenedAt.value = Date.now()
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  if (deletingRecordId.value) return
+  showDeleteModal.value = false
+  deletingTarget.value = null
+}
+
+const onDeleteBackdrop = () => {
+  if (Date.now() - deleteModalOpenedAt.value < 500) return
+  closeDeleteModal()
+}
+
+const confirmDelete = async () => {
+  const record = deletingTarget.value
+  if (!record) return
+  deletingRecordId.value = record.id
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    const res = await fetch(`/api/farmer-income/${record.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || t('ui.deleteIncomeFailed'))
+    successMessage.value = t('ui.deleteIncomeSuccess')
+    if (selectedRecord.value && String(selectedRecord.value.id) === String(record.id)) {
+      showDetailModal.value = false
+      selectedRecord.value = null
+    }
+    await fetchRecords()
+    emit('records-changed')
+    showDeleteModal.value = false
+    deletingTarget.value = null
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    deletingRecordId.value = null
+  }
+}
 
 // Modal functions
 const openRecordDetail = (record) => {
@@ -632,19 +734,20 @@ const closeDetailModal = () => {
 
 // Helper functions
 const formatDate = (dateStr) => {
-  return new Date(dateStr).toLocaleDateString('fil-PH', {
+  const loc = locale.value === 'tl' ? 'fil-PH' : 'en-PH'
+  return new Date(dateStr).toLocaleDateString(loc, {
     year: 'numeric', month: 'long', day: 'numeric'
   })
 }
 
 const formatIrrigation = (type) => {
   const map = {
-    'NIA': 'NIA',
-    'bugsok_waterpump': 'Bugsok na Waterpump',
-    'waterpump_irrigation': 'Waterpump na Nakalawit sa Irrigation',
-    'waterpump_ilog': 'Waterpump na Nakalawit sa Ilog'
+    NIA: 'incomeForm.nia',
+    bugsok_waterpump: 'incomeForm.bugsokPump',
+    waterpump_irrigation: 'incomeForm.pumpIrrigation',
+    waterpump_ilog: 'incomeForm.pumpRiver'
   }
-  return map[type] || type
+  return map[type] ? t(map[type]) : type
 }
 
 const getStatusClass = (status) => {
@@ -745,10 +848,32 @@ async function applyIncomeHighlightFromRoute() {
 
 .farmer-name,
 .record-date,
-.view-btn {
+.view-btn,
+.delete-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.record-delete-row {
+  margin-top: 0.65rem;
+}
+
+.delete-btn {
+  width: 100%;
+  border: 1px solid #fecaca;
+  background: #7f1d1d;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .page-subtitle {

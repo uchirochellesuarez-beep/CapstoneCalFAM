@@ -176,7 +176,7 @@
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="10" class="loading-cell">{{ $t('ui.loadingLoans') }}</td>
+                <td colspan="10" class="loading-cell"><ContentSkeleton variant="table" :label="$t('ui.loadingLoans')" /></td>
               </tr>
               <tr v-else-if="filteredLoans.length === 0">
                 <td colspan="10" class="empty-cell">{{ $t('ui.noLoansFound') }}</td>
@@ -257,7 +257,7 @@
         </div>
 
         <div class="fin-mobile-list">
-          <div v-if="loading" class="fin-mobile-empty">{{ $t('ui.loadingLoans') }}</div>
+          <div v-if="loading" class="fin-mobile-empty"><ContentSkeleton variant="list" :label="$t('ui.loadingLoans')" /></div>
           <div v-else-if="filteredLoans.length === 0" class="fin-mobile-empty">{{ $t('ui.noLoansFound') }}</div>
           <article
             v-else

@@ -139,8 +139,7 @@
 
       <div class="machinery-grid">
         <div v-if="loading && availableMachinery.length === 0" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>{{ $t('ui.loadingAvailableMachinery') }}</p>
+          <ContentSkeleton variant="cards" :label="$t('ui.loadingAvailableMachinery')" />
         </div>
         <div v-else-if="availableMachinery.length === 0" class="empty-state">
           <div class="empty-icon" aria-hidden="true"></div>
@@ -156,12 +155,16 @@
           
           <!-- Machinery Picture -->
           <div class="machinery-picture-container">
-            <img 
-              v-if="machine.machinery_picture" 
-              :src="getImageUrl(machine.machinery_picture)" 
+            <MachineryPhoto
+              v-if="machine.machinery_picture"
+              :src="getImageUrl(machine.machinery_picture)"
               :alt="machine.machinery_name"
-              class="machinery-picture"
-            />
+            >
+              <div class="machinery-picture-placeholder">
+                <div class="placeholder-icon" aria-hidden="true"></div>
+                <p>{{ $t('ui.noImage') }}</p>
+              </div>
+            </MachineryPhoto>
             <div v-else class="machinery-picture-placeholder">
               <div class="placeholder-icon" aria-hidden="true"></div>
               <p>{{ $t('ui.noImage') }}</p>
@@ -277,8 +280,7 @@
           <tbody>
             <tr v-if="loading">
               <td :colspan="bookingTableColspan" class="loading-cell">
-                <div class="loading-spinner"></div>
-                <span>{{ $t('ui.loadingBookings') }}</span>
+                <ContentSkeleton variant="table" :label="$t('ui.loadingBookings')" />
               </td>
             </tr>
             <tr v-else-if="filteredBookings.length === 0">
@@ -342,8 +344,7 @@
 
         <div class="inv2-mobile-list bookings-mobile-list">
           <div v-if="loading" class="inv2-empty">
-            <div class="loading-spinner"></div>
-            <div>{{ $t('ui.loadingBookings') }}</div>
+            <ContentSkeleton variant="list" :label="$t('ui.loadingBookings')" />
           </div>
           <div v-else-if="filteredBookings.length === 0" class="inv2-empty">
             <div>{{ $t('ui.bookToStart') }}</div>
@@ -430,7 +431,7 @@
     <Teleport to="body">
     <div
       v-if="showBookingModal"
-      class="modal-overlay app-modal-overlay machinery-booking-modal machinery-ui"
+      class="modal-overlay app-modal-overlay machinery-booking-modal machinery-ui booking-sheet"
       :class="{ 'light-theme': isLight }"
       @click.self="closeModals"
     >
@@ -511,7 +512,7 @@
 
             <div class="form-group booking-date-group" v-if="selectedMachineryForBooking">
               <label class="form-label">Booking Date *</label>
-              <div v-if="selectedMachineryForBooking.max_capacity" class="booking-date-calendar">
+              <div class="booking-date-calendar">
                 <p v-if="loadingUnavailableDates" class="cal-loading">Checking availability…</p>
                 <div class="cal-nav">
                   <button type="button" class="cal-nav-btn" @click="shiftBookingMonth(-1)" :disabled="!canShiftBookingMonth(-1)">
@@ -548,7 +549,7 @@
                   {{ $t('ui.selectedColon') }} <strong>{{ formatDate(bookingForm.booking_date) }}</strong>
                 </p>
                 <p
-                  v-if="bookingForm.booking_date && selectedMachineryForBooking?.max_capacity"
+                  v-if="bookingForm.booking_date && selectedMachineryForBooking.max_capacity"
                   class="cal-availability-hint"
                   :class="{ 'cal-availability-hint--low': selectedDateRemainingCapacity != null && selectedDateRemainingCapacity <= 0 }"
                 >
@@ -561,14 +562,6 @@
                 </p>
                 <p v-if="!bookingForm.booking_date" class="cal-selected-hint cal-selected-hint--muted">{{ $t('ui.pickCalendarDate') }}</p>
               </div>
-              <input
-                v-else
-                v-model="bookingForm.booking_date"
-                type="date"
-                :min="minDate"
-                class="form-input"
-                required
-              />
             </div>
 
             <div class="form-group booking-location-group">
@@ -1141,7 +1134,7 @@
 
             <div class="form-group" v-if="bookingToEdit">
               <label class="form-label">Booking Date *</label>
-              <div v-if="selectedEditMachinery && selectedEditMachinery.max_capacity" class="booking-date-calendar">
+              <div class="booking-date-calendar">
                 <p v-if="loadingEditUnavailableDates" class="cal-loading">Checking availability…</p>
                 <div class="cal-nav">
                   <button type="button" class="cal-nav-btn" @click="shiftEditMonth(-1)" :disabled="!canShiftEditMonth(-1)">
@@ -1179,14 +1172,6 @@
                 </p>
                 <p v-else class="cal-selected-hint cal-selected-hint--muted">{{ $t('ui.pickCalendarDate') }}</p>
               </div>
-              <input
-                v-else
-                v-model="bookingToEdit.booking_date"
-                type="date"
-                class="form-input"
-                :min="minDate"
-                required
-              />
             </div>
 
             <div class="form-group">
@@ -1312,6 +1297,7 @@ import TypedNumberInput from '../components/TypedNumberInput.vue'
 import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
 import ProofPreviewModal from '../components/ProofPreviewModal.vue'
 import GcashQrPayPanel from '../components/GcashQrPayPanel.vue'
+import MachineryPhoto from '../components/MachineryPhoto.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { canCreateBookingOnBehalf } from '../utils/roleAccess'
 import { historyRowKey, pickFocusedHistoryRow, clearNotificationDeepLink, consumeNotificationDeepLink, scrollFocusedHistoryRowWhenReady, scrollElementWhenReady } from '../utils/paymentHistoryFocus'
@@ -1323,7 +1309,8 @@ export default {
     TypedNumberInput,
     PaymentReceiptPrint,
     ProofPreviewModal,
-    GcashQrPayPanel
+    GcashQrPayPanel,
+    MachineryPhoto
   },
   setup() {
     const machineryStore = useMachineryStore()
@@ -3728,6 +3715,7 @@ export default {
 }
 
 .machinery-picture-container {
+  position: relative;
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 3;
@@ -4116,6 +4104,11 @@ export default {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(10, 20, 14, 0.45);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .cal-loading {
@@ -4164,7 +4157,9 @@ export default {
 
 .cal-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
   gap: 4px;
   margin-bottom: 6px;
   text-align: center;
@@ -4175,16 +4170,27 @@ export default {
   letter-spacing: 0.04em;
 }
 
+.cal-weekdays span {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
   gap: 5px;
 }
 
 .cal-cell {
   position: relative;
+  min-width: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   min-height: 48px;
-  padding: 4px 2px 6px;
+  padding: 4px 0 6px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
@@ -4451,6 +4457,29 @@ export default {
 .booking-form-modal .modal-header {
   padding: 14px 18px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.booking-form-modal .modal-header h2 {
+  min-width: 0;
+  flex: 1;
+}
+
+.booking-form-modal .modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #f8fafc !important;
+  background: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .booking-form-modal .modal-body {
@@ -4468,7 +4497,8 @@ export default {
   grid-template-rows: none;
   column-gap: 12px;
   row-gap: 10px;
-  align-items: start;
+  align-items: stretch;
+  width: 100%;
 }
 
 .booking-form-compact.is-machinery-ready {
@@ -4492,7 +4522,9 @@ export default {
 
 .booking-form-compact.is-machinery-ready .booking-date-group {
   grid-column: 1;
-  align-self: start;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
 }
 
 .booking-form-compact.is-machinery-ready:not(:has(.farmer-combobox)) .booking-machine-group {
@@ -6017,30 +6049,94 @@ export default {
   border: 1px solid #cbd5e1 !important;
 }
 
-@media (max-width: 768px) {
-  .modal-overlay.app-modal-overlay.machinery-booking-modal {
-    padding: max(0.75rem, env(safe-area-inset-top, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px))
-      max(0.75rem, env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+@media (max-width: 900px) {
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    overflow: hidden !important;
   }
 
-  .modal-overlay.app-modal-overlay.machinery-booking-modal .modal-content,
-  .modal-overlay.app-modal-overlay.machinery-booking-modal .modal-content.booking-form-modal,
-  .modal-overlay.app-modal-overlay.machinery-booking-modal .modal-content.modal-large,
-  .modal-overlay.app-modal-overlay.machinery-booking-modal .modal-content.modal-small {
-    width: min(100%, calc(100vw - 1.5rem)) !important;
-    max-width: min(100%, calc(100vw - 1.5rem)) !important;
-    max-height: min(90dvh, calc(100dvh - 1.5rem));
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .modal-content.booking-form-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow-x: hidden;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .booking-form-compact,
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .booking-form-compact.is-machinery-ready {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .booking-form-compact > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    align-self: stretch !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    box-sizing: border-box;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .booking-date-calendar,
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .machinery-info-box,
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .form-input,
+  .modal-overlay.app-modal-overlay.machinery-booking-modal.booking-sheet .form-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .booking-form-modal .modal-header {
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .booking-form-compact {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0;
+    row-gap: 12px;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .booking-date-calendar {
+    padding: 10px;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .cal-cell {
+    min-width: 0 !important;
+    min-height: 44px !important;
+    padding: 4px 0 5px !important;
+    font-size: 13px !important;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .cal-weekdays {
+    font-size: 10px;
+    letter-spacing: 0;
+    gap: 2px;
+  }
+
+  .modal-overlay.app-modal-overlay.machinery-booking-modal .cal-grid {
+    gap: 2px;
   }
 
   .modal-overlay.app-modal-overlay.machinery-booking-modal .booking-form-compact > .modal-actions {
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.15rem;
+    position: static !important;
+    bottom: auto !important;
+    z-index: auto;
+    margin-top: 16px !important;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom, 0px));
+    background: transparent;
     flex-wrap: wrap;
     gap: 8px;
   }

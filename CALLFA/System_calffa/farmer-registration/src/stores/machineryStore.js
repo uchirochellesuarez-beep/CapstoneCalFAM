@@ -900,6 +900,30 @@ export const useMachineryStore = defineStore('machinery', {
       }
     },
 
+    async deleteBooking(id) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
+          method: 'DELETE',
+          headers: authJsonHeaders()
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || 'Failed to delete booking')
+        }
+        await this.fetchBookings()
+        return data
+      } catch (error) {
+        this.error = error.message
+        console.error('Error deleting booking:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
     async editBooking(id, bookingData) {
       this.loading = true
       this.error = null

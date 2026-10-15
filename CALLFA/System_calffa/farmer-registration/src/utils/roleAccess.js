@@ -22,6 +22,18 @@ export const MACHINERY_BOOKING_ROLES = ['farmer', ...OFFICER_LOAN_APPLICANT_ROLE
 export const canBookMachinery = (role) =>
   MACHINERY_BOOKING_ROLES.includes(String(role || '').toLowerCase())
 
+/** Individual farm income and predictions. Agriculturist is excluded. */
+export const PERSONAL_FARM_ANALYTICS_ROLES = [
+  'farmer',
+  'president',
+  'treasurer',
+  'operation_manager',
+  'operator'
+]
+
+export const canUsePersonalFarmAnalytics = (role) =>
+  PERSONAL_FARM_ANALYTICS_ROLES.includes(String(role || '').toLowerCase())
+
 export const canCreateBookingOnBehalf = (role) =>
   ['operation_manager', 'business_manager', 'admin'].includes(String(role || '').toLowerCase())
 

@@ -38,6 +38,7 @@ const {
   getPaymentVerifierRole
 } = require('../services/booking-workflow');
 const { verifyDownPaymentForBooking, recordCashDownPaymentForBooking } = require('../services/down-payment-service');
+const { assertUniqueMachineryName } = require('../utils/machineryName');
 const {
   getDownPaymentSettings,
   setDownPaymentSettings
@@ -505,6 +506,13 @@ router.post('/inventory', async (req, res) => {
       });
     }
     
+    let uniqueMachineryName;
+    try {
+      uniqueMachineryName = await assertUniqueMachineryName(pool, finalBarangayId, machinery_name);
+    } catch (nameErr) {
+      return res.status(nameErr.status || 400).json({ success: false, message: nameErr.message });
+    }
+
     console.log('✅ Validation passed. Inserting into database...');
     const inventoryStatus = normalizeStoredMachineryStatus(status);
 
@@ -526,7 +534,7 @@ router.post('/inventory', async (req, res) => {
        (machinery_name, machinery_type, description, price_per_unit, member_price, non_member_price, interest_rate, unit_type, 
         max_capacity, capacity_unit, status, created_by, barangay_id, requires_machinery_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [machinery_name, machinery_type, description, price_per_unit, 
+      [uniqueMachineryName, machinery_type, description, price_per_unit, 
        req.body.member_price || price_per_unit, 
        req.body.non_member_price || (price_per_unit * 1.25), 
        interestRate,
@@ -542,6 +550,12 @@ router.post('/inventory', async (req, res) => {
       machinery_id: result.insertId 
     });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        success: false,
+        message: 'This machinery name is already used in this barangay. Each machine needs its own name so the system can tell them apart.'
+      });
+    }
     console.error('❌ Error adding machinery:', error);
     res.status(500).json({ success: false, message: 'Failed to add machinery: ' + error.message });
   }
@@ -640,6 +654,13 @@ router.put('/inventory/:id', async (req, res) => {
       ? normalizeInterestRatePercent(req.body.interest_rate)
       : normalizeInterestRatePercent(machinery[0].interest_rate);
 
+    let uniqueMachineryName = machinery_name;
+    try {
+      uniqueMachineryName = await assertUniqueMachineryName(pool, targetBarangayId, machinery_name, id);
+    } catch (nameErr) {
+      return res.status(nameErr.status || 400).json({ success: false, message: nameErr.message });
+    }
+
     let requiresMachineryId;
     try {
       requiresMachineryId = await resolveRequiresMachineryId(pool, {
@@ -661,7 +682,7 @@ router.put('/inventory/:id', async (req, res) => {
              price_per_unit = ?, member_price = ?, non_member_price = ?, interest_rate = ?, unit_type = ?, max_capacity = ?, 
              capacity_unit = ?, status = ?, barangay_id = ?
          WHERE id = ?`,
-        [machinery_name, machinery_type, description, price_per_unit, 
+        [uniqueMachineryName, machinery_type, description, price_per_unit, 
          member_price || price_per_unit, 
          non_member_price || (price_per_unit * 1.25),
          interestRate,
@@ -674,7 +695,7 @@ router.put('/inventory/:id', async (req, res) => {
              price_per_unit = ?, member_price = ?, non_member_price = ?, interest_rate = ?, unit_type = ?, max_capacity = ?, 
              capacity_unit = ?, status = ?, barangay_id = ?, requires_machinery_id = ?
          WHERE id = ?`,
-        [machinery_name, machinery_type, description, price_per_unit, 
+        [uniqueMachineryName, machinery_type, description, price_per_unit, 
          member_price || price_per_unit, 
          non_member_price || (price_per_unit * 1.25),
          interestRate,
@@ -689,6 +710,12 @@ router.put('/inventory/:id', async (req, res) => {
     
     res.json({ success: true, message: 'Machinery updated successfully' });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        success: false,
+        message: 'This machinery name is already used in this barangay. Each machine needs its own name so the system can tell them apart.'
+      });
+    }
     console.error('Error updating machinery:', error);
     res.status(500).json({ success: false, message: 'Failed to update machinery' });
   }
@@ -3604,6 +3631,161 @@ router.put('/bookings/:id/cancel', ...secureBookingRoute, async (req, res) => {
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ success: false, message: 'Failed to cancel booking' });
+  }
+});
+
+async function rowsOrEmpty(connection, sql, params) {
+  try {
+    const [rows] = await connection.execute(sql, params);
+    return rows;
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146) return [];
+    throw error;
+  }
+}
+
+async function runOrSkipMissing(connection, sql, params) {
+  try {
+    await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146) return;
+    throw error;
+  }
+}
+
+// DELETE /api/machinery/bookings/:id — operation manager removes a booking in any status
+router.delete('/bookings/:id', verifyToken, verifyBookingBarangayAccess, async (req, res) => {
+  if (req.user?.role !== 'operation_manager') {
+    return res.status(403).json({
+      success: false,
+      message: 'Only the operation manager can delete bookings.'
+    });
+  }
+
+  const id = parseInt(req.params.id, 10);
+  if (!id) {
+    return res.status(400).json({ success: false, message: 'Booking ID is required' });
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const bookings = await rowsOrEmpty(
+      connection,
+      'SELECT id, farmer_id, status FROM machinery_bookings WHERE id = ?',
+      [id]
+    );
+    if (!bookings.length) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const expenses = await rowsOrEmpty(connection, 'SELECT id FROM machinery_expenses WHERE booking_id = ?', [id]);
+    const operatorIncomes = await rowsOrEmpty(connection, 'SELECT id FROM operator_income WHERE booking_id = ?', [id]);
+    const refunds = await rowsOrEmpty(connection, 'SELECT id FROM machinery_booking_refunds WHERE booking_id = ?', [id]);
+    const payments = await rowsOrEmpty(
+      connection,
+      'SELECT receipt_number FROM machinery_booking_payments WHERE booking_id = ?',
+      [id]
+    );
+    const gcashRows = await rowsOrEmpty(
+      connection,
+      `SELECT id FROM gcash_payment_submissions WHERE transaction_type = 'machinery' AND reference_id = ?`,
+      [id]
+    );
+
+    const expenseIds = expenses.map((row) => row.id);
+    const operatorIncomeIds = operatorIncomes.map((row) => row.id);
+    const refundIds = refunds.map((row) => row.id);
+    const gcashIds = gcashRows.map((row) => row.id);
+    const receiptNumbers = payments.map((row) => row.receipt_number).filter(Boolean);
+
+    await runOrSkipMissing(
+      connection,
+      `DELETE FROM payment_receipts
+       WHERE reference_type = 'machinery_booking' AND reference_id = ?`,
+      [id]
+    );
+    if (refundIds.length) {
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM payment_receipts
+         WHERE module = 'machinery_refund' AND reference_id IN (${refundIds.map(() => '?').join(',')})`,
+        refundIds
+      );
+    }
+    if (expenseIds.length) {
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM payment_receipts
+         WHERE module = 'machinery_expense' AND reference_id IN (${expenseIds.map(() => '?').join(',')})`,
+        expenseIds
+      );
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM due_date_notifications
+         WHERE reference_type = 'machinery_expense' AND reference_id IN (${expenseIds.map(() => '?').join(',')})`,
+        expenseIds
+      );
+    }
+    if (operatorIncomeIds.length) {
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM payment_receipts
+         WHERE module = 'operator_labor' AND reference_id IN (${operatorIncomeIds.map(() => '?').join(',')})`,
+        operatorIncomeIds
+      );
+    }
+    if (receiptNumbers.length) {
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM payment_receipts WHERE receipt_number IN (${receiptNumbers.map(() => '?').join(',')})`,
+        receiptNumbers
+      );
+    }
+    if (gcashIds.length) {
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM due_date_notifications
+         WHERE reference_type = 'gcash_payment_submission' AND reference_id IN (${gcashIds.map(() => '?').join(',')})`,
+        gcashIds
+      );
+      await runOrSkipMissing(
+        connection,
+        `DELETE FROM gcash_payment_submissions WHERE id IN (${gcashIds.map(() => '?').join(',')})`,
+        gcashIds
+      );
+    }
+
+    await runOrSkipMissing(connection, 'DELETE FROM machinery_balance_payment_submissions WHERE booking_id = ?', [id]);
+    await runOrSkipMissing(connection, 'DELETE FROM machinery_booking_refunds WHERE booking_id = ?', [id]);
+    await runOrSkipMissing(connection, 'DELETE FROM machinery_booking_payments WHERE booking_id = ?', [id]);
+    await runOrSkipMissing(connection, 'DELETE FROM machinery_income WHERE booking_id = ?', [id]);
+    await runOrSkipMissing(connection, 'DELETE FROM operator_income WHERE booking_id = ?', [id]);
+    await runOrSkipMissing(connection, 'DELETE FROM machinery_expenses WHERE booking_id = ?', [id]);
+    await connection.execute('DELETE FROM machinery_bookings WHERE id = ?', [id]);
+    await connection.commit();
+
+    try {
+      await deleteNotificationsForBooking(id);
+    } catch (notifyError) {
+      console.error('Booking deleted but notifications were not cleared:', notifyError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Booking deleted, including payments, income, and connected records.'
+    });
+  } catch (error) {
+    if (connection) {
+      try { await connection.rollback(); } catch (_) { /* already closed */ }
+    }
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete booking' });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
