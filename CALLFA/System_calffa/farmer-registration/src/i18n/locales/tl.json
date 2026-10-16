@@ -1122,6 +1122,8 @@
     "deleteDuesConfirm": "Buburahin ang association dues na ₱{amount}? Mawawala rin ang resibo at mga kaugnay na tala.",
     "deleteDuesSuccess": "Nabura ang talaan ng association dues.",
     "deleteDuesFailed": "Hindi mabura ang talaan ng dues.",
+    "deleteMemberDuesConfirm": "Buburahin ang lahat ng association dues ni {name}? Mawawala rin ang mga resibo at kaugnay na tala.",
+    "deleteMemberDuesSuccess": "Nabura ang association dues.",
     "memberShares": "Mga Bahagi ng Miyembro",
     "seedFertShort": "Binhi/Pataba",
     "expenseManagement": "Pamamahala ng Gastos",

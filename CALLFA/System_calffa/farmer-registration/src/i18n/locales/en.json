@@ -1122,6 +1122,8 @@
     "deleteDuesConfirm": "Delete this association dues record of ₱{amount}? The receipt and related records will also be removed.",
     "deleteDuesSuccess": "Association dues record deleted.",
     "deleteDuesFailed": "Could not delete this dues record.",
+    "deleteMemberDuesConfirm": "Delete all association dues for {name}? Receipts and related records will also be removed.",
+    "deleteMemberDuesSuccess": "Association dues deleted.",
     "memberShares": "Member Shares",
     "seedFertShort": "Seed/Fert.",
     "expenseManagement": "Expense Management",

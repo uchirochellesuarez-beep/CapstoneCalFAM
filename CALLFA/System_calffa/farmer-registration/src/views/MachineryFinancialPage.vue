@@ -694,6 +694,13 @@
                       <td>{{ farmer.last_payment_date ? formatDate(farmer.last_payment_date) : '—' }}</td>
                       <td class="actions" @click.stop>
                         <button class="btn btn-small" @click="selectFarmer(farmer)">{{ $t('common.view') }}</button>
+                        <button
+                          v-if="memberHasDues(farmer)"
+                          type="button"
+                          class="btn btn-small btn-delete"
+                          :disabled="deletingDues"
+                          @click="deleteMemberDues(farmer)"
+                        >{{ $t('common.delete') }}</button>
                       </td>
                     </tr>
                   </tbody>
@@ -723,6 +730,13 @@
                   </div>
                   <div class="fin-mobile-card-actions" @click.stop>
                     <button type="button" class="btn btn-small fin-mobile-action" @click="selectFarmer(farmer)">{{ $t('common.view') }}</button>
+                    <button
+                      v-if="memberHasDues(farmer)"
+                      type="button"
+                      class="btn btn-small btn-delete fin-mobile-action"
+                      :disabled="deletingDues"
+                      @click="deleteMemberDues(farmer)"
+                    >{{ $t('common.delete') }}</button>
                   </div>
                 </article>
               </div>
@@ -868,6 +882,12 @@
                           >
                             {{ $t('common.viewReceipt') }}
                           </button>
+                          <button
+                            type="button"
+                            class="btn btn-small btn-delete"
+                            :disabled="deletingDues"
+                            @click="deleteDuesPayment(payment)"
+                          >{{ $t('common.delete') }}</button>
                         </td>
                       </tr>
                     </tbody>
@@ -886,12 +906,19 @@
                       <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receiptNo') }}</span><span>{{ payment.receipt_number || '—' }}</span></div>
                       <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.collectedBy') }}</span><span>{{ payment.collected_by_name }}</span></div>
                     </div>
-                    <div v-if="payment.receipt_number" class="fin-mobile-card-actions">
+                    <div class="fin-mobile-card-actions">
                       <button
+                        v-if="payment.receipt_number"
                         type="button"
                         class="btn btn-small fin-mobile-action receipt-view-btn"
                         @click="viewReceipt(payment.receipt_number)"
                       >{{ $t('common.viewReceipt') }}</button>
+                      <button
+                        type="button"
+                        class="btn btn-small btn-delete fin-mobile-action"
+                        :disabled="deletingDues"
+                        @click="deleteDuesPayment(payment)"
+                      >{{ $t('common.delete') }}</button>
                     </div>
                   </article>
                 </div>
@@ -4374,6 +4401,7 @@ const alert = ref({
 
 // Monthly Dues State
 const monthlyDues = ref([]);
+const deletingDues = ref(false);
 const eligibleFarmers = ref([]);
 const currentPeriod = ref({ start: '', end: '' });
 const duesSummary = ref({
@@ -4404,6 +4432,12 @@ const selectedFarmerPayments = computed(() => {
 
   return monthlyDues.value.filter(payment => payment.farmer_id === selectedFarmer.value.id);
 });
+
+const memberHasDues = (farmer) => {
+  if (!farmer) return false;
+  if (Number(farmer.dues_paid)) return true;
+  return monthlyDues.value.some((payment) => Number(payment.farmer_id) === Number(farmer.id));
+};
 
 const selectedFarmerTotalPaid = computed(() => {
   return selectedFarmerPayments.value.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
@@ -7039,6 +7073,60 @@ const saveDuesFee = async () => {
     showAlert(error.message, 'error');
   } finally {
     duesFeeSaving.value = false;
+  }
+};
+
+const refreshDuesLists = async (farmerId) => {
+  await Promise.all([
+    loadMonthlyDues(),
+    loadEligibleFarmers(),
+    loadDuesSummary()
+  ]);
+  loadIncome();
+  loadProfitSummary();
+  if (farmerId) {
+    const refreshed = eligibleFarmers.value.find((farmer) => Number(farmer.id) === Number(farmerId));
+    if (refreshed) selectFarmer(refreshed);
+  }
+};
+
+const deleteDuesPayment = async (payment) => {
+  if (!payment?.id || deletingDues.value) return;
+  const ok = window.confirm(t('ui.deleteDuesConfirm', { amount: formatNumber(payment.amount) }));
+  if (!ok) return;
+  deletingDues.value = true;
+  try {
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/monthly-dues/${payment.id}`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteDuesFailed'));
+    }
+    await refreshDuesLists(payment.farmer_id);
+    showAlert(t('ui.deleteDuesSuccess'), 'success');
+  } catch (error) {
+    showAlert(error.message || t('ui.deleteDuesFailed'), 'error');
+  } finally {
+    deletingDues.value = false;
+  }
+};
+
+const deleteMemberDues = async (farmer) => {
+  if (!farmer?.id || deletingDues.value || !memberHasDues(farmer)) return;
+  const ok = window.confirm(t('ui.deleteMemberDuesConfirm', { name: farmer.full_name }));
+  if (!ok) return;
+  deletingDues.value = true;
+  try {
+    const response = await financialDelete(`${API_BASE_URL}/machinery-financial/monthly-dues/by-farmer/${farmer.id}`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteDuesFailed'));
+    }
+    await refreshDuesLists(farmer.id);
+    showAlert(t('ui.deleteMemberDuesSuccess'), 'success');
+  } catch (error) {
+    showAlert(error.message || t('ui.deleteDuesFailed'), 'error');
+  } finally {
+    deletingDues.value = false;
   }
 };
 
@@ -15023,6 +15111,16 @@ tr.selected {
     padding: 0.5rem 0.7rem 0.7rem !important;
   }
 }
+
+.btn-delete {
+  background: #991b1b !important;
+  color: #fff !important;
+  border: 1px solid #7f1d1d !important;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #b91c1c !important;
+}
 </style>
 
 <style>
@@ -16190,6 +16288,18 @@ tr.selected {
 .mf-expense-overlay.light-theme .mf-expense-modal .modal-actions {
   border-top-color: #bbf7d0;
   background: #ffffff;
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .modal-actions .btn-success {
+  background: #15803d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid #166534 !important;
+  box-shadow: 0 8px 16px rgba(22, 101, 52, 0.18);
+}
+
+.mf-expense-overlay.light-theme .mf-expense-modal .modal-actions .btn-success:hover:not(:disabled) {
+  background: #166534 !important;
 }
 
 @media (max-width: 720px) {

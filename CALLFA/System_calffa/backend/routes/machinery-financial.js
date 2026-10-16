@@ -2679,6 +2679,97 @@ router.post('/monthly-dues', verifyDuesCollectorAccess, async (req, res) => {
   }
 });
 
+async function runOrSkipDues(connection, sql, params = []) {
+  try {
+    await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146 || error.code === 'ER_BAD_FIELD_ERROR') return;
+    throw error;
+  }
+}
+
+async function deleteDuesRecord(connection, duesId) {
+  await runOrSkipDues(
+    connection,
+    `DELETE FROM payment_receipts
+     WHERE module = 'association_dues'
+       AND reference_type = 'monthly_dues'
+       AND reference_id = ?`,
+    [duesId]
+  );
+  await connection.execute('DELETE FROM monthly_dues WHERE id = ?', [duesId]);
+}
+
+// DELETE one association dues payment and its receipt
+router.delete('/monthly-dues/:id', verifyDuesCollectorAccess, async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Dues record is required' });
+    }
+    const [rows] = await connection.execute(
+      'SELECT id, farmer_id, barangay_id FROM monthly_dues WHERE id = ?',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Association dues record not found' });
+    }
+    if (parseInt(rows[0].barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only delete dues in your barangay.' });
+    }
+
+    await connection.beginTransaction();
+    await deleteDuesRecord(connection, id);
+    await connection.commit();
+    res.json({ success: true, message: 'Association dues record deleted' });
+  } catch (error) {
+    try { await connection.rollback(); } catch { /* ignore */ }
+    console.error('Error deleting association dues:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to delete association dues record' });
+  } finally {
+    connection.release();
+  }
+});
+
+// DELETE every association dues payment for one member, plus receipts
+router.delete('/monthly-dues/by-farmer/:farmerId', verifyDuesCollectorAccess, async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const farmerId = parseInt(req.params.farmerId, 10);
+    if (!farmerId) {
+      return res.status(400).json({ success: false, message: 'Member is required' });
+    }
+    const [farmers] = await connection.execute(
+      'SELECT id, barangay_id FROM farmers WHERE id = ?',
+      [farmerId]
+    );
+    if (farmers.length === 0) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+    if (parseInt(farmers[0].barangay_id, 10) !== parseInt(req.userBarangayId, 10)) {
+      return res.status(403).json({ success: false, message: 'You can only delete dues in your barangay.' });
+    }
+
+    const [rows] = await connection.execute(
+      'SELECT id FROM monthly_dues WHERE farmer_id = ? AND barangay_id = ?',
+      [farmerId, req.userBarangayId]
+    );
+    await connection.beginTransaction();
+    for (const row of rows) {
+      await deleteDuesRecord(connection, row.id);
+    }
+    await connection.commit();
+    res.json({ success: true, message: 'Association dues deleted', deleted: rows.length });
+  } catch (error) {
+    try { await connection.rollback(); } catch { /* ignore */ }
+    console.error('Error deleting member association dues:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to delete association dues' });
+  } finally {
+    connection.release();
+  }
+});
+
 // GET monthly dues summary (president/treasurer only)
 router.get('/monthly-dues/summary', verifyDuesCollectorAccess, async (req, res) => {
   try {
