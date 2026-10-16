@@ -28,6 +28,7 @@ export const PERSONAL_FARM_ANALYTICS_ROLES = [
   'president',
   'treasurer',
   'operation_manager',
+  'business_manager',
   'operator'
 ]
 

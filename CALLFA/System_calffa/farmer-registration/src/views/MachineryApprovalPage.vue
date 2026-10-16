@@ -1011,8 +1011,8 @@ export default {
       return userRole === 'operator'
     })
 
-    const canDeleteBookings = computed(() => authStore.currentUser?.role === 'operation_manager')
-    const canImportHistory = computed(() => authStore.currentUser?.role === 'operation_manager')
+    const canDeleteBookings = computed(() => ['operation_manager', 'business_manager'].includes(authStore.currentUser?.role))
+    const canImportHistory = computed(() => ['operation_manager', 'business_manager'].includes(authStore.currentUser?.role))
     const historyFile = ref(null)
     const historyPreview = ref(null)
     const historyImportError = ref('')

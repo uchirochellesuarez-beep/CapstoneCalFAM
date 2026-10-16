@@ -44,8 +44,8 @@ router.use(verifyToken);
 
 router.get('/template', async (req, res) => {
   try {
-    if (req.user.role !== 'operation_manager') {
-      return res.status(403).json({ success: false, message: 'Only the operation manager can download this template.' });
+    if (!['operation_manager', 'business_manager'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Only the operation manager or business manager can download this template.' });
     }
     const pool = require('../db');
     const [machines] = await pool.execute(

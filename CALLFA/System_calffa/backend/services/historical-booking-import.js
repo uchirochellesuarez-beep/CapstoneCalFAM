@@ -458,8 +458,8 @@ async function analyzeWorkbook(pool, user, buffer) {
 }
 
 function assertOperationManager(user) {
-  if (String(user?.role || '') !== 'operation_manager') {
-    const error = new Error('Only the operation manager can import historical bookings.');
+  if (!['operation_manager', 'business_manager'].includes(String(user?.role || ''))) {
+    const error = new Error('Only the operation manager or business manager can import historical bookings.');
     error.statusCode = 403;
     throw error;
   }

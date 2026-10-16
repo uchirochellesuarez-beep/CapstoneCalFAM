@@ -34,6 +34,7 @@ const PERSONAL_FARM_ANALYTICS_ROLES = new Set([
   'president',
   'treasurer',
   'operation_manager',
+  'business_manager',
   'operator',
 ]);
 

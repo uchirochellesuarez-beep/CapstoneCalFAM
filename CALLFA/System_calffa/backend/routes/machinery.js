@@ -3655,10 +3655,10 @@ async function runOrSkipMissing(connection, sql, params) {
 
 // DELETE /api/machinery/bookings/:id — operation manager removes a booking in any status
 router.delete('/bookings/:id', verifyToken, verifyBookingBarangayAccess, async (req, res) => {
-  if (req.user?.role !== 'operation_manager') {
+  if (!['operation_manager', 'business_manager'].includes(req.user?.role)) {
     return res.status(403).json({
       success: false,
-      message: 'Only the operation manager can delete bookings.'
+      message: 'Only the operation manager or business manager can delete bookings.'
     });
   }
 
