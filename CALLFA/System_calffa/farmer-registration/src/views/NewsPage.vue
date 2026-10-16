@@ -1447,18 +1447,24 @@ onUnmounted(() => {
   .news-page { padding: 0.55rem 0.55rem 1.25rem; }
 
   .notice-hero {
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: nowrap;
-    align-items: center;
-    padding: 0.5rem 0.65rem;
-    gap: 0.45rem;
+    align-items: stretch;
+    padding: 0.65rem 0.7rem;
+    gap: 0.55rem;
     margin-bottom: 0.5rem;
     border-radius: 12px;
   }
 
   .hero-left {
+    width: 100%;
     gap: 0.45rem;
     min-width: 0;
+  }
+
+  .hero-text {
+    min-width: 0;
+    flex: 1;
   }
 
   .hero-icon {
@@ -1479,14 +1485,18 @@ onUnmounted(() => {
   }
 
   .notice-hero h1 {
-    font-size: 1rem;
-    line-height: 1.15;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
   }
 
   .hero-right {
-    flex-shrink: 0;
-    gap: 0.3rem;
-    justify-content: flex-end;
+    width: 100%;
+    flex-shrink: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: stretch;
   }
 
   .hero-stat {
@@ -1501,11 +1511,19 @@ onUnmounted(() => {
     margin-top: 0.05rem;
   }
 
-  .btn-post,
-  .btn-ghost-header {
-    padding: 0.35rem 0.55rem;
-    font-size: 0.72rem;
+  .hero-right .btn-post,
+  .hero-right .btn-ghost-header {
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0 !important;
+    min-height: 2.4rem !important;
+    padding: 0.4rem 0.7rem !important;
+    font-size: 0.8rem;
     border-radius: 8px;
+    justify-content: center;
+    white-space: nowrap;
   }
 
   .notice-toolbar {

@@ -248,8 +248,8 @@ const onCardClick = () => emitOpen()
 
 .notice-card-header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: space-between;
   gap: 0.4rem 0.65rem;
   padding: 0.7rem 0.85rem 0.55rem 0.9rem;
@@ -268,8 +268,10 @@ const onCardClick = () => emitOpen()
 
 .notice-meta {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.28rem;
   margin-top: 0.06rem;
   text-align: left;
 }
@@ -294,12 +296,14 @@ const onCardClick = () => emitOpen()
   flex: 1;
 }
 
-.author-avatar {
-  width: 2.4rem;
-  height: 2.4rem;
+:deep(.author-avatar) {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  max-width: 2.4rem !important;
+  max-height: 2.4rem !important;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
+  flex: 0 0 2.4rem;
   margin-top: 0.04rem;
   border: 1px solid rgba(190, 235, 203, 0.28);
   background: rgba(0, 0, 0, 0.2);
@@ -348,8 +352,10 @@ const onCardClick = () => emitOpen()
 
 .notice-actions { display: flex; gap: 0.3rem; }
 .action-btn {
-  width: 2rem;
-  height: 2rem;
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -410,6 +416,7 @@ const onCardClick = () => emitOpen()
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
+  min-width: 0;
 }
 .notice-body-layout--with-image .notice-main { flex: 1; min-width: 0; }
 .notice-main { width: 100%; min-width: 0; }
@@ -436,9 +443,16 @@ const onCardClick = () => emitOpen()
   font-size: 0.78rem;
   font-weight: 700;
 }
-.notice-figure { flex-shrink: 0; margin: 0; width: 112px; max-width: 34%; }
-.notice-image {
+.notice-figure {
+  flex: 0 0 112px;
+  margin: 0;
   width: 112px;
+  max-width: 34%;
+  min-width: 0;
+  overflow: hidden;
+}
+:deep(.notice-image) {
+  width: 100%;
   max-width: 100%;
   height: 84px;
   object-fit: cover;
@@ -479,22 +493,37 @@ const onCardClick = () => emitOpen()
   .notice-card-footer {
     padding: 0.45rem 0.75rem 0.55rem 0.85rem;
   }
-  .author-avatar {
-    width: 2.1rem;
-    height: 2.1rem;
+  :deep(.author-avatar) {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    max-width: 2.25rem !important;
+    max-height: 2.25rem !important;
+    flex-basis: 2.25rem;
   }
-  .author-name { font-size: 0.7rem; }
-  .author-role { font-size: 0.52rem; }
-  .notice-title { font-size: 0.95rem; margin-bottom: 0.3rem; }
-  .notice-content { font-size: 0.8rem; line-height: 1.4; }
-  .notice-figure { width: 88px; }
-  .notice-image { width: 88px; height: 66px; }
-  .action-btn {
-    width: 1.85rem;
-    height: 1.85rem;
-  }
+  .author-name { font-size: 0.78rem; }
+  .author-role { font-size: 0.58rem; }
+  .notice-title { font-size: 0.98rem; margin-bottom: 0.3rem; }
+  .notice-content { font-size: 0.84rem; line-height: 1.45; }
   .notice-body-layout--with-image {
-    gap: 0.55rem;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .notice-figure {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    order: -1;
+  }
+  :deep(.notice-image) {
+    width: 100%;
+    height: 168px;
+    border-radius: 10px;
+  }
+  .action-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
   }
 }
 </style>
