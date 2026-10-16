@@ -77,6 +77,42 @@ const getTargetBarangayId = (req) => {
   return req.user?.barangay_id ? parseInt(req.user.barangay_id) : null;
 };
 
+function canDeleteOwnedRecord(req, record) {
+  const role = req.user?.role;
+  const userId = parseInt(req.user?.id, 10);
+  if (role === 'admin') return true;
+  if (record && parseInt(record.farmer_id, 10) === userId) return true;
+  if (
+    role === 'treasurer' &&
+    req.user?.barangay_id &&
+    parseInt(req.user.barangay_id, 10) === parseInt(record.barangay_id, 10)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+async function runOrSkip(connection, sql, params = []) {
+  try {
+    await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146 || error.code === 'ER_BAD_FIELD_ERROR') return;
+    throw error;
+  }
+}
+
+async function deleteWithdrawalAndRelated(connection, withdrawalId) {
+  await runOrSkip(
+    connection,
+    `DELETE FROM payment_receipts
+     WHERE module = 'share_capital_withdrawal'
+       AND reference_type = 'share_capital_withdrawal'
+       AND reference_id = ?`,
+    [withdrawalId]
+  );
+  await connection.execute('DELETE FROM share_capital_withdrawals WHERE id = ?', [withdrawalId]);
+}
+
 function feeBarangayId(req) {
   return getTargetBarangayId(req);
 }
@@ -734,14 +770,12 @@ router.put(
 router.delete(
   '/contributions/:id',
   verifyToken,
-  requireBarangayForOfficer,
-  authorizeRoles(['admin', 'treasurer']),
   async (req, res) => {
     const connection = await pool.getConnection();
     try {
       const { id } = req.params;
       const [rows] = await connection.execute(
-        `SELECT id, barangay_id, contribution_kind
+        `SELECT id, farmer_id, barangay_id, contribution_kind
          FROM share_capital_contributions WHERE id = ?`,
         [id]
       );
@@ -749,18 +783,13 @@ router.delete(
         return res.status(404).json({ success: false, message: 'Contribution record not found' });
       }
       const record = rows[0];
-      if (req.user?.role !== 'admin' && parseInt(req.user?.barangay_id) !== parseInt(record.barangay_id)) {
-        return res.status(403).json({ success: false, message: 'You can only delete records in your barangay.' });
-      }
-      if (String(record.contribution_kind || 'membership') !== 'membership') {
-        return res.status(400).json({
-          success: false,
-          message: 'Only recorded share capital payments can be deleted here.'
-        });
+      if (!canDeleteOwnedRecord(req, record)) {
+        return res.status(403).json({ success: false, message: 'You cannot delete this share capital record.' });
       }
 
       await connection.beginTransaction();
-      await connection.execute(
+      await runOrSkip(
+        connection,
         `DELETE FROM payment_receipts
          WHERE module = 'share_capital'
            AND reference_type = 'share_capital_contribution'
@@ -779,6 +808,125 @@ router.delete(
     }
   }
 );
+
+// DELETE /api/share-capital/withdrawals/by-farmer/:farmerId
+// Removes every withdrawal for a member, plus receipts.
+router.delete(
+  '/withdrawals/by-farmer/:farmerId',
+  verifyToken,
+  async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+      const farmerId = parseInt(req.params.farmerId, 10);
+      if (!farmerId) {
+        return res.status(400).json({ success: false, message: 'Member is required' });
+      }
+      const [farmers] = await connection.execute(
+        'SELECT id, barangay_id FROM farmers WHERE id = ?',
+        [farmerId]
+      );
+      if (farmers.length === 0) {
+        return res.status(404).json({ success: false, message: 'Member not found' });
+      }
+      if (!canDeleteOwnedRecord(req, { farmer_id: farmerId, barangay_id: farmers[0].barangay_id })) {
+        return res.status(403).json({ success: false, message: 'You cannot delete these withdrawals.' });
+      }
+
+      const [rows] = await connection.execute(
+        'SELECT id FROM share_capital_withdrawals WHERE farmer_id = ?',
+        [farmerId]
+      );
+      await connection.beginTransaction();
+      for (const row of rows) {
+        await deleteWithdrawalAndRelated(connection, row.id);
+      }
+      await connection.commit();
+      res.json({
+        success: true,
+        message: 'Withdrawals deleted',
+        deleted: rows.length
+      });
+    } catch (error) {
+      try { await connection.rollback(); } catch { /* ignore */ }
+      console.error('Error deleting member withdrawals:', error.message);
+      res.status(500).json({ success: false, message: 'Failed to delete withdrawals' });
+    } finally {
+      connection.release();
+    }
+  }
+);
+
+// DELETE /api/share-capital/withdrawals/:id
+router.delete('/withdrawals/:id', verifyToken, async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Withdrawal is required' });
+    }
+    const [rows] = await connection.execute(
+      'SELECT id, farmer_id, barangay_id FROM share_capital_withdrawals WHERE id = ?',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+    }
+    if (!canDeleteOwnedRecord(req, rows[0])) {
+      return res.status(403).json({ success: false, message: 'You cannot delete this withdrawal.' });
+    }
+
+    await connection.beginTransaction();
+    await deleteWithdrawalAndRelated(connection, id);
+    await connection.commit();
+    res.json({ success: true, message: 'Withdrawal deleted' });
+  } catch (error) {
+    try { await connection.rollback(); } catch { /* ignore */ }
+    console.error('Error deleting withdrawal:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to delete withdrawal' });
+  } finally {
+    connection.release();
+  }
+});
+
+// DELETE /api/share-capital/dues/:id
+router.delete('/dues/:id', verifyToken, async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Dues record is required' });
+    }
+    const [rows] = await connection.execute(
+      'SELECT id, farmer_id, barangay_id FROM monthly_dues WHERE id = ?',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Association dues record not found' });
+    }
+    if (!canDeleteOwnedRecord(req, rows[0])) {
+      return res.status(403).json({ success: false, message: 'You cannot delete this dues record.' });
+    }
+
+    await connection.beginTransaction();
+    await runOrSkip(
+      connection,
+      `DELETE FROM payment_receipts
+       WHERE module = 'association_dues'
+         AND reference_type = 'monthly_dues'
+         AND reference_id = ?`,
+      [id]
+    );
+    await connection.execute('DELETE FROM monthly_dues WHERE id = ?', [id]);
+    await connection.commit();
+    res.json({ success: true, message: 'Association dues record deleted' });
+  } catch (error) {
+    try { await connection.rollback(); } catch { /* ignore */ }
+    console.error('Error deleting association dues:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to delete association dues record' });
+  } finally {
+    connection.release();
+  }
+});
 
 // GET /api/share-capital/withdrawals-overview
 // Treasurer/Admin: members with share-capital and/or seed-fertilizer savings (barangay-scoped)

@@ -249,6 +249,15 @@
                     >
                       {{ $t('common.view') }}
                     </button>
+                    <button
+                      type="button"
+                      class="btn btn-delete"
+                      :disabled="deletingLoanId === loan.id"
+                      :title="$t('common.delete')"
+                      @click="deleteLoan(loan)"
+                    >
+                      {{ $t('common.delete') }}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -354,6 +363,15 @@
                 @click="viewLoanDetails(loan)"
               >
                 {{ $t('common.view') }}
+              </button>
+              <button
+                type="button"
+                class="loan-action-text loan-action-delete"
+                :disabled="deletingLoanId === loan.id"
+                :title="$t('common.delete')"
+                @click="deleteLoan(loan)"
+              >
+                {{ $t('common.delete') }}
               </button>
             </div>
           </article>
@@ -751,6 +769,7 @@ const barangays = ref([])
 const filterBarangay = ref('')
 const loading = ref(true)
 const activeTab = ref('pending')
+const deletingLoanId = ref(null)
 const showApproveModal = ref(false)
 const showRejectModal = ref(false)
 const showDetailsModal = ref(false)
@@ -1137,6 +1156,30 @@ function openRejectModal(loan) {
   selectedLoan.value = loan
   rejectionForm.value.reason = ''
   showRejectModal.value = true
+}
+
+async function deleteLoan(loan) {
+  if (!loan?.id || deletingLoanId.value) return
+  const ok = window.confirm(t('ui.deleteLoanConfirm', { name: loan.full_name || 'this member' }))
+  if (!ok) return
+  deletingLoanId.value = loan.id
+  try {
+    const response = await fetch(`/api/loans/${loan.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    const data = await response.json().catch(() => null)
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteLoanFailed'))
+    }
+    if (selectedLoan.value?.id === loan.id) closeModals()
+    await fetchLoans()
+    alert(t('ui.deleteLoanSuccess'))
+  } catch (error) {
+    alert(error.message || t('ui.deleteLoanFailed'))
+  } finally {
+    deletingLoanId.value = null
+  }
 }
 
 async function viewLoanDetails(loan) {
@@ -2083,6 +2126,16 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
 }
 
+.btn-delete {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+}
+
 .btn-payment {
   background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
   color: #5b21b6;
@@ -2727,7 +2780,8 @@ onUnmounted(() => {
   border-color: rgba(52, 211, 153, 0.45);
 }
 
-.loan-action-reject {
+.loan-action-reject,
+.loan-action-delete {
   color: #fecaca;
   background: rgba(10, 24, 18, 0.95);
   border-color: rgba(248, 113, 113, 0.45);
@@ -2794,7 +2848,8 @@ onUnmounted(() => {
   border-color: #86efac;
 }
 
-.page-container.admin-loans-page.light-theme .loan-action-reject {
+.page-container.admin-loans-page.light-theme .loan-action-reject,
+.page-container.admin-loans-page.light-theme .loan-action-delete {
   color: #991b1b;
   background: #fef2f2;
   border-color: #fca5a5;

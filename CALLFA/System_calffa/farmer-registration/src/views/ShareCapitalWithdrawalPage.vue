@@ -148,6 +148,15 @@
                       <td class="amount td-amount"><strong>₱{{ formatMoney(m.withdrawable_balance) }}</strong></td>
                       <td class="actions td-actions" @click.stop>
                         <button type="button" class="btn btn-small" @click="selectMember(m)">{{ $t('common.view') }}</button>
+                        <button
+                          v-if="Number(m.total_withdrawn) > 0"
+                          type="button"
+                          class="btn btn-small btn-delete"
+                          :disabled="deleting"
+                          @click="deleteMemberWithdrawals(m)"
+                        >
+                          {{ $t('common.delete') }}
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -195,6 +204,15 @@
                   <div class="fin-mobile-card-actions" @click.stop>
                     <button type="button" class="btn btn-small fin-mobile-action" @click="selectMember(m)">
                       {{ $t('common.view') }}
+                    </button>
+                    <button
+                      v-if="Number(m.total_withdrawn) > 0"
+                      type="button"
+                      class="btn btn-small btn-delete fin-mobile-action"
+                      :disabled="deleting"
+                      @click="deleteMemberWithdrawals(m)"
+                    >
+                      {{ $t('common.delete') }}
                     </button>
                   </div>
                 </article>
@@ -320,7 +338,7 @@
                                 <th class="th-amount">{{ $t('ui.amount') }}</th>
                                 <th class="th-remarks">{{ $t('ui.remarks') }}</th>
                                 <th class="th-receipt">{{ $t('ui.receiptNo') }}</th>
-                                <th class="th-actions">{{ $t('common.print') }}</th>
+                                <th class="th-actions">{{ $t('ui.actions') }}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -345,6 +363,14 @@
                                     @click="printWithdrawalReceipt(w.receipt_number)"
                                   >
                                     <PrintIcon />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="btn btn-small btn-delete"
+                                    :disabled="deleting"
+                                    @click="deleteWithdrawal(w)"
+                                  >
+                                    {{ $t('common.delete') }}
                                   </button>
                                 </td>
                               </tr>
@@ -377,13 +403,22 @@
                                 <span>{{ w.receipt_number || '—' }}</span>
                               </div>
                             </div>
-                            <div v-if="w.receipt_number" class="fin-mobile-card-actions">
+                            <div class="fin-mobile-card-actions">
                               <button
+                                v-if="w.receipt_number"
                                 type="button"
                                 class="btn btn-small fin-mobile-action"
                                 @click="printWithdrawalReceipt(w.receipt_number)"
                               >
                                 {{ $t('common.print') }}
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-small btn-delete fin-mobile-action"
+                                :disabled="deleting"
+                                @click="deleteWithdrawal(w)"
+                              >
+                                {{ $t('common.delete') }}
                               </button>
                             </div>
                           </article>
@@ -439,12 +474,14 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
 import PrintIcon from '../components/icons/PrintIcon.vue'
 import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
@@ -473,6 +510,7 @@ const memberTotals = ref({
 const memberWithdrawals = ref([])
 const loading = ref(false)
 const loadingMember = ref(false)
+const deleting = ref(false)
 const setupError = ref('')
 const searchQuery = ref('')
 const withdrawalDate = ref(todayISO())
@@ -725,6 +763,54 @@ async function loadMemberDetails(farmerId) {
 async function selectMember(member) {
   selectedMember.value = member
   await loadMemberDetails(member.id)
+}
+
+async function deleteWithdrawal(row) {
+  if (!row?.id || deleting.value) return
+  const ok = confirm(t('ui.deleteWithdrawalConfirm', {
+    date: formatDate(row.withdrawal_date),
+    amount: formatMoney(row.amount)
+  }))
+  if (!ok) return
+  deleting.value = true
+  try {
+    const res = await apiFetch(`/api/share-capital/withdrawals/${row.id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteWithdrawalFailed'))
+    }
+    if (selectedMember.value) await loadMemberDetails(selectedMember.value.id)
+    await loadOverview()
+    showAlert(t('ui.deleteWithdrawalSuccess'), 'success')
+  } catch (e) {
+    showAlert(e.message, 'error')
+  } finally {
+    deleting.value = false
+  }
+}
+
+async function deleteMemberWithdrawals(member) {
+  if (!member?.id || deleting.value || Number(member.total_withdrawn) <= 0) return
+  const ok = confirm(t('ui.deleteMemberWithdrawalsConfirm', {
+    name: member.full_name,
+    amount: formatMoney(member.total_withdrawn)
+  }))
+  if (!ok) return
+  deleting.value = true
+  try {
+    const res = await apiFetch(`/api/share-capital/withdrawals/by-farmer/${member.id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || t('ui.deleteWithdrawalFailed'))
+    }
+    if (selectedMember.value?.id === member.id) await loadMemberDetails(member.id)
+    await loadOverview()
+    showAlert(t('ui.deleteMemberWithdrawalsSuccess'), 'success')
+  } catch (e) {
+    showAlert(e.message, 'error')
+  } finally {
+    deleting.value = false
+  }
 }
 
 async function printWithdrawalReceipt(receiptNumber) {
@@ -1010,6 +1096,16 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 0.78rem !important;
   padding: 0.45rem 0.65rem !important;
+}
+
+.btn-delete {
+  background: #991b1b !important;
+  color: #fff !important;
+  border: 1px solid #7f1d1d !important;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #b91c1c !important;
 }
 
 .share-capital-withdrawal-page.light-theme .fin-mobile-card {

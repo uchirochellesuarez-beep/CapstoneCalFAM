@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 const pool = require('../db');
 const { verifyToken, authorizeRoles, verifyLoanBarangayAccess } = require('../middleware/auth');
@@ -1324,42 +1326,145 @@ router.put('/:id', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
   }
 });
 
-// DELETE /api/loans/:id - Delete loan (pending only, same barangay)
-router.delete('/:id', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
+function unlinkQuiet(filePath) {
+  if (!filePath) return;
   try {
-    const { id } = req.params;
-    
-    const [loans] = await pool.execute(
-      'SELECT barangay_id, status FROM loans WHERE id = ?',
+    const abs = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(__dirname, '..', String(filePath).replace(/^\//, ''));
+    if (fs.existsSync(abs)) fs.unlinkSync(abs);
+  } catch {
+    /* ignore missing proof files */
+  }
+}
+
+async function runOrSkip(connection, sql, params = []) {
+  try {
+    await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146 || error.code === 'ER_BAD_FIELD_ERROR') return;
+    throw error;
+  }
+}
+
+async function runOrSkipRows(connection, sql, params = []) {
+  try {
+    return await connection.execute(sql, params);
+  } catch (error) {
+    if (error.code === 'ER_NO_SUCH_TABLE' || error.errno === 1146 || error.code === 'ER_BAD_FIELD_ERROR') {
+      return [[]];
+    }
+    throw error;
+  }
+}
+
+function canDeleteLoan(req, loan) {
+  const role = req.user?.role;
+  const userId = parseInt(req.user?.id, 10);
+  if (role === 'admin') return true;
+  if (parseInt(loan.farmer_id, 10) === userId) return true;
+  if (['treasurer', 'president'].includes(role) && req.user?.barangay_id) {
+    return parseInt(req.user.barangay_id, 10) === parseInt(loan.barangay_id, 10);
+  }
+  return false;
+}
+
+// DELETE /api/loans/:id - Delete a loan in any status, plus payments, receipts, and related records
+router.delete('/:id', verifyToken, verifyLoanBarangayAccess, async (req, res) => {
+  const connection = await pool.getConnection();
+  const proofPaths = [];
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Loan ID is required' });
+    }
+
+    const [loans] = await connection.execute(
+      'SELECT id, farmer_id, barangay_id, status FROM loans WHERE id = ?',
       [id]
     );
 
     if (loans.length === 0) {
       return res.status(404).json({ success: false, message: 'Loan not found' });
     }
-
-    // Only allow deletion of pending loans
-    if (loans[0].status !== 'pending') {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Only pending loans can be deleted' 
-      });
+    if (!canDeleteLoan(req, loans[0])) {
+      return res.status(403).json({ success: false, message: 'You cannot delete this loan.' });
     }
 
-    const [result] = await pool.execute('DELETE FROM loans WHERE id = ?', [id]);
+    const [gcashRows] = await runOrSkipRows(
+      connection,
+      `SELECT id, proof_path FROM gcash_payment_submissions
+       WHERE transaction_type = 'loan' AND reference_id = ?`,
+      [id]
+    );
+    const gcashIds = gcashRows.map((row) => row.id);
+    proofPaths.push(...gcashRows.map((row) => row.proof_path).filter(Boolean));
 
+    const [paymentRows] = await runOrSkipRows(
+      connection,
+      'SELECT reference_number FROM loan_payments WHERE loan_id = ?',
+      [id]
+    );
+    const receiptNumbers = paymentRows
+      .map((row) => row.reference_number)
+      .filter((value) => value && String(value).trim());
+
+    await connection.beginTransaction();
+
+    await runOrSkip(
+      connection,
+      `DELETE FROM due_date_notifications
+       WHERE reference_type = 'loan' AND reference_id = ?`,
+      [id]
+    );
+    if (gcashIds.length > 0) {
+      await runOrSkip(
+        connection,
+        `DELETE FROM due_date_notifications
+         WHERE reference_type = 'gcash_payment_submission'
+           AND reference_id IN (${gcashIds.map(() => '?').join(',')})`,
+        gcashIds
+      );
+      await runOrSkip(
+        connection,
+        `DELETE FROM gcash_payment_submissions WHERE id IN (${gcashIds.map(() => '?').join(',')})`,
+        gcashIds
+      );
+    }
+    await runOrSkip(
+      connection,
+      `DELETE FROM payment_receipts
+       WHERE reference_type = 'loan' AND reference_id = ?`,
+      [id]
+    );
+    if (receiptNumbers.length > 0) {
+      await runOrSkip(
+        connection,
+        `DELETE FROM payment_receipts WHERE receipt_number IN (${receiptNumbers.map(() => '?').join(',')})`,
+        receiptNumbers
+      );
+    }
+    await runOrSkip(connection, 'DELETE FROM financial_records WHERE related_loan_id = ?', [id]);
+    await runOrSkip(connection, 'DELETE FROM loan_payments WHERE loan_id = ?', [id]);
+    const [result] = await connection.execute('DELETE FROM loans WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
+      await connection.rollback();
       return res.status(404).json({ success: false, message: 'Loan not found' });
     }
+    await connection.commit();
+    proofPaths.forEach(unlinkQuiet);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Loan deleted successfully',
-      loan_id: id 
+      loan_id: id
     });
   } catch (error) {
+    try { await connection.rollback(); } catch { /* ignore */ }
     console.error('Error deleting loan:', error);
     res.status(500).json({ success: false, message: 'Failed to delete loan', error: error.message });
+  } finally {
+    connection.release();
   }
 });
 

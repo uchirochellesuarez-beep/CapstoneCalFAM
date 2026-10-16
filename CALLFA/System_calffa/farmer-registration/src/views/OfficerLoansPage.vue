@@ -196,6 +196,7 @@
                 <div class="loan-actions">
                   <button class="edit-btn primary-action" @click="editLoan(loan)">{{ $t('common.edit') }}</button>
                   <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                  <button type="button" class="danger-outline-btn" @click="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
                 </div>
               </div>
             </div>
@@ -221,7 +222,10 @@
                     <p v-if="loan.remarks"><strong>{{ $t('ui.remarksColon') }}</strong> {{ loan.remarks }}</p>
                   </div>
                 </div>
-                <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                <div class="loan-actions">
+                  <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                  <button type="button" class="danger-outline-btn" @click="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -256,7 +260,10 @@
                     <p><strong>{{ $t('ui.dueDateColon') }}</strong> {{ formatDate(loan.due_date) }}</p>
                   </div>
                 </div>
-                <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                <div class="loan-actions">
+                  <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                  <button type="button" class="danger-outline-btn" @click="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -280,7 +287,10 @@
                     <p class="rejection-reason"><strong>{{ $t('ui.reasonColon') }}</strong> {{ loan.rejection_reason || 'Not specified' }}</p>
                   </div>
                 </div>
-                <button class="view-btn" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                <div class="loan-actions">
+                  <button class="view-btn" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                  <button type="button" class="danger-outline-btn" @click="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -326,7 +336,10 @@
                     <span class="value total-amount"><strong>₱{{ parseFloat(loan.total_with_penalty).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</strong></span>
                   </div>
                 </div>
-                <button class="view-btn warning-btn" @click.stop="viewLoanDetails(loan)">{{ $t('common.viewPay') }}</button>
+                <div class="loan-actions">
+                  <button class="view-btn warning-btn" @click.stop="viewLoanDetails(loan)">{{ $t('common.viewPay') }}</button>
+                  <button type="button" class="danger-outline-btn" @click.stop="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -349,7 +362,10 @@
                     <p><strong>{{ $t('ui.completedColon') }}</strong> {{ formatDate(loan.updated_at) }}</p>
                   </div>
                 </div>
-                <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                <div class="loan-actions">
+                  <button class="view-btn secondary-action" @click="viewLoanDetails(loan)">{{ $t('common.viewDetails') }}</button>
+                  <button type="button" class="danger-outline-btn" @click="deleteLoanApplication(loan)">{{ $t('common.delete') }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -550,17 +566,22 @@
         </div>
 
         <div
-          v-if="selectedLoan && selectedLoan.status === 'pending'"
+          v-if="selectedLoan"
           class="modal-actions officer-pending-actions"
         >
-          <button type="button" class="edit-btn primary-action" @click="editLoanFromModal">{{ $t('common.edit') }}</button>
+          <button
+            v-if="selectedLoan.status === 'pending'"
+            type="button"
+            class="edit-btn primary-action"
+            @click="editLoanFromModal"
+          >{{ $t('common.edit') }}</button>
           <button
             type="button"
             class="danger-outline-btn"
             :disabled="loading"
-            @click="deleteLoanApplication"
+            @click="deleteLoanApplication(selectedLoan)"
           >
-            {{ loading ? 'Deleting...' : 'Delete' }}
+            {{ loading ? 'Deleting...' : $t('common.delete') }}
           </button>
         </div>
       </div>
@@ -1116,9 +1137,10 @@ const editLoanFromModal = () => {
   nextTick(() => editLoan(loan))
 }
 
-const deleteLoanApplication = async () => {
-  const id = selectedLoan.value?.id
-  if (!id || !confirm('Are you sure you want to delete this loan application?')) return
+const deleteLoanApplication = async (loan) => {
+  const target = loan && loan.id ? loan : selectedLoan.value
+  const id = target?.id
+  if (!id || !confirm(t('ui.deleteLoanConfirm', { name: target.full_name || target.loan_type || 'this loan' }))) return
 
   loading.value = true
   try {
@@ -1127,17 +1149,17 @@ const deleteLoanApplication = async () => {
       headers: apiAuthHeaders()
     })
     const result = await response.json()
-    if (response.ok) {
-      alert('Loan application deleted successfully')
+    if (response.ok && result.success) {
+      alert(t('ui.deleteLoanSuccess'))
       closeModal()
       await loadLoans()
       await checkEligibility()
     } else {
-      alert(result.message || 'Failed to delete loan application')
+      alert(result.message || t('ui.deleteLoanFailed'))
     }
   } catch (error) {
     console.error('Error deleting loan:', error)
-    alert('Failed to delete loan application: ' + error.message)
+    alert(t('ui.deleteLoanFailed'))
   } finally {
     loading.value = false
   }

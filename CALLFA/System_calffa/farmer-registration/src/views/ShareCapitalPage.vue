@@ -125,6 +125,9 @@
                         >
                           <PrintIcon />
                         </button>
+                        <button type="button" class="btn btn-small btn-delete" :disabled="deletingId === c.id" @click="deleteMyContribution(c)">
+                          {{ $t('common.delete') }}
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -158,8 +161,9 @@
                       <span class="fin-mobile-value">{{ c.receipt_number || '—' }}</span>
                     </div>
                   </div>
-                  <div v-if="c.receipt_number" class="fin-mobile-card-actions">
+                  <div class="fin-mobile-card-actions">
                     <button
+                      v-if="c.receipt_number"
                       type="button"
                       class="table-action-btn table-action-print fin-mobile-action"
                       :title="$t('ui.printReceipt')"
@@ -168,6 +172,9 @@
                     >
                       <PrintIcon />
                       <span>{{ $t('common.print') }}</span>
+                    </button>
+                    <button type="button" class="btn btn-small btn-delete fin-mobile-action" :disabled="deletingId === c.id" @click="deleteMyContribution(c)">
+                      {{ $t('common.delete') }}
                     </button>
                   </div>
                 </article>
@@ -228,6 +235,9 @@
                       >
                         <PrintIcon />
                       </button>
+                      <button type="button" class="btn btn-small btn-delete" :disabled="deletingId === w.id" @click="deleteMyWithdrawal(w)">
+                        {{ $t('common.delete') }}
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -260,8 +270,9 @@
                     <span class="fin-mobile-value">{{ w.receipt_number || '—' }}</span>
                   </div>
                 </div>
-                <div v-if="w.receipt_number" class="fin-mobile-card-actions">
+                <div class="fin-mobile-card-actions">
                   <button
+                    v-if="w.receipt_number"
                     type="button"
                     class="table-action-btn table-action-print fin-mobile-action"
                     :title="$t('ui.printReceipt')"
@@ -270,6 +281,9 @@
                   >
                     <PrintIcon />
                     <span>{{ $t('common.print') }}</span>
+                  </button>
+                  <button type="button" class="btn btn-small btn-delete fin-mobile-action" :disabled="deletingId === w.id" @click="deleteMyWithdrawal(w)">
+                    {{ $t('common.delete') }}
                   </button>
                 </div>
               </article>
@@ -294,6 +308,7 @@
                   <col class="col-amount" />
                   <col class="col-method" />
                   <col class="col-receipt" />
+                  <col class="col-actions" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -302,14 +317,15 @@
                     <th class="th-amount">{{ $t('ui.amount') }}</th>
                     <th class="th-method">{{ $t('ui.method') }}</th>
                     <th class="th-receipt">{{ $t('ui.receiptNo') }}</th>
+                    <th class="th-actions">{{ $t('ui.actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="loading">
-                    <td colspan="5" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
+                    <td colspan="6" class="table-empty"><ContentSkeleton variant="table" :rows="4" :label="$t('common.loading')" /></td>
                   </tr>
                   <tr v-else-if="meAssociationDues.length === 0">
-                    <td colspan="5" class="table-empty">{{ $t('ui.noAssociationDues') }}</td>
+                    <td colspan="6" class="table-empty">{{ $t('ui.noAssociationDues') }}</td>
                   </tr>
                   <tr v-else v-for="d in meAssociationDues" :key="d.id">
                     <td class="td-date">{{ formatDate(d.collection_date) }}</td>
@@ -320,6 +336,11 @@
                     <td class="td-method">{{ formatPaymentMethod(d.payment_method) }}</td>
                     <td class="td-receipt" :title="d.receipt_number || ''">
                       <span class="cell-clip">{{ d.receipt_number || '—' }}</span>
+                    </td>
+                    <td class="actions actions-cell td-actions">
+                      <button type="button" class="btn btn-small btn-delete" :disabled="deletingId === d.id" @click="deleteMyDues(d)">
+                        {{ $t('common.delete') }}
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -355,6 +376,11 @@
                     <span class="fin-mobile-label">{{ $t('ui.receipt') }}</span>
                     <span class="fin-mobile-value">{{ d.receipt_number || '—' }}</span>
                   </div>
+                </div>
+                <div class="fin-mobile-card-actions">
+                  <button type="button" class="btn btn-small btn-delete fin-mobile-action" :disabled="deletingId === d.id" @click="deleteMyDues(d)">
+                    {{ $t('common.delete') }}
+                  </button>
                 </div>
               </article>
             </div>
@@ -1368,6 +1394,58 @@ async function saveEdit(id) {
   } finally {
     loading.value = false
   }
+}
+
+async function deleteMyRecord(id, path, confirmMessage, successMessage, failedMessage) {
+  if (deletingId.value) return
+  if (!confirm(confirmMessage)) return
+  deletingId.value = id
+  try {
+    const res = await apiFetch(path, { method: 'DELETE' })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || failedMessage)
+    }
+    await loadMe()
+    showAlert(successMessage, 'success')
+  } catch (e) {
+    showAlert(e.message, 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
+
+function deleteMyContribution(row) {
+  if (!row?.id) return
+  return deleteMyRecord(
+    row.id,
+    `/api/share-capital/contributions/${row.id}`,
+    t('ui.deleteShareConfirm', { date: formatDate(row.contribution_date), amount: formatMoney(row.amount) }),
+    t('ui.deleteShareSuccess'),
+    t('ui.deleteShareFailed')
+  )
+}
+
+function deleteMyWithdrawal(row) {
+  if (!row?.id) return
+  return deleteMyRecord(
+    row.id,
+    `/api/share-capital/withdrawals/${row.id}`,
+    t('ui.deleteWithdrawalConfirm', { date: formatDate(row.withdrawal_date), amount: formatMoney(row.amount) }),
+    t('ui.deleteWithdrawalSuccess'),
+    t('ui.deleteWithdrawalFailed')
+  )
+}
+
+function deleteMyDues(row) {
+  if (!row?.id) return
+  return deleteMyRecord(
+    row.id,
+    `/api/share-capital/dues/${row.id}`,
+    t('ui.deleteDuesConfirm', { amount: formatMoney(row.amount) }),
+    t('ui.deleteDuesSuccess'),
+    t('ui.deleteDuesFailed')
+  )
 }
 
 async function loadMe() {
