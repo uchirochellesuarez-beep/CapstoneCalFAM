@@ -1,5 +1,6 @@
 <template>
   <div class="registered-members-card section-card">
+    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
     <h2 class="registered-members-title">{{ $t('common.registeredMembers') }}</h2>
     
     <div v-if="displayLoading" class="registered-members-muted text-center py-8">
@@ -672,6 +673,10 @@ import TypedNumberInput from './TypedNumberInput.vue'
 import BirthDateSelect from './BirthDateSelect.vue'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 import { mediaUrl } from '../utils/apiBase'
+import CenterToast from './CenterToast.vue'
+import { useCenterNotice } from '../composables/useCenterNotice'
+
+const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
@@ -1035,7 +1040,7 @@ const saveEdit = async (farmer) => {
 
     cancelEdit()
     emit('member-updated', farmer.id)
-    alert('Member information updated successfully!')
+    showCenterNotice('Member information updated successfully!')
   } catch (err) {
     alert('Error updating member: ' + err.message)
   }
@@ -1051,7 +1056,7 @@ const deleteFarmer = async (farmer) => {
     if (result.success) {
       internalFarmers.value = internalFarmers.value.filter(f => f.id !== farmer.id)
       emit('member-deleted', farmer.id)
-      alert('Member deleted successfully!')
+      showCenterNotice('Member deleted successfully!')
     } else {
       alert('Failed to delete member: ' + result.message)
     }
@@ -1199,7 +1204,7 @@ const uploadProfilePicture = async () => {
     // Ask parent to refresh so prop-driven lists also update
     emit('member-updated', selectedFarmer.value.id)
 
-    alert('Profile picture updated successfully!')
+    showCenterNotice('Profile picture updated successfully!')
     closeEditPictureModal()
   } catch (error) {
     uploadError.value = error.message || 'Failed to upload profile picture'
@@ -2347,6 +2352,22 @@ onMounted(async () => {
 
 .edit-member-overlay.light-theme {
   background: rgba(15, 23, 42, 0.48) !important;
+}
+
+.edit-member-overlay.light-theme select,
+.edit-member-overlay.light-theme .edit-input-modal {
+  background: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  color-scheme: light !important;
+}
+
+.edit-member-overlay.light-theme select option,
+.edit-member-overlay.light-theme .edit-input-modal option {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 /*

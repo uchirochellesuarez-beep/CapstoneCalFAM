@@ -1,5 +1,6 @@
 <template>
   <div class="page-container admin-loans-page glass-module-page" :class="{ 'light-theme': isLight }">
+    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
     <div class="page-header page-header-split">
       <div class="page-header-text">
         <h1 class="page-title">{{ $t(pageTitleKey) }}</h1>
@@ -752,6 +753,8 @@ import ProofPreviewModal from '../components/ProofPreviewModal.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
 import { usePaymentReceipt } from '../composables/usePaymentReceipt'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import CenterToast from '../components/CenterToast.vue'
+import { useCenterNotice } from '../composables/useCenterNotice'
 
 const authStore = useAuthStore()
 const loanModuleStore = useLoanModuleStore()
@@ -760,6 +763,7 @@ const router = useRouter()
 const { t } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const highlightedLoanId = ref(null)
 const highlightedHistoryKey = ref(null)
@@ -1174,7 +1178,7 @@ async function deleteLoan(loan) {
     }
     if (selectedLoan.value?.id === loan.id) closeModals()
     await fetchLoans()
-    alert(t('ui.deleteLoanSuccess'))
+    showCenterNotice(t('ui.deleteLoanSuccess'))
   } catch (error) {
     alert(error.message || t('ui.deleteLoanFailed'))
   } finally {
@@ -1332,7 +1336,7 @@ async function approveLoan() {
     console.log('Approval response:', data)
     
     if (data.success) {
-      alert('Loan approved successfully!')
+      showCenterNotice('Loan approved successfully!')
       closeModals()
       await fetchLoans()
     } else {

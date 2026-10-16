@@ -453,7 +453,6 @@ const handleApprove = async (farmerId) => {
     const data = await response.json()
     if (response.ok) {
       await loadFarmers()
-      alert('Farmer approved successfully!')
     } else {
       alert('Failed to approve farmer: ' + (data.message || 'Unknown error'))
     }
@@ -475,7 +474,6 @@ const handleReject = async (farmerId) => {
     const data = await response.json()
     if (response.ok) {
       await loadFarmers()
-      alert('Farmer rejected successfully!')
     } else {
       alert('Failed to reject farmer: ' + (data.message || 'Unknown error'))
     }
@@ -492,7 +490,6 @@ const handleDelete = async (farmerId) => {
     })
     if (response.ok) {
       await loadFarmers()
-      alert('Farmer deleted successfully!')
     } else {
       const data = await response.json()
       alert('Failed to delete farmer: ' + (data.message || 'Unknown error'))

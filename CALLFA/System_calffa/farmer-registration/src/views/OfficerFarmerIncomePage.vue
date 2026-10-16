@@ -40,11 +40,7 @@
       <button class="alert-close" @click="errorMessage = ''">&times;</button>
     </div>
 
-    <!-- Success Message -->
-    <div v-if="successMessage" class="alert alert-success">
-      <span>{{ successMessage }}</span>
-      <button class="alert-close" @click="successMessage = ''">&times;</button>
-    </div>
+    <CenterToast :message="successMessage" @close="successMessage = ''" />
 
     <!-- No barangay warning -->
     <div v-if="!currentUser?.barangay_id" class="alert alert-warning">
@@ -599,6 +595,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import CenterToast from '../components/CenterToast.vue'
 import { useIncomeHubMobile } from '../composables/useIncomeHubMobile'
 import { consumeNotificationDeepLink } from '../utils/paymentHistoryFocus'
 import { getIncomeHighlightId, scrollIncomeRecordIntoView } from '../utils/incomeRecordFocus'

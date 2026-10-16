@@ -10,7 +10,7 @@
       </button>
     </div>
 
-    <div v-if="toastMessage" class="toast" :class="toastType">{{ toastMessage }}</div>
+    <CenterToast :message="toastMessage" :type="toastType" @close="toastMessage = ''" />
 
     <div class="tools-card">
       <span class="record-count">{{ $t('ui.itemsCountParen', { n: pendingNews.length }) }}</span>
@@ -180,6 +180,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { mediaUrl } from '../utils/apiBase'
+import CenterToast from '../components/CenterToast.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

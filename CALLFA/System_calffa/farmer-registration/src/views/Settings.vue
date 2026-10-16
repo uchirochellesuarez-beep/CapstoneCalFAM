@@ -1,5 +1,6 @@
 <template>
   <div class="edit-profile-page glass-module-page" :class="{ 'light-theme': isLight }">
+    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
     <div class="profile-page-inner">
       <header class="profile-page-header">
         <h1 class="profile-page-title">{{ t('settings.title') }}</h1>
@@ -185,12 +186,15 @@ import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { mediaUrl } from '../utils/apiBase'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
+import CenterToast from '../components/CenterToast.vue'
+import { useCenterNotice } from '../composables/useCenterNotice'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
 
@@ -340,13 +344,8 @@ const uploadProfilePicture = async () => {
     authStore.currentUser.profile_picture = data.profile_picture
     localStorage.setItem('currentUser', JSON.stringify(authStore.currentUser))
 
-    uploadMessage.value = 'Profile picture updated successfully!'
-    uploadMessageType.value = 'text-green-600'
-
-    // Clear message after 3 seconds
-    setTimeout(() => {
-      uploadMessage.value = ''
-    }, 3000)
+    uploadMessage.value = ''
+    showCenterNotice('Profile picture updated successfully!')
   } catch (error) {
     uploadMessage.value = error.message || 'Failed to upload profile picture'
     uploadMessageType.value = 'text-red-600'
@@ -404,13 +403,8 @@ const saveProfile = async () => {
     }
     localStorage.setItem('currentUser', JSON.stringify(authStore.currentUser))
     
-    message.value = 'Profile updated successfully!'
-    messageType.value = 'text-green-600'
-    
-    // Clear message after 3 seconds
-    setTimeout(() => {
-      message.value = ''
-    }, 3000)
+    message.value = ''
+    showCenterNotice('Profile updated successfully!')
   } catch (error) {
     message.value = error.message || 'Failed to update profile.'
     messageType.value = 'text-red-600'

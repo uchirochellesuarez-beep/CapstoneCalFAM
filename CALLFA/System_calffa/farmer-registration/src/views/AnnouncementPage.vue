@@ -30,7 +30,7 @@
       </div>
     </header>
 
-    <div v-if="toastMessage" class="toast" :class="toastType">{{ toastMessage }}</div>
+    <CenterToast :message="toastMessage" :type="toastType" @close="toastMessage = ''" />
 
     <!-- Toolbar -->
     <section class="notice-toolbar">
@@ -430,6 +430,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { mediaUrl } from '../utils/apiBase'
+import CenterToast from '../components/CenterToast.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()

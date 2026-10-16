@@ -29,7 +29,7 @@
       </div>
     </header>
 
-    <div v-if="toastMessage" class="toast" :class="toastType">{{ toastMessage }}</div>
+    <CenterToast :message="toastMessage" :type="toastType" @close="toastMessage = ''" />
 
     <section class="notice-toolbar">
       <div class="search-wrap">
@@ -390,6 +390,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import NewsPostCard from '../components/NewsPostCard.vue'
+import CenterToast from '../components/CenterToast.vue'
 import { getApiOrigin, mediaUrl } from '../utils/apiBase'
 
 const API_ORIGIN = getApiOrigin()

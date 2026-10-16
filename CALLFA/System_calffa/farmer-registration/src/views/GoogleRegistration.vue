@@ -45,7 +45,7 @@
               </div>
             </div>
 
-            <div v-if="successMessage" class="message success-message">{{ successMessage }}</div>
+            <CenterToast :message="successMessage" @close="successMessage = ''" />
             <div v-if="errorMessage" class="message error-message">{{ errorMessage }}</div>
 
             <form @submit.prevent="submitRegistration" class="registration-form">
@@ -284,6 +284,7 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import CenterToast from '../components/CenterToast.vue'
 import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'

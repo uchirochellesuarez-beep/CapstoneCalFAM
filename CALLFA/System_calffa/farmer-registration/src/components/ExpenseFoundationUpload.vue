@@ -38,7 +38,7 @@
     </details>
 
     <div v-if="foundationError" class="alert alert-error foundation-alert">{{ foundationError }}</div>
-    <div v-if="foundationSuccess" class="alert alert-success foundation-alert">{{ foundationSuccess }}</div>
+    <CenterToast :message="foundationSuccess" @close="foundationSuccess = ''" />
 
     <div class="foundation-status-card" :class="{ 'has-data': summary && summary.count > 0 }">
       <span class="status-card-icon" aria-hidden="true">
@@ -87,6 +87,7 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
+import CenterToast from './CenterToast.vue'
 
 const props = defineProps({
   farmerId: { type: Number, required: true },

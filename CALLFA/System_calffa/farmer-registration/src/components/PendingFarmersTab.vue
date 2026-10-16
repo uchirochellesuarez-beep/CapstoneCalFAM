@@ -270,11 +270,7 @@
     </div>
     </template>
 
-    <!-- Success Message -->
-    <div v-if="successMessage" class="success-message-banner">
-      <span class="success-text">{{ successMessage }}</span>
-      <button @click="successMessage = ''" class="close-success">×</button>
-    </div>
+    <CenterToast :message="successMessage" @close="successMessage = ''" />
   </div>
 </template>
 
@@ -282,6 +278,7 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { mediaUrl } from '../utils/apiBase'
+import CenterToast from './CenterToast.vue'
 
 const emit = defineEmits(['approve', 'reject', 'delete', 'refresh', 'update-role', 'update-membership-status'])
 const authStore = useAuthStore()
@@ -599,56 +596,6 @@ const approveAllPending = async () => {
   font-weight: 600;
 }
 
-.success-message-banner {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 16px 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.success-text {
-  font-weight: 600;
-}
-
-.close-success {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.close-success:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 @media (max-width: 768px) {
   .registered-members-card {
     padding: 0.65rem;
@@ -701,11 +648,6 @@ const approveAllPending = async () => {
   .delete-btn {
     width: auto;
     min-width: 64px;
-  }
-
-  .success-message-banner {
-    left: 20px;
-    right: 20px;
   }
 }
 

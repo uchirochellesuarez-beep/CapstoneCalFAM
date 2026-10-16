@@ -1,5 +1,6 @@
 <template>
   <div class="page-container officer-loans-page glass-module-page" :class="{ 'light-theme': isLight }">
+    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
     <div class="page-header page-header-split">
       <div class="page-header-text">
         <h1 class="page-title">{{ $t('ui.loans') }}</h1>
@@ -648,6 +649,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useLoanModuleStore } from '../stores/loanModuleStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import CenterToast from '../components/CenterToast.vue'
+import { useCenterNotice } from '../composables/useCenterNotice'
 import GcashQrPayPanel from '../components/GcashQrPayPanel.vue'
 import ProofPreviewModal from '../components/ProofPreviewModal.vue'
 import PaymentReceiptPrint from '../components/PaymentReceiptPrint.vue'
@@ -663,6 +666,7 @@ const route = useRoute()
 const router = useRouter()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
+const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const loanModuleActive = computed(() => loanModuleStore.enabled)
 
@@ -901,7 +905,7 @@ const submitLoanApplication = async () => {
     
     if (response.ok) {
       const details = result.details
-      alert(`Loan application submitted successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months\n\nPlease wait for admin approval.`)
+      showCenterNotice(`Loan application submitted successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months\n\nPlease wait for admin approval.`)
       loanForm.value = {
         type: '',
         amount: '',
@@ -1125,7 +1129,7 @@ const updateLoan = async () => {
     
     if (response.ok) {
       const details = result.details
-      alert(`Loan updated successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months`)
+      showCenterNotice(`Loan updated successfully!\n\nPrincipal: ₱${details.principal.toLocaleString()}\nInterest (1%): ₱${details.interest.toLocaleString()}\nTotal to Pay: ₱${details.total.toLocaleString()}\nPayment Term: ${details.payment_term} months`)
       closeEditModal()
       await loadLoans()
     } else {
