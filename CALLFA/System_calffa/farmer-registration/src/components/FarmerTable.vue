@@ -585,8 +585,13 @@
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" @click="cancelEdit" class="btn-secondary">{{ $t('common.cancel') }}</button>
-              <button type="button" @click="saveEdit(editingFarmer)" class="btn-primary">{{ $t('common.save') }}</button>
+              <p v-if="editError" class="edit-form-error">{{ editError }}</p>
+              <div class="modal-footer-actions">
+                <button type="button" @click="cancelEdit" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="saveEdit(editingFarmer)" class="btn-primary" :disabled="savingEdit">
+                  {{ savingEdit ? $t('common.saving') : $t('common.save') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -718,6 +723,8 @@ const activeRole = ref('farmer')
 const editingId = ref(null)
 const showEditMemberModal = ref(false)
 const editingFarmer = ref(null)
+const editError = ref('')
+const savingEdit = ref(false)
 const farmLocationOptions = ref([])
 const loadingFarmLocations = ref(false)
 const editForm = ref({
@@ -817,7 +824,16 @@ const formatMemberAddress = (farmer) => {
   return barangay || home || 'N/A'
 }
 
+const normalizeDob = (value) => {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(String(value || ''))
+  if (!match || match[1] === '0000-00-00') return ''
+  return match[1]
+}
+
 const startEdit = (farmer) => {
+  if (!farmer) return
+  editError.value = ''
+  savingEdit.value = false
   editingId.value = farmer.id
   editingFarmer.value = farmer
   showEditMemberModal.value = true
@@ -825,16 +841,18 @@ const startEdit = (farmer) => {
   const storedAddress = farmer.address || ''
   const homeAddress =
     storedAddress && storedAddress !== barangayLabel ? storedAddress : ''
+  const storedLand = parseFloat(farmer.land_area)
+  const landArea = Number.isFinite(storedLand) && storedLand > 0 ? String(storedLand) : ''
 
   editForm.value = {
     reference_number: farmer.reference_number || '',
     full_name: farmer.full_name,
-    date_of_birth: farmer.date_of_birth?.split('T')[0] || '',
+    date_of_birth: normalizeDob(farmer.date_of_birth),
     address: homeAddress,
     barangay_name: barangayLabel,
     phone_number: String(farmer.phone_number || '').replace(/\D/g, '').slice(0, 11),
     educational_status: farmer.educational_status || '',
-    land_area: farmer.land_area || '',
+    land_area: landArea,
     farm_location: farmer.farm_location || '',
     role: farmer.role,
     membership_status: farmer.membership_status || 'member',
@@ -876,6 +894,8 @@ const cancelEdit = () => {
   editingId.value = null
   editingFarmer.value = null
   showEditMemberModal.value = false
+  editError.value = ''
+  savingEdit.value = false
   farmLocationOptions.value = []
   loadingFarmLocations.value = false
   editForm.value = {
@@ -924,41 +944,54 @@ const loadFarmLocationOptions = async (barangayId, currentFarmLocation = '') => 
 }
 
 const saveEdit = async (farmer) => {
-  if (!farmer) return
+  if (!farmer || savingEdit.value) return
+  editError.value = ''
+
   const referenceRegex = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
   if (!referenceRegex.test(String(editForm.value.reference_number || '').trim())) {
-    alert('Reference number must follow 00-00-00-000-000000 format.')
+    editError.value = 'Reference number must follow 00-00-00-000-000000 format.'
     return
   }
 
+  const fullName = String(editForm.value.full_name || '').trim()
+  if (!fullName) {
+    editError.value = 'Full name is required.'
+    return
+  }
+  editForm.value.full_name = fullName
+
+  const dateOfBirth = normalizeDob(editForm.value.date_of_birth)
+  if (!dateOfBirth) {
+    editError.value = 'Date of birth is required.'
+    return
+  }
+  editForm.value.date_of_birth = dateOfBirth
+
   const phoneNumber = String(editForm.value.phone_number || '').replace(/\D/g, '')
   if (phoneNumber.length !== 11) {
-    alert(`Phone number must be exactly 11 digits. You entered ${phoneNumber.length} digits.`)
+    editError.value = `Phone number must be exactly 11 digits. You entered ${phoneNumber.length} digits.`
     return
   }
   if (!/^09\d{9}$/.test(phoneNumber)) {
-    alert('Phone number must be a valid Philippine mobile number (09XXXXXXXXX).')
+    editError.value = 'Phone number must be a valid Philippine mobile number (09XXXXXXXXX).'
     return
   }
   editForm.value.phone_number = phoneNumber
 
-  const landHa = parseFloat(editForm.value.land_area)
-  if (editForm.value.land_area !== '' && editForm.value.land_area != null) {
-    if (!Number.isFinite(landHa) || landHa <= 0) {
-      alert('Farm area (hectares) must be a number greater than 0.')
-      return
-    }
+  const rawLand = editForm.value.land_area
+  const landBlank = rawLand === '' || rawLand == null
+  const landHa = landBlank ? NaN : parseFloat(rawLand)
+  let landAreaPayload = null
+  if (!landBlank && Number.isFinite(landHa) && landHa > 0) {
     if (landHa > LAND_AREA_MAX) {
-      alert('Farm area must be at most 3 digits (maximum 999.99 hectares).')
+      editError.value = 'Farm area must be at most 3 digits (maximum 999.99 hectares).'
       return
     }
-  }
-
-  if (!confirm(`Are you sure you want to update ${farmer.full_name}'s information?`)) {
-    return
+    landAreaPayload = landHa
   }
 
   try {
+    savingEdit.value = true
     if (!isAdmin.value && userBarangayId.value) {
       editForm.value.barangay_id = userBarangayId.value
     }
@@ -976,8 +1009,8 @@ const saveEdit = async (farmer) => {
       address: homeAddress || barangayName,
       phone_number: editForm.value.phone_number,
       educational_status: editForm.value.educational_status,
-      land_area: editForm.value.land_area,
-      farm_location: editForm.value.farm_location
+      land_area: landAreaPayload,
+      farm_location: editForm.value.farm_location || ''
     }
 
     if (editForm.value.barangay_id != null) {
@@ -1001,6 +1034,8 @@ const saveEdit = async (farmer) => {
       throw new Error(profileResp?.message || 'Failed to update profile')
     }
 
+    let followUpWarning = ''
+
     // Update role if changed and not admin
     if (editForm.value.role !== farmer.role && farmer.role !== 'admin') {
       const roleResponse = await fetch(`/api/farmers/${farmer.id}/role`, {
@@ -1008,19 +1043,24 @@ const saveEdit = async (farmer) => {
         headers: authHeaders,
         body: JSON.stringify({ role: editForm.value.role })
       })
-      
-      if (!roleResponse.ok) throw new Error('Failed to update role')
+      if (!roleResponse.ok) {
+        const roleBody = await roleResponse.json().catch(() => null)
+        followUpWarning = roleBody?.message || 'Personal information was saved, but the role could not be updated.'
+      }
     }
 
     // Update membership status if changed
-    if (editForm.value.membership_status !== farmer.membership_status) {
+    const previousMembership = farmer.membership_status || 'member'
+    if (!followUpWarning && editForm.value.membership_status !== previousMembership) {
       const statusResponse = await fetch(`/api/farmers/${farmer.id}/membership-status`, {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify({ membership_status: editForm.value.membership_status })
       })
-      
-      if (!statusResponse.ok) throw new Error('Failed to update membership status')
+      if (!statusResponse.ok) {
+        const statusBody = await statusResponse.json().catch(() => null)
+        followUpWarning = statusBody?.message || 'Personal information was saved, but membership status could not be updated.'
+      }
     }
 
     // Update local data
@@ -1040,9 +1080,11 @@ const saveEdit = async (farmer) => {
 
     cancelEdit()
     emit('member-updated', farmer.id)
-    showCenterNotice('Member information updated successfully!')
+    showCenterNotice(followUpWarning || 'Member information updated successfully!')
   } catch (err) {
-    alert('Error updating member: ' + err.message)
+    editError.value = err.message || 'Could not update member.'
+  } finally {
+    savingEdit.value = false
   }
 }
 
@@ -2490,6 +2532,26 @@ onMounted(async () => {
 
 .edit-member-overlay .modal-body {
   padding: 0.75rem 1rem 0.5rem !important;
+}
+
+.edit-member-overlay .modal-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.edit-member-overlay .modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.edit-member-overlay .edit-form-error {
+  margin: 0;
+  color: #fecaca;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 @media (max-width: 768px) {

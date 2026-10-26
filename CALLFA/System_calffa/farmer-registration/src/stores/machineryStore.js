@@ -37,7 +37,7 @@ export const useMachineryStore = defineStore('machinery', {
 
   getters: {
     availableMachinery: (state) =>
-      state.inventory.filter((m) => (m.availability_status || m.status) === 'Available'),
+      state.inventory.filter((m) => (m.stored_status || m.status) === 'Available'),
     pendingBookings: (state) => state.bookings.filter(b => b.status === 'Pending'),
     approvedBookings: (state) => state.bookings.filter(b => b.status === 'Approved'),
     myBookings: (state) => (farmerId) => state.bookings.filter(b => b.farmer_id === farmerId),

@@ -303,6 +303,7 @@ const isFarmer = computed(() => userRole.value === 'farmer')
 const userBarangayId = computed(() => authStore.currentUser?.barangay_id)
 
 const MEMBER_ROLES = ['farmer', 'president', 'treasurer', 'auditor', 'operator', 'operation_manager', 'business_manager']
+const COUNTED_STATUSES = ['approved', 'pending', 'rejected']
 const isMemberRole = (role) => MEMBER_ROLES.includes(role)
 
 // Filter options for filter panel
@@ -327,9 +328,12 @@ const filteredFarmers = computed(() => {
   return allFarmers.value.filter(f => f.barangay_id === userBarangayId.value)
 })
 
-// Apply analytics filters on top of role-based farmer list
+// Apply analytics filters on top of role-based farmer list.
+// Admin and agriculturist are not members. Inactive accounts are not in this count.
 const filteredAnalyticsFarmers = computed(() => {
-  let list = filteredFarmers.value.filter(f => isMemberRole(f.role))
+  let list = filteredFarmers.value.filter(f =>
+    isMemberRole(f.role) && COUNTED_STATUSES.includes(f.status || 'pending')
+  )
   if (appliedBarangay.value) {
     list = list.filter(f => String(f.barangay_id) === String(appliedBarangay.value))
   }
@@ -345,7 +349,8 @@ const filteredAnalyticsFarmers = computed(() => {
   return list
 })
 
-// Total Members count = APPROVED farmers + officers only (excludes pending/rejected and agriculturists)
+// Approved members in this view. Admin and agriculturist are not counted.
+// Inactive accounts are not counted. President sees their barangay only.
 const totalFarmersCount = computed(() => {
   return filteredFarmers.value.filter(f =>
     isMemberRole(f.role) && f.status === 'approved'

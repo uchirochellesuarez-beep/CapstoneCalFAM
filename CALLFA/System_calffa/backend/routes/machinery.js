@@ -176,11 +176,13 @@ router.get('/inventory', async (req, res) => {
 
     const [inventory] = await pool.execute(query, params);
     let withAvailability = await withDisplayStatus(pool, inventory);
+    // The badge is the status the officer saved. An active booking does not
+    // turn a machine Unavailable; that only happens when status is set to Unavailable.
+    withAvailability = withAvailability.map((row) => ({
+      ...row,
+      availability_status: row.stored_status
+    }));
     if (isBookingCatalog) {
-      withAvailability = withAvailability.map((row) => ({
-        ...row,
-        availability_status: row.stored_status
-      }));
       withAvailability = await annotateInventoryPrerequisites(pool, withAvailability, user.id);
     } else if (status) {
       withAvailability = withAvailability.filter((row) => row.availability_status === status);
@@ -237,9 +239,12 @@ router.get('/inventory/:id', async (req, res) => {
     );
     
     const [enriched] = await withDisplayStatus(pool, machinery);
+    const machineryRow = enriched
+      ? { ...enriched, availability_status: enriched.stored_status }
+      : machinery[0];
     res.json({ 
       success: true, 
-      machinery: enriched || machinery[0],
+      machinery: machineryRow,
       operators 
     });
   } catch (error) {

@@ -532,31 +532,32 @@ router.put('/:id/profile', verifyToken, async (req, res) => {
       values.push(phone_number);
     }
     if (date_of_birth) {
+      const normalizedDob = String(date_of_birth).slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDob) || normalizedDob === '0000-00-00') {
+        return res.status(400).json({ success: false, message: 'Invalid date of birth.' });
+      }
       updates.push('date_of_birth = ?');
-      values.push(date_of_birth);
+      values.push(normalizedDob);
     }
     if (educational_status !== undefined) {
       updates.push('educational_status = ?');
       values.push(educational_status);
     }
     if (land_area !== undefined) {
-      const parsedLandArea = parseFloat(land_area);
-      if (land_area !== null && String(land_area).trim() !== '') {
-        if (!Number.isFinite(parsedLandArea) || parsedLandArea <= 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'Land area (hectares farmed) must be greater than 0.'
-          });
-        }
-        if (parsedLandArea > 999.99) {
-          return res.status(400).json({
-            success: false,
-            message: 'Land area must be at most 3 digits (maximum 999.99 hectares).'
-          });
-        }
+      const blankLand = land_area === null || String(land_area).trim() === '';
+      const parsedLandArea = blankLand ? NaN : parseFloat(land_area);
+      if (blankLand || !Number.isFinite(parsedLandArea) || parsedLandArea <= 0) {
+        updates.push('land_area = ?');
+        values.push(null);
+      } else if (parsedLandArea > 999.99) {
+        return res.status(400).json({
+          success: false,
+          message: 'Land area must be at most 3 digits (maximum 999.99 hectares).'
+        });
+      } else {
+        updates.push('land_area = ?');
+        values.push(parsedLandArea);
       }
-      updates.push('land_area = ?');
-      values.push(Number.isFinite(parsedLandArea) ? parsedLandArea : land_area);
     }
     if (farm_location) {
       updates.push('farm_location = ?');
@@ -816,7 +817,7 @@ router.put('/:id/membership-status', async (req, res) => {
     if (farmer.length === 0) return res.status(404).json({ success: false, message: 'Farmer not found' });
 
     // Check barangay authorization for presidents
-    if (changerRole === 'president' && changerBarangayId !== farmer[0].barangay_id) {
+    if (changerRole === 'president' && parseInt(changerBarangayId, 10) !== parseInt(farmer[0].barangay_id, 10)) {
       return res.status(403).json({ 
         success: false, 
         message: `President can only change membership status for members from their own barangay.` 
