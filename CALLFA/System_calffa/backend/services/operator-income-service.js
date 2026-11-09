@@ -1,4 +1,44 @@
 const pool = require('../db');
+
+function firstPositiveId(...values) {
+  for (const value of values) {
+    const id = parseInt(value, 10);
+    if (Number.isFinite(id) && id > 0) return id;
+  }
+  return null;
+}
+
+function resolveAssignedOperatorId(row = {}) {
+  return firstPositiveId(
+    row.booking_operator_id,
+    row.booking_assigned_operator_id,
+    row.machinery_operator_id,
+    row.machinery_assigned_operator_id,
+    row.completed_by,
+    row.expense_operator_id,
+    row.operator_id
+  );
+}
+
+const BOOKING_OPERATOR_SELECT = `
+  SELECT
+    mb.id,
+    mb.status,
+    mb.completed_by,
+    mb.completed_date,
+    mb.machinery_id,
+    mb.barangay_id AS booking_barangay_id,
+    mb.assigned_operator_id AS booking_operator_id,
+    mi.assigned_operator_id AS machinery_operator_id,
+    mi.machinery_name,
+    mi.barangay_id,
+    op.full_name AS operator_name,
+    op.id AS resolved_operator_id
+  FROM machinery_bookings mb
+  JOIN machinery_inventory mi ON mb.machinery_id = mi.id
+  LEFT JOIN farmers op ON COALESCE(mb.assigned_operator_id, mi.assigned_operator_id, mb.completed_by) = op.id
+  WHERE mb.id = ?
+`;
 const {
   createOperatorIncomeNotification,
   formatLocalDate
@@ -135,21 +175,14 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
     if (newAmount > existingAmount && options.expenseId) {
       await pool.execute(
         `UPDATE operator_income
-         SET labor_cost_amount = ?, expense_id = ?, transaction_date = COALESCE(?, transaction_date), income_status = 'Credited'
+         SET labor_cost_amount = ?, expense_id = ?, operator_id = COALESCE(?, operator_id),
+             transaction_date = COALESCE(?, transaction_date), income_status = 'Credited'
          WHERE id = ?`,
-        [newAmount, options.expenseId, options.transactionDate || null, existing[0].id]
+        [newAmount, options.expenseId, options.operatorId || null, options.transactionDate || null, existing[0].id]
       );
-      const [bookings] = await pool.execute(
-        `SELECT mb.*, mi.machinery_name, mi.assigned_operator_id, mi.barangay_id,
-                op.full_name AS operator_name
-         FROM machinery_bookings mb
-         JOIN machinery_inventory mi ON mb.machinery_id = mi.id
-         LEFT JOIN farmers op ON COALESCE(mb.assigned_operator_id, mi.assigned_operator_id, mb.completed_by) = op.id
-         WHERE mb.id = ?`,
-        [bookingIdNum]
-      );
+      const [bookings] = await pool.execute(BOOKING_OPERATOR_SELECT, [bookingIdNum]);
       if (bookings.length > 0) {
-        const operatorId = bookings[0].assigned_operator_id || bookings[0].completed_by;
+        const operatorId = resolveAssignedOperatorId(bookings[0]);
         await createOperatorIncomeNotification({
           operatorId,
           bookingId: bookingIdNum,
@@ -166,7 +199,7 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
           transactionDate: options.transactionDate || formatLocalDate(new Date()),
           bookingId: bookingIdNum,
           expenseId: options.expenseId,
-          barangayId: bookings[0].barangay_id,
+          barangayId: bookings[0].barangay_id || bookings[0].booking_barangay_id,
           recordedBy: options.recordedBy || null
         });
       }
@@ -201,28 +234,20 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
     };
   }
 
-  const [bookings] = await pool.execute(
-    `SELECT mb.*, mi.assigned_operator_id, mi.machinery_name, mi.barangay_id,
-            op.full_name AS operator_name
-     FROM machinery_bookings mb
-     JOIN machinery_inventory mi ON mb.machinery_id = mi.id
-     LEFT JOIN farmers op ON COALESCE(mb.assigned_operator_id, mi.assigned_operator_id, mb.completed_by) = op.id
-     WHERE mb.id = ?`,
-    [bookingIdNum]
-  );
+  const [bookings] = await pool.execute(BOOKING_OPERATOR_SELECT, [bookingIdNum]);
 
   if (bookings.length === 0) {
     return { created: false, reason: 'booking_not_found' };
   }
 
   const booking = bookings[0];
-  if (booking.status !== 'Completed') {
-    return { created: false, reason: 'booking_not_completed' };
-  }
-
-  const operatorId = booking.assigned_operator_id || booking.completed_by;
+  const operatorId = resolveAssignedOperatorId(booking) || firstPositiveId(options.operatorId);
   if (!operatorId) {
     return { created: false, reason: 'no_assigned_operator' };
+  }
+
+  if (!options.expenseId && booking.status !== 'Completed' && booking.status !== 'Awaiting Final Payment') {
+    return { created: false, reason: 'booking_not_completed', operatorId };
   }
 
   const { expenseId, laborCost, transactionDate } = options.expenseId
@@ -238,6 +263,10 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
     (booking.completed_date
       ? formatLocalDate(booking.completed_date)
       : formatLocalDate(new Date()));
+
+  if (!(parseFloat(laborCost) > 0)) {
+    return { created: false, reason: 'no_labor_cost', operatorId };
+  }
 
   const [result] = await pool.execute(
     `INSERT INTO operator_income
@@ -264,7 +293,7 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
         transactionDate: txDate,
         bookingId: bookingIdNum,
         expenseId,
-        barangayId: booking.barangay_id,
+        barangayId: booking.barangay_id || booking.booking_barangay_id,
         recordedBy: options.recordedBy || null
       })
     : null;
@@ -276,6 +305,132 @@ async function generateOperatorIncomeForBooking(bookingId, options = {}) {
     laborCost,
     receipt_number: receiptNumber
   };
+}
+
+async function creditOperatorIncomeFromExpense(expenseId, options = {}) {
+  const expenseIdNum = parseInt(expenseId, 10);
+  const laborCost = parseFloat(options.laborCost);
+  if (!expenseIdNum) return { created: false, reason: 'invalid_expense_id' };
+  if (!(laborCost > 0)) return { created: false, reason: 'no_labor_cost' };
+
+  const [rows] = await pool.execute(
+    `SELECT me.id, me.booking_id, me.machinery_id, me.operator_id AS expense_operator_id,
+            me.labor_cost, me.date_of_expense,
+            mb.assigned_operator_id AS booking_operator_id,
+            mb.completed_by,
+            mi.assigned_operator_id AS machinery_operator_id,
+            mi.machinery_name,
+            mi.barangay_id
+     FROM machinery_expenses me
+     LEFT JOIN machinery_bookings mb ON me.booking_id = mb.id
+     LEFT JOIN machinery_inventory mi ON me.machinery_id = mi.id
+     WHERE me.id = ?`,
+    [expenseIdNum]
+  );
+  if (!rows.length) return { created: false, reason: 'expense_not_found' };
+
+  const row = rows[0];
+  const operatorId = resolveAssignedOperatorId(row) || firstPositiveId(options.operatorId);
+  if (operatorId) {
+    await pool.execute(
+      'UPDATE machinery_expenses SET operator_id = ? WHERE id = ? AND (operator_id IS NULL OR operator_id <> ?)',
+      [operatorId, expenseIdNum, operatorId]
+    );
+  }
+  if (!operatorId) {
+    return { created: false, reason: 'no_assigned_operator' };
+  }
+
+  const bookingId = firstPositiveId(options.bookingId, row.booking_id);
+  const transactionDate = options.transactionDate || row.date_of_expense || formatLocalDate(new Date());
+
+  if (bookingId) {
+    return generateOperatorIncomeForBooking(bookingId, {
+      expenseId: expenseIdNum,
+      laborCost,
+      transactionDate,
+      recordedBy: options.recordedBy,
+      operatorId
+    });
+  }
+
+  const [existing] = await pool.execute(
+    'SELECT id FROM operator_income WHERE expense_id = ? LIMIT 1',
+    [expenseIdNum]
+  );
+  if (existing.length) {
+    await pool.execute(
+      `UPDATE operator_income
+       SET labor_cost_amount = ?, operator_id = ?, machinery_id = ?, transaction_date = ?, income_status = 'Credited'
+       WHERE id = ?`,
+      [laborCost, operatorId, row.machinery_id, transactionDate, existing[0].id]
+    );
+    return { created: false, updated: true, incomeId: existing[0].id, operatorId, laborCost };
+  }
+
+  const [result] = await pool.execute(
+    `INSERT INTO operator_income
+     (operator_id, booking_id, machinery_id, expense_id, labor_cost_amount, transaction_date, income_status)
+     VALUES (?, NULL, ?, ?, ?, ?, 'Credited')`,
+    [operatorId, row.machinery_id, expenseIdNum, laborCost, transactionDate]
+  );
+
+  await createOperatorIncomeNotification({
+    operatorId,
+    bookingId: expenseIdNum,
+    machineryName: row.machinery_name,
+    laborCost,
+    transactionDate
+  });
+
+  const receiptNumber = await issueOperatorLaborReceipt({
+    incomeId: result.insertId,
+    operatorId,
+    machineryName: row.machinery_name,
+    laborCost,
+    transactionDate,
+    bookingId: null,
+    expenseId: expenseIdNum,
+    barangayId: row.barangay_id,
+    recordedBy: options.recordedBy || null
+  });
+
+  return {
+    created: true,
+    incomeId: result.insertId,
+    operatorId,
+    laborCost,
+    receipt_number: receiptNumber
+  };
+}
+
+async function backfillOperatorIncomeFromLaborExpenses(poolOverride = pool) {
+  const db = poolOverride || pool;
+  const [rows] = await db.execute(
+    `SELECT me.id, me.booking_id, me.labor_cost, me.date_of_expense
+     FROM machinery_expenses me
+     WHERE me.expense_status = 'Recorded'
+       AND COALESCE(me.labor_cost, 0) > 0
+       AND NOT EXISTS (
+         SELECT 1 FROM operator_income oi
+         WHERE oi.income_status = 'Credited'
+           AND COALESCE(oi.labor_cost_amount, 0) > 0
+           AND (oi.expense_id = me.id OR (me.booking_id IS NOT NULL AND oi.booking_id = me.booking_id))
+       )`
+  );
+  let credited = 0;
+  for (const row of rows) {
+    const result = await creditOperatorIncomeFromExpense(row.id, {
+      laborCost: row.labor_cost,
+      bookingId: row.booking_id,
+      transactionDate: row.date_of_expense
+    });
+    if (result.created || result.updated) credited += 1;
+  }
+  if (credited) {
+    console.log(`✅ Credited labor from ${credited} expense${credited === 1 ? '' : 's'} to assigned operators`);
+  }
+  return credited;
 }
 
 async function ensureLaborReceiptForIncomeRow(row) {
@@ -362,6 +517,9 @@ module.exports = {
   formatLocalDate,
   getLaborCostForBooking,
   generateOperatorIncomeForBooking,
+  creditOperatorIncomeFromExpense,
+  backfillOperatorIncomeFromLaborExpenses,
+  resolveAssignedOperatorId,
   getOperatorIncomeSummary,
   issueOperatorLaborReceipt,
   findOperatorLaborReceipt,

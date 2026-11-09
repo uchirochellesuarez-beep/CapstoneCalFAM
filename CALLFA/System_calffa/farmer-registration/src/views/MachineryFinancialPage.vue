@@ -5897,11 +5897,16 @@ const saveExpense = async () => {
     const data = await response.json();
     
     if (data.success) {
+      const credited = data.operator_income && (data.operator_income.created || data.operator_income.updated);
+      const noOperator = data.operator_income && data.operator_income.reason === 'no_assigned_operator';
       showAlert(
-        completingPendingExpense.value
-          ? 'Expense recorded successfully. Operator income credited from labor cost.'
-          : (editingExpense.value ? 'Expense updated successfully' : 'Expense recorded successfully'),
-        'success'
+        data.message
+          || (credited
+            ? 'Expense recorded successfully. Labor cost was credited to the assigned operator.'
+            : noOperator
+              ? 'Expense saved, but labor was not credited because this machinery has no assigned operator.'
+              : (editingExpense.value ? 'Expense updated successfully' : 'Expense recorded successfully')),
+        noOperator ? 'warning' : 'success'
       );
       closeExpenseForm();
       loadExpenses();

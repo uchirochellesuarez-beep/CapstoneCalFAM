@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const { generateOperatorIncomeForBooking } = require('../services/operator-income-service');
+const { creditOperatorIncomeFromExpense } = require('../services/operator-income-service');
 const { generateReceiptNumber, recordPaymentReceipt, ensureReceiptTables } = require('../services/receipt-service');
 const { getCollectionFees } = require('../services/collection-fee-service');
 const { REFUNDED_BOOKING_NOT_EXISTS_SQL } = require('../services/refund-service');
@@ -121,11 +121,11 @@ async function fetchExpenseRow(pool, expenseId) {
 }
 
 async function finalizeExpenseAndIncome(expenseId, { laborCost, transactionDate, bookingId, recordedBy = null }) {
-  if (!bookingId || !(parseFloat(laborCost) > 0)) return null;
-  return generateOperatorIncomeForBooking(bookingId, {
-    expenseId: parseInt(expenseId, 10),
+  if (!(parseFloat(laborCost) > 0)) return null;
+  return creditOperatorIncomeFromExpense(expenseId, {
     laborCost,
     transactionDate,
+    bookingId,
     recordedBy
   });
 }
@@ -436,8 +436,9 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       ]
     );
 
-    if (booking_id && parseFloat(labor_cost) > 0) {
-      await finalizeExpenseAndIncome(result.insertId, {
+    let operatorIncome = null;
+    if (parseFloat(labor_cost) > 0) {
+      operatorIncome = await finalizeExpenseAndIncome(result.insertId, {
         laborCost: labor_cost,
         transactionDate: expenseDate,
         bookingId: booking_id,
@@ -454,11 +455,15 @@ router.post('/expenses', verifyTreasurerAccess, async (req, res) => {
       });
     }
 
+    const credited = operatorIncome && (operatorIncome.created || operatorIncome.updated);
     res.json({ 
       success: true, 
-      message: 'Expense recorded successfully',
+      message: credited
+        ? 'Expense recorded successfully. Labor cost was credited to the assigned operator.'
+        : 'Expense recorded successfully',
       expense_id: result.insertId,
-      receipt_number: receiptNum
+      receipt_number: receiptNum,
+      operator_income: operatorIncome
     });
   } catch (error) {
     console.error('Error creating expense:', error);
@@ -549,11 +554,11 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
     const linkedBookingId = booking_id || existing.booking_id;
     const shouldGenerateIncome =
       (isCompletingPending || existing.expense_status === 'Recorded') &&
-      linkedBookingId &&
       parseFloat(labor_cost) > 0;
 
+    let operatorIncome = null;
     if (shouldGenerateIncome) {
-      await finalizeExpenseAndIncome(id, {
+      operatorIncome = await finalizeExpenseAndIncome(id, {
         laborCost: labor_cost,
         transactionDate: expenseDate,
         bookingId: linkedBookingId,
@@ -572,11 +577,17 @@ router.put('/expenses/:id', verifyTreasurerAccess, async (req, res) => {
       }
     }
     
+    const credited = operatorIncome && (operatorIncome.created || operatorIncome.updated);
     res.json({
       success: true,
-      message: isCompletingPending ? 'Expense recorded successfully' : 'Expense updated successfully',
+      message: credited
+        ? (isCompletingPending
+          ? 'Expense recorded successfully. Labor cost was credited to the assigned operator.'
+          : 'Expense updated successfully. Labor cost was credited to the assigned operator.')
+        : (isCompletingPending ? 'Expense recorded successfully' : 'Expense updated successfully'),
       expense_status: isCompletingPending ? 'Recorded' : existing.expense_status,
-      receipt_number: receiptNum
+      receipt_number: receiptNum,
+      operator_income: operatorIncome
     });
   } catch (error) {
     console.error('Error updating expense:', error);

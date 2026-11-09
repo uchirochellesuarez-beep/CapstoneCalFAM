@@ -21,9 +21,10 @@ async function createPendingExpenseForBooking(bookingId, options = {}) {
 
   const [bookings] = await pool.execute(
     `SELECT mb.*,
+            mb.assigned_operator_id AS booking_operator_id,
             mi.machinery_name,
             mi.machinery_type,
-            mi.assigned_operator_id,
+            mi.assigned_operator_id AS machinery_operator_id,
             mi.barangay_id,
             f.full_name AS farmer_name
      FROM machinery_bookings mb
@@ -45,7 +46,10 @@ async function createPendingExpenseForBooking(bookingId, options = {}) {
     return { created: false, reason: 'booking_not_completed' };
   }
 
-  const operatorId = booking.assigned_operator_id || booking.completed_by || null;
+  const operatorId = parseInt(booking.booking_operator_id, 10)
+    || parseInt(booking.machinery_operator_id, 10)
+    || parseInt(booking.completed_by, 10)
+    || null;
   const expenseDate = booking.completed_date
     ? formatLocalDate(booking.completed_date)
     : formatLocalDate(new Date());

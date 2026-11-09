@@ -65,7 +65,7 @@ async function ensureOperatorAssignmentSchema(pool) {
       CREATE TABLE operator_income (
         id INT AUTO_INCREMENT PRIMARY KEY,
         operator_id INT NOT NULL,
-        booking_id INT NOT NULL,
+        booking_id INT NULL,
         machinery_id INT NOT NULL,
         expense_id INT NULL,
         labor_cost_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
@@ -81,6 +81,14 @@ async function ensureOperatorAssignmentSchema(pool) {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     console.log('✅ Created operator_income table');
+  } else {
+    try {
+      await pool.execute(
+        'ALTER TABLE operator_income MODIFY COLUMN booking_id INT NULL'
+      );
+    } catch (err) {
+      console.warn('⚠️ Could not allow operator_income.booking_id to be empty:', err.message);
+    }
   }
 
   // Backfill inventory assigned_operator_id from active machinery_operators (one per machinery).
@@ -106,6 +114,13 @@ async function ensureOperatorAssignmentSchema(pool) {
     } catch (err) {
       console.warn('⚠️ Operator assignment backfill skipped:', err.message)
     }
+  }
+
+  try {
+    const { backfillOperatorIncomeFromLaborExpenses } = require('../services/operator-income-service');
+    await backfillOperatorIncomeFromLaborExpenses(pool);
+  } catch (err) {
+    console.warn('⚠️ Operator labor income backfill skipped:', err.message);
   }
 }
 
