@@ -1349,8 +1349,10 @@
                 <thead>
                   <tr>
                     <th>{{ $t('ui.farmer') }}</th>
-                    <th>{{ $t('ui.sisingilinAr') }}</th>
+                    <th>{{ $t('ui.machinery') }}</th>
+                    <th>{{ $t('ui.totalAmount') }}</th>
                     <th>{{ $t('ui.nakolektangBayad') }}</th>
+                    <th>{{ $t('ui.paymentStatus') }}</th>
                     <th>{{ $t('ui.petsaNgBayad') }}</th>
                     <th>{{ $t('ui.receiptNo') }}</th>
                     <th>{{ $t('ui.outstandingBalance') }}</th>
@@ -1360,8 +1362,10 @@
                 <tbody>
                   <tr v-for="ar in arList" :key="ar.id" :data-booking-id="ar.id" :class="{ 'notification-highlight-row': highlightedBookingId == ar.id }">
                     <td>{{ ar.farmer_name }}</td>
-                    <td class="amount-cell">₱{{ formatNumber(ar.remaining_balance ?? ar.accounts_receivable ?? 0) }}</td>
+                    <td>{{ ar.machinery_name || '—' }}</td>
+                    <td class="amount-cell">₱{{ formatNumber(ar.total_price ?? ar.accounts_receivable ?? 0) }}</td>
                     <td class="amount-cell">₱{{ formatNumber(ar.amount_collected || 0) }}</td>
+                    <td>{{ formatCollectiblePaymentStatus(ar.payment_status) }}</td>
                     <td>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</td>
                     <td>{{ ar.last_receipt_number || '—' }}</td>
                     <td class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">
@@ -1407,8 +1411,10 @@
                   <span class="amount-cell balance" :class="{ highlight: ar.remaining_balance > 0 }">₱{{ formatNumber(ar.remaining_balance) }}</span>
                 </div>
                 <div class="fin-mobile-card-meta">
-                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.sisingilinAr') }}</span><span>₱{{ formatNumber(ar.remaining_balance ?? ar.accounts_receivable ?? 0) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.machinery') }}</span><span>{{ ar.machinery_name || '—' }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.totalAmount') }}</span><span>₱{{ formatNumber(ar.total_price ?? ar.accounts_receivable ?? 0) }}</span></div>
                   <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.nakolektangBayad') }}</span><span>₱{{ formatNumber(ar.amount_collected || 0) }}</span></div>
+                  <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.paymentStatus') }}</span><span>{{ formatCollectiblePaymentStatus(ar.payment_status) }}</span></div>
                   <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.petsaNgBayad') }}</span><span>{{ ar.last_payment_date ? formatDate(ar.last_payment_date) : '—' }}</span></div>
                   <div class="fin-mobile-meta-row"><span class="fin-mobile-label">{{ $t('ui.receiptNo') }}</span><span>{{ ar.last_receipt_number || '—' }}</span></div>
                 </div>
@@ -4598,6 +4604,13 @@ const API_BASE_URL = '/api';
 const formatNumber = (num) => {
   if (!num) return '0.00';
   return parseFloat(num).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const formatCollectiblePaymentStatus = (status) => {
+  const key = String(status || 'Unpaid').trim();
+  if (key === 'Partial') return 'Partially Paid';
+  if (key === 'Unpaid') return 'Pending/Unpaid';
+  return key || 'Pending/Unpaid';
 };
 
 const formatInterestRateDisplay = (rate) => {

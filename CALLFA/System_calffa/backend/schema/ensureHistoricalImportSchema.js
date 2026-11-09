@@ -24,7 +24,8 @@ async function ensureHistoricalImportSchema(pool) {
     { name: 'is_historical_import', sql: 'TINYINT(1) NOT NULL DEFAULT 0' },
     { name: 'imported_by', sql: 'INT NULL' },
     { name: 'imported_at', sql: 'TIMESTAMP NULL' },
-    { name: 'import_batch_id', sql: 'INT NULL' }
+    { name: 'import_batch_id', sql: 'INT NULL' },
+    { name: 'needs_rate_review', sql: 'TINYINT(1) NOT NULL DEFAULT 0' }
   ];
 
   for (const col of bookingColumns) {

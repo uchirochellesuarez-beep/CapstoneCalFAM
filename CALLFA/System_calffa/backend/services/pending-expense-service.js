@@ -38,6 +38,9 @@ async function createPendingExpenseForBooking(bookingId, options = {}) {
   }
 
   const booking = bookings[0];
+  if (parseInt(booking.is_historical_import, 10) === 1) {
+    return { created: false, reason: 'historical_import' };
+  }
   if (booking.status !== 'Completed') {
     return { created: false, reason: 'booking_not_completed' };
   }
@@ -114,11 +117,21 @@ async function notifyTreasurersForPendingExpense({
 }
 
 async function backfillPendingExpensesForCompletedBookings() {
+  const [flagColumn] = await pool.execute(
+    `SELECT 1 FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'machinery_bookings'
+       AND COLUMN_NAME = 'is_historical_import'`
+  );
+  const historicalFilter = flagColumn.length
+    ? 'AND COALESCE(mb.is_historical_import, 0) = 0'
+    : '';
   const [rows] = await pool.execute(
     `SELECT mb.id
      FROM machinery_bookings mb
      WHERE mb.status = 'Completed'
        AND COALESCE(mb.machine_used, 0) = 1
+       ${historicalFilter}
        AND NOT EXISTS (
          SELECT 1 FROM machinery_expenses me WHERE me.booking_id = mb.id
        )`

@@ -82,9 +82,12 @@ router.post('/commit', handleUpload, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Choose an Excel file to import.' });
     }
     const result = await commitWorkbook(require('../db'), req.user, req.file.buffer, req.file.originalname);
+    const collectibleNote = result.outstanding_collectibles
+      ? ` Outstanding collectibles of ₱${Number(result.outstanding_collectibles).toFixed(2)} were added to AR/Collectibles.`
+      : '';
     res.json({
       success: true,
-      message: `Imported ${result.imported} historical booking${result.imported === 1 ? '' : 's'}.`,
+      message: `Imported ${result.imported} historical booking${result.imported === 1 ? '' : 's'}.${collectibleNote}`,
       ...result
     });
   } catch (error) {

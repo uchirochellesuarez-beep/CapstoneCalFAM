@@ -77,6 +77,8 @@ async function main() {
   const valid = validateRows([row(2, base())], context);
   check('completed booking is ready without payment', present(valid).canCommit && valid[0].data.area_unit === 'hectares');
   check('total is member price times area', valid[0].data.total_price === 750 && valid[0].preview.total_price === 750);
+  check('completed unpaid becomes a collectible', valid[0].data.payment_status === 'Unpaid' && valid[0].preview.creates_collectible === true);
+  check('preview lists outstanding collectibles', present(valid).summary.outstanding_collectibles === 750 && present(valid).summary.completed === 1);
 
   const flat = validateRows([row(2, base({ machinery_name: 'Dryer', area_size: 2 }))], {
     ...context,
@@ -106,6 +108,11 @@ async function main() {
 
   const pending = validateRows([row(2, base({ booking_status: 'Pending', booking_date: '2024-05-01' }))], context);
   check('pending booking is ready', pending[0].outcome === 'ready' && pending[0].data.status === 'Pending');
+  check('pending service is not a collectible', pending[0].preview.creates_collectible === false);
+  check('pending service is not earned receivable', present(pending).summary.outstanding_collectibles === 0);
+
+  check('imported bookings stay unpaid', valid[0].data.total_paid === 0 && valid[0].data.remaining_balance === 750);
+  check('payment word is not a service status', Boolean(mapBookingStatus('Paid').error));
 
   const sameFarmer = validateRows([
     row(2, base({ booking_date: '2024-03-01' })),

@@ -13,7 +13,7 @@ const HEADER_ALIASES = {
   booking_date: ['booking_date', 'service_date', 'scheduled_service_date', 'date'],
   service_location: ['service_location', 'location', 'service_location_barangay'],
   area_size: ['area_size', 'area', 'hectares', 'area_hectares'],
-  booking_status: ['booking_status', 'status', 'transaction_status']
+  booking_status: ['booking_status', 'service_status', 'status', 'transaction_status']
 };
 
 const TEMPLATE_HEADERS = [
@@ -25,12 +25,39 @@ const TEMPLATE_HEADERS = [
   'booking_status'
 ];
 
+const REQUIRED_HEADERS = [
+  'reference_number',
+  'machinery_name',
+  'booking_date',
+  'area_size',
+  'booking_status'
+];
+
 const STATUS_LOOKUP = BOOKING_STATUS_ENUM_VALUES.reduce((map, status) => {
   map[normalizeKey(status)] = status;
   return map;
 }, {});
 STATUS_LOOKUP.canceled = 'Cancelled';
 STATUS_LOOKUP.complete = 'Completed';
+STATUS_LOOKUP.done = 'Completed';
+STATUS_LOOKUP.serviced = 'Completed';
+
+const PAYMENT_STATUS_LOOKUP = {
+  unpaid: 'Unpaid',
+  pending: 'Unpaid',
+  'not paid': 'Unpaid',
+  'pending unpaid': 'Unpaid',
+  uncollected: 'Unpaid',
+  partial: 'Partial',
+  'partially paid': 'Partial',
+  'partial payment': 'Partial',
+  paid: 'Paid',
+  'fully paid': 'Paid',
+  'full payment': 'Paid',
+  collected: 'Paid'
+};
+
+const COMPLETED_SERVICE_STATUSES = new Set(['Completed', 'Awaiting Final Payment']);
 
 function normalizeKey(value) {
   return String(value || '')
@@ -185,12 +212,22 @@ function moneyResult(amount, label) {
 function mapBookingStatus(value) {
   const text = asText(value);
   if (text && text.formulaRejected) return { error: 'Spreadsheet formulas are not allowed.' };
-  if (!text) return { error: 'Booking status is required.' };
-  const status = STATUS_LOOKUP[normalizeKey(text)];
+  if (!text) return { error: 'Service status is required. Use Completed if the machinery service was already performed, or Pending if it was not.' };
+  const key = normalizeKey(text);
+  if (PAYMENT_STATUS_LOOKUP[key] && !STATUS_LOOKUP[key]) {
+    return {
+      error: `"${text}" is not a service status. Use Completed if the machinery work was already done, or Pending if it was not. Imported bookings are unpaid until collected in AR/Collectibles.`
+    };
+  }
+  const status = STATUS_LOOKUP[key];
   if (!status) {
-    return { error: `Unsupported booking status "${text}". Use one of: ${BOOKING_STATUS_ENUM_VALUES.join(', ')}.` };
+    return { error: `Unsupported service status "${text}". Use one of: ${BOOKING_STATUS_ENUM_VALUES.join(', ')}.` };
   }
   return { value: status };
+}
+
+function isCompletedService(status) {
+  return COMPLETED_SERVICE_STATUSES.has(status);
 }
 
 function blankRow(record) {
@@ -217,8 +254,7 @@ async function readSheetRows(buffer) {
     if (key && !columnMap.has(key)) columnMap.set(key, col);
   });
 
-  const missing = ['reference_number', 'machinery_name', 'booking_date', 'area_size', 'booking_status']
-    .filter((key) => !columnMap.has(key));
+  const missing = REQUIRED_HEADERS.filter((key) => !columnMap.has(key));
   if (missing.length) {
     const error = new Error(`The template is missing required columns: ${missing.join(', ')}. Download a fresh template.`);
     error.statusCode = 400;
@@ -308,6 +344,12 @@ function validateRecord(entry, context, seenKeys) {
   const bookingStatus = mapBookingStatus(record.booking_status);
   if (bookingStatus.error) pushError(errors, 'booking_status', bookingStatus.error);
 
+  const payment = {
+    total_paid: 0,
+    remaining_balance: totalPrice,
+    payment_status: 'Unpaid'
+  };
+
   const location = asText(record.service_location);
   if (location && location.formulaRejected) pushError(errors, 'service_location', 'Spreadsheet formulas are not allowed.');
 
@@ -340,7 +382,14 @@ function validateRecord(entry, context, seenKeys) {
       area_size: area.value,
       booking_date: bookingDate.value || '',
       booking_status: bookingStatus.value || '',
-      total_price: totalPrice
+      payment_status: 'Unpaid',
+      remaining_balance: payment.remaining_balance,
+      total_price: totalPrice,
+      creates_collectible: Boolean(
+        isCompletedService(bookingStatus.value)
+        && payment.remaining_balance > 0
+        && totalPrice
+      )
     },
     data: outcome === 'ready' ? {
       historical_reference: `F${farmer.id}-M${machinery.id}-${bookingDate.value}`,
@@ -351,9 +400,38 @@ function validateRecord(entry, context, seenKeys) {
       area_size: area.value,
       area_unit: 'hectares',
       total_price: totalPrice,
+      total_paid: payment.total_paid || 0,
+      remaining_balance: payment.remaining_balance,
+      payment_status: payment.payment_status || 'Unpaid',
       status: bookingStatus.value
     } : null
   };
+}
+
+function financialTotals(rows) {
+  const totals = {
+    completed: 0,
+    total_service_fees: 0,
+    outstanding_collectibles: 0,
+    collected_payments: 0
+  };
+  for (const row of rows) {
+    const data = row.data || {};
+    const preview = row.preview || {};
+    const total = Number(data.total_price ?? preview.total_price) || 0;
+    const paid = Number(data.total_paid) || 0;
+    const remaining = Number(data.remaining_balance ?? preview.remaining_balance) || 0;
+    const status = data.status || preview.booking_status;
+    totals.total_service_fees = roundMoney(totals.total_service_fees + total);
+    totals.collected_payments = roundMoney(totals.collected_payments + paid);
+    if (isCompletedService(status)) {
+      totals.completed += 1;
+      if (remaining > 0) {
+        totals.outstanding_collectibles = roundMoney(totals.outstanding_collectibles + remaining);
+      }
+    }
+  }
+  return totals;
 }
 
 function summarize(results) {
@@ -361,9 +439,15 @@ function summarize(results) {
     total: results.length,
     ready: 0,
     invalid: 0,
-    duplicate: 0
+    duplicate: 0,
+    ...financialTotals(results.filter((row) => row.outcome === 'ready'))
   };
-  for (const row of results) summary[row.outcome] += 1;
+  for (const row of results) {
+    if (summary[row.outcome] == null) continue;
+    if (row.outcome === 'ready' || row.outcome === 'invalid' || row.outcome === 'duplicate') {
+      summary[row.outcome] += 1;
+    }
+  }
   return summary;
 }
 
@@ -505,12 +589,18 @@ async function commitWorkbook(pool, user, buffer, filename) {
 
     for (const row of ready) {
       const data = row.data;
+      const serviceCompleted = isCompletedService(data.status);
+      const remaining = roundMoney(data.remaining_balance || 0);
+      const paid = roundMoney(data.total_paid || 0);
+      const machineUsed = serviceCompleted ? 1 : 0;
+      const receivableAmount = serviceCompleted && remaining > 0 ? remaining : null;
       await connection.execute(
         `INSERT INTO machinery_bookings
          (farmer_id, machinery_id, barangay_id, booking_date, service_location, area_size, area_unit,
           total_price, total_paid, remaining_balance, payment_status, payment_date, last_payment_date,
-          notes, status, completed_date, historical_reference, is_historical_import, imported_by, imported_at, import_batch_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), ?)`,
+          notes, status, machine_used, completed_date, receivable_amount, receivable_created_at,
+          historical_reference, is_historical_import, imported_by, imported_at, import_batch_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), ?)`,
         [
           data.farmer_id,
           data.machinery_id,
@@ -520,14 +610,17 @@ async function commitWorkbook(pool, user, buffer, filename) {
           data.area_size,
           data.area_unit,
           data.total_price,
-          0,
-          data.total_price,
-          'Unpaid',
-          null,
-          null,
+          paid,
+          remaining,
+          data.payment_status || 'Unpaid',
+          paid > 0 ? data.booking_date : null,
+          paid > 0 ? data.booking_date : null,
           null,
           data.status,
-          data.status === 'Completed' ? `${data.booking_date} 00:00:00` : null,
+          machineUsed,
+          serviceCompleted ? `${data.booking_date} 00:00:00` : null,
+          receivableAmount,
+          receivableAmount != null ? `${data.booking_date} 00:00:00` : null,
           data.historical_reference,
           user.id,
           batchId
@@ -536,12 +629,18 @@ async function commitWorkbook(pool, user, buffer, filename) {
     }
 
     await connection.commit();
+    const importedFinancials = financialTotals(ready);
     return {
       batch_id: batchId,
       imported: ready.length,
       skipped: presentation.summary.duplicate,
       rejected: presentation.summary.invalid,
-      total: presentation.summary.total
+      total: presentation.summary.total,
+      completed: importedFinancials.completed,
+      total_service_fees: importedFinancials.total_service_fees,
+      outstanding_collectibles: importedFinancials.outstanding_collectibles,
+      collected_payments: importedFinancials.collected_payments,
+      errors: presentation.errors
     };
   } catch (error) {
     await connection.rollback();
@@ -597,13 +696,14 @@ async function buildTemplateBuffer(machineNames = []) {
     'One booking per row. Keep the header row on the Bookings sheet.',
     'reference_number is the farmer reference number already stored on the farmer account. The system uses it to find that farmer.',
     'The same farmer can have many rows when the machine or the date is different.',
-    'Required: reference_number, machinery_name, booking_date, area_size, booking_status.',
+    'Required: reference_number, machinery_name, booking_date, area_size, booking_status (service status).',
     'Optional: service_location.',
     'Dates must be YYYY-MM-DD and cannot be in the future. Area is in hectares.',
-    'Do not type an amount. The total to pay is calculated from the machinery name: the machine price times the area, or the flat price when the machine is charged per load.',
-    'Collected payments are not imported. The balance stays unpaid until it is collected later.',
-    'Completed means the service is done. Pending means the booking is recorded and payment is still to be collected later.',
-    `Other accepted statuses: ${BOOKING_STATUS_ENUM_VALUES.join(', ')}.`,
+    'Do not type the total service fee. It is calculated from the machine price times the area, or the flat price when the machine is charged per load.',
+    'Do not enter payment amounts. Imported bookings are unpaid. Collection is recorded later in AR/Collectibles.',
+    'booking_status is the service: Completed = the machinery work was already done. Pending = the service has not been performed yet.',
+    'Completed bookings are added to AR/Collectibles automatically because they are still unpaid. Pending services are not treated as earned income or receivables.',
+    `Other accepted service statuses: ${BOOKING_STATUS_ENUM_VALUES.join(', ')}.`,
     'machinery_name must be the exact name of one machine in your barangay. Two machines cannot share a name. Choose it from the dropdown.',
     'A row is skipped when that farmer, machine, and date are already in the system. Live bookings are not overwritten.',
     `Maximum ${MAX_ROWS} data rows and a 5 MB .xlsx file.`
@@ -627,39 +727,108 @@ module.exports = {
   parseDate,
   mapBookingStatus,
   priceForImportedBooking,
+  isCompletedService,
   backfillHistoricalBookingTotals
 };
 
 async function backfillHistoricalBookingTotals(pool) {
   const [rows] = await pool.query(
-    `SELECT mb.id, mb.area_size, mb.total_paid,
+    `SELECT mb.id, mb.status, mb.area_size, mb.total_price, mb.total_paid, mb.remaining_balance,
+            mb.payment_status, mb.machine_used, mb.receivable_amount, mb.needs_rate_review,
             f.membership_status, f.barangay_id AS farmer_barangay_id,
             mi.barangay_id, mi.member_price, mi.non_member_price, mi.price_per_unit, mi.unit_type
      FROM machinery_bookings mb
      JOIN farmers f ON f.id = mb.farmer_id
      JOIN machinery_inventory mi ON mi.id = mb.machinery_id
-     WHERE mb.is_historical_import = 1
-       AND (mb.total_price IS NULL OR mb.total_price = 0)`
+     WHERE mb.is_historical_import = 1`
   );
-  let updated = 0;
+  let pricedCount = 0;
+  let synced = 0;
+  let flagged = 0;
   for (const row of rows) {
-    const priced = priceForImportedBooking(
-      row,
-      { membership_status: row.membership_status, barangay_id: row.farmer_barangay_id },
-      row.area_size
-    );
-    if (!priced.value) continue;
     const paid = roundMoney(row.total_paid || 0);
-    const remaining = roundMoney(Math.max(0, priced.value - paid));
-    const paymentStatus = remaining <= 0 ? 'Paid' : (paid > 0 ? 'Partial' : 'Unpaid');
+    let total = roundMoney(row.total_price || 0);
+    let needsReview = parseInt(row.needs_rate_review, 10) === 1 ? 1 : 0;
+
+    const missingPrice = !Number.isFinite(total) || total <= 0;
+    if (missingPrice) {
+      const priced = priceForImportedBooking(
+        row,
+        { membership_status: row.membership_status, barangay_id: row.farmer_barangay_id },
+        row.area_size
+      );
+      if (!priced.value) {
+        if (!needsReview) {
+          flagged += 1;
+          await pool.execute(
+            `UPDATE machinery_bookings
+             SET needs_rate_review = 1
+             WHERE id = ? AND COALESCE(needs_rate_review, 0) = 0`,
+            [row.id]
+          );
+        }
+        continue;
+      }
+      total = priced.value;
+      pricedCount += 1;
+    }
+
+    const remaining = roundMoney(Math.max(0, total - paid));
+    const paymentStatus = row.payment_status === 'Refunded'
+      ? 'Refunded'
+      : (remaining <= 0 && paid > 0 ? 'Paid' : (paid > 0 ? 'Partial' : 'Unpaid'));
+    const serviceCompleted = isCompletedService(row.status);
+    const machineUsed = serviceCompleted ? 1 : (parseInt(row.machine_used, 10) === 1 ? 1 : 0);
+    const receivableAmount = serviceCompleted && remaining > 0 ? remaining : null;
+    const currentRemaining = roundMoney(row.remaining_balance || 0);
+    const alreadySynced =
+      roundMoney(row.total_price || 0) === total
+      && currentRemaining === remaining
+      && String(row.payment_status || '') === paymentStatus
+      && parseInt(row.machine_used, 10) === machineUsed
+      && roundMoney(row.receivable_amount || 0) === roundMoney(receivableAmount || 0)
+      && needsReview === 0;
+
+    if (alreadySynced) continue;
+
     await pool.execute(
       `UPDATE machinery_bookings
-       SET total_price = ?, remaining_balance = ?, payment_status = ?
-       WHERE id = ? AND (total_price IS NULL OR total_price = 0)`,
-      [priced.value, remaining, paymentStatus, row.id]
+       SET total_price = ?,
+           remaining_balance = ?,
+           payment_status = ?,
+           machine_used = ?,
+           receivable_amount = ?,
+           receivable_created_at = CASE
+             WHEN ? IS NOT NULL THEN COALESCE(receivable_created_at, completed_date, imported_at, NOW())
+             ELSE NULL
+           END,
+           completed_date = CASE
+             WHEN ? = 1 THEN COALESCE(completed_date, CONCAT(booking_date, ' 00:00:00'))
+             ELSE completed_date
+           END,
+           needs_rate_review = 0
+       WHERE id = ?`,
+      [
+        total,
+        remaining,
+        paymentStatus,
+        machineUsed,
+        receivableAmount,
+        receivableAmount,
+        machineUsed,
+        row.id
+      ]
     );
-    updated += 1;
+    synced += 1;
   }
-  if (updated) console.log(`✅ Set the amount to pay on ${updated} imported booking${updated === 1 ? '' : 's'}`);
-  return updated;
+  if (pricedCount || synced) {
+    console.log(
+      `✅ Synchronized ${synced} historical booking${synced === 1 ? '' : 's'} with AR/Collectibles` +
+      (pricedCount ? ` (${pricedCount} fee${pricedCount === 1 ? '' : 's'} recalculated)` : '')
+    );
+  }
+  if (flagged) {
+    console.log(`⚠️ Flagged ${flagged} historical booking${flagged === 1 ? '' : 's'} for machinery rate review`);
+  }
+  return { updated: synced, flagged };
 }

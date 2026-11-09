@@ -107,7 +107,6 @@ async function ensureMachineryHostingSchema(pool) {
       SET machine_used = 1
       WHERE status IN ('Completed', 'Awaiting Final Payment')
         AND COALESCE(machine_used, 0) = 0
-        AND COALESCE(total_paid, 0) > 0
     `);
   }
 }

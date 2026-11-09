@@ -1503,7 +1503,10 @@ router.get('/ar', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN farmers f ON mb.farmer_id = f.id
       WHERE mb.status = 'Completed'
         AND COALESCE(mb.remaining_balance, mb.total_price - COALESCE(mb.total_paid, 0)) > 0
-        AND COALESCE(mb.machine_used, 0) = 1
+        AND (
+          COALESCE(mb.machine_used, 0) = 1
+          OR COALESCE(mb.is_historical_import, 0) = 1
+        )
     `;
     const params = [];
     
@@ -1703,9 +1706,12 @@ router.post('/collections', verifyTreasurerAccess, async (req, res) => {
            payment_status = ?,
            payment_date = ?,
            last_payment_date = ?,
-           receipt_number = ?${bookingStatusUpdate}
+           receipt_number = ?,
+           receivable_amount = CASE WHEN ? <= 0 THEN NULL ELSE ? END,
+           receivable_created_at = CASE WHEN ? <= 0 THEN NULL ELSE receivable_created_at END
+           ${bookingStatusUpdate}
        WHERE id = ?`,
-      [newTotalPaid, newRemainingBalance, paymentStatus, collection_date, collection_date, receiptNum, booking_id]
+      [newTotalPaid, newRemainingBalance, paymentStatus, collection_date, collection_date, receiptNum, newRemainingBalance, newRemainingBalance, newRemainingBalance, booking_id]
     );
 
     // Update income entry: delete old and insert fresh with cumulative total_paid
@@ -2321,7 +2327,10 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN farmers f ON mb.farmer_id = f.id
       LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       WHERE mb.status = 'Completed'
-        AND COALESCE(mb.machine_used, 0) = 1
+        AND (
+          COALESCE(mb.machine_used, 0) = 1
+          OR COALESCE(mb.is_historical_import, 0) = 1
+        )
         AND GREATEST(
           0,
           mb.total_price - COALESCE(mb.total_paid, 0) +

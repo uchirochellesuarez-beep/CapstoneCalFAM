@@ -39,8 +39,9 @@
             <p>
               Use the farmer reference number already saved on the farmer account. That is how the system finds the farmer.
               The machinery name must match exactly one machine in your barangay. Two machines cannot share a name.
-              The total to pay is taken from that machine's price and the area. It is not typed in the file.
-              One row is one booking. Completed means the service is done. Pending means the balance is still to be collected.
+              The total service fee is calculated from that machine's rate and the area. Do not type the total in the file.
+              Completed means the machinery work was already done. Imported bookings are unpaid, so completed services go to AR/Collectibles automatically.
+              Pending services are not treated as receivables.
               The same farmer, machine, and date already in the system is skipped.
             </p>
           </div>
@@ -54,6 +55,9 @@
         <div v-if="historyPreview" class="history-import-summary">
           <span>Total {{ historyPreview.summary.total }}</span>
           <span>Ready {{ historyPreview.summary.ready }}</span>
+          <span>Completed {{ historyPreview.summary.completed || 0 }}</span>
+          <span>Service fees ₱{{ formatNumber(historyPreview.summary.total_service_fees || 0) }}</span>
+          <span>Collectibles ₱{{ formatNumber(historyPreview.summary.outstanding_collectibles || 0) }}</span>
           <span>Invalid {{ historyPreview.summary.invalid }}</span>
           <span>Already imported {{ historyPreview.summary.duplicate }}</span>
         </div>
@@ -106,11 +110,22 @@
             {{ historyImportBusy ? 'Importing…' : 'Confirm import' }}
           </button>
         </div>
-        <p v-if="historyImportResult" class="history-import-success">
-          Imported {{ historyImportResult.imported }}.
-          Skipped {{ historyImportResult.skipped }} already in the system.
-          Rejected {{ historyImportResult.rejected }}.
-        </p>
+        <div v-if="historyImportResult" class="history-import-success">
+          <p>
+            Processed {{ historyImportResult.total }} row{{ historyImportResult.total === 1 ? '' : 's' }}.
+            Imported {{ historyImportResult.imported }} booking{{ historyImportResult.imported === 1 ? '' : 's' }}
+            ({{ historyImportResult.completed || 0 }} completed).
+          </p>
+          <p>
+            Calculated service fees ₱{{ formatNumber(historyImportResult.total_service_fees || 0) }}.
+            Outstanding collectibles ₱{{ formatNumber(historyImportResult.outstanding_collectibles || 0) }}
+            {{ (historyImportResult.outstanding_collectibles || 0) > 0 ? 'were added to AR/Collectibles.' : 'were generated.' }}
+          </p>
+          <p>
+            Skipped {{ historyImportResult.skipped }} duplicate{{ historyImportResult.skipped === 1 ? '' : 's' }}.
+            Failed {{ historyImportResult.rejected }} record{{ historyImportResult.rejected === 1 ? '' : 's' }}.
+          </p>
+        </div>
       </section>
 
       <div class="stats-group stats-group--machinery-approval">
@@ -1084,7 +1099,11 @@ export default {
     const confirmHistoryImport = async () => {
       if (!historyFile.value || !historyPreview.value?.canCommit || historyImportBusy.value) return
       const ready = historyPreview.value.summary?.ready || 0
-      if (!window.confirm(`Import ${ready} historical booking${ready === 1 ? '' : 's'}? Existing bookings will not be changed.`)) {
+      const collectibles = historyPreview.value.summary?.outstanding_collectibles || 0
+      const collectibleNote = collectibles > 0
+        ? ` Completed unpaid services totaling ₱${Number(collectibles).toFixed(2)} will be added to AR/Collectibles.`
+        : ''
+      if (!window.confirm(`Import ${ready} historical booking${ready === 1 ? '' : 's'}? Existing bookings will not be changed.${collectibleNote}`)) {
         return
       }
       historyImportBusy.value = true
@@ -1788,6 +1807,10 @@ export default {
   margin: 0.75rem 0 0;
   color: #86efac;
   font-weight: 700;
+}
+
+.history-import-success p {
+  margin: 0.15rem 0;
 }
 
 .history-import-table-wrap {
