@@ -363,7 +363,6 @@
                   </td>
                   <td class="td-status">
                     <span :class="['mach-loan-status', bookingStatusSlug(booking.status)]">{{ booking.status }}</span>
-                    <small v-if="booking.is_historical_import" class="historical-flag">Historical</small>
                   </td>
                   <td class="td-actions">
                     <div class="action-buttons">
@@ -1837,16 +1836,6 @@ export default {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.85rem;
-}
-
-.historical-flag {
-  display: inline-block;
-  margin-left: 0.35rem;
-  padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  background: rgba(74, 222, 128, 0.16);
-  color: #bbf7d0;
-  font-size: 0.68rem;
 }
 
 .light-theme .history-import-card {

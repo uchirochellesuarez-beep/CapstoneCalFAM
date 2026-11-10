@@ -827,7 +827,7 @@ async function listPendingSubmissions(pool, barangayId) {
        ON s.transaction_type = 'machinery' AND mb.id = s.reference_id
      LEFT JOIN machinery_inventory mi ON mb.machinery_id = mi.id
      WHERE s.barangay_id = ? AND s.status = 'pending_verification'
-     ORDER BY s.submitted_at ASC`,
+     ORDER BY s.submitted_at DESC, s.id DESC`,
     [barangayId]
   );
   return rows.map((row) => {

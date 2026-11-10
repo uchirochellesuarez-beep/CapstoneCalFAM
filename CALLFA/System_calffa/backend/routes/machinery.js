@@ -1553,8 +1553,7 @@ router.get('/bookings/pending-down-payments', verifyToken, async (req, res) => {
     if (bookerFilter) {
       query += ` AND ${bookerFilter}`;
     }
-    query += ` ORDER BY FIELD(mb.status, 'Awaiting Payment Verification', 'Awaiting Down Payment', 'Payment Rejected'),
-                       COALESCE(mb.down_payment_submitted_at, mb.approved_date, mb.created_at) DESC`;
+    query += ' ORDER BY COALESCE(mb.down_payment_submitted_at, mb.approved_date, mb.created_at) DESC, mb.id DESC';
 
     const [bookings] = await pool.execute(query, params);
     res.json({ success: true, bookings });

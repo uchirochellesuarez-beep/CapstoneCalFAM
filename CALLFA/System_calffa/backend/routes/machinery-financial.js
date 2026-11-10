@@ -2295,7 +2295,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
       LEFT JOIN barangay_service_places bsp ON mb.barangay_place_id = bsp.id
       WHERE mb.status IN ('Approved', 'In Use', 'Completed')
         AND mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
-      ORDER BY mb.booking_date ASC, mb.id ASC
+      ORDER BY mb.booking_date DESC, mb.id DESC
     `;
     const serviceLedgerParams = [dateStart, dateEnd];
     if (effectiveBarangayId) serviceLedgerParams.push(effectiveBarangayId);
@@ -2348,7 +2348,7 @@ router.get('/reports/transactions', verifyFinancialAccess, async (req, res) => {
           CASE WHEN mb.payment_status = 'Partial' THEN COALESCE(mb.pending_interest, 0) ELSE 0 END
         ) > 0
         AND mb.booking_date BETWEEN ? AND ?${barangayFilterFarmer}${machineryFilterBooking}
-      ORDER BY f.full_name ASC, mb.booking_date ASC, mb.id ASC
+      ORDER BY mb.booking_date DESC, mb.id DESC
     `;
     const collectiblesListParams = [dateStart, dateEnd, dateStart, dateEnd];
     if (effectiveBarangayId) collectiblesListParams.push(effectiveBarangayId);
