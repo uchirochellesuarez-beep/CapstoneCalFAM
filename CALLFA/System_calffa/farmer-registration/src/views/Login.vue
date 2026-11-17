@@ -243,6 +243,7 @@
                     </svg>
                   </button>
                 </div>
+                <PasswordRequirements :password="passwordForm.password" always-show />
                 <p v-if="passwordError" class="field-hint-error">{{ passwordError }}</p>
               </div>
 
@@ -364,7 +365,9 @@ import { useAuthStore } from '../stores/authStore'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageToggle from '../components/LanguageToggle.vue'
+import PasswordRequirements from '../components/PasswordRequirements.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+import { getPasswordStrengthErrorKey, isPasswordStrong } from '../utils/passwordRules'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -444,8 +447,8 @@ const formTitle = computed(() => {
 
 const canSubmitPassword = computed(() => {
   return (
-    passwordForm.value.password.length >= 8 &&
-    passwordForm.value.confirmPassword.length >= 8 &&
+    isPasswordStrong(passwordForm.value.password) &&
+    passwordForm.value.confirmPassword.length > 0 &&
     !passwordError.value &&
     !confirmError.value
   )
@@ -536,15 +539,9 @@ const validatePasswordInput = () => {
 
   if (!password) return
 
-  if (password.length < 8) {
-    passwordError.value = t('signup.passwordMinLength')
-    return
-  }
-
-  const hasLetters = /[a-zA-Z]/.test(password)
-  const hasNumbers = /[0-9]/.test(password)
-  if (!hasLetters || !hasNumbers) {
-    passwordError.value = t('signup.passwordLettersNumbers')
+  const errorKey = getPasswordStrengthErrorKey(password)
+  if (errorKey) {
+    passwordError.value = t(errorKey)
   }
 
   if (passwordForm.value.confirmPassword) {

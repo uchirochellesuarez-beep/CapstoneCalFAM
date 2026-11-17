@@ -17,6 +17,7 @@ const { getUserBarangayContext, getBarangayOfficers, getBarangayFarmers } = requ
 const { buildListBarangayScope, canAccessBarangay, assertFarmerAccess } = require('../utils/requestUser');
 const { hasFarmersEmailColumn, hasFarmersGoogleIdColumn, ensureFarmersEmailColumn } = require('../utils/googleAuth');
 const REFERENCE_NUMBER_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/;
+const { validatePasswordStrength } = require('../utils/passwordRules');
 
 // Configure multer for profile picture uploads
 const storage = multer.diskStorage({
@@ -29,7 +30,9 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    let ext = path.extname(file.originalname).toLowerCase();
+    if (ext === '.jfif') ext = '.jpg'; // JFIF is JPEG; normalize for broader clients
+    cb(null, 'profile-' + uniqueSuffix + ext);
   }
 });
 
@@ -37,15 +40,16 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: function (req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
+    // .jfif is a JPEG variant commonly saved by Windows/browsers
+    const allowedExt = /^\.(jpe?g|jfif|png|gif)$/i;
+    const allowedMime = /^image\/(jpeg|pjpeg|png|gif)$/i;
+    const extname = allowedExt.test(path.extname(file.originalname));
+    const mimetype = allowedMime.test(file.mimetype);
+
     if (mimetype && extname) {
       return cb(null, true);
-    } else {
-      cb(new Error('Only image files (JPEG, PNG, GIF) are allowed!'));
     }
+    cb(new Error('Invalid file format. Only JPEG, PNG, or GIF images are accepted.'));
   }
 });
 
@@ -112,21 +116,12 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Validate password (minimum 8 characters with letters and numbers)
-    if (password.length < 8) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Password must be at least 8 characters long' 
-      });
-    }
-    
-    const hasLetters = /[a-zA-Z]/.test(password);
-    const hasNumbers = /[0-9]/.test(password);
-    
-    if (!hasLetters || !hasNumbers) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Password must contain both letters and numbers' 
+    // Validate password strength (length, letter, number, special character)
+    const passwordStrengthError = validatePasswordStrength(password);
+    if (passwordStrengthError) {
+      return res.status(400).json({
+        success: false,
+        message: passwordStrengthError
       });
     }
 
@@ -969,7 +964,17 @@ router.delete('/:id', async (req, res) => {
 // -----------------------------
 // UPLOAD PROFILE PICTURE
 // -----------------------------
-router.post('/:id/profile-picture', upload.single('profile_picture'), async (req, res) => {
+router.post('/:id/profile-picture', (req, res, next) => {
+  upload.single('profile_picture')(req, res, (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Photo is too large. Maximum file size is 10 MB.'
+        : (err.message || 'Upload failed');
+      return res.status(400).json({ success: false, message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     const farmerId = parseInt(req.params.id);
     

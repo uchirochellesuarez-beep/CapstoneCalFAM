@@ -1,6 +1,6 @@
 <template>
   <div class="registered-members-card section-card">
-    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
+    <CenterToast :message="centerNotice" :type="centerNoticeType" @close="clearCenterNotice" />
     <h2 class="registered-members-title">{{ $t('common.registeredMembers') }}</h2>
     
     <div v-if="displayLoading" class="registered-members-muted text-center py-8">
@@ -641,7 +641,7 @@
                 type="file"
                 ref="profilePictureInput"
                 @change="handleProfilePictureSelect"
-                accept="image/jpeg,image/png,image/gif"
+                accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.jfif,.png,.gif"
                 class="hidden"
               />
             </label>
@@ -680,8 +680,10 @@ import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInp
 import { mediaUrl } from '../utils/apiBase'
 import CenterToast from './CenterToast.vue'
 import { useCenterNotice } from '../composables/useCenterNotice'
+import { useI18n } from 'vue-i18n'
 
-const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
+const { t } = useI18n()
+const { centerNotice, centerNoticeType, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const farmerStore = useFarmerStore()
 const authStore = useAuthStore()
@@ -1185,24 +1187,44 @@ const closeEditPictureModal = () => {
   uploadError.value = ''
 }
 
+const isValidProfileImage = (file) => {
+  const allowedTypes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif']
+  const allowedExt = /\.(jpe?g|jfif|png|gif)$/i
+  const hasValidExt = allowedExt.test(file.name || '')
+  const hasValidType = !file.type || allowedTypes.includes(file.type)
+  return hasValidExt && hasValidType
+}
+
+const clearProfilePictureSelection = () => {
+  selectedProfilePicture.value = null
+  if (profilePicturePreview.value) {
+    URL.revokeObjectURL(profilePicturePreview.value)
+  }
+  profilePicturePreview.value = null
+  if (profilePictureInput.value) {
+    profilePictureInput.value.value = ''
+  }
+}
+
 const handleProfilePictureSelect = (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // Validate file size (10MB max)
-  if (file.size > 10 * 1024 * 1024) {
-    uploadError.value = 'File size must be less than 10MB'
-    selectedProfilePicture.value = null
-    profilePicturePreview.value = null
+  // Format first: wrong type gets format error
+  if (!isValidProfileImage(file)) {
+    const msg = t('ui.invalidImageFormat')
+    uploadError.value = msg
+    showCenterNotice(msg, 'error')
+    clearProfilePictureSelection()
     return
   }
 
-  // Validate file type
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
-  if (!allowedTypes.includes(file.type)) {
-    uploadError.value = 'Only JPEG, PNG, and GIF images are allowed'
-    selectedProfilePicture.value = null
-    profilePicturePreview.value = null
+  // Then size: oversized image gets size error
+  if (file.size > 10 * 1024 * 1024) {
+    const msg = t('ui.imageTooLarge')
+    uploadError.value = msg
+    showCenterNotice(msg, 'error')
+    clearProfilePictureSelection()
     return
   }
 
@@ -1226,10 +1248,27 @@ const uploadProfilePicture = async () => {
       body: formData
     })
 
-    const data = await response.json()
+    const raw = await response.text()
+    let data
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      throw new Error(
+        response.ok
+          ? 'Unexpected server response while uploading photo'
+          : `Upload failed (${response.status}). Please try again.`
+      )
+    }
 
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Failed to upload profile picture')
+      const serverMsg = data.message || ''
+      if (/file size|too large|10\s*mb/i.test(serverMsg)) {
+        throw new Error(t('ui.imageTooLarge'))
+      }
+      if (/invalid file format|only (image|jpeg)/i.test(serverMsg)) {
+        throw new Error(t('ui.invalidImageFormat'))
+      }
+      throw new Error(serverMsg || 'Failed to upload profile picture')
     }
 
     // Update local farmer data
@@ -1249,7 +1288,9 @@ const uploadProfilePicture = async () => {
     showCenterNotice('Profile picture updated successfully!')
     closeEditPictureModal()
   } catch (error) {
-    uploadError.value = error.message || 'Failed to upload profile picture'
+    const msg = error.message || 'Failed to upload profile picture'
+    uploadError.value = msg
+    showCenterNotice(msg, 'error')
   } finally {
     uploading.value = false
   }

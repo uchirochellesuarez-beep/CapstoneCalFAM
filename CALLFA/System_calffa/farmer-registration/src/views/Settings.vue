@@ -1,6 +1,6 @@
 <template>
   <div class="edit-profile-page glass-module-page" :class="{ 'light-theme': isLight }">
-    <CenterToast :message="centerNotice" @close="clearCenterNotice" />
+    <CenterToast :message="centerNotice" :type="centerNoticeType" @close="clearCenterNotice" />
     <div class="profile-page-inner">
       <header class="profile-page-header">
         <h1 class="profile-page-title">{{ t('settings.title') }}</h1>
@@ -27,7 +27,7 @@
                   type="file"
                   ref="profilePictureInput"
                   @change="handleProfilePictureChange"
-                  accept="image/jpeg,image/png,image/gif"
+                  accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.jfif,.png,.gif"
                   class="hidden"
                 />
               </label>
@@ -194,7 +194,7 @@ const authStore = useAuthStore()
 const { t } = useI18n()
 const { isDark } = useBackdropTheme()
 const isLight = computed(() => !isDark.value)
-const { centerNotice, showCenterNotice, clearCenterNotice } = useCenterNotice()
+const { centerNotice, centerNoticeType, showCenterNotice, clearCenterNotice } = useCenterNotice()
 
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
 
@@ -287,22 +287,37 @@ const profilePictureUrl = computed(() => {
   return null
 })
 
+const isValidProfileImage = (file) => {
+  const allowedTypes = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif']
+  const allowedExt = /\.(jpe?g|jfif|png|gif)$/i
+  const hasValidExt = allowedExt.test(file.name || '')
+  const hasValidType = !file.type || allowedTypes.includes(file.type)
+  return hasValidExt && hasValidType
+}
+
 const handleProfilePictureChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // Validate file size (10MB max)
-  if (file.size > 10 * 1024 * 1024) {
-    uploadMessage.value = 'File size must be less than 10MB'
+  // Format first: wrong type gets format error
+  if (!isValidProfileImage(file)) {
+    const msg = t('ui.invalidImageFormat')
+    uploadMessage.value = msg
     uploadMessageType.value = 'text-red-600'
+    showCenterNotice(msg, 'error')
+    profilePictureFile.value = null
+    if (profilePictureInput.value) profilePictureInput.value.value = ''
     return
   }
 
-  // Validate file type
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
-  if (!allowedTypes.includes(file.type)) {
-    uploadMessage.value = 'Only JPEG, PNG, and GIF images are allowed'
+  // Then size: oversized image gets size error
+  if (file.size > 10 * 1024 * 1024) {
+    const msg = t('ui.imageTooLarge')
+    uploadMessage.value = msg
     uploadMessageType.value = 'text-red-600'
+    showCenterNotice(msg, 'error')
+    profilePictureFile.value = null
+    if (profilePictureInput.value) profilePictureInput.value.value = ''
     return
   }
 
@@ -334,10 +349,27 @@ const uploadProfilePicture = async () => {
       body: formData
     })
 
-    const data = await response.json()
+    const raw = await response.text()
+    let data
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      throw new Error(
+        response.ok
+          ? 'Unexpected server response while uploading photo'
+          : `Upload failed (${response.status}). Please try again.`
+      )
+    }
 
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Failed to upload profile picture')
+      const serverMsg = data.message || ''
+      if (/file size|too large|10\s*mb/i.test(serverMsg)) {
+        throw new Error(t('ui.imageTooLarge'))
+      }
+      if (/invalid file format|only (image|jpeg)/i.test(serverMsg)) {
+        throw new Error(t('ui.invalidImageFormat'))
+      }
+      throw new Error(serverMsg || 'Failed to upload profile picture')
     }
 
     // Update authStore with new profile picture
@@ -347,8 +379,10 @@ const uploadProfilePicture = async () => {
     uploadMessage.value = ''
     showCenterNotice('Profile picture updated successfully!')
   } catch (error) {
-    uploadMessage.value = error.message || 'Failed to upload profile picture'
+    const msg = error.message || 'Failed to upload profile picture'
+    uploadMessage.value = msg
     uploadMessageType.value = 'text-red-600'
+    showCenterNotice(msg, 'error')
     profilePictureFile.value = null
   } finally {
     uploading.value = false

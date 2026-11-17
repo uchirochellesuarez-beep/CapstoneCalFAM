@@ -196,6 +196,7 @@
                       class="form-input"
                       autocomplete="new-password"
                       :placeholder="t('googleReg.passwordPlaceholder')"
+                      @input="validatePassword"
                       @blur="validatePassword"
                     />
                     <button
@@ -212,6 +213,7 @@
                       </svg>
                     </button>
                   </div>
+                  <PasswordRequirements :password="formData.password" always-show />
                   <span v-if="errors.password" class="form-error">{{ errors.password }}</span>
                 </div>
               </div>
@@ -289,8 +291,10 @@ import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
 import BirthDateSelect from '../components/BirthDateSelect.vue'
+import PasswordRequirements from '../components/PasswordRequirements.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
+import { getPasswordStrengthErrorKey } from '../utils/passwordRules'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -417,16 +421,9 @@ const validatePassword = () => {
 
   if (!pwd) return
 
-  if (pwd.length < 8) {
-    errors.password = t('signup.passwordMinLength')
-    return
-  }
-
-  const hasLetters = /[a-zA-Z]/.test(pwd)
-  const hasNumbers = /[0-9]/.test(pwd)
-
-  if (!hasLetters || !hasNumbers) {
-    errors.password = t('signup.passwordLettersNumbers')
+  const errorKey = getPasswordStrengthErrorKey(pwd)
+  if (errorKey) {
+    errors.password = t(errorKey)
     return
   }
 

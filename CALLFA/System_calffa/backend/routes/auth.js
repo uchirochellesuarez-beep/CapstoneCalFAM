@@ -31,17 +31,7 @@ const GOOGLE_RESET_NOT_LINKED_MESSAGE =
 const RESET_TOKEN_PURPOSE = 'google_password_reset';
 const RESET_TOKEN_EXPIRES_IN = '10m';
 
-function validatePasswordStrength(password) {
-  if (!password || String(password).length < 8) {
-    return 'Password must be at least 8 characters long';
-  }
-  const hasLetters = /[a-zA-Z]/.test(password);
-  const hasNumbers = /[0-9]/.test(password);
-  if (!hasLetters || !hasNumbers) {
-    return 'Password must contain both letters and numbers';
-  }
-  return null;
-}
+const { validatePasswordStrength } = require('../utils/passwordRules');
 
 /**
  * POST /api/auth/google/verify-token
@@ -181,21 +171,12 @@ router.post('/google/register', async (req, res) => {
       });
     }
 
-    // Validate password (minimum 8 characters with letters and numbers)
-    if (password.length < 8) {
+    // Validate password strength (length, letter, number, special character)
+    const passwordStrengthError = validatePasswordStrength(password);
+    if (passwordStrengthError) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 8 characters long'
-      });
-    }
-    
-    const hasLetters = /[a-zA-Z]/.test(password);
-    const hasNumbers = /[0-9]/.test(password);
-    
-    if (!hasLetters || !hasNumbers) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must contain both letters and numbers'
+        message: passwordStrengthError
       });
     }
 

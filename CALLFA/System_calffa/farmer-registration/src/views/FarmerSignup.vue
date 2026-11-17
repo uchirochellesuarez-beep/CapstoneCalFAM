@@ -237,6 +237,7 @@
                   </svg>
                 </button>
               </div>
+              <PasswordRequirements :password="form.password" always-show />
               <span v-if="passwordError" class="form-error">{{ passwordError }}</span>
             </div>
           </div>
@@ -354,8 +355,10 @@ import LanguageToggle from '../components/LanguageToggle.vue'
 import RegistrationLegalNotice from '../components/RegistrationLegalNotice.vue'
 import TypedNumberInput from '../components/TypedNumberInput.vue'
 import BirthDateSelect from '../components/BirthDateSelect.vue'
+import PasswordRequirements from '../components/PasswordRequirements.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
+import { getPasswordStrengthErrorKey, isPasswordStrong } from '../utils/passwordRules'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -405,10 +408,6 @@ const showToast = (message, type = 'error') => {
 }
 
 watch(error, (value) => {
-  if (value) showToast(value, 'error')
-})
-
-watch(passwordError, (value) => {
   if (value) showToast(value, 'error')
 })
 
@@ -499,52 +498,24 @@ const validatePhoneNumber = () => {
 }
 
 const validatePassword = () => {
-  const password = form.value.password
-
-  if (password.length < 8) {
-    error.value = t('signup.passwordMinLength')
+  const errorKey = getPasswordStrengthErrorKey(form.value.password)
+  if (errorKey) {
+    error.value = t(errorKey)
+    passwordError.value = t(errorKey)
     return false
   }
-
-  const hasLetters = /[a-zA-Z]/.test(password)
-  const hasNumbers = /[0-9]/.test(password)
-
-  if (!hasLetters || !hasNumbers) {
-    error.value = t('signup.passwordLettersNumbers')
-    return false
-  }
-
+  passwordError.value = ''
   return true
 }
 
 const validatePasswordInput = () => {
   const password = form.value.password
-
   if (!password) {
     passwordError.value = ''
     return
   }
-
-  const hasLetters = /[a-zA-Z]/.test(password)
-  const hasNumbers = /[0-9]/.test(password)
-  const length = password.length
-
-  if (length < 8) {
-    passwordError.value = t('signup.passwordMoreChars', { count: 8 - length })
-    return
-  }
-
-  if (!hasLetters && hasNumbers) {
-    passwordError.value = t('signup.passwordAddLetters')
-    return
-  }
-
-  if (hasLetters && !hasNumbers) {
-    passwordError.value = t('signup.passwordAddNumbers')
-    return
-  }
-
-  passwordError.value = ''
+  const errorKey = getPasswordStrengthErrorKey(password)
+  passwordError.value = errorKey && !isPasswordStrong(password) ? t(errorKey) : ''
 }
 
 const register = async () => {
