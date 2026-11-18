@@ -178,29 +178,9 @@
                   <span class="info-label">{{ $t('ui.quantityColon') }}</span>
                   <span class="info-value">{{ formatAssistanceQuantity(dist) }}</span>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">{{ $t('ui.smsColon') }}</span>
-                  <span class="info-value">
-                    <span class="sms-status" :class="getSmsStatusClass(dist.sms_status)">
-                      {{ formatSmsStatus(dist.sms_status) }}
-                    </span>
-                  </span>
-                </div>
-                <div v-if="dist.sms_failure_reason" class="info-row">
-                  <span class="info-label">{{ $t('ui.reasonColon') }}</span>
-                  <span class="info-value sms-error">{{ dist.sms_failure_reason }}</span>
-                </div>
               </div>
 
-              <div class="card-actions card-actions-split">
-                <button
-                  v-if="canRetrySms(dist)"
-                  type="button"
-                  class="btn-sms-retry"
-                  @click="retryDistributionSms(dist)"
-                >
-                  {{ $t('ui.retrySms') }}
-                </button>
+              <div class="card-actions">
                 <button type="button" class="btn-completed" @click="markAsCompleted(dist)">
                   {{ $t('common.done') }}
                 </button>
@@ -243,14 +223,6 @@
                 <div class="info-row">
                   <span class="info-label">{{ $t('ui.quantityColon') }}</span>
                   <span class="info-value">{{ formatAssistanceQuantity(dist) }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">{{ $t('ui.smsColon') }}</span>
-                  <span class="info-value">
-                    <span class="sms-status" :class="getSmsStatusClass(dist.sms_status)">
-                      {{ formatSmsStatus(dist.sms_status) }}
-                    </span>
-                  </span>
                 </div>
                 <div v-if="dist.distribution_date" class="info-row">
                   <span class="info-label">{{ $t('ui.completedColon') }}</span>
@@ -558,7 +530,7 @@ const submitAssistance = async () => {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || t('ui.createDistributionError'))
     
-    successMessage.value = getSmsFeedbackMessage(data.sms)
+    successMessage.value = t('ui.assistanceCreated')
     closeModal()
     await fetchRecords()
     await fetchDistributions()
@@ -631,65 +603,6 @@ const formatAssistanceQuantity = (dist) => {
   if (parsed) return t('ui.assistQtyLine', parsed)
   const unit = dist?.unit && dist.unit !== 'sako' ? dist.unit : t('incomeForm.sacksUnit')
   return `${dist?.quantity ?? 0} ${unit}`
-}
-
-const formatSmsStatus = (status) => {
-  const map = {
-    sent: 'ui.smsSent',
-    failed: 'ui.smsFailed',
-    not_configured: 'ui.smsNotConfigured',
-    pending: 'ui.smsPending'
-  }
-  return map[status] ? t(map[status]) : t('ui.smsNoStatus')
-}
-
-const getSmsStatusClass = (status) => {
-  const map = {
-    sent: 'status-sent',
-    failed: 'status-failed',
-    not_configured: 'status-warning',
-    pending: 'status-pending'
-  }
-  return map[status] || 'status-pending'
-}
-
-const canRetrySms = (distribution) => {
-  return ['failed', 'not_configured', 'pending'].includes(distribution.sms_status)
-}
-
-const getSmsFeedbackMessage = (sms) => {
-  if (!sms) return t('ui.assistanceCreated')
-  if (sms.success) {
-    return t('ui.assistanceCreatedSms', { recipient: sms.recipient || t('ui.theFarmer') })
-  }
-  if (sms.status === 'not_configured') {
-    return t('ui.assistanceCreatedNoSms')
-  }
-  return t('ui.assistanceCreatedSmsFailed', { detail: sms.error ? `: ${sms.error}` : '.' })
-}
-
-const retryDistributionSms = async (distribution) => {
-  loadingDistributions.value = true
-  errorMessage.value = ''
-
-  try {
-    const res = await fetch(`/api/farmer-income/distribution/${distribution.id}/retry-sms`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}`
-      }
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || t('ui.smsRetryError'))
-
-    successMessage.value = getSmsFeedbackMessage(data.sms)
-    await fetchDistributions()
-  } catch (err) {
-    errorMessage.value = err.message
-  } finally {
-    loadingDistributions.value = false
-  }
 }
 
 onMounted(async () => {
