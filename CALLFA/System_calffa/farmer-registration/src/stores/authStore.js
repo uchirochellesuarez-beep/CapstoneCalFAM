@@ -67,12 +67,17 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       localStorage.removeItem('currentUser')
       localStorage.removeItem('token')
-        import('./loanModuleStore').then(({ useLoanModuleStore }) => {
-          useLoanModuleStore().reset()
-        }).catch(() => {})
-        import('./downPaymentStore').then(({ useDownPaymentStore }) => {
-          useDownPaymentStore().reset()
-        }).catch(() => {})
+      try {
+        sessionStorage.setItem('calffa_clear_login_form', '1')
+      } catch {
+        /* ignore private mode */
+      }
+      import('./loanModuleStore').then(({ useLoanModuleStore }) => {
+        useLoanModuleStore().reset()
+      }).catch(() => {})
+      import('./downPaymentStore').then(({ useDownPaymentStore }) => {
+        useDownPaymentStore().reset()
+      }).catch(() => {})
     },
 
     persistAuth(user, token) {
@@ -208,6 +213,12 @@ export const useAuthStore = defineStore('auth', {
       if (this.loggingOut) return
       this.loggingOut = true
       const token = this.token
+      // Ask Login.vue to wipe reference/password (incl. browser autofill leftovers)
+      try {
+        sessionStorage.setItem('calffa_clear_login_form', '1')
+      } catch {
+        /* ignore private mode */
+      }
       // Hide the signed-in screen before the role disappears, so another
       // account's cached cards cannot flash on the way to the login page.
       this.clearLocalAuth()

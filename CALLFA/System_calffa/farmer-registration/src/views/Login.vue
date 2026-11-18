@@ -43,7 +43,7 @@
 
           <!-- ========= LOGIN ========= -->
           <template v-if="!isResetFlow">
-            <form @submit.prevent="submitLogin" class="auth-form">
+            <form @submit.prevent="submitLogin" class="auth-form" autocomplete="off">
               <div class="form-group">
                 <label class="form-label">{{ t('auth.referenceNumber') }}</label>
                 <div class="field-input-wrapper">
@@ -56,12 +56,17 @@
                   <input
                     v-model="loginForm.referenceNumber"
                     type="text"
+                    name="calffa-reference"
                     required
                     minlength="19"
                     maxlength="19"
                     pattern="\d{2}-\d{2}-\d{2}-\d{3}-\d{6}"
                     inputmode="numeric"
                     class="form-input"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
                     :placeholder="t('auth.referencePlaceholder')"
                     @input="handleLoginReferenceInput"
                   />
@@ -85,9 +90,10 @@
                   <input
                     v-model="loginForm.password"
                     :type="showPassword ? 'text' : 'password'"
+                    name="calffa-password"
                     required
                     class="form-input"
-                    autocomplete="current-password"
+                    autocomplete="new-password"
                     :placeholder="t('auth.passwordPlaceholder')"
                   />
                   <button
@@ -358,7 +364,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
@@ -438,6 +444,34 @@ const loginForm = ref({
   role: 'farmer'
 })
 
+const CLEAR_LOGIN_FLAG = 'calffa_clear_login_form'
+
+function clearLoginCredentials() {
+  loginForm.value.referenceNumber = ''
+  loginForm.value.password = ''
+  showPassword.value = false
+}
+
+async function clearLoginCredentialsHard() {
+  clearLoginCredentials()
+  await nextTick()
+  clearLoginCredentials()
+  // Beat browser autofill that often runs shortly after mount
+  requestAnimationFrame(() => clearLoginCredentials())
+  setTimeout(() => clearLoginCredentials(), 50)
+  setTimeout(() => clearLoginCredentials(), 200)
+}
+
+function maybeClearLoginAfterLogout() {
+  if (sessionStorage.getItem(CLEAR_LOGIN_FLAG) !== '1') return
+  sessionStorage.removeItem(CLEAR_LOGIN_FLAG)
+  clearLoginCredentialsHard()
+}
+
+onMounted(() => {
+  maybeClearLoginAfterLogout()
+})
+
 const formTitle = computed(() => {
   if (!isResetFlow.value) return t('auth.signIn')
   if (resetStep.value === 'password') return t('auth.createNewPassword')
@@ -491,6 +525,8 @@ watch(
     successMessage.value = ''
     if (isResetFlow.value) {
       resetForgotState()
+    } else {
+      maybeClearLoginAfterLogout()
     }
   }
 )
@@ -513,6 +549,8 @@ const submitLogin = async () => {
   const result = await authStore.login(loginForm.value.referenceNumber, loginForm.value.password)
 
   if (result.success) {
+    // Drop credentials from the form so logout / back-navigation cannot restore them
+    clearLoginCredentials()
     const userRole = authStore.currentUser?.role
 
     if (userRole === 'admin') {

@@ -66,13 +66,13 @@
             <label>{{ t('settings.education') }}</label>
             <select v-model="profile.educational_status">
               <option value="" disabled>{{ t('settings.selectEducation') }}</option>
-              <option value="Elementary">{{ t('settings.elementary') }}</option>
-              <option value="High School">{{ t('settings.highSchool') }}</option>
-              <option value="Senior High School">{{ t('settings.seniorHigh') }}</option>
-              <option value="Vocational">{{ t('settings.vocational') }}</option>
-              <option value="College">{{ t('settings.college') }}</option>
-              <option value="Post Graduate">{{ t('settings.postGraduate') }}</option>
-              <option value="None">{{ t('settings.none') }}</option>
+              <option
+                v-for="option in educationOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
             </select>
           </div>
           <div class="form-group">
@@ -199,6 +199,36 @@ const { centerNotice, centerNoticeType, showCenterNotice, clearCenterNotice } = 
 
 const REFERENCE_FORMAT_REGEX = /^\d{2}-\d{2}-\d{2}-\d{3}-\d{6}$/
 
+/** Canonical values — must match signup / Google registration / admin edit. */
+const EDUCATION_STATUS_VALUES = [
+  'No Formal Education',
+  'Elementary Level',
+  'Elementary Graduate',
+  'High School Level',
+  'High School Graduate',
+  'Vocational',
+  'College Level',
+  'College Graduate',
+  'Post Graduate'
+]
+
+/** Older Settings/signup values → canonical so saved data still shows. */
+const EDUCATION_STATUS_ALIASES = {
+  None: 'No Formal Education',
+  Elementary: 'Elementary Level',
+  'High School': 'High School Graduate',
+  'Senior High School': 'High School Graduate',
+  College: 'College Graduate'
+}
+
+function normalizeEducationalStatus(value = '') {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  if (EDUCATION_STATUS_VALUES.includes(raw)) return raw
+  if (EDUCATION_STATUS_ALIASES[raw]) return EDUCATION_STATUS_ALIASES[raw]
+  return raw
+}
+
 function formatReferenceNumberInput(value = '') {
   const digits = String(value).replace(/\D/g, '').slice(0, 15)
   const parts = [2, 2, 2, 3, 6]
@@ -230,10 +260,33 @@ const userInitials = computed(() => {
 const profile = ref({
   full_name: authStore.currentUser?.full_name || '',
   phone_number: authStore.currentUser?.phone_number || '',
-  educational_status: authStore.currentUser?.educational_status || '',
+  educational_status: normalizeEducationalStatus(authStore.currentUser?.educational_status),
   reference_number: authStore.currentUser?.reference_number || '',
   address: authStore.currentUser?.address || authStore.currentUser?.barangay_name || '',
   barangay_name: authStore.currentUser?.barangay_name || ''
+})
+
+const educationOptions = computed(() => {
+  const labels = {
+    'No Formal Education': t('signup.noFormalEducation'),
+    'Elementary Level': t('signup.elementaryLevel'),
+    'Elementary Graduate': t('signup.elementaryGraduate'),
+    'High School Level': t('signup.highSchoolLevel'),
+    'High School Graduate': t('signup.highSchoolGraduate'),
+    Vocational: t('signup.vocational'),
+    'College Level': t('signup.collegeLevel'),
+    'College Graduate': t('signup.collegeGraduate'),
+    'Post Graduate': t('signup.postGraduate')
+  }
+  const options = EDUCATION_STATUS_VALUES.map((value) => ({
+    value,
+    label: labels[value] || value
+  }))
+  const current = normalizeEducationalStatus(profile.value.educational_status)
+  if (current && !EDUCATION_STATUS_VALUES.includes(current)) {
+    options.unshift({ value: current, label: current })
+  }
+  return options
 })
 
 const saving = ref(false)
@@ -426,7 +479,7 @@ const saveProfile = async () => {
       body: JSON.stringify({
         full_name: profile.value.full_name,
         phone_number: profile.value.phone_number,
-        educational_status: profile.value.educational_status,
+        educational_status: normalizeEducationalStatus(profile.value.educational_status),
         address: profile.value.address,
         reference_number: ref
       })
@@ -440,12 +493,17 @@ const saveProfile = async () => {
 
     // Update local authStore with the returned data
     const previousEmail = authStore.currentUser?.email
+    const educationalStatus = normalizeEducationalStatus(
+      data.farmer?.educational_status ?? profile.value.educational_status
+    )
     authStore.currentUser = {
       ...authStore.currentUser,
       ...data.farmer,
+      educational_status: educationalStatus,
       email: data.farmer?.email || previousEmail,
       google_linked: Boolean(data.farmer?.google_linked ?? authStore.currentUser?.google_linked)
     }
+    profile.value.educational_status = educationalStatus
     localStorage.setItem('currentUser', JSON.stringify(authStore.currentUser))
     
     message.value = ''
@@ -483,11 +541,13 @@ const fetchUserProfile = async () => {
     if (data.success && data.farmer) {
       const farmer = data.farmer
       
+      const educationalStatus = normalizeEducationalStatus(farmer.educational_status)
+
       // Update profile with fresh data from server
       profile.value = {
         full_name: farmer.full_name || '',
         phone_number: farmer.phone_number || '',
-        educational_status: farmer.educational_status || '',
+        educational_status: educationalStatus,
         reference_number: farmer.reference_number || '',
         address: farmer.address || '',
         barangay_name: farmer.barangay_name || ''
@@ -501,7 +561,7 @@ const fetchUserProfile = async () => {
         ...authStore.currentUser,
         reference_number: farmer.reference_number,
         phone_number: farmer.phone_number,
-        educational_status: farmer.educational_status,
+        educational_status: educationalStatus,
         address: farmer.address,
         profile_picture: farmer.profile_picture,
         barangay_name: farmer.barangay_name,
