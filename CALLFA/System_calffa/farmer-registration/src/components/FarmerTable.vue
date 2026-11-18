@@ -681,6 +681,7 @@ import { mediaUrl } from '../utils/apiBase'
 import CenterToast from './CenterToast.vue'
 import { useCenterNotice } from '../composables/useCenterNotice'
 import { useI18n } from 'vue-i18n'
+import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
 
 const { t } = useI18n()
 const { centerNotice, centerNoticeType, showCenterNotice, clearCenterNotice } = useCenterNotice()
@@ -1248,7 +1249,15 @@ const uploadProfilePicture = async () => {
       body: formData
     })
 
+    if (response.status === 413) {
+      throw new Error(t('ui.imageTooLarge'))
+    }
+
     const raw = await response.text()
+    if (isBackendUnavailable({ response, rawBody: raw })) {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
     let data
     try {
       data = JSON.parse(raw)
@@ -1288,7 +1297,9 @@ const uploadProfilePicture = async () => {
     showCenterNotice('Profile picture updated successfully!')
     closeEditPictureModal()
   } catch (error) {
-    const msg = error.message || 'Failed to upload profile picture'
+    const msg = isBackendUnavailable({ error })
+      ? backendUnavailableMessage(t)
+      : (error.message || 'Failed to upload profile picture')
     uploadError.value = msg
     showCenterNotice(msg, 'error')
   } finally {

@@ -62,6 +62,7 @@
     "online": "Online",
     "available": "Available",
     "unavailable": "Unavailable",
+    "backendUnavailable": "Cannot connect to the server. Please make sure the backend is running, then try again.",
     "id": "ID",
     "edit": "Edit",
     "delete": "Delete",

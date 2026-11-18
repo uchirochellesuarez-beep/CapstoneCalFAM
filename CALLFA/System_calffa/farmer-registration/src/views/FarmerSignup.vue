@@ -359,6 +359,7 @@ import PasswordRequirements from '../components/PasswordRequirements.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 import { getPasswordStrengthErrorKey, isPasswordStrong } from '../utils/passwordRules'
+import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -587,12 +588,21 @@ const register = async () => {
       })
     })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Registration failed' }))
-      throw new Error(errorData.message || 'Registration failed')
+    const raw = await response.text()
+    if (isBackendUnavailable({ response, rawBody: raw })) {
+      throw new Error(backendUnavailableMessage(t))
     }
 
-    await response.json()
+    let data = null
+    try {
+      data = raw ? JSON.parse(raw) : null
+    } catch {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || t('signup.registerError'))
+    }
 
     success.value = true
     form.value = {
@@ -612,7 +622,11 @@ const register = async () => {
       router.push('/login')
     }, 3000)
   } catch (err) {
-    error.value = err.message || t('signup.registerError')
+    const message = isBackendUnavailable({ error: err })
+      ? backendUnavailableMessage(t)
+      : (err.message || t('signup.registerError'))
+    error.value = message
+    showToast(message, 'error')
   } finally {
     loading.value = false
   }

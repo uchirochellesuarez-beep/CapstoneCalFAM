@@ -7,6 +7,7 @@ import {
   isSameAccountAlreadyInBrowser
 } from '../utils/authSession'
 import { i18n } from '../i18n'
+import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
 
 const API_BASE_URL = '/api/farmers'
 
@@ -144,16 +145,20 @@ export const useAuthStore = defineStore('auth', {
           })
         })
 
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => null)
-          const errorText = errorBody?.message || (await response.text().catch(() => null))
-          throw new Error(errorText || 'Login failed')
+        const raw = await response.text()
+        if (isBackendUnavailable({ response, rawBody: raw })) {
+          throw new Error(backendUnavailableMessage((k) => i18n.global.t(k)))
         }
 
-        const data = await response.json()
+        let data = null
+        try {
+          data = raw ? JSON.parse(raw) : null
+        } catch {
+          throw new Error(backendUnavailableMessage((k) => i18n.global.t(k)))
+        }
 
-        if (!data.success) {
-          throw new Error(data.message || 'Login failed')
+        if (!response.ok || !data?.success) {
+          throw new Error(data?.message || 'Login failed')
         }
 
         if (isSameAccountAlreadyInBrowser(data.farmer?.id) && this.token === data.token) {
@@ -189,10 +194,10 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         this.error = error.message
         this.loading = false
-        if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+        if (isBackendUnavailable({ error })) {
           return {
             success: false,
-            error: 'Cannot connect to server. Please make sure the backend is running on http://localhost:5000'
+            error: backendUnavailableMessage((k) => i18n.global.t(k))
           }
         }
         return { success: false, error: error.message }

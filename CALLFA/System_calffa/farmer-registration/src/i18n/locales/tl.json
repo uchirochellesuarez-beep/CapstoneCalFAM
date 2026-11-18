@@ -62,6 +62,7 @@
     "online": "Nakakonekta",
     "available": "Magagamit",
     "unavailable": "Hindi Magagamit",
+    "backendUnavailable": "Hindi makakonekta sa server. Siguraduhing tumatakbo ang backend, tapos subukan ulit.",
     "id": "ID",
     "edit": "Baguhin",
     "delete": "Burahin",

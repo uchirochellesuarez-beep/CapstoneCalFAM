@@ -295,6 +295,7 @@ import PasswordRequirements from '../components/PasswordRequirements.vue'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import { LAND_AREA_MAX, LAND_AREA_MAX_INTEGER_DIGITS } from '../utils/numericInput'
 import { getPasswordStrengthErrorKey } from '../utils/passwordRules'
+import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
 import farmerPhoto from '../assets/landing/farmer-hero.jpg'
 import calffaLogo from '../assets/landing/calffa-logo.jpg'
 
@@ -503,8 +504,19 @@ const submitRegistration = async () => {
       body: JSON.stringify({ token: token.value })
     })
 
-    const verifyData = await verifyResponse.json()
-    if (!verifyData.success) {
+    const verifyRaw = await verifyResponse.text()
+    if (isBackendUnavailable({ response: verifyResponse, rawBody: verifyRaw })) {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
+    let verifyData = null
+    try {
+      verifyData = verifyRaw ? JSON.parse(verifyRaw) : null
+    } catch {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
+    if (!verifyData?.success) {
       throw new Error(t('googleReg.tokenFailed'))
     }
 
@@ -517,10 +529,20 @@ const submitRegistration = async () => {
       body: JSON.stringify(formData)
     })
 
-    const data = await response.json()
+    const raw = await response.text()
+    if (isBackendUnavailable({ response, rawBody: raw })) {
+      throw new Error(backendUnavailableMessage(t))
+    }
 
-    if (!data.success) {
-      throw new Error(data.message || 'Registration failed')
+    let data = null
+    try {
+      data = raw ? JSON.parse(raw) : null
+    } catch {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.message || 'Registration failed')
     }
 
     successMessage.value = t('googleReg.successRedirect')
@@ -529,7 +551,9 @@ const submitRegistration = async () => {
       router.push('/login')
     }, 2000)
   } catch (error) {
-    errorMessage.value = error.message || t('googleReg.registerFailed')
+    errorMessage.value = isBackendUnavailable({ error })
+      ? backendUnavailableMessage(t)
+      : (error.message || t('googleReg.registerFailed'))
     console.error('Registration error:', error)
   } finally {
     isSubmitting.value = false

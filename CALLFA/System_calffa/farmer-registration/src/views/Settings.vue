@@ -188,6 +188,7 @@ import { mediaUrl } from '../utils/apiBase'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import CenterToast from '../components/CenterToast.vue'
 import { useCenterNotice } from '../composables/useCenterNotice'
+import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -349,7 +350,15 @@ const uploadProfilePicture = async () => {
       body: formData
     })
 
+    if (response.status === 413) {
+      throw new Error(t('ui.imageTooLarge'))
+    }
+
     const raw = await response.text()
+    if (isBackendUnavailable({ response, rawBody: raw })) {
+      throw new Error(backendUnavailableMessage(t))
+    }
+
     let data
     try {
       data = JSON.parse(raw)
@@ -379,7 +388,9 @@ const uploadProfilePicture = async () => {
     uploadMessage.value = ''
     showCenterNotice('Profile picture updated successfully!')
   } catch (error) {
-    const msg = error.message || 'Failed to upload profile picture'
+    const msg = isBackendUnavailable({ error })
+      ? backendUnavailableMessage(t)
+      : (error.message || 'Failed to upload profile picture')
     uploadMessage.value = msg
     uploadMessageType.value = 'text-red-600'
     showCenterNotice(msg, 'error')
