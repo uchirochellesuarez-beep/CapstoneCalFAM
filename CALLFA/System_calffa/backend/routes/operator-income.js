@@ -97,35 +97,39 @@ router.get('/dashboard', verifyOperatorAccess, async (req, res) => {
       JOIN farmers f ON mb.farmer_id = f.id
       JOIN machinery_inventory mi ON mb.machinery_id = mi.id
       WHERE mb.machinery_id IN (${placeholders})
-        AND (mb.assigned_operator_id = ? OR mb.assigned_operator_id IS NULL)
+        AND (
+          mb.assigned_operator_id = ?
+          OR mb.completed_by = ?
+          OR mb.assigned_operator_id IS NULL
+        )
     `;
 
     const [upcoming] = await pool.execute(
       `${baseBookingSelect}
        AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed') AND mb.booking_date >= ?
        ORDER BY mb.booking_date ASC LIMIT 20`,
-      [...machineryIds, operatorId, today]
+      [...machineryIds, operatorId, operatorId, today]
     );
 
     const [active] = await pool.execute(
       `${baseBookingSelect}
        AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use')
        ORDER BY mb.booking_date ASC LIMIT 20`,
-      [...machineryIds, operatorId]
+      [...machineryIds, operatorId, operatorId]
     );
 
     const [completed] = await pool.execute(
       `${baseBookingSelect}
        AND mb.status = 'Completed'
        ORDER BY mb.completed_date DESC LIMIT 20`,
-      [...machineryIds, operatorId]
+      [...machineryIds, operatorId, operatorId]
     );
 
     const [incomplete] = await pool.execute(
       `${baseBookingSelect}
        AND mb.status = 'Incomplete'
        ORDER BY mb.updated_at DESC LIMIT 20`,
-      [...machineryIds, operatorId]
+      [...machineryIds, operatorId, operatorId]
     );
 
     const [recentTransactions] = await pool.execute(

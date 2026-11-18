@@ -1482,8 +1482,21 @@ router.get('/bookings', async (req, res) => {
       if (!userId) {
         query += ' AND 1=0';
       } else {
-        query += ` AND mb.assigned_operator_id = ? AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use', 'Awaiting Final Payment', 'Completed', 'Incomplete')`;
-        params.push(userId);
+        // Operators see work assigned to them, plus completed/incomplete jobs on their machinery
+        // (historical imports sometimes left assigned_operator_id NULL).
+        query += ` AND mb.status IN ('Approved', 'Assigned to Operator', 'Booking Confirmed', 'In Use', 'Awaiting Final Payment', 'Completed', 'Incomplete')
+          AND (
+            mb.assigned_operator_id = ?
+            OR mb.completed_by = ?
+            OR (
+              mb.status IN ('Completed', 'Incomplete')
+              AND EXISTS (
+                SELECT 1 FROM machinery_inventory mi_op
+                WHERE mi_op.id = mb.machinery_id AND mi_op.assigned_operator_id = ?
+              )
+            )
+          )`;
+        params.push(userId, userId, userId);
       }
     } else if (userRole === 'treasurer' || userRole === 'auditor' || userRole === 'agriculturist') {
       if (!userBarangayId) {
