@@ -1,0 +1,29 @@
+{
+  "project": "CalFAM Expense Predictive Analytics",
+  "algorithm": "linear_regression",
+  "seed": 20261119,
+  "run_id": "20261119_211021",
+  "input_source": "excel",
+  "input_path": "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\data\\CalFAM_ML_Training_Dataset.xlsx",
+  "chronological_split": {
+    "train_target_labels": [
+      "2021-H2",
+      "2022-H1",
+      "2022-H2",
+      "2023-H1",
+      "2023-H2",
+      "2024-H1",
+      "2024-H2"
+    ],
+    "validation_target_labels": [
+      "2025-H1",
+      "2025-H2"
+    ],
+    "test_target_labels": [
+      "2026-H1"
+    ]
+  },
+  "performance_disclaimer": "ALL METRICS BELOW ARE SYNTHETIC DATA PERFORMANCE ONLY. They do NOT represent real-world forecasting accuracy on CalFAM farmers.",
+  "prior_models_dir_preserved": true,
+  "note": "Active training workflow is Linear Regression only. Historical Ridge/RF comparison artifacts remain archived under models/ and older runs/."
+}

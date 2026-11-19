@@ -1,0 +1,14 @@
+{
+  "workbook": "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\references\\PH_Rice_Production_Cost_References.xlsx",
+  "n_verified_production_cost_rows": 444,
+  "n_verified_input_price_rows": 7,
+  "n_verified_numeric_observations_total": 451,
+  "years_in_production_costs": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "access_date": "2026-11-19"
+}

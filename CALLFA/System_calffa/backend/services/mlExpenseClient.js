@@ -41,4 +41,39 @@ async function fetchExpenseForecastFromMlService(totalExpensesSeries) {
   return null;
 }
 
-module.exports = { fetchExpenseForecastFromMlService };
+/**
+ * Calls the standalone pretrained Linear Regression endpoint.
+ * Returns parsed JSON (ok true/false) or null if ML_API_URL missing / unreachable.
+ * Does not fall back to the legacy /forecast/expenses Ridge-RF path.
+ */
+async function fetchPretrainedLrFromMlService(payload) {
+  const base = (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
+  if (!base) return null;
+
+  const timeout =
+    parseInt(String(process.env.ML_API_TIMEOUT_MS || '15000'), 10) || 15000;
+  const url = `${base}/forecast/expenses/pretrained-lr`;
+
+  try {
+    const { data, status } = await axios.post(url, payload, {
+      timeout,
+      headers: { 'Content-Type': 'application/json' },
+      validateStatus: () => true,
+    });
+    if (status >= 200 && status < 300 && data && typeof data === 'object') {
+      return data;
+    }
+    console.warn(
+      '[mlExpenseClient] pretrained-lr unexpected HTTP status:',
+      status
+    );
+  } catch (err) {
+    console.warn('[mlExpenseClient] pretrained-lr unreachable:', err.message);
+  }
+  return null;
+}
+
+module.exports = {
+  fetchExpenseForecastFromMlService,
+  fetchPretrainedLrFromMlService,
+};

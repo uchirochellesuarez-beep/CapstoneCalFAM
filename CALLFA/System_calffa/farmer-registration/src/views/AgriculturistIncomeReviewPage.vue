@@ -317,13 +317,13 @@
                 <div class="form-group">
                   <label for="assistance-fertilizer">{{ $t('incomeForm.assistFertilizer') }}</label>
                   <div class="input-group">
-                    <input
+                    <TypedNumberInput
                       id="assistance-fertilizer"
-                      v-model.number="assistanceForm.fertilizer_sacks"
-                      type="number"
-                      min="0"
+                      v-model="assistanceForm.fertilizer_sacks"
+                      :decimal="false"
+                      :min="0"
                       placeholder="0"
-                      class="form-input"
+                      input-class="form-input"
                     />
                     <span class="input-unit">{{ $t('incomeForm.sacksUnit') }}</span>
                   </div>
@@ -331,13 +331,13 @@
                 <div class="form-group">
                   <label for="assistance-seeds">{{ $t('incomeForm.assistSeeds') }}</label>
                   <div class="input-group">
-                    <input
+                    <TypedNumberInput
                       id="assistance-seeds"
-                      v-model.number="assistanceForm.seed_sacks"
-                      type="number"
-                      min="0"
+                      v-model="assistanceForm.seed_sacks"
+                      :decimal="false"
+                      :min="0"
                       placeholder="0"
-                      class="form-input"
+                      input-class="form-input"
                     />
                     <span class="input-unit">{{ $t('incomeForm.sacksUnit') }}</span>
                   </div>
@@ -377,6 +377,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
 import CenterToast from '../components/CenterToast.vue'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
 import { useIncomeHubMobile } from '../composables/useIncomeHubMobile'
 import { consumeNotificationDeepLink } from '../utils/paymentHistoryFocus'
 import { getIncomeHighlightId, scrollIncomeRecordIntoView } from '../utils/incomeRecordFocus'
@@ -489,9 +490,16 @@ const closeModal = () => {
 
 // Submit assistance
 const submitAssistance = async () => {
-  const fertilizer = assistanceForm.value.fertilizer_sacks || 0
-  const seeds = assistanceForm.value.seed_sacks || 0
-  
+  const fertilizerRaw = Number(assistanceForm.value.fertilizer_sacks ?? 0)
+  const seedsRaw = Number(assistanceForm.value.seed_sacks ?? 0)
+  const fertilizer = Number.isFinite(fertilizerRaw) ? fertilizerRaw : 0
+  const seeds = Number.isFinite(seedsRaw) ? seedsRaw : 0
+
+  if (!Number.isInteger(fertilizer) || fertilizer < 0 || !Number.isInteger(seeds) || seeds < 0) {
+    errorMessage.value = t('ui.sacksWholeNumberOnly')
+    return
+  }
+
   if (fertilizer === 0 && seeds === 0) {
     errorMessage.value = t('ui.enterFertOrSeedQty')
     return

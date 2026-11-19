@@ -1,0 +1,5095 @@
+{
+  "source_table": "0012B5EAPC0.px",
+  "updated_api_list": "2026-08-05",
+  "n": 636,
+  "rows": [
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 30098.12
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 30302.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 30102.53
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 28848.17
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 31048.1
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 29150.35
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 29208.39
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 28938.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 30573.11
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 29726.44
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 29655.46
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 28893.36
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1673.18
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1724.56
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2308.78
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1739.39
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1714.24
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 2026.7
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2113.71
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1594.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1693.71
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1875.63
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2211.25
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1666.97
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 9938.2
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 9240.45
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 7137.05
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 6100.14
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 11359.34
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 7809.68
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 7161.2
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 6407.17
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 10648.77
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 8525.06
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 7149.12
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 6253.65
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 2518.0
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 2513.05
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2376.35
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 2314.37
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2437.02
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 2857.62
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2716.86
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 2646.0
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 2477.51
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 2685.33
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2546.6
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 2480.19
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 10238.71
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 10747.46
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 11853.74
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 12282.76
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 10160.13
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 10915.8
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 11554.9
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 12505.68
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 10199.42
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 10831.63
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 11704.32
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 12394.22
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1440.97
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1500.74
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1567.52
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1521.11
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1457.74
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1385.81
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1341.06
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1371.24
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1449.36
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1443.27
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1454.29
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1446.18
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 269.76
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 304.6
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 313.88
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 315.19
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 238.89
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 249.85
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 255.93
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 256.9
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 254.32
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 277.23
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 284.91
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 286.04
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 102.53
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 105.68
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 141.48
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 106.59
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 97.25
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 114.97
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 119.91
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 90.46
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 99.89
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 110.33
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 130.69
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 98.52
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 9469.83
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 10535.68
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 13419.64
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 10961.46
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 8815.63
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 10904.51
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 11348.71
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 8990.48
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 9142.73
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 10720.09
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 12384.18
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 9975.97
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 880.22
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1064.46
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1393.61
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1088.17
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 822.35
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1094.71
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1133.9
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 843.04
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 851.28
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1079.58
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1263.76
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 965.61
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 766.66
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 927.12
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1213.81
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 947.78
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 762.44
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1014.95
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1051.29
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 781.63
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 764.55
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 971.04
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1132.55
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 864.7
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 13964.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 14925.26
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 17341.26
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 15764.85
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 15349.65
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 17164.32
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 17961.1
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 16691.36
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 14657.09
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 16044.79
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 17651.18
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 16228.1
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 3376.93
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 3544.73
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 3909.6
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 4051.1
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2861.75
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 3074.6
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 3254.61
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 3522.41
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 3119.34
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 3309.66
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 3582.11
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 3786.76
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1668.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1751.45
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1931.73
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 2001.65
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1810.02
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1944.64
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2058.5
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 2227.88
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1739.28
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1848.05
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1995.12
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 2114.76
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 53532.48
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 55763.48
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 60863.44
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 55574.48
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 55213.38
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 57219.17
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 58518.2
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 54620.38
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 54372.93
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 56491.33
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 59690.82
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 55097.43
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 64951.44
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 78546.22
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 102834.78
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 80296.4
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 65465.65
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 87147.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 90267.63
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 67113.16
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 65208.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 82914.03
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 96523.06
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 73573.26
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 11418.95
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 22782.74
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 41971.34
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 24721.92
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 10252.27
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 29928.37
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 31749.43
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 12492.78
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 10835.61
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 26422.7
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 36832.24
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 18475.83
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 14.87
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 13.2
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 14.74
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 12.98
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 15.09
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 13.89
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 14.31
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 13.55
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 14.98
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 13.54
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 14.52
+    },
+    {
+      "type": "Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 13.26
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 33131.59
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 33096.08
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 32761.44
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 31297.11
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 33793.19
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 31811.03
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 31833.97
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 31481.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 33462.39
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 32453.56
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 32297.71
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 31389.08
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1900.49
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1959.48
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2623.29
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1976.34
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1886.11
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 2216.62
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2311.78
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1743.96
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1893.3
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 2088.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2467.54
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1860.15
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 11496.31
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 10568.99
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 8163.28
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 6969.4
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 12696.81
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 8693.28
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 7973.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 7130.0
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 12096.56
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 9631.13
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 8068.17
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 7049.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 2726.6
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 2654.44
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2510.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 2444.59
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2527.72
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 3242.96
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 3083.21
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 3002.8
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 2627.16
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 2948.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2796.63
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 2723.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 11037.13
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 11585.56
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 12778.11
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 13240.58
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 10778.97
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 11580.66
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 12258.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 13267.39
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 10908.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 11583.11
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 12518.4
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 13253.98
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1734.04
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1805.96
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1886.32
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1830.48
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1725.16
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1640.03
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1587.07
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1622.79
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1729.6
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1722.99
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1736.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1726.64
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 286.91
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 323.97
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 333.84
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 335.23
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 233.58
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 244.3
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 250.25
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 251.19
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 260.25
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 284.14
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 292.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 293.21
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 147.8
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 152.38
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 204.01
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 153.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 153.23
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 180.08
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 187.81
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 141.68
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 150.51
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 166.23
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 195.91
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Irrigation fee",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 147.69
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 10178.29
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 11204.98
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 14219.46
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 11632.34
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 9423.22
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 11600.1
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 12039.46
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 9616.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 9800.76
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 11402.54
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 13129.46
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 10624.52
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 635.29
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 751.21
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 981.12
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 762.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 584.66
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 774.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 798.12
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 595.42
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 609.98
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 762.95
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 889.62
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 679.06
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 642.74
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 760.02
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 992.62
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 771.64
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 597.03
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 791.09
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 815.01
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 608.02
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 619.89
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 775.55
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 903.82
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 689.83
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 14610.36
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 15611.43
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 18178.76
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 16398.48
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 15841.9
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 17772.12
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 18596.52
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 17067.64
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 15226.13
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 16691.78
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 18387.64
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 16733.06
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 3328.64
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 3494.04
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 3853.7
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 3993.17
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2870.74
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 3084.25
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 3264.83
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 3533.47
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 3099.69
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 3289.15
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 3559.26
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 3763.32
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1491.19
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1565.29
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1726.41
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1788.89
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1489.53
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1600.32
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1694.01
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1833.4
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1490.36
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1582.8
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1710.21
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1811.15
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 57920.24
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 59912.49
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 65159.66
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 59327.93
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 59058.31
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 61183.25
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 62469.96
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 58165.4
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 58489.28
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 60547.87
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 63814.81
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 58746.66
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 72350.86
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 85552.23
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 111736.05
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 86860.37
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 70843.18
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 93869.63
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 96707.42
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 72147.16
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 71597.02
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 89815.88
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 104147.11
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 79347.17
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 14430.61
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 25639.73
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 46576.39
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 27532.45
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 11784.87
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 32686.39
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 34237.47
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 13981.77
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 13107.74
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 29268.01
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 40332.3
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 20600.51
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 14.44
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 13.02
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 14.52
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 12.81
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 15.01
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 13.79
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 14.25
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 13.42
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 14.72
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 13.4
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 14.39
+    },
+    {
+      "type": "Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 13.11
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 23227.53
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 23974.93
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 24079.96
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 23301.35
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 26279.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 24527.18
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 24645.94
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 24520.84
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 24753.39
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 24251.06
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 24362.95
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 23911.1
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1158.35
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1192.59
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1596.61
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1202.86
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1415.65
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1695.56
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1768.35
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1334.01
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1287.0
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1444.08
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1682.48
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Seeds",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1268.43
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 6409.19
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 6230.93
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 4812.34
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 4131.15
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 9035.84
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 6277.32
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 5753.35
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 5153.48
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 7722.52
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 6254.12
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 5282.85
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fertilizer",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 4642.32
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 2045.54
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 2192.8
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2073.52
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 2019.44
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2279.45
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 2188.2
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2080.41
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 2026.15
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 2162.5
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 2190.5
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2076.97
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Pesticides",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 2022.8
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 8430.33
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 8849.23
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 9760.12
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 10113.36
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 9085.07
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 9760.77
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 10332.25
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 11182.43
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 8757.7
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 9305.0
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 10046.19
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Hired labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 10647.89
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 777.2
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 809.43
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 845.45
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 820.42
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 993.17
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 944.17
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 913.68
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 934.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 885.18
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 876.8
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 879.56
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Fuel & Oil",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 877.33
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 230.9
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 260.73
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 268.67
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 269.79
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 248.11
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 259.49
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 265.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 266.82
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 239.5
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 260.11
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 267.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Transport cost of inputs",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 268.3
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 7865.22
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 8735.37
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 11231.23
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 9117.01
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 7760.1
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 9576.25
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 10012.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 7781.1
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 7812.66
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 9155.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 10622.02
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NON-CASH COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 8449.05
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1434.96
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1732.59
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2282.65
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1792.57
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1235.27
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1617.38
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1691.44
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1241.19
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1335.12
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1674.98
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1987.05
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Harvesters' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1516.88
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 1047.32
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 1264.54
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 1666.01
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 1308.32
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 1049.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 1374.51
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 1437.45
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 1054.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 1048.55
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 1319.53
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 1551.73
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Threshers' share",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 1181.57
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 12501.8
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 13371.28
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 15444.4
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 14329.63
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 14494.51
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 16094.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 16842.64
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 16026.55
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 13498.15
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 14732.76
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 16143.52
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "IMPUTED COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 15178.09
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 3486.31
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 3659.54
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 4036.23
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 4182.31
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2846.14
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 3057.82
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 3236.86
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 3503.2
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 3166.22
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 3358.68
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 3636.54
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Operator labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 3842.75
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 2070.22
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 2173.09
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 2396.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 2483.52
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 2366.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 2542.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 2691.69
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 2913.18
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 2218.5
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 2357.95
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 2544.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Family labor",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 2698.35
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 43594.55
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 46081.57
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 50755.6
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 46747.99
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 48533.86
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 50197.67
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 51501.39
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 48328.48
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 46064.2
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 48139.62
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 51128.49
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "TOTAL COSTS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 47538.24
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 48192.33
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 58187.82
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 76661.47
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 60202.3
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 56123.63
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 73484.51
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 76849.51
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 56392.68
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 52157.98
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 65615.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 77040.91
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "GROSS RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 58391.38
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 4597.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 12106.25
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 25905.88
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 13454.32
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 7589.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 23286.84
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 25348.12
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 8064.2
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 6093.78
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 17476.15
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 25912.41
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "NET RETURNS",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 10853.14
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2022",
+      "value": 16.34
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2023",
+      "value": 14.73
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2024",
+      "value": 16.48
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "January to June",
+      "year": "2025",
+      "value": 14.56
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2022",
+      "value": 15.28
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2023",
+      "value": 14.45
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2024",
+      "value": 14.79
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "July to December",
+      "year": "2025",
+      "value": 14.27
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2022",
+      "value": 15.81
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2023",
+      "value": 14.58
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2024",
+      "value": 15.58
+    },
+    {
+      "type": "Non-Irrigated Palay",
+      "geolocation": "PHILIPPINES",
+      "item": "Cost per kilogram (in PhP)",
+      "cropping_season": "Average",
+      "year": "2025",
+      "value": 14.41
+    }
+  ]
+}

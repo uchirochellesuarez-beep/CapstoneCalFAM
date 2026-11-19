@@ -31,6 +31,7 @@ const { ensureRefundWorkflowSchema } = require('./schema/ensureRefundWorkflowSch
 const { ensureBarangaySecuritySchema } = require('./schema/ensureBarangaySecuritySchema');
 const { ensureLoanModuleSchema } = require('./schema/ensureLoanModuleSchema');
 const { ensureFarmerIncomeStatusSchema } = require('./schema/ensureFarmerIncomeStatusSchema');
+const { ensurePredictiveExcelSchema } = require('./schema/ensurePredictiveExcelSchema');
 const { ensureManualIncomeSchema } = require('./schema/ensureManualIncomeSchema');
 const { ensureAnnouncementViewsSchema } = require('./schema/ensureAnnouncementViewsSchema');
 const { ensureActiveSessionSchema } = require('./schema/ensureActiveSessionSchema');
@@ -123,6 +124,7 @@ if (require.main === module) {
       () => ensureBarangaySecuritySchema(pool),
       () => ensureLoanModuleSchema(pool),
       () => ensureFarmerIncomeStatusSchema(pool),
+      () => ensurePredictiveExcelSchema(pool),
       () => ensureManualIncomeSchema(pool),
       () => ensureAnnouncementViewsSchema(pool),
       () => ensureActiveSessionSchema(pool),

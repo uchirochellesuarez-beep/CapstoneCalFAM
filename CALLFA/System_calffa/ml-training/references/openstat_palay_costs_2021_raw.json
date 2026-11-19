@@ -1,0 +1,974 @@
+[
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 4059.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 6008.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 5019.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 1284.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1345.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 1317.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Dry",
+    "year": "2021",
+    "value": 10787.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Wet",
+    "year": "2021",
+    "value": 11251.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Average",
+    "year": "2021",
+    "value": 10794.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 810.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 878.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 845.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 195.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 219.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 208.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Dry",
+    "year": "2021",
+    "value": 445.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Wet",
+    "year": "2021",
+    "value": 291.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Average",
+    "year": "2021",
+    "value": 363.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Dry",
+    "year": "2021",
+    "value": 54.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Wet",
+    "year": "2021",
+    "value": 77.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Average",
+    "year": "2021",
+    "value": 65.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Dry",
+    "year": "2021",
+    "value": 9.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Wet",
+    "year": "2021",
+    "value": 2.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Average",
+    "year": "2021",
+    "value": 6.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Dry",
+    "year": "2021",
+    "value": 3.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Average",
+    "year": "2021",
+    "value": 2.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Dry",
+    "year": "2021",
+    "value": 5.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Wet",
+    "year": "2021",
+    "value": 12.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Average",
+    "year": "2021",
+    "value": 9.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Dry",
+    "year": "2021",
+    "value": 48166.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Wet",
+    "year": "2021",
+    "value": 52524.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Average",
+    "year": "2021",
+    "value": 49920.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Dry",
+    "year": "2021",
+    "value": 11.48,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Wet",
+    "year": "2021",
+    "value": 12.75,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "All Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Average",
+    "year": "2021",
+    "value": 12.02,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 5366.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 5317.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 6469.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 1451.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1484.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 1427.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Dry",
+    "year": "2021",
+    "value": 8824.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Wet",
+    "year": "2021",
+    "value": 9181.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Average",
+    "year": "2021",
+    "value": 11801.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 904.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 822.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 1001.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 195.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 199.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 216.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Dry",
+    "year": "2021",
+    "value": 800.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Wet",
+    "year": "2021",
+    "value": 537.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Average",
+    "year": "2021",
+    "value": 662.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Dry",
+    "year": "2021",
+    "value": 57.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Wet",
+    "year": "2021",
+    "value": 55.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Average",
+    "year": "2021",
+    "value": 71.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Dry",
+    "year": "2021",
+    "value": 15.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Wet",
+    "year": "2021",
+    "value": 4.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Average",
+    "year": "2021",
+    "value": 9.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Dry",
+    "year": "2021",
+    "value": 4.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Average",
+    "year": "2021",
+    "value": 3.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Dry",
+    "year": "2021",
+    "value": 7.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Wet",
+    "year": "2021",
+    "value": 14.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Average",
+    "year": "2021",
+    "value": 11.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Dry",
+    "year": "2021",
+    "value": 49501.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Wet",
+    "year": "2021",
+    "value": 49689.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Average",
+    "year": "2021",
+    "value": 56570.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Dry",
+    "year": "2021",
+    "value": 10.84,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Wet",
+    "year": "2021",
+    "value": 11.06,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Average",
+    "year": "2021",
+    "value": 12.5,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 2416.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 4795.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 3599.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 942.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1079.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 1021.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Dry",
+    "year": "2021",
+    "value": 8895.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Wet",
+    "year": "2021",
+    "value": 9342.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Hired labor",
+    "season": "Average",
+    "year": "2021",
+    "value": 8945.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 408.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 699.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 572.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Dry",
+    "year": "2021",
+    "value": 144.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Wet",
+    "year": "2021",
+    "value": 232.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost paid in cash",
+    "season": "Average",
+    "year": "2021",
+    "value": 194.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Dry",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Wet",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Irrigation fee",
+    "season": "Average",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Dry",
+    "year": "2021",
+    "value": 54.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Wet",
+    "year": "2021",
+    "value": 70.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fertilizer",
+    "season": "Average",
+    "year": "2021",
+    "value": 63.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Dry",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Wet",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Pesticides",
+    "season": "Average",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Dry",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Wet",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Fuel and oil",
+    "season": "Average",
+    "year": "2021",
+    "value": 0.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Dry",
+    "year": "2021",
+    "value": 1.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Wet",
+    "year": "2021",
+    "value": 4.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Transport cost",
+    "season": "Average",
+    "year": "2021",
+    "value": 3.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Dry",
+    "year": "2021",
+    "value": 42457.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Wet",
+    "year": "2021",
+    "value": 49552.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "TOTAL COSTS",
+    "season": "Average",
+    "year": "2021",
+    "value": 46173.0,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Dry",
+    "year": "2021",
+    "value": 13.45,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Wet",
+    "year": "2021",
+    "value": 14.58,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  },
+  {
+    "type": "Non-Irrigated Palay",
+    "geolocation": "PHILIPPINES",
+    "item": "Cost per kilogram (pesos)",
+    "season": "Average",
+    "year": "2021",
+    "value": 13.96,
+    "season_note": "Dry/Wet (not calendar H1/H2)"
+  }
+]

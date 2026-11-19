@@ -23,6 +23,53 @@ const {
   MAX_UPLOAD_POINTS,
   MAX_FOUNDATION_FILE_BYTES,
 } = require('../services/expenseForecastService');
+const {
+  forecastWithPretrainedLr,
+  forecastWithPretrainedLrFromSavedRecords,
+  forecastWithPretrainedLrFromExcelRows,
+  forecastWithPretrainedLrFromCombinedFoundation,
+} = require('../services/pretrainedLrForecastService');
+const {
+  buildPredictiveExcelTemplateBuffer,
+} = require('../services/predictiveExcelTemplate');
+const { parsePredictiveExcelBuffer } = require('../services/predictiveExcelParser');
+const { semesterFromCreatedAt } = require('../services/agriculturalSemester');
+const {
+  findFarmIncomeSemesterConflicts,
+  listPredictiveExcelRows,
+  replacePredictiveExcelRows,
+  deletePredictiveExcelRow,
+  clearPredictiveExcelRows,
+  dbRowToForecastRow,
+} = require('../services/predictiveExcelStore');
+const path = require('path');
+
+/** Statuses that occupy a farmer's one-slot-per-semester limit. */
+const SEMESTER_SLOT_STATUSES = new Set([
+  'Pending',
+  'Eligible',
+  'Upcoming Assistance',
+  'Received',
+]);
+
+function isSemesterSlotStatus(status) {
+  return SEMESTER_SLOT_STATUSES.has(String(status || '').trim());
+}
+
+function isEligibleLikeStatus(status) {
+  const s = String(status || '').trim();
+  return s === 'Eligible' || s === 'Upcoming Assistance' || s === 'Received';
+}
+
+const uploadPredictiveExcelMem = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (ext === '.xlsx') return cb(null, true);
+    cb(new Error('Upload an .xlsx Excel workbook only.'));
+  },
+});
 
 const uploadFoundationMem = multer({
   storage: multer.memoryStorage(),
@@ -494,7 +541,39 @@ router.post('/', async (req, res) => {
 
     // Validate required fields
     if (!farmer_id || !area_hectares || !planting_method || !irrigation_type) {
+      await conn.rollback();
       return res.status(400).json({ error: 'Kulang ang mga kinakailangang impormasyon.' });
+    }
+
+    // One active record per agricultural semester (H1/H2 from Asia/Manila submission time)
+    const submitSemester = semesterFromCreatedAt(new Date());
+    if (!submitSemester) {
+      await conn.rollback();
+      return res.status(400).json({
+        error_code: 'INVALID_SEMESTER',
+        error: 'Hindi matukoy ang kasalukuyang agricultural semester.',
+      });
+    }
+    const [existingRows] = await conn.execute(
+      `SELECT id, status, created_at FROM farmer_income_records WHERE farmer_id = ?`,
+      [farmer_id]
+    );
+    const conflict = (existingRows || []).find((row) => {
+      if (!isSemesterSlotStatus(row.status)) return false;
+      const sem = semesterFromCreatedAt(row.created_at);
+      return sem && sem.label === submitSemester.label;
+    });
+    if (conflict) {
+      await conn.rollback();
+      return res.status(409).json({
+        error_code: 'SEMESTER_ALREADY_SUBMITTED',
+        error:
+          `Mayroon nang talaan para sa ${submitSemester.label} (record #${conflict.id}, status: ${conflict.status}). ` +
+          'Isang record lang ang pinapayagan kada H1 at kada H2. Burahin muna ang Pending/Rejected o hintayin ang susunod na semester.',
+        semester: submitSemester.label,
+        existing_record_id: conflict.id,
+        existing_status: conflict.status,
+      });
     }
 
     // Insert main income record with "Pending" status for President to verify
@@ -648,6 +727,327 @@ router.get('/expense-forecast/:farmerId', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/farmer-income/expense-forecast-pretrained-lr/:farmerId
+ * Option A — Eligible Farm Income records.
+ * Semesters derived automatically from created_at (Asia/Manila).
+ * Forecast semester = next after latest history. No manual period body required.
+ * No Ridge / RandomForest / Node OLS fallback. No Excel mix-in.
+ */
+router.post('/expense-forecast-pretrained-lr/:farmerId', async (req, res) => {
+  try {
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({
+        ok: false,
+        error_code: 'FORBIDDEN_OR_UNAUTHORIZED',
+        error: gate.error,
+      });
+    }
+    const uid = gate.id;
+
+    const [records] = await pool.execute(
+      `SELECT * FROM farmer_income_records WHERE farmer_id = ? AND status = 'Eligible'`,
+      [uid]
+    );
+
+    const source = String(req.body?.source || 'saved_records').trim();
+    let result;
+    if (source === 'saved_records' || source === 'combined_foundation' || !req.body?.record_periods) {
+      // True next-semester forecast: Eligible Farm Income + saved Excel foundation
+      const excelRows = await listPredictiveExcelRows(pool, uid);
+      result = await forecastWithPretrainedLrFromCombinedFoundation(uid, records, excelRows, {
+        model_run_id: req.body?.model_run_id || '20261119_211021',
+        preferFarmIncomeOnConflict: true,
+      });
+    } else {
+      // Explicit periods retained for compatibility / tests only
+      result = await forecastWithPretrainedLr(uid, records, {
+        period_mode: 'explicit',
+        forecast_period: req.body?.forecast_period ?? req.body?.forecastPeriod ?? null,
+        record_periods: req.body?.record_periods ?? req.body?.recordPeriods ?? null,
+        model_run_id: req.body?.model_run_id || '20261119_211021',
+      });
+      result.input_source = 'explicit_periods';
+    }
+
+    const status = result.ok
+      ? 200
+      : result.error_code === 'ML_SERVICE_UNAVAILABLE'
+        ? 503
+        : 400;
+    return res.status(status).json(result);
+  } catch (err) {
+    console.error('Error pretrained-LR forecasting:', err);
+    res.status(500).json({
+      ok: false,
+      error_code: 'INTERNAL_ERROR',
+      error: 'Hindi matagumpay ang pretrained Linear Regression forecast.',
+    });
+  }
+});
+
+/** GET Excel template for Predictive Analytics (own auth). */
+router.get('/predictive-excel/template', async (req, res) => {
+  try {
+    const actor = personalFarmActor(req);
+    if (!actor.ok) {
+      return res.status(actor.status).json({ ok: false, error: actor.error });
+    }
+    const buffer = await buildPredictiveExcelTemplateBuffer();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="CalFAM_Agricultural_Expense_History_Template.xlsx"'
+    );
+    return res.send(buffer);
+  } catch (err) {
+    console.error('predictive excel template:', err);
+    return res.status(500).json({ ok: false, error: 'Unable to build Excel template.' });
+  }
+});
+
+/** GET saved Predictive Excel semester rows for a farmer. */
+router.get('/predictive-excel/:farmerId', async (req, res) => {
+  try {
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
+    }
+    const rows = await listPredictiveExcelRows(pool, gate.id);
+    return res.json({
+      ok: true,
+      rows: rows.map((r) => ({
+        id: r.id,
+        agricultural_semester: r.agricultural_semester,
+        year: r.year,
+        half: r.half,
+        half_label: r.half === 1 ? 'H1' : 'H2',
+        area_hectares: Number(r.area_hectares),
+        planting_method: r.planting_method,
+        irrigation_type: r.irrigation_type,
+        total_expenses: Number(r.total_expenses),
+        uploaded_at: r.uploaded_at,
+      })),
+      n_rows: rows.length,
+    });
+  } catch (err) {
+    console.error('predictive excel list:', err);
+    return res.status(500).json({ ok: false, error: 'Unable to load saved Excel history.' });
+  }
+});
+
+/**
+ * POST /api/farmer-income/predictive-excel/forecast/:farmerId
+ * Option B — upload Excel, validate vs Farm Income semesters, save, then forecast.
+ */
+router.post(
+  '/predictive-excel/forecast/:farmerId',
+  (req, res, next) => {
+    uploadPredictiveExcelMem.single('file')(req, res, (err) => {
+      if (!err) return next();
+      const message =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? 'Excel file must be 2 MB or smaller.'
+          : err.message || 'Invalid Excel upload.';
+      return res.status(400).json({ ok: false, error_code: 'UPLOAD_ERROR', error: message });
+    });
+  },
+  async (req, res) => {
+    try {
+      const gate = assertOwnFarmerId(req, req.params.farmerId);
+      if (!gate.ok) {
+        return res.status(gate.status).json({
+          ok: false,
+          error_code: 'FORBIDDEN_OR_UNAUTHORIZED',
+          error: gate.error,
+        });
+      }
+      if (!req.file?.buffer) {
+        return res.status(400).json({
+          ok: false,
+          error_code: 'MISSING_FILE',
+          error: 'Choose an .xlsx file to upload.',
+        });
+      }
+
+      const parsed = await parsePredictiveExcelBuffer(req.file.buffer);
+      if (!parsed.ok) {
+        return res.status(400).json({ ...parsed, persisted: false });
+      }
+
+      const [farmIncomeRows] = await pool.execute(
+        `SELECT r.id, r.farmer_id, r.status, r.created_at, f.full_name AS farmer_name
+         FROM farmer_income_records r
+         JOIN farmers f ON f.id = r.farmer_id
+         WHERE r.farmer_id = ?`,
+        [gate.id]
+      );
+      const conflicts = findFarmIncomeSemesterConflicts(parsed.rows, farmIncomeRows);
+      if (conflicts.length > 0) {
+        return res.status(409).json({
+          ok: false,
+          error_code: 'SEMESTER_CONFLICT_WITH_FARM_INCOME',
+          // UI localizes from conflicts[]; keep a short English fallback only.
+          error: 'Excel semester conflicts with an existing Farm Income record.',
+          conflicts,
+          persisted: false,
+        });
+      }
+
+      const saved = await replacePredictiveExcelRows(pool, gate.id, parsed.rows);
+      const forecastRows = saved.map((r) =>
+        dbRowToForecastRow({
+          id: r.id,
+          agricultural_semester: r.agricultural_semester,
+          area_hectares: r.area_hectares,
+          planting_method: r.planting_method,
+          irrigation_type: r.irrigation_type,
+          land_preparation_cost: r.land_preparation_cost,
+          planting_cost: r.planting_cost,
+          spraying_cost: r.spraying_cost,
+          harvester_cost: r.harvester_cost,
+          drying_cost: r.drying_cost,
+          hauling_cost: r.hauling_cost,
+          tarasko_cost: r.tarasko_cost,
+          fuel_cost: r.fuel_cost,
+          other_expenses: r.other_expenses,
+          total_fertilizer_cost: r.total_fertilizer_cost,
+          total_pesticide_cost: r.total_pesticide_cost,
+          total_expenses: r.total_expenses,
+        })
+      );
+
+      const result = await forecastWithPretrainedLrFromExcelRows(gate.id, forecastRows, {
+        model_run_id: '20261119_211021',
+      });
+      result.input_source = 'excel_upload';
+      result.persisted = true;
+      result.saved_excel_rows = saved.map((r) => ({
+        id: r.id,
+        agricultural_semester: r.agricultural_semester,
+        year: r.year,
+        half: r.half,
+        half_label: r.half === 1 ? 'H1' : 'H2',
+        total_expenses: r.total_expenses,
+      }));
+
+      const status = result.ok
+        ? 200
+        : result.error_code === 'ML_SERVICE_UNAVAILABLE'
+          ? 503
+          : 400;
+      return res.status(status).json(result);
+    } catch (err) {
+      console.error('predictive excel forecast:', err);
+      return res.status(500).json({
+        ok: false,
+        error_code: 'INTERNAL_ERROR',
+        error: 'Excel predictive forecast failed.',
+        persisted: false,
+      });
+    }
+  }
+);
+
+/** POST run forecast from already-saved Excel rows (no new file). */
+router.post('/predictive-excel/forecast-saved/:farmerId', async (req, res) => {
+  try {
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({
+        ok: false,
+        error_code: 'FORBIDDEN_OR_UNAUTHORIZED',
+        error: gate.error,
+      });
+    }
+    const rows = await listPredictiveExcelRows(pool, gate.id);
+    if (!rows.length) {
+      return res.status(400).json({
+        ok: false,
+        error_code: 'INSUFFICIENT_HISTORY',
+        error: 'No saved Excel history yet. Upload a workbook first.',
+      });
+    }
+
+    const [farmIncomeRows] = await pool.execute(
+      `SELECT r.id, r.farmer_id, r.status, r.created_at, f.full_name AS farmer_name
+       FROM farmer_income_records r
+       JOIN farmers f ON f.id = r.farmer_id
+       WHERE r.farmer_id = ?`,
+      [gate.id]
+    );
+    const conflicts = findFarmIncomeSemesterConflicts(
+      rows.map((r) => ({ agricultural_semester: r.agricultural_semester })),
+      farmIncomeRows
+    );
+    if (conflicts.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        error_code: 'SEMESTER_CONFLICT_WITH_FARM_INCOME',
+        error: 'Saved Excel semester conflicts with an existing Farm Income record.',
+        conflicts,
+      });
+    }
+
+    const forecastRows = rows.map((r) => dbRowToForecastRow(r));
+    const result = await forecastWithPretrainedLrFromExcelRows(gate.id, forecastRows, {
+      model_run_id: '20261119_211021',
+    });
+    result.input_source = 'excel_saved';
+    result.persisted = true;
+    const status = result.ok
+      ? 200
+      : result.error_code === 'ML_SERVICE_UNAVAILABLE'
+        ? 503
+        : 400;
+    return res.status(status).json(result);
+  } catch (err) {
+    console.error('predictive excel forecast-saved:', err);
+    return res.status(500).json({
+      ok: false,
+      error_code: 'INTERNAL_ERROR',
+      error: 'Saved Excel forecast failed.',
+    });
+  }
+});
+
+/** DELETE one saved Excel semester row. */
+router.delete('/predictive-excel/:farmerId/:rowId', async (req, res) => {
+  try {
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
+    }
+    const ok = await deletePredictiveExcelRow(pool, gate.id, req.params.rowId);
+    if (!ok) {
+      return res.status(404).json({ ok: false, error: 'Excel row not found.' });
+    }
+    return res.json({ ok: true, message: 'Excel semester row deleted.' });
+  } catch (err) {
+    console.error('predictive excel delete row:', err);
+    return res.status(500).json({ ok: false, error: 'Unable to delete Excel row.' });
+  }
+});
+
+/** DELETE all saved Excel rows for farmer. */
+router.delete('/predictive-excel/:farmerId', async (req, res) => {
+  try {
+    const gate = assertOwnFarmerId(req, req.params.farmerId);
+    if (!gate.ok) {
+      return res.status(gate.status).json({ ok: false, error: gate.error });
+    }
+    const n = await clearPredictiveExcelRows(pool, gate.id);
+    return res.json({ ok: true, deleted: n, message: 'All saved Excel history cleared.' });
+  } catch (err) {
+    console.error('predictive excel clear:', err);
+    return res.status(500).json({ ok: false, error: 'Unable to clear Excel history.' });
+  }
+});
+
 // GET /api/farmer-income/barangay-farmers/:barangayId — approved farmers list (president: expense foundation UI)
 router.get('/barangay-farmers/:barangayId', async (req, res) => {
   try {
@@ -679,7 +1079,7 @@ router.get('/barangay-farmers/:barangayId', async (req, res) => {
   }
 });
 
-// GET /api/farmer-income/barangay-forecasts/:barangayId — read-only predictions for the president
+// GET /api/farmer-income/barangay-forecasts/:barangayId — read-only next-semester predictions (president)
 router.get('/barangay-forecasts/:barangayId', async (req, res) => {
   try {
     const decoded = decodeIncomeJwt(req);
@@ -712,7 +1112,13 @@ router.get('/barangay-forecasts/:barangayId', async (req, res) => {
       );
       let forecast;
       try {
-        forecast = await forecastFutureTotalExpenses(person.id, records);
+        const excelRows = await listPredictiveExcelRows(pool, person.id);
+        forecast = await forecastWithPretrainedLrFromCombinedFoundation(
+          person.id,
+          records,
+          excelRows,
+          { preferFarmIncomeOnConflict: true }
+        );
       } catch (forecastErr) {
         console.error('barangay forecast:', forecastErr);
         forecast = { ok: false, error: 'Hindi makuha ang forecast.' };
@@ -892,7 +1298,7 @@ router.delete('/:id', async (req, res) => {
 
     // Get the record with farmer barangay info
     const [records] = await conn.execute(
-      `SELECT r.id, r.farmer_id, f.barangay_id FROM farmer_income_records r
+      `SELECT r.id, r.farmer_id, r.status, f.barangay_id FROM farmer_income_records r
        JOIN farmers f ON r.farmer_id = f.id
        WHERE r.id = ?`,
       [id]
@@ -914,6 +1320,14 @@ router.delete('/:id', async (req, res) => {
     if (!isOwner && !isPresidentOfBarangay) {
       await conn.rollback();
       return res.status(403).json({ error: 'You can only delete your own income record.' });
+    }
+    // Farmers may only delete records that are not yet Eligible (Pending / Rejected).
+    if (isOwner && !isPresidentOfBarangay && isEligibleLikeStatus(records[0].status)) {
+      await conn.rollback();
+      return res.status(403).json({
+        error_code: 'ELIGIBLE_DELETE_FORBIDDEN',
+        error: 'Hindi mabura ang Eligible record. Isang talaan lang ang pinapayagan kada semester.',
+      });
     }
 
     const [distributions] = await conn.execute(
@@ -1367,6 +1781,12 @@ router.post('/distribution/create', async (req, res) => {
     if (!income_record_id || !assistance_type || !quantity) {
       await conn.rollback();
       return res.status(400).json({ error: 'Kulang ang kinakailangang impormasyon.' });
+    }
+
+    const quantityNum = Number(quantity);
+    if (!Number.isFinite(quantityNum) || !Number.isInteger(quantityNum) || quantityNum <= 0) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Buong numero lang ang dami ng sako (walang decimal).' });
     }
 
     const [existingDistributions] = await conn.execute(

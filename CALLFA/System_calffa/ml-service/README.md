@@ -25,6 +25,21 @@ Health: `GET http://127.0.0.1:5001/health`
 
 Response includes `model_name` (`linear_regression_lags`, `ridge_regression_lags`, or `random_forest_regressor_lags`), `predicted_total_expenses`, and uncertainty bands.
 
+### Pretrained Linear Regression (standalone; not wired to Node yet)
+
+`POST /forecast/expenses/pretrained-lr` — loads the offline joblib (no fit on request).
+
+Default artifact: `../ml-training/runs/run_20261119_211021/expense_model.joblib`  
+Optional override env: `CALFAM_PRETRAINED_LR_PATH`
+
+Status: `GET /forecast/expenses/pretrained-lr/status`
+
+Tests:
+
+```bash
+python -m unittest tests.test_pretrained_lr -v
+```
+
 ## Node integration
 
 Set in backend `.env`:

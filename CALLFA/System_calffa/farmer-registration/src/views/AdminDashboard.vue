@@ -162,7 +162,7 @@
           <canvas ref="barangayChartRef"></canvas>
         </div>
 
-        <!-- Financial Overview -->
+        <!-- Financial Overview-->
         <div class="glass-chart-card dashboard-insight-card financial-overview-card">
           <div class="glass-chart-header">
             <div>

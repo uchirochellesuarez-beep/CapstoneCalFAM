@@ -113,17 +113,26 @@
             <p v-if="item.reference_number" class="forecast-view-ref">{{ item.reference_number }}</p>
             <template v-if="item.forecast?.ok">
               <p class="forecast-view-amount">
-                ₱{{ formatForecastPeso(item.forecast.forecast_next?.predicted_total_expenses) }}
+                ₱{{ formatForecastPeso(item.forecast.predicted_total_expenses ?? item.forecast.forecast_next?.predicted_total_expenses) }}
               </p>
               <p class="forecast-view-meta">
-                {{ $t('ui.forecastRange', {
-                  low: formatForecastPeso(item.forecast.forecast_next?.ci95_low),
-                  high: formatForecastPeso(item.forecast.forecast_next?.ci95_high)
+                {{ $t('ui.forecastNextSemester', {
+                  semester: item.forecast.forecast_period || item.forecast.forecast_next?.label || '—'
                 }) }}
               </p>
               <p class="forecast-view-meta">
-                {{ $t('ui.forecastDataUsed', { n: item.forecast.training_n || 0 }) }}
+                {{ $t('ui.forecastLatestHistory', {
+                  semester: item.forecast.latest_history_period || '—'
+                }) }}
               </p>
+              <p class="forecast-view-meta">
+                {{ $t('ui.forecastFoundationUsed', {
+                  n: item.forecast.training_n || item.forecast.foundation_counts?.total || 0,
+                  income: item.forecast.foundation_counts?.farm_income ?? '—',
+                  excel: item.forecast.foundation_counts?.excel ?? '—'
+                }) }}
+              </p>
+              <p class="forecast-view-meta">{{ $t('ui.forecastModelLr') }}</p>
             </template>
             <p v-else class="forecast-view-meta">
               {{ translateForecastError(item.forecast?.error) }}
@@ -186,11 +195,15 @@ const filteredForecasts = computed(() => {
 const translateForecastError = (error) => {
   const err = String(error || '')
   if (!err) return t('ui.forecastInsufficient')
-  if (/Wala pang naka-save/i.test(err)) return t('incomeForm.noRecordsForForecast')
-  if (/Kulang/i.test(err)) return t('incomeForm.notEnoughRecords')
+  if (/Wala pang naka-save|At least one Eligible|saved Excel semester/i.test(err)) {
+    return t('incomeForm.noRecordsForForecast')
+  }
+  if (/Kulang|INSUFFICIENT|Not enough/i.test(err)) return t('incomeForm.notEnoughRecords')
+  if (/Duplicate|DUPLICATE/i.test(err)) return t('incomeForm.duplicatePeriod')
+  if (/ML service|unavailable|misconfigured/i.test(err)) return t('incomeForm.mlServiceUnavailable')
   if (/Hindi kayang i-fit/i.test(err)) return t('incomeForm.forecastFitFailed')
   if (/Hindi makuha ang forecast/i.test(err)) return t('incomeForm.forecastFailed')
-  return t('incomeForm.forecastFailed')
+  return err || t('incomeForm.forecastFailed')
 }
 
 const formatForecastPeso = (value) => {

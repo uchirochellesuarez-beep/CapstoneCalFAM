@@ -60,6 +60,9 @@
         <span>{{ $t('incomeForm.editingFrom', { date: formatDate(editingCreatedAt) }) }}</span>
         <button class="cancel-edit-btn" @click="cancelEdit">{{ $t('common.cancel') }}</button>
       </div>
+      <div v-else-if="semesterSubmitBlocked" class="alert alert-error" style="margin-bottom:1rem">
+        <span>{{ semesterSubmitBlockMessage }}</span>
+      </div>
       <form @submit.prevent="submitForm" class="income-form">
 
         <!-- Section 1: Farm Details -->
@@ -381,7 +384,13 @@
         <!-- Submit -->
         <div class="form-actions">
           <button type="button" class="btn-reset" @click="editingRecordId ? cancelEdit() : resetForm()">{{ editingRecordId ? $t('incomeForm.cancel') : $t('incomeForm.reset') }}</button>
-          <button type="submit" class="btn-submit" :disabled="submitting">
+          <button
+            type="submit"
+            class="btn-submit"
+            :class="{ 'btn-submit-disabled': submitting || (!editingRecordId && semesterSubmitBlocked) }"
+            :disabled="submitting || (!editingRecordId && semesterSubmitBlocked)"
+            :title="(!editingRecordId && semesterSubmitBlocked) ? semesterSubmitBlockMessage : undefined"
+          >
             <span v-if="submitting">{{ editingRecordId ? $t('incomeForm.updating') : $t('incomeForm.submitting') }}</span>
             <span v-else>{{ editingRecordId ? $t('incomeForm.updateRecord') : $t('incomeForm.saveRecord') }}</span>
           </button>
@@ -451,6 +460,13 @@
               class="edit-btn"
               @click="startEdit(record)"
             >{{ $t('common.edit') }}</button>
+            <button
+              v-if="canDeleteIncomeRecord(record)"
+              type="button"
+              class="delete-btn"
+              :disabled="deletingRecordId === record.id"
+              @click="deleteIncomeRecord(record)"
+            >{{ deletingRecordId === record.id ? $t('ui.deleting') : $t('common.delete') }}</button>
             <button type="button" class="view-btn" @click="openRecordDetail(record)">{{ $t('common.view') }}</button>
           </div>
         </div>
@@ -520,39 +536,196 @@
     <div v-if="activeTab === 'predictive'" class="predictive-wrapper">
       <div class="form-section">
         <h2 class="section-title">{{ $t('incomeForm.predictedExpenses') }}</h2>
+        <p class="form-hint">
+          {{ $t('incomeForm.predictiveIntro') }}
+        </p>
 
-        <p class="form-hint">Predictions use only the income and expenses saved on this account.</p>
         <div class="form-row">
           <div class="form-group">
             <label>{{ $t('incomeForm.targetFarmerId') }}</label>
             <input type="text" :value="targetFarmerId || '-'" disabled />
           </div>
           <div class="form-group">
-            <label>{{ $t('incomeForm.foundationData') }}</label>
-            <input type="file" accept=".csv,.json,text/csv,application/json" @change="onFoundationFileChange" />
+            <label>{{ $t('incomeForm.predictionSource') }}</label>
+            <select v-model="predictionSource" @change="onPredictionSourceChange">
+              <option value="saved_records">{{ $t('incomeForm.sourceOptionSavedRecords') }}</option>
+              <option value="excel_upload">{{ $t('incomeForm.sourceOptionExcel') }}</option>
+            </select>
           </div>
         </div>
 
-        <div class="predictive-actions">
-          <button class="btn-submit" type="button" :disabled="foundationUploading || !canUploadFoundation" @click="uploadFoundationFile">
-            <span v-if="foundationUploading">{{ $t('common.uploading') }}</span>
-            <span v-else>{{ $t('common.uploadFoundation') }}</span>
-          </button>
-          <button class="btn-submit" type="button" :disabled="forecastLoading || !targetFarmerId" @click="fetchExpenseForecast">
-            <span v-if="forecastLoading">{{ $t('common.forecasting') }}</span>
-            <span v-else>{{ $t('common.runForecast') }}</span>
-          </button>
+        <!-- Option A -->
+        <div v-if="predictionSource === 'saved_records'">
+          <p class="form-hint">
+            {{ $t('incomeForm.savedRecordsHint') }}
+          </p>
+          <div v-if="loadingRecords" class="form-hint">{{ $t('incomeForm.loadingEligibleRecords') }}</div>
+          <div v-else-if="eligiblePredictiveRecords.length === 0" class="alert alert-error">
+            <span>{{ $t('incomeForm.noEligibleRecords') }}</span>
+          </div>
+          <div v-else class="foundation-summary">
+            <p><strong>{{ $t('incomeForm.latestHistorySemester') }}</strong> {{ savedLatestHistoryPeriod || '—' }}</p>
+            <p><strong>{{ $t('incomeForm.forecastSemesterAuto') }}</strong> {{ savedForecastPeriod || '—' }}</p>
+            <div class="forecast-history-wrap forecast-history-wrap--desktop">
+              <table class="forecast-history-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('incomeForm.submitted') }}</th>
+                    <th>{{ $t('incomeForm.autoSemester') }}</th>
+                    <th class="col-amt">{{ $t('ui.expenses') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in savedRecordsWithSemester" :key="row.id">
+                    <td>{{ formatDate(row.created_at) }}</td>
+                    <td>{{ row.auto_semester || '—' }}</td>
+                    <td class="col-amt">₱{{ formatPeso(row.total_expenses) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="forecast-mobile-cards">
+              <div
+                v-for="row in savedRecordsWithSemester"
+                :key="'m-' + row.id"
+                class="forecast-mobile-card"
+              >
+                <div class="forecast-mobile-row">
+                  <span class="forecast-mobile-label">{{ $t('incomeForm.submitted') }}</span>
+                  <span class="forecast-mobile-value">{{ formatDate(row.created_at) }}</span>
+                </div>
+                <div class="forecast-mobile-row">
+                  <span class="forecast-mobile-label">{{ $t('incomeForm.semester') }}</span>
+                  <span class="forecast-mobile-value">{{ row.auto_semester || '—' }}</span>
+                </div>
+                <div class="forecast-mobile-row">
+                  <span class="forecast-mobile-label">{{ $t('ui.expenses') }}</span>
+                  <span class="forecast-mobile-value forecast-mobile-value--amt">₱{{ formatPeso(row.total_expenses) }}</span>
+                </div>
+              </div>
+            </div>
+            <p v-if="savedDuplicateSemesterError" class="alert alert-error" style="margin-top:0.75rem">
+              {{ savedDuplicateSemesterError }}
+            </p>
+          </div>
+          <div class="predictive-actions">
+            <button
+              class="btn-submit"
+              type="button"
+              :disabled="forecastLoading || !canRunSavedForecast"
+              @click="runSavedRecordsForecast"
+            >
+              <span v-if="forecastLoading">{{ $t('common.forecasting') }}</span>
+              <span v-else>{{ $t('common.runForecast') }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Option B -->
+        <div v-else>
+          <p class="form-hint">
+            {{ $t('incomeForm.excelUploadHint') }}
+          </p>
+          <div class="predictive-actions">
+            <button class="btn-submit" type="button" :disabled="!targetFarmerId" @click="downloadPredictiveExcelTemplate">
+              {{ $t('incomeForm.downloadExcelTemplate') }}
+            </button>
+          </div>
+
+          <div class="form-group" style="margin-top:1rem">
+            <label>{{ $t('incomeForm.uploadCompletedWorkbook') }}</label>
+            <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" @change="onExcelFileChange" />
+          </div>
+          <p v-if="excelFileName" class="form-hint">{{ $t('incomeForm.selectedFile', { name: excelFileName }) }}</p>
+          <div class="predictive-actions">
+            <button
+              class="btn-submit"
+              type="button"
+              :disabled="forecastLoading || !excelFile || !targetFarmerId"
+              @click="runExcelForecast"
+            >
+              <span v-if="forecastLoading">{{ $t('common.forecasting') }}</span>
+              <span v-else>{{ $t('incomeForm.uploadSaveRunForecast') }}</span>
+            </button>
+          </div>
+
+          <div v-if="savedExcelRows.length" class="foundation-summary saved-excel-panel" style="margin-top:1.25rem">
+            <div class="saved-excel-panel-header">
+              <p class="saved-excel-title">
+                <strong>{{ $t('incomeForm.savedExcelHistory') }}</strong>
+                <span class="saved-excel-count">{{ savedExcelRows.length }}</span>
+              </p>
+              <button
+                class="btn-submit"
+                type="button"
+                :disabled="forecastLoading || !targetFarmerId || !savedExcelRows.length"
+                @click="runSavedExcelForecast"
+              >
+                <span v-if="forecastLoading">{{ $t('common.forecasting') }}</span>
+                <span v-else>{{ $t('incomeForm.runForecastFromSavedExcel') }}</span>
+              </button>
+            </div>
+            <div class="forecast-history-wrap forecast-history-wrap--desktop">
+              <table class="forecast-history-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('incomeForm.semester') }}</th>
+                    <th>{{ $t('incomeForm.year') }}</th>
+                    <th>{{ $t('incomeForm.halfLabel') }}</th>
+                    <th class="col-amt">{{ $t('ui.expenses') }}</th>
+                    <th class="col-actions">{{ $t('ui.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in savedExcelRows" :key="row.id">
+                    <td>{{ row.agricultural_semester }}</td>
+                    <td>{{ row.year }}</td>
+                    <td>{{ row.half_label || (row.half === 1 ? 'H1' : 'H2') }}</td>
+                    <td class="col-amt">₱{{ formatPeso(row.total_expenses) }}</td>
+                    <td class="col-actions">
+                      <button
+                        type="button"
+                        class="delete-btn"
+                        :disabled="deletingExcelRowId === row.id"
+                        @click="deleteSavedExcelRow(row)"
+                      >{{ deletingExcelRowId === row.id ? $t('ui.deleting') : $t('common.delete') }}</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="forecast-mobile-cards">
+              <div
+                v-for="row in savedExcelRows"
+                :key="'mx-' + row.id"
+                class="forecast-mobile-card"
+              >
+                <div class="forecast-mobile-row">
+                  <span class="forecast-mobile-label">{{ $t('incomeForm.semester') }}</span>
+                  <span class="forecast-mobile-value">{{ row.agricultural_semester }}</span>
+                </div>
+                <div class="forecast-mobile-row">
+                  <span class="forecast-mobile-label">{{ $t('ui.expenses') }}</span>
+                  <span class="forecast-mobile-value forecast-mobile-value--amt">₱{{ formatPeso(row.total_expenses) }}</span>
+                </div>
+                <div class="forecast-mobile-actions">
+                  <button
+                    type="button"
+                    class="delete-btn"
+                    :disabled="deletingExcelRowId === row.id"
+                    @click="deleteSavedExcelRow(row)"
+                  >{{ deletingExcelRowId === row.id ? $t('ui.deleting') : $t('common.delete') }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="form-hint" style="margin-top:1.25rem">{{ $t('incomeForm.noSavedExcelHistory') }}</div>
+        </div>
+
+        <div v-if="clientForecastError" class="alert alert-error" style="margin-top:1rem">
+          <span>{{ clientForecastError }}</span>
         </div>
         <ContentSkeleton v-if="forecastLoading" variant="chart" :label="$t('common.forecasting')" />
-
-        <div class="foundation-summary" v-if="foundationSummary">
-          <p><strong>{{ $t('incomeForm.foundationFarmerId') }}</strong> {{ foundationSummary.farmer_id }}</p>
-          <p><strong>{{ $t('incomeForm.uploadedPoints') }}</strong> {{ foundationSummary.count || 0 }}</p>
-          <p v-if="foundationSummary.updated_at"><strong>{{ $t('incomeForm.lastUpdated') }}</strong> {{ formatDate(foundationSummary.updated_at) }}</p>
-          <p v-if="(foundationSummary.preview || []).length > 0">
-            <strong>{{ $t('incomeForm.preview') }}</strong> {{ foundationSummary.preview.join(', ') }}
-          </p>
-        </div>
       </div>
 
       <div class="form-section" v-if="forecastResult">
@@ -560,57 +733,63 @@
         <div v-if="forecastResult.ok" class="summary-grid">
           <div class="summary-item expense">
             <span class="summary-label">{{ $t('incomeForm.predictedFutureExpense') }}</span>
-            <span class="summary-value">₱{{ formatPeso(forecastResult.forecast_next?.predicted_total_expenses) }}</span>
+            <span class="summary-value">₱{{ formatPeso(forecastResult.predicted_total_expenses ?? forecastResult.forecast_next?.predicted_total_expenses) }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ $t('incomeForm.ci95') }}</span>
-            <span class="summary-value">
-              ₱{{ formatPeso(forecastResult.forecast_next?.ci95_low) }} - ₱{{ formatPeso(forecastResult.forecast_next?.ci95_high) }}
-            </span>
+            <span class="summary-label">{{ $t('incomeForm.latestHistorySemesterShort') }}</span>
+            <span class="summary-value">{{ forecastResult.latest_history_period || '—' }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ $t('incomeForm.modelQuality') }}</span>
-            <span class="summary-value">{{ forecastResult.forecast_next?.r_squared ?? '—' }}</span>
+            <span class="summary-label">{{ $t('incomeForm.forecastSemesterShort') }}</span>
+            <span class="summary-value">{{ forecastResult.forecast_period || forecastResult.forecast_next?.label || '—' }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ $t('incomeForm.trainingPoints') }}</span>
-            <span class="summary-value">{{ forecastResult.training_n || 0 }}</span>
+            <span class="summary-label">{{ $t('incomeForm.modelUsed') }}</span>
+            <span class="summary-value">{{ $t('incomeForm.modelLinearRegressionShort') }}</span>
           </div>
         </div>
         <div v-else class="alert alert-error">
-          <span>{{ translatedForecastError || $t('incomeForm.forecastFailed') }}</span>
+          <span style="white-space: pre-line">{{ translatedForecastError || $t('incomeForm.forecastFailed') }}</span>
         </div>
 
         <div class="model-info-box" v-if="forecastResult.ok">
-          <p><strong>{{ $t('incomeForm.modelUsed') }}</strong> {{ forecastResult.model || 'N/A' }}</p>
-          <p>
-            <strong>{{ $t('incomeForm.engine') }}</strong>
-            {{ forecastEngineLabel }}
-          </p>
-          <p>{{ forecastMethodText }}</p>
-          <p v-if="forecastQualityHint">{{ forecastQualityHint }}</p>
+          <p><strong>{{ $t('incomeForm.modelUsed') }}</strong> {{ $t('incomeForm.modelLinearRegression') }}</p>
+          <p><strong>{{ $t('incomeForm.predictionSourceLabel') }}</strong> {{ forecastSourceLabel }}</p>
+          <p class="lr-disclaimer">{{ $t('incomeForm.predictionOnlyDisclaimer') }}</p>
         </div>
-        <div v-if="forecastHistory.length" class="foundation-summary">
-          <p class="forecast-history-title"><strong>{{ $t('incomeForm.savedExpensesUsed') }}</strong></p>
-          <div class="forecast-history-wrap">
+        <div v-if="forecastHistoryPeriods.length" class="foundation-summary">
+          <p class="forecast-history-title"><strong>{{ $t('incomeForm.historyUsed') }}</strong></p>
+          <div class="forecast-history-wrap forecast-history-wrap--desktop">
             <table class="forecast-history-table">
               <thead>
                 <tr>
-                  <th class="col-num">#</th>
-                  <th>{{ $t('incomeForm.forecastSource') }}</th>
-                  <th>{{ $t('incomeForm.forecastPeriod') }}</th>
+                  <th>{{ $t('incomeForm.semester') }}</th>
                   <th class="col-amt">{{ $t('ui.expenses') }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, idx) in forecastHistory" :key="idx">
-                  <td class="col-num">{{ idx + 1 }}</td>
-                  <td>{{ forecastHistorySource(row) }}</td>
-                  <td>{{ forecastHistoryPeriod(row) }}</td>
+                <tr v-for="row in forecastHistoryPeriods" :key="row.record_id || row.period">
+                  <td>{{ row.period }}</td>
                   <td class="col-amt">₱{{ formatPeso(row.total_expenses) }}</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="forecast-mobile-cards">
+            <div
+              v-for="row in forecastHistoryPeriods"
+              :key="'mh-' + (row.record_id || row.period)"
+              class="forecast-mobile-card"
+            >
+              <div class="forecast-mobile-row">
+                <span class="forecast-mobile-label">{{ $t('incomeForm.semester') }}</span>
+                <span class="forecast-mobile-value">{{ row.period }}</span>
+              </div>
+              <div class="forecast-mobile-row">
+                <span class="forecast-mobile-label">{{ $t('ui.expenses') }}</span>
+                <span class="forecast-mobile-value forecast-mobile-value--amt">₱{{ formatPeso(row.total_expenses) }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -836,7 +1015,14 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
+import {
+  semesterFromCreatedAt,
+  nextSemester,
+  isEligibleIncomeStatus,
+} from '../utils/agriculturalSemester'
 import { useBackdropTheme } from '../composables/useBackdropTheme'
+
+const SEMESTER_SLOT_STATUSES = new Set(['Pending', 'Eligible'])
 
 const { t, locale } = useI18n()
 
@@ -859,47 +1045,103 @@ const showDetailModal = ref(false)
 const selectedRecord = ref(null)
 const editingRecordId = ref(null)
 const editingCreatedAt = ref(null)
+const deletingRecordId = ref(null)
 const forecastLoading = ref(false)
-const foundationUploading = ref(false)
 const forecastResult = ref(null)
-const foundationSummary = ref(null)
-const foundationFile = ref(null)
+const predictionSource = ref('saved_records')
+const clientForecastError = ref('')
+const excelFile = ref(null)
+const excelFileName = ref('')
+const savedExcelRows = ref([])
+const deletingExcelRowId = ref(null)
 const targetFarmerId = computed(() => (
   currentUser.value?.id != null ? String(currentUser.value.id) : ''
 ))
-const canUploadFoundation = computed(() => !!foundationFile.value && !!targetFarmerId.value)
-const forecastHistory = computed(() => {
-  const rows = forecastResult.value?.history
+const eligiblePredictiveRecords = computed(() =>
+  (records.value || []).filter((r) => isEligibleIncomeStatus(r?.status))
+)
+const savedRecordsWithSemester = computed(() =>
+  eligiblePredictiveRecords.value.map((r) => {
+    const sem = semesterFromCreatedAt(r.created_at)
+    return { ...r, auto_semester: sem?.label || null, period_index: sem?.period_index ?? null }
+  })
+)
+const savedDuplicateSemesterError = computed(() => {
+  const seen = new Map()
+  for (const r of savedRecordsWithSemester.value) {
+    if (!r.auto_semester) continue
+    if (seen.has(r.auto_semester)) {
+      return t('incomeForm.duplicateEligibleSemester', { semester: r.auto_semester })
+    }
+    seen.set(r.auto_semester, r.id)
+  }
+  return ''
+})
+const savedLatestHistoryPeriod = computed(() => {
+  let best = null
+  for (const r of savedRecordsWithSemester.value) {
+    if (r.period_index == null) continue
+    if (!best || r.period_index > best.period_index) best = r
+  }
+  return best?.auto_semester || ''
+})
+const savedForecastPeriod = computed(() => {
+  const next = nextSemester(savedLatestHistoryPeriod.value)
+  return next?.label || ''
+})
+const canRunSavedForecast = computed(() =>
+  !!targetFarmerId.value &&
+  eligiblePredictiveRecords.value.length > 0 &&
+  !savedDuplicateSemesterError.value &&
+  !!savedForecastPeriod.value
+)
+const forecastHistoryPeriods = computed(() => {
+  const rows = forecastResult.value?.history_periods
   return Array.isArray(rows) ? rows : []
 })
-const forecastEngineLabel = computed(() => {
-  const engine = forecastResult.value?.ml_engine
-  if (engine === 'python_sklearn') return t('incomeForm.enginePython')
-  if (engine === 'node_sparse_fallback') return t('incomeForm.engineSparse')
-  return t('incomeForm.engineOls')
+const forecastSourceLabel = computed(() => {
+  const raw = String(forecastResult.value?.input_source || predictionSource.value || '').trim()
+  if (raw === 'combined_foundation') return t('incomeForm.sourceCombinedFoundation')
+  if (raw === 'saved_records') return t('incomeForm.sourceSavedRecords')
+  if (raw === 'excel_upload' || raw === 'excel_saved') return t('incomeForm.sourceExcel')
+  return raw || '—'
 })
-const forecastMethodText = computed(() => {
-  const model = forecastResult.value?.model
-  const engine = forecastResult.value?.ml_engine
-  if (model === 'last_saved_expense') return t('incomeForm.methodLastSaved')
-  if (model === 'two_point_trend') return t('incomeForm.methodTwoPoint')
-  if (engine === 'python_sklearn') return t('incomeForm.methodPython')
-  if (engine === 'node_ols_fallback') return t('incomeForm.methodOls')
-  return ''
-})
-const forecastQualityHint = computed(() => {
-  const engine = forecastResult.value?.ml_engine
-  if (engine === 'node_sparse_fallback') return t('incomeForm.qualityHintSparse')
-  if (forecastResult.value?.forecast_quality_hint_ph) return t('incomeForm.qualityHintLow')
-  return ''
-})
+const formatExcelSemesterConflicts = (conflicts) => {
+  const rows = Array.isArray(conflicts) ? conflicts : []
+  if (!rows.length) return t('incomeForm.excelSemesterConflictIntro')
+  const items = rows.map((c) =>
+    t('incomeForm.excelSemesterConflictItem', {
+      semester: c.excel_semester || '—',
+      year: c.year || '—',
+      half: c.half || '—',
+      farmerName: c.farmer_name || currentUser.value?.full_name || currentUser.value?.name || '—',
+      status: incomeStatusLabel(c.farm_income_status),
+    })
+  )
+  return [
+    t('incomeForm.excelSemesterConflictIntro'),
+    ...items,
+    t('incomeForm.excelSemesterConflictHint'),
+  ].join('\n')
+}
+
 const translatedForecastError = computed(() => {
+  const code = String(forecastResult.value?.error_code || '')
   const err = String(forecastResult.value?.error || '')
+  if (code === 'INSUFFICIENT_HISTORY') {
+    return t('incomeForm.insufficientHistory')
+  }
+  if (code === 'DUPLICATE_PERIOD') {
+    return t('incomeForm.duplicatePeriod')
+  }
+  if (code === 'SEMESTER_CONFLICT_WITH_FARM_INCOME') {
+    return formatExcelSemesterConflicts(forecastResult.value?.conflicts)
+  }
+  if (code === 'ML_SERVICE_UNAVAILABLE' || /ML service is unavailable/i.test(err)) {
+    return t('incomeForm.mlServiceUnavailable')
+  }
   if (!err) return ''
-  if (/Wala pang naka-save/i.test(err)) return t('incomeForm.noRecordsForForecast')
-  if (/Kulang ang datos/i.test(err)) return t('incomeForm.notEnoughRecords')
-  if (/Hindi kayang i-fit/i.test(err)) return t('incomeForm.forecastFitFailed')
-  return t('incomeForm.forecastFailed')
+  return err || t('incomeForm.forecastFailed')
 })
 
 const syncActiveTabFromRoute = async () => {
@@ -1019,6 +1261,10 @@ const submitForm = async () => {
     errorMessage.value = t('incomeForm.loginRequired')
     return
   }
+  if (!editingRecordId.value && semesterSubmitBlocked.value) {
+    errorMessage.value = semesterSubmitBlockMessage.value
+    return
+  }
   submitting.value = true
   errorMessage.value = ''
   successMessage.value = ''
@@ -1073,17 +1319,45 @@ const submitForm = async () => {
         body: JSON.stringify(payload)
       })
     }
-    const data = await res.json()
-    if (!res.ok) throw new Error(t('incomeForm.saveFailed'))
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || data.message || t('incomeForm.saveFailed'))
 
     successMessage.value = editingRecordId.value
       ? t('incomeForm.updateSuccess')
       : t('incomeForm.saveSuccess')
     cancelEdit()
+    await fetchRecords()
   } catch (err) {
     errorMessage.value = err.message
   } finally {
     submitting.value = false
+  }
+}
+
+const deleteIncomeRecord = async (record) => {
+  if (!canDeleteIncomeRecord(record) || !record?.id) return
+  const ok = window.confirm(
+    t('incomeForm.deleteConfirm', { date: formatDate(record.created_at) })
+  )
+  if (!ok) return
+  deletingRecordId.value = record.id
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    const res = await fetch(`/api/farmer-income/${record.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authStore.token}` },
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || data.message || t('incomeForm.deleteFailed'))
+    successMessage.value = data.message || t('incomeForm.deleteSuccess')
+    if (selectedRecord.value?.id === record.id) closeDetailModal()
+    if (editingRecordId.value === record.id) cancelEdit()
+    await fetchRecords()
+  } catch (err) {
+    errorMessage.value = err.message
+  } finally {
+    deletingRecordId.value = null
   }
 }
 
@@ -1180,73 +1454,215 @@ const fetchCompletedAssistance = async () => {
   }
 }
 
-const fetchFoundationSummary = async () => {
-  if (!targetFarmerId.value) return
-  try {
-    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
-      headers: { 'Authorization': `Bearer ${authStore.token}` }
-    })
-    const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.fetchFoundationError'))
-    foundationSummary.value = data
-  } catch (err) {
-    foundationSummary.value = null
-    errorMessage.value = err.message
+const onPredictionSourceChange = async () => {
+  forecastResult.value = null
+  clientForecastError.value = ''
+  excelFile.value = null
+  excelFileName.value = ''
+  if (predictionSource.value === 'excel_upload') {
+    await fetchSavedExcelRows()
   }
 }
 
-const fetchExpenseForecast = async () => {
-  if (!targetFarmerId.value) return
-  forecastLoading.value = true
-  forecastResult.value = null
+const fetchSavedExcelRows = async () => {
+  if (!targetFarmerId.value) {
+    savedExcelRows.value = []
+    return
+  }
   try {
-    const res = await fetch(`/api/farmer-income/expense-forecast/${targetFarmerId.value}`, {
-      headers: { 'Authorization': `Bearer ${authStore.token}` }
+    const res = await fetch(`/api/farmer-income/predictive-excel/${targetFarmerId.value}`, {
+      headers: { Authorization: `Bearer ${authStore.token}` },
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || t('incomeForm.loadExcelHistoryFailed'))
+    savedExcelRows.value = Array.isArray(data.rows) ? data.rows : []
+  } catch (err) {
+    savedExcelRows.value = []
+    clientForecastError.value = err.message
+  }
+}
+
+const onExcelFileChange = (event) => {
+  const f = event?.target?.files?.[0]
+  excelFile.value = f || null
+  excelFileName.value = f?.name || ''
+  clientForecastError.value = ''
+  forecastResult.value = null
+}
+
+const runSavedRecordsForecast = async () => {
+  if (!canRunSavedForecast.value) {
+    clientForecastError.value =
+      savedDuplicateSemesterError.value || t('incomeForm.cannotRunSavedForecast')
+    return
+  }
+  clientForecastError.value = ''
+  forecastResult.value = null
+  forecastLoading.value = true
+  try {
+    const res = await fetch(
+      `/api/farmer-income/expense-forecast-pretrained-lr/${targetFarmerId.value}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ source: 'saved_records' }),
+      }
+    )
+    const data = await res.json().catch(() => ({}))
     forecastResult.value = data
-    if (!res.ok) {
-      throw new Error(t('incomeForm.forecastFailed'))
+    if (!res.ok || !data?.ok) {
+      if (!data?.error && !data?.error_code) {
+        forecastResult.value = {
+          ok: false,
+          error_code: 'FORECAST_FAILED',
+          error: t('incomeForm.forecastFailed'),
+        }
+      }
     }
   } catch (err) {
-    errorMessage.value = err.message
+    forecastResult.value = {
+      ok: false,
+      error_code: 'ML_SERVICE_UNAVAILABLE',
+      error: err?.message || t('incomeForm.mlServiceUnavailable'),
+    }
   } finally {
     forecastLoading.value = false
   }
 }
 
-const onFoundationFileChange = (event) => {
-  const f = event?.target?.files?.[0]
-  foundationFile.value = f || null
+const downloadPredictiveExcelTemplate = async () => {
+  try {
+    const res = await fetch('/api/farmer-income/predictive-excel/template', {
+      headers: { Authorization: `Bearer ${authStore.token}` },
+    })
+    if (!res.ok) throw new Error(t('incomeForm.downloadTemplateFailed'))
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'CalFAM_Agricultural_Expense_History_Template.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    clientForecastError.value = err.message
+  }
 }
 
-const uploadFoundationFile = async () => {
-  if (!foundationFile.value || !targetFarmerId.value) return
-  foundationUploading.value = true
+const runExcelForecast = async () => {
+  if (!excelFile.value || !targetFarmerId.value) return
+  clientForecastError.value = ''
+  forecastResult.value = null
+  forecastLoading.value = true
   try {
     const formData = new FormData()
-    formData.append('file', foundationFile.value)
-    const res = await fetch(`/api/farmer-income/expense-history-foundation/${targetFarmerId.value}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${authStore.token}` },
-      body: formData
-    })
-    const data = await res.json()
-    if (!res.ok || !data?.ok) throw new Error(t('incomeForm.uploadFailed'))
-    successMessage.value = t('incomeForm.foundationUploaded')
-    foundationFile.value = null
-    await fetchFoundationSummary()
-    await fetchExpenseForecast()
+    formData.append('file', excelFile.value)
+    const res = await fetch(
+      `/api/farmer-income/predictive-excel/forecast/${targetFarmerId.value}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        body: formData,
+      }
+    )
+    const data = await res.json().catch(() => ({}))
+    forecastResult.value = data
+    if (!res.ok || !data?.ok) {
+      if (!data?.error && !data?.error_code) {
+        forecastResult.value = {
+          ok: false,
+          error_code: 'FORECAST_FAILED',
+          error: t('incomeForm.forecastFailed'),
+        }
+      }
+    } else {
+      await fetchSavedExcelRows()
+    }
   } catch (err) {
-    errorMessage.value = err.message
+    forecastResult.value = {
+      ok: false,
+      error_code: 'ML_SERVICE_UNAVAILABLE',
+      error: err?.message || t('incomeForm.mlServiceUnavailable'),
+    }
   } finally {
-    foundationUploading.value = false
+    forecastLoading.value = false
+  }
+}
+
+const runSavedExcelForecast = async () => {
+  if (!targetFarmerId.value || !savedExcelRows.value.length) return
+  clientForecastError.value = ''
+  forecastResult.value = null
+  forecastLoading.value = true
+  try {
+    const res = await fetch(
+      `/api/farmer-income/predictive-excel/forecast-saved/${targetFarmerId.value}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+      }
+    )
+    const data = await res.json().catch(() => ({}))
+    forecastResult.value = data
+    if (!res.ok || !data?.ok) {
+      if (!data?.error && !data?.error_code) {
+        forecastResult.value = {
+          ok: false,
+          error_code: 'FORECAST_FAILED',
+          error: t('incomeForm.forecastFailed'),
+        }
+      }
+    }
+  } catch (err) {
+    forecastResult.value = {
+      ok: false,
+      error_code: 'ML_SERVICE_UNAVAILABLE',
+      error: err?.message || t('incomeForm.mlServiceUnavailable'),
+    }
+  } finally {
+    forecastLoading.value = false
+  }
+}
+
+const deleteSavedExcelRow = async (row) => {
+  if (!row?.id || !targetFarmerId.value) return
+  const ok = window.confirm(
+    t('incomeForm.excelDeleteConfirm', {
+      semester: row.agricultural_semester || '—',
+      year: row.year || '—',
+      half: row.half_label || (row.half === 1 ? 'H1' : 'H2'),
+    })
+  )
+  if (!ok) return
+  deletingExcelRowId.value = row.id
+  clientForecastError.value = ''
+  try {
+    const res = await fetch(
+      `/api/farmer-income/predictive-excel/${targetFarmerId.value}/${row.id}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+      }
+    )
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || t('incomeForm.excelDeleteFailed'))
+    await fetchSavedExcelRows()
+  } catch (err) {
+    clientForecastError.value = err.message
+  } finally {
+    deletingExcelRowId.value = null
   }
 }
 
 const loadPredictiveData = async () => {
-  await fetchFoundationSummary()
-  await fetchExpenseForecast()
+  forecastResult.value = null
+  clientForecastError.value = ''
+  await fetchRecords()
+  if (predictionSource.value === 'excel_upload') {
+    await fetchSavedExcelRows()
+  }
 }
 
 // ─── Helpers ───
@@ -1283,6 +1699,32 @@ const canEditIncomeRecord = (record) => {
   return s === 'Pending' || s === 'Rejected'
 }
 
+const canDeleteIncomeRecord = (record) => {
+  return normalizeIncomeStatus(record?.status) !== 'Eligible'
+}
+
+const currentSubmissionSemester = computed(() => semesterFromCreatedAt(new Date()))
+const semesterSlotRecord = computed(() => {
+  const current = currentSubmissionSemester.value
+  if (!current) return null
+  return (records.value || []).find((r) => {
+    const norm = normalizeIncomeStatus(r?.status)
+    if (!SEMESTER_SLOT_STATUSES.has(norm)) return false
+    const sem = semesterFromCreatedAt(r.created_at)
+    return sem && sem.label === current.label
+  }) || null
+})
+const semesterSubmitBlocked = computed(() => !editingRecordId.value && !!semesterSlotRecord.value)
+const semesterSubmitBlockMessage = computed(() => {
+  const sem = currentSubmissionSemester.value?.label || '—'
+  const row = semesterSlotRecord.value
+  if (!row) return ''
+  return t('incomeForm.semesterAlreadySubmitted', {
+    semester: sem,
+    status: incomeStatusLabel(row.status),
+  })
+})
+
 const formatPeso = (value) => {
   const n = parseFloat(value || 0)
   if (!Number.isFinite(n)) return '0.00'
@@ -1312,17 +1754,6 @@ const formatAssistanceType = (type) => {
     both: 'incomeForm.assistBoth'
   }
   return map[type] ? t(map[type]) : type
-}
-
-const forecastHistorySource = (row) => {
-  if (row?.source === 'upload') return t('incomeForm.foundationSource')
-  return t('incomeForm.savedRecordSource')
-}
-
-const forecastHistoryPeriod = (row) => {
-  const pi = Number(row?.period_index)
-  if (Number.isFinite(pi) && pi > 0) return String(pi)
-  return '—'
 }
 
 const extractQuantityFromNotes = (notes) => {
@@ -1387,21 +1818,30 @@ const getTimeSinceReceived = (dateStr) => {
   return t('incomeForm.yearsAgo', { n: Math.floor(days / 365) })
 }
 
-onMounted(() => {
+onMounted(async () => {
   syncActiveTabFromRoute()
+  if (currentUser.value?.id) await fetchRecords()
 })
 
 watch(() => route.query.tab, () => {
   syncActiveTabFromRoute()
 })
 
-watch(targetFarmerId, async (id) => {
-  if (!id) return
-  if (activeTab.value === 'predictive') {
-    await fetchFoundationSummary()
-    await fetchExpenseForecast()
+watch(activeTab, async (tab) => {
+  if (!currentUser.value?.id) return
+  if (tab === 'form' || tab === 'history' || tab === 'predictive') {
+    await fetchRecords()
   }
 })
+
+watch(targetFarmerId, async (id) => {
+  if (!id) return
+  await fetchRecords()
+  if (activeTab.value === 'predictive') {
+    await loadPredictiveData()
+  }
+})
+
 </script>
 
 <style scoped>
@@ -1610,6 +2050,83 @@ watch(targetFarmerId, async (id) => {
   -webkit-overflow-scrolling: touch;
 }
 
+.forecast-mobile-cards {
+  display: none;
+}
+
+.forecast-mobile-card {
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.forecast-mobile-card + .forecast-mobile-card {
+  margin-top: 0.65rem;
+}
+
+.page-container.farmer-income-page.light-theme .forecast-mobile-card {
+  background: #f8faf9;
+  border-color: rgba(22, 101, 52, 0.18);
+}
+
+.forecast-mobile-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+}
+
+.forecast-mobile-label {
+  flex: 0 0 auto;
+  max-width: 42%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+  line-height: 1.35;
+}
+
+.forecast-mobile-value {
+  flex: 1 1 auto;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.forecast-mobile-value--amt {
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.forecast-mobile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(134, 239, 172, 0.18);
+}
+
+.period-select {
+  width: 100%;
+  min-width: 8rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  color: inherit;
+}
+
+.lr-disclaimer {
+  margin-top: 0.75rem;
+  line-height: 1.45;
+  font-size: 0.92rem;
+}
+
 .forecast-history-table {
   width: 100%;
   border-collapse: collapse;
@@ -1642,10 +2159,51 @@ watch(targetFarmerId, async (id) => {
   white-space: nowrap;
 }
 
+.saved-excel-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.saved-excel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+.saved-excel-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: rgba(22, 101, 52, 0.18);
+  color: #bbf7d0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.page-container.farmer-income-page.light-theme .saved-excel-count {
+  background: #dcfce7;
+  color: #166534;
+}
+.forecast-history-table .col-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .forecast-history-table .col-amt {
   text-align: right;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.forecast-history-table .col-desktop-only {
+  /* shown on desktop; hidden in mobile card layout */
 }
 
 .page-container:not(.light-theme) .forecast-history-table th,
@@ -1959,9 +2517,31 @@ watch(targetFarmerId, async (id) => {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(22, 101, 52, 0.32);
 }
-.btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-submit:disabled,
+.btn-submit.btn-submit-disabled {
+  background: #9ca3af !important;
+  color: #f3f4f6 !important;
+  -webkit-text-fill-color: #f3f4f6 !important;
+  border: 1px solid #6b7280 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  filter: none !important;
+  pointer-events: none;
+}
+
+.page-container.farmer-income-page:not(.light-theme) .btn-submit:disabled,
+.page-container.farmer-income-page:not(.light-theme) .btn-submit.btn-submit-disabled,
+body.glass-dark .page-container.farmer-income-page:not(.light-theme) .btn-submit:disabled,
+body.glass-dark .page-container.farmer-income-page:not(.light-theme) .btn-submit.btn-submit-disabled {
+  background: #4b5563 !important;
+  color: #d1d5db !important;
+  -webkit-text-fill-color: #d1d5db !important;
+  border: 1px solid #6b7280 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }
 
 /* History */
@@ -2331,36 +2911,32 @@ watch(targetFarmerId, async (id) => {
 
   .forecast-history-title {
     margin: 0 0 0.4rem !important;
-    font-size: 0.72rem;
-    line-height: 1.25;
+    font-size: 0.78rem;
+    line-height: 1.3;
   }
 
-  .forecast-history-table {
-    font-size: 0.68rem;
-    min-width: 0;
-    table-layout: fixed;
+  .foundation-summary > p {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    margin: 0.2rem 0;
   }
 
-  .forecast-history-table th,
-  .forecast-history-table td {
-    padding: 0.28rem 0.22rem;
-    line-height: 1.2;
+  .saved-excel-panel-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .forecast-history-table th {
-    font-size: 0.58rem;
-    letter-spacing: 0.02em;
+  .saved-excel-panel-header .btn-submit {
+    width: 100%;
   }
 
-  .forecast-history-table .col-num {
-    width: 1.35rem;
-    padding-left: 0;
-    padding-right: 0.15rem;
+  .forecast-history-wrap--desktop {
+    display: none !important;
   }
 
-  .forecast-history-table .col-amt {
-    width: 5.6rem;
-    font-size: 0.66rem;
+  .forecast-mobile-cards {
+    display: block !important;
+    margin-top: 0.55rem;
   }
 
   .model-info-box {
@@ -2371,6 +2947,11 @@ watch(targetFarmerId, async (id) => {
   .predictive-actions {
     flex-direction: column;
     gap: 0.45rem;
+  }
+
+  .predictive-actions .btn-submit,
+  .predictive-actions .btn-reset {
+    width: 100%;
   }
 
   .record-financials {
@@ -2749,6 +3330,33 @@ watch(targetFarmerId, async (id) => {
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(134, 239, 172, 0.45);
   transform: translateY(-1px);
+}
+.delete-btn {
+  padding: 0.42rem 0.92rem;
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+  -webkit-text-fill-color: #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  box-shadow: none;
+  filter: none;
+}
+.delete-btn:hover:not(:disabled) {
+  background: rgba(153, 27, 27, 0.55);
+  border-color: rgba(248, 113, 113, 0.7);
+  transform: translateY(-1px);
+}
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Strong readability overrides for history cards in dark theme */
@@ -3601,6 +4209,40 @@ watch(targetFarmerId, async (id) => {
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* Status pills keep dark text on light badge fills (cell-value white must not inherit) */
+.farmer-income-page-modal:not(.light-theme) .cell-value .status-badge,
+.farmer-income-page-modal:not(.light-theme) .status-badge {
+  -webkit-text-fill-color: unset;
+}
+
+.farmer-income-page-modal:not(.light-theme) .status-badge.eligible {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border: 1px solid #86efac !important;
+}
+
+.farmer-income-page-modal:not(.light-theme) .status-badge.pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+  border: 1px solid #fcd34d !important;
+}
+
+.farmer-income-page-modal:not(.light-theme) .status-badge.rejected {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+.farmer-income-page-modal:not(.light-theme) .status-badge.completed {
+  background: #bbf7d0 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+  border: 1px solid #4ade80 !important;
+}
+
 .farmer-income-page-modal:not(.light-theme) .detail-table th {
   background: rgba(20, 83, 45, 0.75) !important;
   color: #ffffff !important;
@@ -3799,6 +4441,15 @@ watch(targetFarmerId, async (id) => {
   -webkit-text-fill-color: #ffffff !important;
 }
 
+.page-container.farmer-income-page.light-theme .delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+  -webkit-text-fill-color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.page-container.farmer-income-page.light-theme .delete-btn:hover:not(:disabled) {
+  background: #fecaca;
+}
 .page-container.farmer-income-page.light-theme .view-btn,
 .page-container.farmer-income-page.light-theme .edit-btn {
   background: #ffffff !important;
@@ -4473,13 +5124,23 @@ watch(targetFarmerId, async (id) => {
     border-radius: 10px !important;
   }
 
-  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table {
-    font-size: 12px !important;
+  html body .page-container.farmer-income-page.machinery-ui .forecast-history-wrap--desktop {
+    display: none !important;
   }
 
-  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table th,
-  html body .page-container.farmer-income-page.machinery-ui .forecast-history-table td {
-    padding: 6px 8px !important;
+  html body .page-container.farmer-income-page.machinery-ui .forecast-mobile-cards {
+    display: block !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .saved-excel-panel-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  html body .page-container.farmer-income-page.machinery-ui .saved-excel-panel-header .btn-submit,
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions .btn-submit,
+  html body .page-container.farmer-income-page.machinery-ui .predictive-actions .btn-reset {
+    width: 100% !important;
   }
 
   html body .page-container.farmer-income-page.machinery-ui .records-list {
@@ -4538,7 +5199,7 @@ watch(targetFarmerId, async (id) => {
     padding-top: 8px !important;
   }
 
-  html body .page-container.farmer-income-page.machinery-ui :is(.edit-btn, .view-btn) {
+  html body .page-container.farmer-income-page.machinery-ui :is(.edit-btn, .view-btn, .delete-btn) {
     flex: 0 0 auto !important;
     width: auto !important;
     min-width: 0 !important;
@@ -4576,8 +5237,8 @@ watch(targetFarmerId, async (id) => {
     border-width: 3px !important;
   }
 
-  body.glass-dark .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .add-row-btn, .cancel-edit-btn, .tab-btn),
-  body.glass-light .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .add-row-btn, .cancel-edit-btn, .tab-btn) {
+  body.glass-dark .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .delete-btn, .add-row-btn, .cancel-edit-btn, .tab-btn),
+  body.glass-light .page-container.farmer-income-page.machinery-ui :is(.btn-submit, .btn-reset, .edit-btn, .view-btn, .delete-btn, .add-row-btn, .cancel-edit-btn, .tab-btn) {
     border-radius: 8px !important;
     font-weight: 600 !important;
   }

@@ -1,0 +1,106 @@
+{
+  "target": "target_total_expenses_php",
+  "target_unit": "PHP",
+  "target_definition": "Total agricultural expenses for the target calendar six-month period",
+  "feature_order": [
+    "area_hectares",
+    "prev_total_expenses",
+    "prev_prev_total_expenses",
+    "prev_expenses_per_ha",
+    "prev_fertilizer_cost",
+    "prev_pesticide_cost",
+    "prev_labor_related_cost",
+    "prev_transport_cost",
+    "prev_fuel_cost",
+    "planting_method_sabog",
+    "planting_method_talok",
+    "irrigation_NIA",
+    "irrigation_bugsok_waterpump",
+    "irrigation_waterpump_irrigation",
+    "irrigation_waterpump_ilog",
+    "period_index",
+    "is_h1",
+    "n_hist_periods",
+    "roll3_mean_total",
+    "delta_prev",
+    "has_lag2"
+  ],
+  "feature_units": {
+    "area_hectares": "hectares",
+    "prev_total_expenses": "PHP",
+    "prev_prev_total_expenses": "PHP",
+    "prev_expenses_per_ha": "PHP_per_hectare",
+    "prev_fertilizer_cost": "PHP",
+    "prev_pesticide_cost": "PHP",
+    "prev_labor_related_cost": "PHP",
+    "prev_transport_cost": "PHP",
+    "prev_fuel_cost": "PHP",
+    "planting_method_sabog": "indicator_0_1",
+    "planting_method_talok": "indicator_0_1",
+    "irrigation_NIA": "indicator_0_1",
+    "irrigation_bugsok_waterpump": "indicator_0_1",
+    "irrigation_waterpump_irrigation": "indicator_0_1",
+    "irrigation_waterpump_ilog": "indicator_0_1",
+    "period_index": "ordinal_half_year_from_2021_H1",
+    "is_h1": "indicator_0_1",
+    "n_hist_periods": "count",
+    "roll3_mean_total": "PHP",
+    "delta_prev": "PHP",
+    "has_lag2": "indicator_0_1"
+  },
+  "missing_value_handling": {
+    "prev_prev_total_expenses": "Impute with prev_total_expenses when only one prior period; has_lag2=0",
+    "delta_prev": "Set to 0 when has_lag2=0",
+    "categoricals": "One-hot from previous period methods; mutually exclusive within group"
+  },
+  "excluded_from_model_matrix": [
+    "synth_farmer_id",
+    "target_period_index",
+    "target_period_label",
+    "split"
+  ],
+  "no_price_index_features": true,
+  "reason_no_price_index_features": "Verified official historical series not attached; see references/SOURCES.md",
+  "leakage_rules": [
+    "Features use only rows with period_index < target period_index",
+    "Target-period expenses and incomes are never used as features",
+    "synth_farmer_id is metadata only, not a numeric predictor"
+  ],
+  "splits": {
+    "train_target_labels": [
+      "2021-H2",
+      "2022-H1",
+      "2022-H2",
+      "2023-H1",
+      "2023-H2",
+      "2024-H1",
+      "2024-H2"
+    ],
+    "validation_target_labels": [
+      "2025-H1",
+      "2025-H2"
+    ],
+    "test_target_labels": [
+      "2026-H1"
+    ]
+  },
+  "counts": {
+    "n_supervised": 2000,
+    "n_train": 1400,
+    "n_validation": 400,
+    "n_test": 200
+  },
+  "seed": 20261119,
+  "selected_model": "linear_regression",
+  "active_algorithms": [
+    "linear_regression"
+  ],
+  "model_artifact": "runs/run_20261119_211021/expense_model.joblib",
+  "input_source": "excel",
+  "run_id": "20261119_211021",
+  "inference_notes": {
+    "clip_nonnegative": true,
+    "input": "DataFrame or 2D array in feature_order",
+    "output": "predicted target_total_expenses_php (PHP)"
+  }
+}
