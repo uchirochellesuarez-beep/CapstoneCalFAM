@@ -48,7 +48,10 @@ async function fetchExpenseForecastFromMlService(totalExpensesSeries) {
  */
 async function fetchPretrainedLrFromMlService(payload) {
   const base = (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
-  if (!base) return null;
+  if (!base) {
+    console.warn('[mlExpenseClient] pretrained-lr skipped: ML_API_URL is empty');
+    return null;
+  }
 
   const timeout =
     parseInt(String(process.env.ML_API_TIMEOUT_MS || '15000'), 10) || 15000;
@@ -60,12 +63,26 @@ async function fetchPretrainedLrFromMlService(payload) {
       headers: { 'Content-Type': 'application/json' },
       validateStatus: () => true,
     });
-    if (status >= 200 && status < 300 && data && typeof data === 'object') {
-      return data;
+    if (data && typeof data === 'object') {
+      // Accept FastAPI JSON bodies even on 4xx when they include ok/error_code
+      if (status >= 200 && status < 300) return data;
+      if (data.ok === false || data.error_code || data.error || data.detail) {
+        return {
+          ok: false,
+          error_code: data.error_code || 'ML_HTTP_ERROR',
+          error:
+            data.error ||
+            (typeof data.detail === 'string'
+              ? data.detail
+              : `ML service HTTP ${status}`),
+          http_status: status,
+        };
+      }
     }
     console.warn(
       '[mlExpenseClient] pretrained-lr unexpected HTTP status:',
-      status
+      status,
+      typeof data === 'object' ? data : String(data).slice(0, 200)
     );
   } catch (err) {
     console.warn('[mlExpenseClient] pretrained-lr unreachable:', err.message);
