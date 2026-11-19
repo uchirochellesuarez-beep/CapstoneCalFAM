@@ -1,9 +1,14 @@
 /**
  * Isolated pretrained Linear Regression forecast path.
+ * Engines: Python ML service (preferred when ML_API_URL reachable) or local Node JSON.
  * No Ridge / RandomForest / Node OLS fallback.
  */
 const { buildPretrainedLrFeatures } = require('./pretrainedLrFeatureBuilder');
-const { fetchPretrainedLrFromMlService } = require('./mlExpenseClient');
+const {
+  isMlApiConfigured,
+  fetchPretrainedLrFromMlService,
+} = require('./mlExpenseClient');
+const { predictPretrainedLrLocalSafe } = require('./pretrainedLrLocalPredict');
 const { semesterFromCreatedAt } = require('./agriculturalSemester');
 const { dbRowToForecastRow } = require('./predictiveExcelStore');
 
@@ -15,98 +20,38 @@ const PUBLIC_DISCLAIMER_EN =
   'This prediction uses a Linear Regression model trained on simulated agricultural expense data. ' +
   'Results are estimates and have not been validated against actual CALFFA farmer outcomes.';
 
-async function runPretrainedLrPrediction(farmerId, rows, buildOptions = {}) {
-  const built = buildPretrainedLrFeatures(rows, buildOptions);
-  if (!built.ok) {
-    return {
-      ok: false,
-      error_code: built.error_code,
-      error: built.error,
-      limitations: built.limitations || [],
-      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
-      disclaimer_en: PUBLIC_DISCLAIMER_EN,
-      ml_engine: 'pretrained_linear_regression',
-      model: 'pretrained_linear_regression',
-      farmer_id: Number(farmerId),
-    };
-  }
+const DEFAULT_MODEL_RUN_ID = '20261119_211021';
+const MODEL_NAME = 'pretrained_linear_regression';
 
-  const ml = await fetchPretrainedLrFromMlService({
-    feature_vector: built.feature_vector,
-    forecast_period: built.forecast_period,
-    farmer_id: Number(farmerId),
-    model_run_id: buildOptions.model_run_id || '20261119_211021',
-  });
+function isPretrainedLrModelName(payload) {
+  return String(payload?.model_name || payload?.ml_engine || '') === MODEL_NAME;
+}
 
-  if (!ml) {
-    return {
-      ok: false,
-      error_code: 'ML_SERVICE_UNAVAILABLE',
-      error:
-        'Pretrained Linear Regression ML service is unavailable or misconfigured (ML_API_URL). ' +
-        'No legacy Ridge/RandomForest/OLS fallback is used on this route.',
-      limitations: built.limitations,
-      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
-      disclaimer_en: PUBLIC_DISCLAIMER_EN,
-      ml_engine: 'pretrained_linear_regression',
-      model: 'pretrained_linear_regression',
-      farmer_id: Number(farmerId),
-      forecast_period: built.forecast_period,
-      latest_history_period: built.latest_history_period,
-      history_periods: built.history_periods,
-    };
-  }
-
-  if (ml.ok === false) {
-    return {
-      ok: false,
-      error_code: ml.error_code || 'PRETRAINED_LR_REJECTED',
-      error: ml.error || 'Pretrained Linear Regression rejected the feature payload.',
-      limitations: built.limitations,
-      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
-      disclaimer_en: PUBLIC_DISCLAIMER_EN,
-      ml_engine: 'pretrained_linear_regression',
-      model: 'pretrained_linear_regression',
-      farmer_id: Number(farmerId),
-    };
-  }
-
-  if (String(ml.model_name || ml.ml_engine || '') !== 'pretrained_linear_regression') {
-    return {
-      ok: false,
-      error_code: 'UNEXPECTED_MODEL',
-      error:
-        'ML service returned a non-pretrained-LR model identifier. Refusing to accept legacy engines on this route.',
-      limitations: built.limitations,
-      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
-      disclaimer_en: PUBLIC_DISCLAIMER_EN,
-      ml_engine: 'pretrained_linear_regression',
-      model: 'pretrained_linear_regression',
-      farmer_id: Number(farmerId),
-    };
-  }
-
+function buildSuccessResponse(built, prediction, farmerId, inferenceEngine) {
+  const forecastPeriod = prediction.forecast_period || built.forecast_period;
   return {
     ok: true,
-    ml_engine: 'pretrained_linear_regression',
-    model: 'pretrained_linear_regression',
-    model_run_id: ml.model_run_id || null,
-    model_artifact_path: ml.model_artifact_path || null,
+    ml_engine: MODEL_NAME,
+    model: MODEL_NAME,
+    model_name: MODEL_NAME,
+    model_run_id: prediction.model_run_id || null,
+    model_artifact_path: prediction.model_artifact_path || null,
+    inference_engine: inferenceEngine,
     trained_on_simulated_data: true,
-    performance_label: ml.performance_label || 'SYNTHETIC DATA PERFORMANCE',
-    disclaimer_ph: ml.disclaimer_ph || PUBLIC_DISCLAIMER_PH,
-    disclaimer_en: ml.disclaimer_en || PUBLIC_DISCLAIMER_EN,
-    method_description_ph: ml.method_description_ph || null,
-    forecast_period: ml.forecast_period || built.forecast_period,
+    performance_label: prediction.performance_label || 'SYNTHETIC DATA PERFORMANCE',
+    disclaimer_ph: prediction.disclaimer_ph || PUBLIC_DISCLAIMER_PH,
+    disclaimer_en: prediction.disclaimer_en || PUBLIC_DISCLAIMER_EN,
+    method_description_ph: prediction.method_description_ph || null,
+    forecast_period: forecastPeriod,
     latest_history_period: built.latest_history_period,
     period_extrapolation: Boolean(built.period_extrapolation),
     forecast_next: {
-      label: ml.forecast_period || built.forecast_period,
-      predicted_total_expenses: Number(ml.predicted_total_expenses),
+      label: forecastPeriod,
+      predicted_total_expenses: Number(prediction.predicted_total_expenses),
       period_index: built.forecast_period_index,
       is_h1: built.forecast_is_h1,
     },
-    predicted_total_expenses: Number(ml.predicted_total_expenses),
+    predicted_total_expenses: Number(prediction.predicted_total_expenses),
     feature_vector: built.feature_vector,
     feature_order: built.feature_order,
     history_periods: built.history_periods,
@@ -116,6 +61,150 @@ async function runPretrainedLrPrediction(farmerId, rows, buildOptions = {}) {
     training_n: built.n_hist_periods,
     legacy_fallback_used: false,
     persisted: false,
+  };
+}
+
+function runLocalPretrainedLr(built, farmerId, modelRunId) {
+  return predictPretrainedLrLocalSafe(built.feature_vector, {
+    forecast_period: built.forecast_period,
+    farmer_id: Number(farmerId),
+    model_run_id: modelRunId,
+  });
+}
+
+/**
+ * Engine selection:
+ * 1) ML_API_URL set + Python reachable + pretrained LR → python_pretrained_lr
+ * 2) ML_API_URL missing → node_pretrained_lr
+ * 3) Python unreachable / non-LR / transport fail → node_pretrained_lr
+ * 4) Local also fails → structured error (never Ridge/RF/OLS)
+ */
+async function resolvePretrainedLrPrediction(built, farmerId, modelRunId) {
+  const payload = {
+    feature_vector: built.feature_vector,
+    forecast_period: built.forecast_period,
+    farmer_id: Number(farmerId),
+    model_run_id: modelRunId,
+  };
+
+  if (isMlApiConfigured()) {
+    const ml = await fetchPretrainedLrFromMlService(payload);
+    if (ml && ml.ok !== false && isPretrainedLrModelName(ml)) {
+      return {
+        kind: 'ok',
+        prediction: ml,
+        inference_engine: 'python_pretrained_lr',
+      };
+    }
+    if (ml && ml.ok === false) {
+      // Explicit model/feature rejection from Python — do not swap engines silently
+      // for validation errors; only fall through to Node on transport/unavailable.
+      const code = String(ml.error_code || '');
+      const isTransportOrMissing =
+        !code ||
+        code === 'ML_HTTP_ERROR' ||
+        code === 'ML_SERVICE_UNAVAILABLE';
+      if (!isTransportOrMissing) {
+        return { kind: 'reject', ml };
+      }
+    }
+    if (ml && ml.ok !== false && !isPretrainedLrModelName(ml)) {
+      return {
+        kind: 'reject',
+        ml: {
+          ok: false,
+          error_code: 'UNEXPECTED_MODEL',
+          error:
+            'ML service returned a non-pretrained-LR model identifier. ' +
+            'Refusing to accept legacy engines on this route.',
+        },
+      };
+    }
+    // Unreachable / empty → try Node JSON (same run_id)
+  }
+
+  const local = runLocalPretrainedLr(built, farmerId, modelRunId);
+  if (local && local.ok) {
+    return {
+      kind: 'ok',
+      prediction: local,
+      inference_engine: 'node_pretrained_lr',
+    };
+  }
+
+  return {
+    kind: 'unavailable',
+    local,
+    python_attempted: isMlApiConfigured(),
+  };
+}
+
+async function runPretrainedLrPrediction(farmerId, rows, buildOptions = {}) {
+  const modelRunId = buildOptions.model_run_id || DEFAULT_MODEL_RUN_ID;
+  const built = buildPretrainedLrFeatures(rows, buildOptions);
+  if (!built.ok) {
+    return {
+      ok: false,
+      error_code: built.error_code,
+      error: built.error,
+      limitations: built.limitations || [],
+      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+      disclaimer_en: PUBLIC_DISCLAIMER_EN,
+      ml_engine: MODEL_NAME,
+      model: MODEL_NAME,
+      farmer_id: Number(farmerId),
+    };
+  }
+
+  const resolved = await resolvePretrainedLrPrediction(built, farmerId, modelRunId);
+
+  if (resolved.kind === 'ok') {
+    return buildSuccessResponse(
+      built,
+      resolved.prediction,
+      farmerId,
+      resolved.inference_engine
+    );
+  }
+
+  if (resolved.kind === 'reject') {
+    const ml = resolved.ml;
+    return {
+      ok: false,
+      error_code: ml.error_code || 'PRETRAINED_LR_REJECTED',
+      error: ml.error || 'Pretrained Linear Regression rejected the feature payload.',
+      limitations: built.limitations,
+      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+      disclaimer_en: PUBLIC_DISCLAIMER_EN,
+      ml_engine: MODEL_NAME,
+      model: MODEL_NAME,
+      farmer_id: Number(farmerId),
+      forecast_period: built.forecast_period,
+      latest_history_period: built.latest_history_period,
+      history_periods: built.history_periods,
+    };
+  }
+
+  const localErr = resolved.local || {};
+  return {
+    ok: false,
+    error_code: localErr.error_code || 'PRETRAINED_LR_UNAVAILABLE',
+    error:
+      localErr.error ||
+      'Pretrained Linear Regression is unavailable (Python ML service and local Node JSON inference both failed). ' +
+        'No legacy Ridge/RandomForest/OLS fallback is used on this route.',
+    limitations: built.limitations,
+    disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+    disclaimer_en: PUBLIC_DISCLAIMER_EN,
+    ml_engine: MODEL_NAME,
+    model: MODEL_NAME,
+    inference_engine: null,
+    python_attempted: Boolean(resolved.python_attempted),
+    farmer_id: Number(farmerId),
+    forecast_period: built.forecast_period,
+    latest_history_period: built.latest_history_period,
+    history_periods: built.history_periods,
+    legacy_fallback_used: false,
   };
 }
 

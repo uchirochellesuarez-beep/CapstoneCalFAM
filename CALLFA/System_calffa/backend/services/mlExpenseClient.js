@@ -1,12 +1,20 @@
 const axios = require('axios');
 
+function getMlApiBaseUrl() {
+  return (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
+}
+
+function isMlApiConfigured() {
+  return Boolean(getMlApiBaseUrl());
+}
+
 /**
  * Calls the dedicated Python ML service (FastAPI + scikit-learn).
  * @param {number[]} totalExpensesSeries — chronological values
  * @returns {Promise<object|null>} Parsed JSON with ok:true or null if disabled/unreachable
  */
 async function fetchExpenseForecastFromMlService(totalExpensesSeries) {
-  const base = (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
+  const base = getMlApiBaseUrl();
   if (!base) return null;
 
   const timeout =
@@ -47,7 +55,7 @@ async function fetchExpenseForecastFromMlService(totalExpensesSeries) {
  * Does not fall back to the legacy /forecast/expenses Ridge-RF path.
  */
 async function fetchPretrainedLrFromMlService(payload) {
-  const base = (process.env.ML_API_URL || '').trim().replace(/\/$/, '');
+  const base = getMlApiBaseUrl();
   if (!base) {
     console.warn('[mlExpenseClient] pretrained-lr skipped: ML_API_URL is empty');
     return null;
@@ -91,6 +99,8 @@ async function fetchPretrainedLrFromMlService(payload) {
 }
 
 module.exports = {
+  getMlApiBaseUrl,
+  isMlApiConfigured,
   fetchExpenseForecastFromMlService,
   fetchPretrainedLrFromMlService,
 };

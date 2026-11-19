@@ -28,6 +28,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "sms:test": "node test-sms.js",
-    "test:pretrained-lr": "jest tests/agriculturalSemester.test.js tests/pretrainedLrFeatureBuilder.test.js tests/pretrainedLrForecastService.test.js tests/predictiveExcelParser.test.js tests/predictiveExcelStore.test.js --forceExit"
+    "test:pretrained-lr": "jest tests/agriculturalSemester.test.js tests/pretrainedLrFeatureBuilder.test.js tests/pretrainedLrForecastService.test.js tests/predictiveExcelParser.test.js tests/predictiveExcelStore.test.js --forceExit",
+    "test:pretrained-lr-local": "jest tests/pretrainedLrLocalPredict.test.js --forceExit"
   }
 }
