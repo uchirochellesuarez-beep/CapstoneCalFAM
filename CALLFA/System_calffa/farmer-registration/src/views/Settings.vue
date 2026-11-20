@@ -83,6 +83,18 @@
               :placeholder="t('settings.addressPlaceholder')"
             />
           </div>
+          <div class="form-group">
+            <label>{{ t('settings.landArea') }}</label>
+            <TypedNumberInput
+              v-model="profile.land_area"
+              :min="0.01"
+              :max="LAND_AREA_MAX"
+              :max-integer-digits="LAND_AREA_MAX_INTEGER_DIGITS"
+              input-class="settings-number-input"
+              :placeholder="t('settings.landAreaPlaceholder')"
+            />
+            <p class="field-hint">{{ t('settings.landAreaHint') }}</p>
+          </div>
           <div class="form-group form-group--full">
             <label>{{ t('settings.referenceNumber') }}</label>
             <input
@@ -189,6 +201,12 @@ import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 import CenterToast from '../components/CenterToast.vue'
 import { useCenterNotice } from '../composables/useCenterNotice'
 import { backendUnavailableMessage, isBackendUnavailable } from '../utils/networkError'
+import TypedNumberInput from '../components/TypedNumberInput.vue'
+import {
+  LAND_AREA_MAX,
+  LAND_AREA_MAX_INTEGER_DIGITS,
+  parseNumericInput
+} from '../utils/numericInput'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -263,7 +281,11 @@ const profile = ref({
   educational_status: normalizeEducationalStatus(authStore.currentUser?.educational_status),
   reference_number: authStore.currentUser?.reference_number || '',
   address: authStore.currentUser?.address || authStore.currentUser?.barangay_name || '',
-  barangay_name: authStore.currentUser?.barangay_name || ''
+  barangay_name: authStore.currentUser?.barangay_name || '',
+  land_area:
+    authStore.currentUser?.land_area != null && authStore.currentUser?.land_area !== ''
+      ? authStore.currentUser.land_area
+      : ''
 })
 
 const educationOptions = computed(() => {
@@ -465,6 +487,20 @@ const saveProfile = async () => {
       return
     }
 
+    const landArea = parseNumericInput(profile.value.land_area)
+    if (landArea == null || landArea <= 0) {
+      message.value = t('signup.landAreaError')
+      messageType.value = 'text-red-600'
+      saving.value = false
+      return
+    }
+    if (landArea > LAND_AREA_MAX) {
+      message.value = t('signup.landAreaMaxError')
+      messageType.value = 'text-red-600'
+      saving.value = false
+      return
+    }
+
     const userId = authStore.currentUser?.id
     if (!userId) {
       throw new Error('User ID not found')
@@ -481,7 +517,8 @@ const saveProfile = async () => {
         phone_number: profile.value.phone_number,
         educational_status: normalizeEducationalStatus(profile.value.educational_status),
         address: profile.value.address,
-        reference_number: ref
+        reference_number: ref,
+        land_area: landArea
       })
     })
 
@@ -504,6 +541,9 @@ const saveProfile = async () => {
       google_linked: Boolean(data.farmer?.google_linked ?? authStore.currentUser?.google_linked)
     }
     profile.value.educational_status = educationalStatus
+    if (data.farmer?.land_area != null) {
+      profile.value.land_area = data.farmer.land_area
+    }
     localStorage.setItem('currentUser', JSON.stringify(authStore.currentUser))
     
     message.value = ''
@@ -550,7 +590,8 @@ const fetchUserProfile = async () => {
         educational_status: educationalStatus,
         reference_number: farmer.reference_number || '',
         address: farmer.address || '',
-        barangay_name: farmer.barangay_name || ''
+        barangay_name: farmer.barangay_name || '',
+        land_area: farmer.land_area != null && farmer.land_area !== '' ? farmer.land_area : ''
       }
       
       // Update authStore with fresh data for future use
@@ -563,6 +604,7 @@ const fetchUserProfile = async () => {
         phone_number: farmer.phone_number,
         educational_status: educationalStatus,
         address: farmer.address,
+        land_area: farmer.land_area,
         profile_picture: farmer.profile_picture,
         barangay_name: farmer.barangay_name,
         email: nextEmail || authStore.currentUser?.email || null,
@@ -1079,7 +1121,8 @@ const confirmLogout = async () => {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group :deep(.settings-number-input) {
   width: 100%;
   padding: 0.6rem 0.85rem;
   min-height: 0;
@@ -1095,7 +1138,8 @@ const confirmLogout = async () => {
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group :deep(.settings-number-input:focus) {
   outline: none;
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
