@@ -98,6 +98,23 @@ describe('pretrainedLrFeatureBuilder', () => {
     expect(built.feature_vector.period_index).toBe(11);
     expect(built.feature_vector.is_h1).toBe(1);
     expect(built.forecast_period).toBe('2026-H1');
+    // Latest history semester area (r2 = 2 ha), not earlier 1.2
+    expect(built.forecast_area_hectares).toBe(2);
+    expect(built.feature_vector.area_hectares).toBe(2);
+    expect(built.area_varies_across_history).toBe(true);
+  });
+
+  test('forecast_area_hectares uses latest semester when areas differ', () => {
+    const early = baseRow({ id: 1, area_hectares: 0.8, total_expenses: 10000 });
+    const late = baseRow({ id: 2, area_hectares: 1.5, total_expenses: 20000 });
+    const built = buildPretrainedLrFeatures([early, late], {
+      forecast_period: '2026-H1',
+      record_periods: { 1: '2025-H1', 2: '2025-H2' },
+    });
+    expect(built.ok).toBe(true);
+    expect(built.forecast_area_hectares).toBe(1.5);
+    expect(built.latest_history_period).toBe('2025-H2');
+    expect(built.area_varies_across_history).toBe(true);
   });
 
   test('single history record uses has_lag2=0 imputation', () => {

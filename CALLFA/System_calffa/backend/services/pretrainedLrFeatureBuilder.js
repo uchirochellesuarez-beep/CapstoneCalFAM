@@ -282,6 +282,26 @@ function buildPretrainedLrFeatures(rows, options = {}) {
   const prev = hist[hist.length - 1];
   const prevPrev = hist.length >= 2 ? hist[hist.length - 2] : null;
 
+  // Forecast farm area = latest historical semester (carry-forward). Not a new model feature.
+  const forecastAreaHectares = Number(prev.area_hectares);
+  if (!Number.isFinite(forecastAreaHectares) || forecastAreaHectares <= 0) {
+    return fail(
+      'MISSING_FARM_AREA',
+      `Latest history semester ${prev.period.label} has invalid area_hectares for forecast.`,
+      { limitations, period: prev.period.label }
+    );
+  }
+
+  const areaVariesAcrossHistory = hist.some(
+    (h) => Number(h.area_hectares) !== forecastAreaHectares
+  );
+  if (areaVariesAcrossHistory) {
+    limitations.push(
+      'Farm area differs across history semesters. ' +
+        `Forecast uses the latest history semester area (${forecastAreaHectares} ha from ${prev.period.label}).`
+    );
+  }
+
   const prev_total = prev.total_expenses;
   let prev_prev_total;
   let has_lag2;
@@ -344,7 +364,10 @@ function buildPretrainedLrFeatures(rows, options = {}) {
       record_id: h.id,
       period: h.period.label,
       total_expenses: h.total_expenses,
+      area_hectares: h.area_hectares,
     })),
+    forecast_area_hectares: forecastAreaHectares,
+    area_varies_across_history: areaVariesAcrossHistory,
     period_extrapolation: isExtrapolation(forecastParsed.period_index),
     limitations,
     mappings: {

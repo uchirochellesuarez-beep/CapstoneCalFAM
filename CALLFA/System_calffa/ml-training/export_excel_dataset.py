@@ -192,8 +192,12 @@ def main() -> None:
         "supervised": int(len(training)),
         "periods": int(len(periods)),
     }
-    if counts["farmers"] != 200 or counts["historical"] != 2200 or counts["supervised"] != 2000:
-        raise SystemExit(f"Unexpected counts before Excel export: {counts}")
+    n = counts["farmers"]
+    if n < 5 or counts["historical"] != n * 11 or counts["supervised"] != n * 10:
+        raise SystemExit(
+            f"Unexpected counts before Excel export: {counts} "
+            f"(expected hist={n * 11}, supervised={n * 10})"
+        )
 
     wb = Workbook()
     # remove default sheet; Dataset_Info will be first

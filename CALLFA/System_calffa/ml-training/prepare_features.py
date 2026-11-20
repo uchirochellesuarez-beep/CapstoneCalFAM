@@ -2,7 +2,7 @@
 Build lag-safe supervised feature matrix from the synthetic expense panel.
 
 Warm-up: period_index == 1 (2021-H1) — no supervised row.
-Targets: period_index 2..11 → 200 × 10 = 2,000 supervised examples.
+Targets: period_index 2..11 → n_farmers × 10 supervised examples.
 
 Features use only information from periods strictly before the target period.
 No farmer_id numeric feature. No price-index features (official series pending).
@@ -136,8 +136,13 @@ def build_supervised(records: pd.DataFrame) -> pd.DataFrame:
             }
             rows.append(feat)
     df = pd.DataFrame(rows)
+    n_farmers = int(records["synth_farmer_id"].nunique())
+    expected = n_farmers * 10
     # Leakage sanity: target must not equal a feature that is same-period (N/A by construction)
-    assert len(df) == 200 * 10, len(df)
+    if len(df) != expected:
+        raise AssertionError(
+            f"Expected {expected} supervised rows (n_farmers={n_farmers} × 10), got {len(df)}"
+        )
     return df
 
 

@@ -85,19 +85,19 @@
     ]
   },
   "counts": {
-    "n_supervised": 2000,
-    "n_train": 1400,
-    "n_validation": 400,
-    "n_test": 200
+    "n_supervised": 500,
+    "n_train": 350,
+    "n_validation": 100,
+    "n_test": 50
   },
   "seed": 20261119,
   "selected_model": "linear_regression",
   "active_algorithms": [
     "linear_regression"
   ],
-  "model_artifact": "runs/run_20261119_211021/expense_model.joblib",
+  "model_artifact": "runs/run_20261120_203925/expense_model.joblib",
   "input_source": "excel",
-  "run_id": "20261119_211021",
+  "run_id": "20261120_203925",
   "inference_notes": {
     "clip_nonnegative": true,
     "input": "DataFrame or 2D array in feature_order",

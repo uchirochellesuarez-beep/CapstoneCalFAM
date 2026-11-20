@@ -1,0 +1,36 @@
+{
+  "performance_disclaimer": "SYNTHETIC DATA PERFORMANCE ONLY. Not real-world CalFAM accuracy.",
+  "run_id": "20261120_203925",
+  "joblib": "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/runs/run_20261120_203925/expense_model.joblib",
+  "joblib_sha256": "d39ac3cf84229986aeebcdbe74b28fe479c4c1f9c3a058a8e397ea8a3f77f8a8",
+  "excel": "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/data/CalFAM_ML_Training_Dataset.xlsx",
+  "test_target_labels": [
+    "2026-H1"
+  ],
+  "n_test": 50,
+  "postprocessing": "predicted_total = max(pipe.predict(X), 0); per_ha = total / area_hectares",
+  "total_php_metrics_same_predictions": {
+    "MAE": 4640.101586375722,
+    "RMSE": 7752.5137606644,
+    "R2": 0.9309400292761948,
+    "WAPE": 0.07943747151913515,
+    "WAPE_percent": 7.943747151913515,
+    "n": 50
+  },
+  "php_per_ha_metrics": {
+    "MAE": 3544.075967753562,
+    "RMSE": 5111.665861128141,
+    "R2": 0.7924000619261901,
+    "WAPE": 0.07483417592979627,
+    "WAPE_percent": 7.483417592979627,
+    "n": 50
+  },
+  "graphs": [
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/reports/graphs/05_actual_vs_predicted_per_ha.png",
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/runs/run_20261120_203925/graphs/05_actual_vs_predicted_per_ha.png",
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/reports/graphs/06_prediction_error_distribution_per_ha.png",
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/runs/run_20261120_203925/graphs/06_prediction_error_distribution_per_ha.png",
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/reports/graphs/07_residual_scatter_per_ha.png",
+    "C:/xampp/htdocs/CALFAM/CALLFA/System_calffa/ml-training/runs/run_20261120_203925/graphs/07_residual_scatter_per_ha.png"
+  ]
+}

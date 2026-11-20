@@ -1,28 +1,9 @@
 {
+  "n_farmers": 50,
+  "n_expense_rows": 550,
+  "median_periods_per_farmer": 11,
+  "expected_supervised_if_10_targets": 500,
   "seed": 20261119,
-  "n_farmers": 200,
-  "n_periods": 11,
-  "n_records": 2200,
-  "period_labels": [
-    "2021-H1",
-    "2021-H2",
-    "2022-H1",
-    "2022-H2",
-    "2023-H1",
-    "2023-H2",
-    "2024-H1",
-    "2024-H2",
-    "2025-H1",
-    "2025-H2",
-    "2026-H1"
-  ],
-  "historical_end": "2026-H1",
-  "next_calendar_period_after_history": "2026-H2",
-  "later_forecast_example": "2027-H1",
-  "monetary_disclaimer": "All PHP values are synthetic assumptions for offline ML development. They are NOT official PSA/DA/FPA/PhilRice prices. No fabricated price-index features are included.",
-  "files": {
-    "farmers": "synthetic_farmers.csv",
-    "records": "synthetic_expense_records.csv",
-    "periods": "period_dictionary.csv"
-  }
+  "source": "resampled_from_existing_synthetic_panel",
+  "note": "SYNTHETIC subset sized closer to a ~50-member cooperative scale. Still not real CalFAM farmer outcomes."
 }

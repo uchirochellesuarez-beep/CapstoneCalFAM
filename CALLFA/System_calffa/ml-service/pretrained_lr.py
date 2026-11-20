@@ -17,13 +17,13 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 
-# Repository-relative default: ml-training/runs/run_20261119_211021/expense_model.joblib
+# Repository-relative default: ml-training/runs/run_20261120_203925/expense_model.joblib
 _ML_SERVICE_ROOT = Path(__file__).resolve().parent
 _DEFAULT_ARTIFACT = (
     _ML_SERVICE_ROOT.parent
     / "ml-training"
     / "runs"
-    / "run_20261119_211021"
+    / "run_20261120_203925"
     / "expense_model.joblib"
 )
 

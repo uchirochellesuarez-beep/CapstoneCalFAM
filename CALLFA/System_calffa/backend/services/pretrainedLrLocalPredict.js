@@ -12,10 +12,10 @@ const DEFAULT_ARTIFACT_PATH = path.join(
   __dirname,
   '..',
   'ml-artifacts',
-  'pretrained_lr_20261119_211021.json'
+  'pretrained_lr_20261120_203925.json'
 );
 
-const EXPECTED_RUN_ID = '20261119_211021';
+const EXPECTED_RUN_ID = '20261120_203925';
 const EXPECTED_SCHEMA_VERSION = 1;
 
 class LocalPredictError extends Error {

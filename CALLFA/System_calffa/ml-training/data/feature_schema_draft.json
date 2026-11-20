@@ -85,10 +85,10 @@
     ]
   },
   "counts": {
-    "n_supervised": 2000,
-    "n_train": 1400,
-    "n_validation": 400,
-    "n_test": 200
+    "n_supervised": 500,
+    "n_train": 350,
+    "n_validation": 100,
+    "n_test": 50
   },
   "seed": 20261119
 }

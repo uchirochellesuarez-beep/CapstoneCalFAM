@@ -22,6 +22,7 @@ const {
   forecastWithPretrainedLrFromSavedRecords,
   forecastWithPretrainedLrFromExcelRows,
   forecastWithPretrainedLrFromCombinedFoundation,
+  derivePerHectareExpenses,
 } = require('../services/pretrainedLrForecastService');
 
 function eligibleRow(overrides = {}) {
@@ -53,7 +54,7 @@ function pythonOk(overrides = {}) {
     ok: true,
     model_name: 'pretrained_linear_regression',
     ml_engine: 'pretrained_linear_regression',
-    model_run_id: '20261119_211021',
+    model_run_id: '20261120_203925',
     predicted_total_expenses: 12340,
     forecast_period: '2026-H1',
     trained_on_simulated_data: true,
@@ -69,7 +70,7 @@ function nodeOk(overrides = {}) {
     ok: true,
     model_name: 'pretrained_linear_regression',
     ml_engine: 'pretrained_linear_regression',
-    model_run_id: '20261119_211021',
+    model_run_id: '20261120_203925',
     predicted_total_expenses: 55550,
     forecast_period: '2026-H1',
     trained_on_simulated_data: true,
@@ -95,8 +96,11 @@ describe('forecastWithPretrainedLr — engine selection', () => {
     });
     expect(result.ok).toBe(true);
     expect(result.inference_engine).toBe('python_pretrained_lr');
-    expect(result.model_run_id).toBe('20261119_211021');
+    expect(result.model_run_id).toBe('20261120_203925');
     expect(result.predicted_total_expenses).toBe(12340);
+    expect(result.forecast_area_hectares).toBe(1);
+    expect(result.predicted_expenses_per_hectare).toBe(12340);
+    expect(result.forecast_next.predicted_expenses_per_hectare).toBe(12340);
     expect(result.trained_on_simulated_data).toBe(true);
     expect(result.legacy_fallback_used).toBe(false);
     expect(result.feature_order).toHaveLength(21);
@@ -114,12 +118,12 @@ describe('forecastWithPretrainedLr — engine selection', () => {
     expect(result.ok).toBe(true);
     expect(result.inference_engine).toBe('node_pretrained_lr');
     expect(result.predicted_total_expenses).toBe(46270);
-    expect(result.model_run_id).toBe('20261119_211021');
+    expect(result.model_run_id).toBe('20261120_203925');
     expect(fetchPretrainedLrFromMlService).not.toHaveBeenCalled();
     expect(predictPretrainedLrLocalSafe).toHaveBeenCalledTimes(1);
     const localArgs = predictPretrainedLrLocalSafe.mock.calls[0];
     expect(Object.keys(localArgs[0])).toHaveLength(21);
-    expect(localArgs[1].model_run_id).toBe('20261119_211021');
+    expect(localArgs[1].model_run_id).toBe('20261120_203925');
   });
 
   test('3) Python unreachable → Node fallback succeeds', async () => {
@@ -171,10 +175,10 @@ describe('forecastWithPretrainedLr — engine selection', () => {
     await forecastWithPretrainedLr(7, [eligibleRow()], {
       forecast_period: '2026-H1',
       record_periods: { 101: '2025-H2' },
-      model_run_id: '20261119_211021',
+      model_run_id: '20261120_203925',
     });
     expect(fetchPretrainedLrFromMlService.mock.calls[0][0].model_run_id).toBe(
-      '20261119_211021'
+      '20261120_203925'
     );
   });
 
@@ -361,11 +365,106 @@ describe('deployment safety — JSON artifact present', () => {
       __dirname,
       '..',
       'ml-artifacts',
-      'pretrained_lr_20261119_211021.json'
+      'pretrained_lr_20261120_203925.json'
     );
     expect(fs.existsSync(artifact)).toBe(true);
     const parsed = JSON.parse(fs.readFileSync(artifact, 'utf8'));
-    expect(parsed.run_id).toBe('20261119_211021');
+    expect(parsed.run_id).toBe('20261120_203925');
     expect(parsed.coefficients).toHaveLength(21);
+  });
+});
+
+describe('PHP/ha post-inference', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    isMlApiConfigured.mockReturnValue(true);
+  });
+
+  test('derivePerHectareExpenses rounds to 2 decimals', () => {
+    const r = derivePerHectareExpenses(10000, 1.5);
+    expect(r.ok).toBe(true);
+    expect(r.predicted_expenses_per_hectare).toBe(6666.67);
+    expect(r.forecast_area_hectares).toBe(1.5);
+  });
+
+  test('derivePerHectareExpenses rejects zero/invalid area', () => {
+    expect(derivePerHectareExpenses(10000, 0).error_code).toBe('MISSING_FARM_AREA');
+    expect(derivePerHectareExpenses(10000, -1).error_code).toBe('MISSING_FARM_AREA');
+    expect(derivePerHectareExpenses(10000, NaN).error_code).toBe('MISSING_FARM_AREA');
+  });
+
+  test('saved records: PHP/ha uses latest area; total unchanged', async () => {
+    fetchPretrainedLrFromMlService.mockResolvedValue(
+      pythonOk({ predicted_total_expenses: 30000, forecast_period: '2026-H1' })
+    );
+    const result = await forecastWithPretrainedLrFromSavedRecords(7, [
+      eligibleRow({
+        id: 1,
+        created_at: '2025-03-15T00:00:00+08:00',
+        area_hectares: 1,
+        total_expenses: 10000,
+      }),
+      eligibleRow({
+        id: 2,
+        created_at: '2025-09-15T00:00:00+08:00',
+        area_hectares: 2,
+        total_expenses: 20000,
+      }),
+    ]);
+    expect(result.ok).toBe(true);
+    expect(result.predicted_total_expenses).toBe(30000);
+    expect(result.forecast_area_hectares).toBe(2);
+    expect(result.predicted_expenses_per_hectare).toBe(15000);
+    expect(result.area_varies_across_history).toBe(true);
+  });
+
+  test('excel upload: PHP/ha from latest Farm_Area_Hectares-mapped area', async () => {
+    fetchPretrainedLrFromMlService.mockResolvedValue(
+      pythonOk({ predicted_total_expenses: 45000, forecast_period: '2026-H2' })
+    );
+    const result = await forecastWithPretrainedLrFromExcelRows(7, [
+      {
+        ...eligibleRow({ id: 'excel-1', area_hectares: 1.0, total_expenses: 20000 }),
+        agricultural_semester: '2026-H1',
+      },
+      {
+        ...eligibleRow({ id: 'excel-2', area_hectares: 1.5, total_expenses: 30000 }),
+        agricultural_semester: '2025-H2',
+      },
+    ]);
+    expect(result.ok).toBe(true);
+    // Latest chronologically is 2026-H1 with 1.0 ha
+    expect(result.latest_history_period).toBe('2026-H1');
+    expect(result.forecast_area_hectares).toBe(1);
+    expect(result.predicted_total_expenses).toBe(45000);
+    expect(result.predicted_expenses_per_hectare).toBe(45000);
+    expect(result.persisted).toBe(false);
+  });
+
+  test('Node inference path also returns PHP/ha', async () => {
+    isMlApiConfigured.mockReturnValue(false);
+    predictPretrainedLrLocalSafe.mockReturnValue(
+      nodeOk({ predicted_total_expenses: 12345, forecast_period: '2026-H1' })
+    );
+    const result = await forecastWithPretrainedLr(7, [eligibleRow({ area_hectares: 1.5 })], {
+      forecast_period: '2026-H1',
+      record_periods: { 101: '2025-H2' },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.inference_engine).toBe('node_pretrained_lr');
+    expect(result.predicted_total_expenses).toBe(12345);
+    expect(result.forecast_area_hectares).toBe(1.5);
+    expect(result.predicted_expenses_per_hectare).toBe(8230);
+  });
+
+  test('zero hectares rejected before prediction', async () => {
+    const result = await forecastWithPretrainedLr(7, [eligibleRow({ area_hectares: 0 })], {
+      forecast_period: '2026-H1',
+      record_periods: { 101: '2025-H2' },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error_code).toBe('MISSING_FARM_AREA');
+    expect(fetchPretrainedLrFromMlService).not.toHaveBeenCalled();
+    expect(predictPretrainedLrLocalSafe).not.toHaveBeenCalled();
   });
 });

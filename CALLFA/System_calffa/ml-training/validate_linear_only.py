@@ -85,12 +85,15 @@ def main() -> None:
     farmers = pd.read_csv(ROOT / "data" / "synthetic_farmers.csv")
     hist = pd.read_csv(ROOT / "data" / "synthetic_expense_records.csv")
     sup = pd.read_csv(CSV_PATH)
-    if len(farmers) != 200:
-        errors.append("farmers count")
-    if len(hist) != 2200:
-        errors.append("hist count")
-    if len(sup) != 2000:
-        errors.append("supervised count")
+    n_farmers = int(len(farmers))
+    expected_hist = n_farmers * 11
+    expected_sup = n_farmers * 10
+    if n_farmers < 5:
+        errors.append(f"farmers count too small: {n_farmers}")
+    if len(hist) != expected_hist:
+        errors.append(f"hist count: got {len(hist)}, expected {expected_hist}")
+    if len(sup) != expected_sup:
+        errors.append(f"supervised count: got {len(sup)}, expected {expected_sup}")
 
     if TRAIN_LABELS != {
         "2021-H2",
@@ -108,12 +111,18 @@ def main() -> None:
         errors.append("TEST_LABELS changed")
 
     split_counts = sup["split"].value_counts().to_dict()
+    expected_train = n_farmers * 7
+    expected_val = n_farmers * 2
+    expected_test = n_farmers * 1
     if (
-        split_counts.get("train") != 1400
-        or split_counts.get("validation") != 400
-        or split_counts.get("test") != 200
+        split_counts.get("train") != expected_train
+        or split_counts.get("validation") != expected_val
+        or split_counts.get("test") != expected_test
     ):
-        errors.append(f"split counts unexpected: {split_counts}")
+        errors.append(
+            f"split counts unexpected: {split_counts} "
+            f"(expected train={expected_train}, val={expected_val}, test={expected_test})"
+        )
 
     if not EXCEL_PATH.exists():
         errors.append("technical Excel missing")
@@ -123,8 +132,8 @@ def main() -> None:
             if not match.get("compared"):
                 errors.append("excel/csv not compared")
             df, _ = load_supervised("excel")
-            if len(df) != 2000:
-                errors.append("excel load row count")
+            if len(df) != expected_sup:
+                errors.append(f"excel load row count: got {len(df)}, expected {expected_sup}")
         except SystemExit as e:
             errors.append(f"excel load failed: {e}")
 

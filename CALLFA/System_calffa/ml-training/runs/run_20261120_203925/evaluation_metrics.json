@@ -4,7 +4,7 @@
   "seed": 20261119,
   "input_source": "excel",
   "input_path": "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\data\\CalFAM_ML_Training_Dataset.xlsx",
-  "run_id": "20261119_211021",
+  "run_id": "20261120_203925",
   "feature_columns": [
     "area_hectares",
     "prev_total_expenses",
@@ -29,43 +29,43 @@
     "has_lag2"
   ],
   "split_sizes": {
-    "train": 1400,
-    "validation": 400,
-    "test": 200
+    "train": 350,
+    "validation": 100,
+    "test": 50
   },
   "train": {
-    "MAE": 3948.1389433912013,
-    "RMSE": 5869.0574901677,
-    "R2": 0.957288293541789,
-    "WAPE": 0.07534706687795167,
-    "n": 1400,
+    "MAE": 4102.341754101837,
+    "RMSE": 5900.790220338152,
+    "R2": 0.9598135807399558,
+    "WAPE": 0.07585450661621265,
+    "n": 350,
     "performance_label": "SYNTHETIC DATA PERFORMANCE"
   },
   "validation": {
-    "MAE": 4123.770388964796,
-    "RMSE": 6215.913281274581,
-    "R2": 0.9523425276899931,
-    "WAPE": 0.07541705059688304,
-    "n": 400,
+    "MAE": 3679.2428422990447,
+    "RMSE": 5059.821173894273,
+    "R2": 0.96624051149097,
+    "WAPE": 0.06722263753876227,
+    "n": 100,
     "performance_label": "SYNTHETIC DATA PERFORMANCE"
   },
   "test": {
-    "MAE": 4237.409320954708,
-    "RMSE": 6234.534462927384,
-    "R2": 0.9572980537644691,
-    "WAPE": 0.07348531295796563,
-    "n": 200,
+    "MAE": 4640.101586375722,
+    "RMSE": 7752.5137606644,
+    "R2": 0.9309400292761948,
+    "WAPE": 0.07943747151913515,
+    "n": 50,
     "performance_label": "SYNTHETIC DATA PERFORMANCE"
   },
-  "fit_seconds": 0.00699925422668457,
+  "fit_seconds": 0.016335487365722656,
   "graph_files": [
     "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\reports\\graphs\\01_actual_vs_predicted.png",
-    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261119_211021\\graphs\\01_actual_vs_predicted.png",
+    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261120_203925\\graphs\\01_actual_vs_predicted.png",
     "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\reports\\graphs\\02_prediction_error_distribution.png",
-    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261119_211021\\graphs\\02_prediction_error_distribution.png",
+    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261120_203925\\graphs\\02_prediction_error_distribution.png",
     "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\reports\\graphs\\03_residual_scatter.png",
-    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261119_211021\\graphs\\03_residual_scatter.png",
+    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261120_203925\\graphs\\03_residual_scatter.png",
     "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\reports\\graphs\\04_linear_feature_contributions.png",
-    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261119_211021\\graphs\\04_linear_feature_contributions.png"
+    "C:\\xampp\\htdocs\\CALFAM\\CALLFA\\System_calffa\\ml-training\\runs\\run_20261120_203925\\graphs\\04_linear_feature_contributions.png"
   ]
 }

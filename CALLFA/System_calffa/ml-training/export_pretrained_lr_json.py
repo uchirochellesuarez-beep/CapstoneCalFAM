@@ -18,9 +18,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_JOBLIB = ROOT / "runs" / "run_20261119_211021" / "expense_model.joblib"
+DEFAULT_JOBLIB = ROOT / "runs" / "run_20261120_203925" / "expense_model.joblib"
 DEFAULT_OUT = (
-    ROOT.parent / "backend" / "ml-artifacts" / "pretrained_lr_20261119_211021.json"
+    ROOT.parent / "backend" / "ml-artifacts" / "pretrained_lr_20261120_203925.json"
 )
 DEFAULT_FIXTURES = (
     ROOT.parent / "backend" / "ml-artifacts" / "pretrained_lr_parity_fixtures.json"

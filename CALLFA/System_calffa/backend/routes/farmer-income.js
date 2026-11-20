@@ -757,7 +757,7 @@ router.post('/expense-forecast-pretrained-lr/:farmerId', async (req, res) => {
       // True next-semester forecast: Eligible Farm Income + saved Excel foundation
       const excelRows = await listPredictiveExcelRows(pool, uid);
       result = await forecastWithPretrainedLrFromCombinedFoundation(uid, records, excelRows, {
-        model_run_id: req.body?.model_run_id || '20261119_211021',
+        model_run_id: req.body?.model_run_id || '20261120_203925',
         preferFarmIncomeOnConflict: true,
       });
     } else {
@@ -766,7 +766,7 @@ router.post('/expense-forecast-pretrained-lr/:farmerId', async (req, res) => {
         period_mode: 'explicit',
         forecast_period: req.body?.forecast_period ?? req.body?.forecastPeriod ?? null,
         record_periods: req.body?.record_periods ?? req.body?.recordPeriods ?? null,
-        model_run_id: req.body?.model_run_id || '20261119_211021',
+        model_run_id: req.body?.model_run_id || '20261120_203925',
       });
       result.input_source = 'explicit_periods';
     }
@@ -922,7 +922,7 @@ router.post(
       );
 
       const result = await forecastWithPretrainedLrFromExcelRows(gate.id, forecastRows, {
-        model_run_id: '20261119_211021',
+        model_run_id: '20261120_203925',
       });
       result.input_source = 'excel_upload';
       result.persisted = true;
@@ -995,7 +995,7 @@ router.post('/predictive-excel/forecast-saved/:farmerId', async (req, res) => {
 
     const forecastRows = rows.map((r) => dbRowToForecastRow(r));
     const result = await forecastWithPretrainedLrFromExcelRows(gate.id, forecastRows, {
-      model_run_id: '20261119_211021',
+      model_run_id: '20261120_203925',
     });
     result.input_source = 'excel_saved';
     result.persisted = true;

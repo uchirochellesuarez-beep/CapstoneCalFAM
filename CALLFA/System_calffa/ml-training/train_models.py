@@ -135,8 +135,8 @@ def load_supervised(source: str) -> tuple[pd.DataFrame, str]:
     missing = [c for c in FEATURE_COLUMNS + [TARGET_COL, "split"] if c not in df.columns]
     if missing:
         raise SystemExit(f"Missing required columns: {missing}")
-    if len(df) != 2000:
-        raise SystemExit(f"Expected 2000 supervised rows, got {len(df)}")
+    if len(df) < 50:
+        raise SystemExit(f"Too few supervised rows: {len(df)}")
     return df, label
 
 
@@ -318,14 +318,15 @@ def main(argv: list[str] | None = None) -> None:
     train = df[df["split"] == "train"].copy()
     val = df[df["split"] == "validation"].copy()
     test = df[df["split"] == "test"].copy()
-    if not (len(train) == 1400 and len(val) == 400 and len(test) == 200):
+    if len(train) < 20 or len(val) < 5 or len(test) < 5:
         raise SystemExit(
             f"Unexpected chronological split sizes: train={len(train)}, "
             f"val={len(val)}, test={len(test)}"
         )
     log(
         f"  Chronological split OK: train={len(train)}, "
-        f"validation={len(val)}, test={len(test)}"
+        f"validation={len(val)}, test={len(test)} "
+        f"(total={len(df)}; sizes scale with n_farmers)"
     )
 
     # --- Feature preparation ---

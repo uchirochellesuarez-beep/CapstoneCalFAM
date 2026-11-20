@@ -20,15 +20,67 @@ const PUBLIC_DISCLAIMER_EN =
   'This prediction uses a Linear Regression model trained on simulated agricultural expense data. ' +
   'Results are estimates and have not been validated against actual CALFFA farmer outcomes.';
 
-const DEFAULT_MODEL_RUN_ID = '20261119_211021';
+const DEFAULT_MODEL_RUN_ID = '20261120_203925';
 const MODEL_NAME = 'pretrained_linear_regression';
 
 function isPretrainedLrModelName(payload) {
   return String(payload?.model_name || payload?.ml_engine || '') === MODEL_NAME;
 }
 
+/**
+ * Derive PHP/ha from total prediction using latest-history farm area.
+ * Does not change the pretrained LR total; post-inference only.
+ */
+function derivePerHectareExpenses(predictedTotal, forecastAreaHectares) {
+  const total = Number(predictedTotal);
+  const area = Number(forecastAreaHectares);
+  if (!Number.isFinite(area) || area <= 0) {
+    return {
+      ok: false,
+      error_code: 'MISSING_FARM_AREA',
+      error:
+        'Cannot compute expenses per hectare: forecast farm area must be a finite number greater than zero.',
+    };
+  }
+  if (!Number.isFinite(total)) {
+    return {
+      ok: false,
+      error_code: 'INVALID_TOTAL_EXPENSES',
+      error: 'Cannot compute expenses per hectare: predicted total is not finite.',
+    };
+  }
+  const perHa = Math.round((total / area) * 100) / 100;
+  return {
+    ok: true,
+    forecast_area_hectares: area,
+    predicted_expenses_per_hectare: perHa,
+  };
+}
+
 function buildSuccessResponse(built, prediction, farmerId, inferenceEngine) {
   const forecastPeriod = prediction.forecast_period || built.forecast_period;
+  const predictedTotal = Number(prediction.predicted_total_expenses);
+  const perHa = derivePerHectareExpenses(predictedTotal, built.forecast_area_hectares);
+  if (!perHa.ok) {
+    return {
+      ok: false,
+      error_code: perHa.error_code,
+      error: perHa.error,
+      limitations: built.limitations || [],
+      disclaimer_ph: PUBLIC_DISCLAIMER_PH,
+      disclaimer_en: PUBLIC_DISCLAIMER_EN,
+      ml_engine: MODEL_NAME,
+      model: MODEL_NAME,
+      inference_engine: inferenceEngine,
+      farmer_id: Number(farmerId),
+      forecast_period: forecastPeriod,
+      latest_history_period: built.latest_history_period,
+      history_periods: built.history_periods,
+      predicted_total_expenses: predictedTotal,
+      legacy_fallback_used: false,
+    };
+  }
+
   return {
     ok: true,
     ml_engine: MODEL_NAME,
@@ -45,18 +97,23 @@ function buildSuccessResponse(built, prediction, farmerId, inferenceEngine) {
     forecast_period: forecastPeriod,
     latest_history_period: built.latest_history_period,
     period_extrapolation: Boolean(built.period_extrapolation),
+    forecast_area_hectares: perHa.forecast_area_hectares,
+    predicted_expenses_per_hectare: perHa.predicted_expenses_per_hectare,
     forecast_next: {
       label: forecastPeriod,
-      predicted_total_expenses: Number(prediction.predicted_total_expenses),
+      predicted_total_expenses: predictedTotal,
+      predicted_expenses_per_hectare: perHa.predicted_expenses_per_hectare,
+      forecast_area_hectares: perHa.forecast_area_hectares,
       period_index: built.forecast_period_index,
       is_h1: built.forecast_is_h1,
     },
-    predicted_total_expenses: Number(prediction.predicted_total_expenses),
+    predicted_total_expenses: predictedTotal,
     feature_vector: built.feature_vector,
     feature_order: built.feature_order,
     history_periods: built.history_periods,
     mappings: built.mappings,
     limitations: built.limitations,
+    area_varies_across_history: Boolean(built.area_varies_across_history),
     farmer_id: Number(farmerId),
     training_n: built.n_hist_periods,
     legacy_fallback_used: false,
@@ -214,7 +271,7 @@ async function forecastWithPretrainedLrFromSavedRecords(farmerId, eligibleDbRows
     period_mode: 'created_at',
     auto_forecast_period: true,
     require_eligible: true,
-    model_run_id: options.model_run_id || '20261119_211021',
+    model_run_id: options.model_run_id || '20261120_203925',
   });
 }
 
@@ -224,7 +281,7 @@ async function forecastWithPretrainedLrFromExcelRows(farmerId, excelRows, option
     period_mode: 'row_period',
     auto_forecast_period: true,
     require_eligible: false,
-    model_run_id: options.model_run_id || '20261119_211021',
+    model_run_id: options.model_run_id || '20261120_203925',
   });
 }
 
@@ -345,7 +402,7 @@ async function forecastWithPretrainedLrFromCombinedFoundation(
     period_mode: 'row_period',
     auto_forecast_period: true,
     require_eligible: false,
-    model_run_id: options.model_run_id || '20261119_211021',
+    model_run_id: options.model_run_id || '20261120_203925',
   });
 
   result.input_source = 'combined_foundation';
@@ -371,7 +428,7 @@ async function forecastWithPretrainedLr(farmerId, eligibleDbRows, options = {}) 
     require_eligible: options.require_eligible !== false,
     forecast_period: options.forecast_period,
     record_periods: options.record_periods,
-    model_run_id: options.model_run_id || '20261119_211021',
+    model_run_id: options.model_run_id || '20261120_203925',
   });
 }
 
@@ -382,6 +439,7 @@ module.exports = {
   forecastWithPretrainedLrFromCombinedFoundation,
   mergeFarmIncomeAndExcelHistory,
   runPretrainedLrPrediction,
+  derivePerHectareExpenses,
   PUBLIC_DISCLAIMER_PH,
   PUBLIC_DISCLAIMER_EN,
 };

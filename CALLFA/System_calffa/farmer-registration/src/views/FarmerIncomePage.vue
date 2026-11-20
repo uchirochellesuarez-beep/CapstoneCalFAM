@@ -732,20 +732,26 @@
         <h3 class="section-title">{{ $t('incomeForm.forecastResult') }}</h3>
         <div v-if="forecastResult.ok" class="summary-grid">
           <div class="summary-item expense">
+            <span class="summary-label">{{ $t('incomeForm.predictedExpensesPerHa') }}</span>
+            <span class="summary-value">
+              ₱{{ formatPeso(forecastResult.predicted_expenses_per_hectare ?? forecastResult.forecast_next?.predicted_expenses_per_hectare) }}
+              <span class="summary-unit">{{ $t('incomeForm.perHectareUnit') }}</span>
+            </span>
+          </div>
+          <div class="summary-item">
             <span class="summary-label">{{ $t('incomeForm.predictedFutureExpense') }}</span>
             <span class="summary-value">₱{{ formatPeso(forecastResult.predicted_total_expenses ?? forecastResult.forecast_next?.predicted_total_expenses) }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">{{ $t('incomeForm.latestHistorySemesterShort') }}</span>
-            <span class="summary-value">{{ forecastResult.latest_history_period || '—' }}</span>
+            <span class="summary-label">{{ $t('incomeForm.forecastFarmArea') }}</span>
+            <span class="summary-value">
+              {{ forecastResult.forecast_area_hectares ?? forecastResult.forecast_next?.forecast_area_hectares ?? '—' }}
+              {{ $t('incomeForm.hectares') }}
+            </span>
           </div>
           <div class="summary-item">
             <span class="summary-label">{{ $t('incomeForm.forecastSemesterShort') }}</span>
             <span class="summary-value">{{ forecastResult.forecast_period || forecastResult.forecast_next?.label || '—' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">{{ $t('incomeForm.modelUsed') }}</span>
-            <span class="summary-value">{{ $t('incomeForm.modelLinearRegressionShort') }}</span>
           </div>
         </div>
         <div v-else class="alert alert-error">
@@ -2465,6 +2471,12 @@ watch(targetFarmerId, async (id) => {
   color: #6b7280;
   margin-bottom: 0.3rem;
   font-weight: 600;
+}
+.summary-item .summary-unit {
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-left: 0.2rem;
+  opacity: 0.85;
 }
 .summary-item .summary-value {
   display: block;

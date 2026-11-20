@@ -67,7 +67,7 @@ class TestPretrainedLr(unittest.TestCase):
                 "feature_vector": VALID_FEATURES,
                 "forecast_period": "2021-H2",
                 "farmer_id": 1,
-                "model_run_id": "20261119_211021",
+                "model_run_id": "20261120_203925",
             },
         )
         self.assertEqual(res.status_code, 200)
@@ -75,7 +75,7 @@ class TestPretrainedLr(unittest.TestCase):
         self.assertTrue(data["ok"])
         self.assertEqual(data["model_name"], "pretrained_linear_regression")
         self.assertEqual(data["ml_engine"], "pretrained_linear_regression")
-        self.assertEqual(data["model_run_id"], "20261119_211021")
+        self.assertEqual(data["model_run_id"], "20261120_203925")
         self.assertTrue(data["trained_on_simulated_data"])
         self.assertEqual(data["performance_label"], "SYNTHETIC DATA PERFORMANCE")
         self.assertEqual(data["forecast_period"], "2021-H2")

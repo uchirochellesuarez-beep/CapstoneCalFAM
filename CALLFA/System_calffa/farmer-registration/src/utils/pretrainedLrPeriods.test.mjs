@@ -70,7 +70,7 @@ run('builds correct API payload', () => {
   assert.deepEqual(built.body, {
     forecast_period: '2026-H1',
     record_periods: { 10: '2025-H1', 11: '2025-H2' },
-    model_run_id: '20261119_211021',
+    model_run_id: '20261120_203925',
   })
 })
 

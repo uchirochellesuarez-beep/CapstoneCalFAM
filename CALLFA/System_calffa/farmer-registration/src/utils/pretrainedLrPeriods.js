@@ -127,7 +127,7 @@ export function buildPretrainedLrRequestBody(eligibleRecords, recordPeriods, for
     body: {
       forecast_period: validated.forecast_period,
       record_periods: validated.record_periods,
-      model_run_id: '20261119_211021',
+      model_run_id: '20261120_203925',
     },
   }
 }
